@@ -1,0 +1,14 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib', 'node_modules']
+
+optimizer = true
+optimizer_runs = 800
+
+remappings = [
+  '@openzeppelin/=node_modules/@openzeppelin/',
+]
+
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
