@@ -11,12 +11,14 @@ pragma experimental ABIEncoderV2;
 interface IPump {
 
     /**
-     * @notice initializes a pump with given data
+     * @notice attaches the pump to a well
      * @param pumpData pump specific data
      * @param n The number of tokens in the well
-     * @dev called by {IWell.initialize}
+     * @dev 
+     * Should be called by a Well on deployment.
+     * `msg.sender` should be assumed to be the Well address.
      */
-    function initialize(bytes calldata pumpData, uint n) external;
+    function attach(bytes calldata pumpData, uint n) external;
 
     /**
      * @notice updates the pump with given data

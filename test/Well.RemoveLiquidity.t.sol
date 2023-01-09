@@ -15,7 +15,7 @@ contract RemoveLiquidityTest is TestHelper {
     }
 
     function testGetRemoveLiquidityOut() public {
-        uint[] memory amountsOut = well.getRemoveLiquidityOut(w, 2000 * 1e18);
+        uint[] memory amountsOut = well.getRemoveLiquidityOut(2000 * 1e18);
         for (uint i = 0; i < tokens.length; i++) assertEq(amountsOut[i], 1000 * 1e18);
     }
 
@@ -28,7 +28,7 @@ contract RemoveLiquidityTest is TestHelper {
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountIn, amountsOut);
 
-        well.removeLiquidity(w, lpAmountIn, amountsOut, user);
+        well.removeLiquidity(lpAmountIn, amountsOut, user);
 
         assertEq(well.balanceOf(user), 0);
 
@@ -46,6 +46,6 @@ contract RemoveLiquidityTest is TestHelper {
         amountsOut[1] = 1000 * 1e18;
 
         vm.expectRevert("Well: slippage");
-        well.removeLiquidity(w, lpAmountIn, amountsOut, user);
+        well.removeLiquidity(lpAmountIn, amountsOut, user);
     }
 }

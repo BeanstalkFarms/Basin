@@ -22,7 +22,7 @@ contract SwapTest is TestHelper {
 
     function testGetSwapOut() public {
         uint amountIn = 1000 * 1e18;
-        uint amountOut = well.getSwapOut(w, tokens[0], tokens[1], amountIn);
+        uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn);
         assertEq(amountOut, 500 * 1e18);
     }
 
@@ -36,7 +36,7 @@ contract SwapTest is TestHelper {
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], amountIn, minAmountOut);
 
-        uint amountOut = well.swapFrom(w, tokens[0], tokens[1], amountIn, minAmountOut, user);
+        uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
         assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn);
         assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut);
@@ -48,12 +48,12 @@ contract SwapTest is TestHelper {
     function testSwapOutMinTooHigh() prank(user) public {
         uint amountIn = 1000 * 1e18;
         vm.expectRevert("Well: slippage");
-        well.swapFrom(w, tokens[0], tokens[1], amountIn, 501 * 1e18, user);
+        well.swapFrom(tokens[0], tokens[1], amountIn, 501 * 1e18, user);
     }
 
     function testGetSwapIn() public {
         uint amountOut = 500 * 1e18;
-        uint amountIn = well.getSwapIn(w, tokens[0], tokens[1], amountOut);
+        uint amountIn = well.getSwapIn(tokens[0], tokens[1], amountOut);
         assertEq(amountIn, 1000 * 1e18);
     }
 
@@ -67,7 +67,7 @@ contract SwapTest is TestHelper {
         uint balanceBefore0 = tokens[0].balanceOf(user);
         uint balanceBefore1 = tokens[1].balanceOf(user);
 
-        uint amountIn = well.swapTo(w, tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
         assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn);
         assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut);
@@ -79,6 +79,6 @@ contract SwapTest is TestHelper {
     function testSwapOutMaxTooLow() prank(user) public {
         uint amountOut = 500 * 1e18;
         vm.expectRevert("Well: slippage");
-        well.swapTo(w, tokens[0], tokens[1], 999 * 1e18, amountOut, user);
+        well.swapTo(tokens[0], tokens[1], 999 * 1e18, amountOut, user);
     }
 }

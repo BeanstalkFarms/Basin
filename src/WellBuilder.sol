@@ -2,65 +2,52 @@
 
 pragma solidity ^0.8.17;
 
-import "src/libraries/LibWellUtilities.sol";
 import "src/interfaces/IWellBuilder.sol";
 import "src/Well.sol";
+import "src/libraries/LibContractInfo.sol";
+import "oz/utils/math/SafeCast.sol";
 
 /**
  * @author Publius
  * @title Well Builder 
  * @dev
- * Well Builder is both a Well factory and a Well registry for all Wells deployed through the Builder
- * Wells can be permissionlessly built given Well info.
- * Only 1 Well can be deployed for each unique Well info struct.
- * Well addresses are indexed by Well hash for future lookup.
+ * Well Builder is an instance of a Well factory.
+ * Wells can be permissionlessly built given tokens, a well function and optionally a pump.
  **/
 
 contract WellBuilder is IWellBuilder {
 
-    mapping(bytes32 => address) wellAddresses;
-
-    /**
-     * Management
-    **/
+    using LibContractInfo for address;
+    using SafeCast for uint256;
 
     /// @dev see {IWellBuilder.buildWell}
     /// tokens in Well info struct must be alphabetically sorted
     function buildWell(
-        WellInfo calldata wellInfo
-    ) external payable returns (address wellAddress) {
-        for (uint256 i; i < wellInfo.tokens.length - 1; i++) {
+        IERC20[] calldata tokens,
+        Call calldata wellFunction,
+        Call calldata pump
+    ) external payable returns (address well) {
+        for (uint256 i; i < tokens.length - 1; i++) {
             require(
-                wellInfo.tokens[i] < wellInfo.tokens[i + 1],
+                tokens[i] < tokens[i + 1],
                 "LibWell: Tokens not alphabetical"
             );
         }
 
-        bytes32 wellHash = LibWellUtilities.computeWellHash(wellInfo);
+        // name is in format `<token0Symbol>:...:<tokenNSymbol> <wellFunctionName> Well`
+        // symbol is in format `<token0Symbol>...<tokenNSymbol><wellFunctionSymbol>w`
+        string memory name = address(tokens[0]).getSymbol();
+        string memory symbol = name;
+        for (uint256 i = 1; i < tokens.length; ++i) {
+            name = string.concat(name, ":", address(tokens[i]).getSymbol());
+            symbol = string.concat(symbol, address(tokens[i]).getSymbol());
+        }
+        name = string.concat(name, " ", wellFunction.target.getName(), " Well");
+        symbol = string.concat(symbol, wellFunction.target.getSymbol(), "w");
 
-        // deploy using create2 to deploy to a deterministic address.
-        // create2 call will fail if a Well is already deployed with the Well info argument.
-        bytes memory bytecode = type(Well).creationCode;
-        assembly { wellAddress := create2(0, add(bytecode, 32), mload(bytecode), wellHash) }
-        Well(wellAddress).initialize(wellInfo);
+        well = address(new Well(tokens, wellFunction, pump, name, symbol));
 
-        wellAddresses[wellHash] = wellAddress;
-        emit BuildWell(wellAddress, wellInfo, wellHash);
-    }
 
-    /// @dev see {IWellBuilder.getWellAddressFromHash}
-    function getWellAddressFromHash(bytes32 wellHash) external view returns (address wellAddress) {
-        return wellAddresses[wellHash];
-    }
-
-    /// @dev see {IWellBuilder.getWellAddress}
-    function getWellAddress(WellInfo calldata wellInfo) external view returns (address wellAddress) {
-        bytes32 wh = LibWellUtilities.computeWellHash(wellInfo);
-        wellAddress = wellAddresses[wh];
-    }
-
-    /// @dev see {IWellBuilder.getWellHash}
-    function getWellHash(WellInfo calldata wellInfo) external pure returns (bytes32 wellHash) {
-        wellHash = LibWellUtilities.computeWellHash(wellInfo);
+        emit BuildWell(well, tokens, wellFunction, pump);
     }
 }

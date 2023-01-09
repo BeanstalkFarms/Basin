@@ -16,35 +16,31 @@ contract WellInitTest is TestHelper {
         // TODO: add name/symbol tests
     }
 
-    function testWellInfo() public {
-        WellInfo memory wi = well.wellInfo();
-        for (uint i = 0; i < tokens.length; i++)
-            assertEq(address(wi.tokens[i]), address(w.tokens[i]));
-        for (uint i = 0; i < w.pumps.length; i++) {
-            assertEq(wi.pumps[i].target, w.pumps[i].target);
-            assertEq(wi.pumps[i].data, w.pumps[i].data);
-        }
-        assertEq(wi.wellFunction.target, w.wellFunction.target);
-        assertEq(wi.wellFunction.data, w.wellFunction.data);
-    }
-
-    function testWellHash() public {
-        bytes32 wellHash = well.wellHash();
-        assertEq(wellHash, wellBuilder.getWellHash(w));
-    }
+    // function testWellInfo() public {
+    //     WellInfo memory wi = well.wellInfo();
+    //     for (uint i = 0; i < tokens.length; i++)
+    //         assertEq(address(wi.tokens[i]), address(tokens[i]));
+    //     for (uint i = 0; i < pumps.length; i++) {
+    //         assertEq(wi.pumps[i].target, pumps[i].target);
+    //         assertEq(wi.pumps[i].data, pumps[i].data);
+    //     }
+    //     console.log(wi.wellFunction.target);
+    //     assertEq(wi.wellFunction.target, wellFunction.target);
+    //     assertEq(wi.wellFunction.data, wellFunction.data);
+    // }
 
     function testTokens() public {
         IERC20[] memory wellTokens = well.tokens();
-        for (uint i = 0; i < tokens.length; i++)
+        for (uint i = 0; i < tokens.length; i++) {
+            console.log(address(wellTokens[i]));
             assertEq(address(wellTokens[i]), address(tokens[i]));
+        }
     }
 
     function testPumps() public {
-        Call[] memory wellPumps = well.pumps();
-        for (uint i = 0; i < w.pumps.length; i++) {
-            assertEq(wellPumps[i].target, w.pumps[i].target);
-            assertEq(wellPumps[i].data, w.pumps[i].data);
-        }
+        Call memory wellPump = well.pump();
+        assertEq(wellPump.target, pump.target);
+        assertEq(wellPump.data, pump.data);
     }
 
     function testName() public {
