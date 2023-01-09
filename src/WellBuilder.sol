@@ -18,7 +18,7 @@ import "oz/utils/math/SafeCast.sol";
 contract WellBuilder is IWellBuilder {
 
     using LibContractInfo for address;
-    using SafeCast for uint256;
+    using SafeCast for uint;
 
     /// @dev see {IWellBuilder.buildWell}
     /// tokens in Well info struct must be alphabetically sorted
@@ -27,7 +27,7 @@ contract WellBuilder is IWellBuilder {
         Call calldata wellFunction,
         Call calldata pump
     ) external payable returns (address well) {
-        for (uint256 i; i < tokens.length - 1; i++) {
+        for (uint i; i < tokens.length - 1; i++) {
             require(
                 tokens[i] < tokens[i + 1],
                 "LibWell: Tokens not alphabetical"
@@ -38,7 +38,7 @@ contract WellBuilder is IWellBuilder {
         // symbol is in format `<token0Symbol>...<tokenNSymbol><wellFunctionSymbol>w`
         string memory name = address(tokens[0]).getSymbol();
         string memory symbol = name;
-        for (uint256 i = 1; i < tokens.length; ++i) {
+        for (uint i = 1; i < tokens.length; ++i) {
             name = string.concat(name, ":", address(tokens[i]).getSymbol());
             symbol = string.concat(symbol, address(tokens[i]).getSymbol());
         }
