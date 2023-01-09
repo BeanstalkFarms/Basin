@@ -4,6 +4,7 @@
 
 pragma solidity ^0.8.17;
 
+import "oz/security/ReentrancyGuard.sol";
 import "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 import "src/interfaces/IWell.sol";
@@ -37,7 +38,8 @@ contract Well is
     IWell,
     ImmutableTokens,
     ImmutableWellFunction,
-    ImmutablePump
+    ImmutablePump,
+    ReentrancyGuard
 {
     /// @dev see {IWell.initialize}
     constructor(
@@ -52,6 +54,7 @@ contract Well is
         ImmutableTokens(_tokens)
         ImmutableWellFunction(_function)
         ImmutablePump(_pump)
+        ReentrancyGuard()
     {
         if (_pump.target != address(0)) 
             IPump(_pump.target).attach(_pump.data, _tokens.length);
@@ -105,7 +108,7 @@ contract Well is
         uint amountIn,
         uint minAmountOut,
         address recipient
-    ) external returns (uint amountOut) {
+    ) external nonReentrant returns (uint amountOut) {
         amountOut = uint(
             updatePumpsAndgetSwap(
                 fromToken,
@@ -124,7 +127,7 @@ contract Well is
         uint maxAmountIn,
         uint amountOut,
         address recipient
-    ) external returns (uint amountIn) {
+    ) external nonReentrant returns (uint amountIn) {
         amountIn = uint(
             -updatePumpsAndgetSwap(
                 toToken,
@@ -217,7 +220,7 @@ contract Well is
         uint[] memory tokenAmountsIn,
         uint minAmountOut,
         address recipient
-    ) external returns (uint amountOut) {
+    ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = pumpBalances(_tokens);
         for (uint i; i < _tokens.length; ++i) {
@@ -256,7 +259,7 @@ contract Well is
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
         address recipient
-    ) external returns (uint[] memory tokenAmountsOut) {
+    ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = pumpBalances(_tokens);
         uint lpTokenSupply = totalSupply();
@@ -298,7 +301,7 @@ contract Well is
         uint lpAmountIn,
         uint minTokenAmountOut,
         address recipient
-    ) external returns (uint tokenAmountOut) {
+    ) external nonReentrant returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = pumpBalances(_tokens);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
@@ -356,7 +359,7 @@ contract Well is
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
         address recipient
-    ) external returns (uint lpAmountIn) {
+    ) external nonReentrant returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = pumpBalances(_tokens);
         lpAmountIn = _getRemoveLiquidityImbalanced(

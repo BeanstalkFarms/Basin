@@ -5,6 +5,7 @@ pragma solidity ^0.8.17;
 import "src/interfaces/IWellBuilder.sol";
 import "src/Well.sol";
 import "src/libraries/LibContractInfo.sol";
+import "oz/security/ReentrancyGuard.sol";
 import "oz/utils/math/SafeCast.sol";
 
 /**
@@ -15,10 +16,12 @@ import "oz/utils/math/SafeCast.sol";
  * Wells can be permissionlessly built given tokens, a well function and optionally a pump.
  **/
 
-contract WellBuilder is IWellBuilder {
+contract WellBuilder is IWellBuilder, ReentrancyGuard {
 
     using LibContractInfo for address;
     using SafeCast for uint;
+
+    constructor() ReentrancyGuard() {}
 
     /// @dev see {IWellBuilder.buildWell}
     /// tokens in Well info struct must be alphabetically sorted
@@ -26,7 +29,7 @@ contract WellBuilder is IWellBuilder {
         IERC20[] calldata tokens,
         Call calldata wellFunction,
         Call calldata pump
-    ) external payable returns (address well) {
+    ) external nonReentrant payable returns (address well) {
         for (uint i; i < tokens.length - 1; i++) {
             require(
                 tokens[i] < tokens[i + 1],
