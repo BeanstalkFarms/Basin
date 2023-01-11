@@ -56,12 +56,12 @@ interface IWell {
     /**
      * @notice Emitted when liquidity is removed from the well to a single token
      * @param lpAmountIn The amount of LP tokens burned
-     * @param token The token received
+     * @param tokenOut The token received
      * @param tokenAmountOut The amount of token received
      */
     event RemoveLiquidityOneToken(
         uint lpAmountIn,
-        IERC20 token,
+        IERC20 tokenOut,
         uint tokenAmountOut
     );
 

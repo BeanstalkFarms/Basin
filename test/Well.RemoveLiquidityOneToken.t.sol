@@ -7,7 +7,11 @@ import "test/TestHelper.sol";
 
 contract RemoveLiquidityOneTokenTest is TestHelper {
 
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 token, uint tokenAmountOut);
+    event RemoveLiquidityOneToken(
+        uint lpAmountIn,
+        IERC20 tokenOut,
+        uint tokenAmountOut
+    );
 
     function setUp() public {
         setupWell(2);
