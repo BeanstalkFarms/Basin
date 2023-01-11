@@ -130,11 +130,11 @@ interface IWell {
     ) external view returns (uint amountIn);
 
     /**
-     * @notice Calcuates the amount of toToken received from swapping amountIn of fromToken
+     * @notice Calculates the `amountOut` of `toToken` received for `amountIn` of `fromToken` during a swap.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
-     * @param amountIn The exact amount of fromToken to swap
-     * @return amountOut The amount of toToken received from swapping amountIn of fromToken
+     * @param amountIn The amount of `fromToken` to swap
+     * @return amountOut The amount of `toToken` received for swapping `amountIn` of `fromToken`
      */
     function getSwapOut(
         IERC20 fromToken,
