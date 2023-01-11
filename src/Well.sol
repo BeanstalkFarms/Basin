@@ -405,7 +405,7 @@ contract Well is
         return totalSupply() - getLpTokenSupply(wellFunction(), balances);
     }
 
-    /// @dev returns the balances of the well and updates the pumps
+    /// @dev Fetches the current balances of the Well and updates the Pump.
     function pumpBalances(IERC20[] memory _tokens)
         internal
         returns (uint[] memory balances)
@@ -414,7 +414,7 @@ contract Well is
         updatePump(balances);
     }
 
-    /// @dev updates the pumps with the previous balances
+    /// @dev Updates the Pump with the previous balances.
     function updatePump(uint[] memory balances)
         internal
     {
@@ -422,7 +422,8 @@ contract Well is
             IPump(pumpAddress()).update(pumpBytes(), balances);
     }
 
-    /// @dev returns the balances of the tokens by calling balanceOf on each token
+    /// @dev Returns the Well's balances of `_tokens` by calling {balanceOf} on 
+    /// each token.
     function getBalances(IERC20[] memory _tokens)
         internal
         view
@@ -433,28 +434,36 @@ contract Well is
             balances[i] = _tokens[i].balanceOf(address(this));
     }
 
-    /// @dev gets the jth balance given a list of balances and LP token supply.
-    /// wraps the getLpTokenSupply function in the well function contract
+    /// @dev Gets the jth balance given a list of balances and LP token supply.
+    /// Wraps {IWellFunction.getLpTokenSupply}.
     function getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
         internal
         view
         returns (uint lpTokenSupply)
     {
-        lpTokenSupply = IWellFunction(_wellFunction.target).getLpTokenSupply(_wellFunction.data, balances);
+        lpTokenSupply = IWellFunction(_wellFunction.target).getLpTokenSupply(
+            _wellFunction.data,
+            balances
+        );
     }
 
-    /// @dev gets the LP token supply given a list of balances.
-    /// wraps the getBalance function in the well function contract
+    /// @dev Gets the LP token supply given a list of balances.
+    /// Wraps {IWellFunction.getBalance}.
     function getBalance(
         Call memory wf,
         uint[] memory balances,
         uint j,
         uint lpTokenSupply
     ) internal view returns (uint balance) {
-        balance = IWellFunction(wf.target).getBalance(wf.data, balances, j, lpTokenSupply);
+        balance = IWellFunction(wf.target).getBalance(
+            wf.data,
+            balances,
+            j,
+            lpTokenSupply
+        );
     }
 
-    /// @dev returns the index of fromToken and toToken in tokens
+    /// @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
     function getIJ(
         IERC20[] memory _tokens,
         IERC20 iToken,
@@ -466,7 +475,7 @@ contract Well is
         }
     }
 
-    /// @dev returns the index of token in tokens
+    /// @dev Returns the index of `iToken` in `_tokens`.
     function getJ(IERC20[] memory _tokens, IERC20 iToken)
         internal
         pure
