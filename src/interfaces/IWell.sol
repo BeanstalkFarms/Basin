@@ -186,7 +186,7 @@ interface IWell {
     ) external returns (uint[] memory tokenAmountsOut);
 
     /**
-     * @notice Calculates the amounts of tokens to receive from removing liquidity in a balanced ratio
+     * @notice Calculates the amounts of tokens received from removing liquidity in a balanced ratio
      * @param lpAmountIn The exact amount of LP tokens to burn
      * @return tokenAmountsOut The amounts of tokens received from removing liquidity in a balanced ratio
      */
