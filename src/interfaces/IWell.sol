@@ -38,14 +38,20 @@ interface IWell {
      * @param tokenAmountsIn The amounts of tokens added
      * @param lpAmountOut The amount of LP tokens minted
      */
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
+    event AddLiquidity(
+        uint[] tokenAmountsIn,
+        uint lpAmountOut
+    );
 
     /**
      * @notice Emitted when liquidity is removed from the well
      * @param lpAmountIn The amount of LP tokens burned
      * @param tokenAmountsOut The amounts of tokens received
      */
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
+    event RemoveLiquidity(
+        uint lpAmountIn,
+        uint[] tokenAmountsOut
+    );
     
     /**
      * @notice Emitted when liquidity is removed from the well to a single token
@@ -53,7 +59,11 @@ interface IWell {
      * @param token The token received
      * @param tokenAmountOut The amount of token received
      */
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 token, uint tokenAmountOut);
+    event RemoveLiquidityOneToken(
+        uint lpAmountIn,
+        IERC20 token,
+        uint tokenAmountOut
+    );
 
     /**
      * @notice returns the tokens of the well
