@@ -230,7 +230,7 @@ interface IWell {
 
 
     /**
-     * @notice Removes liquidity from the Well in any ratio of all tokens
+     * @notice Removes liquidity from the Well in any amounts of all tokens
      * @param maxLpAmountIn The maximum amount of LP tokens to burn
      * @param tokenAmountsOut The exact amounts of tokens to receive. The order should match the order of the tokens in the Well
      * @return lpAmountIn The amount of LP tokens burned
@@ -244,7 +244,7 @@ interface IWell {
     /**
      * @notice Calculates the amount of LP tokens to burn to remove liquidity in any amounts of all tokens
      * @param tokenAmountsOut The exact amounts of tokens to receive. The order should match the order of the tokens in the Well
-     * @return lpAmountIn The amount of LP tokens burned from removing liquidity in exchange for any amounts of all tokens
+     * @return lpAmountIn The amount of LP tokens burned
      */
     function getRemoveLiquidityImbalanced(
         uint[] calldata tokenAmountsOut
