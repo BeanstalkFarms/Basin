@@ -71,7 +71,7 @@ interface IWell {
     function tokens() external view returns (IERC20[] memory);
 
     /**
-     * @notice returns the pump of the Well
+     * @notice returns the Pump of the Well
      */
     function pump() external view returns (Call memory);
 
