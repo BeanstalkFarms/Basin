@@ -434,7 +434,7 @@ contract Well is
             balances[i] = _tokens[i].balanceOf(address(this));
     }
 
-    /// @dev Gets the jth balance given a list of balances and LP token supply.
+    /// @dev Gets the LP token supply given a list of `balances`.
     /// Wraps {IWellFunction.getLpTokenSupply}.
     function getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
         internal
@@ -447,7 +447,7 @@ contract Well is
         );
     }
 
-    /// @dev Gets the LP token supply given a list of balances.
+    /// @dev Gets the jth balance given a list of `balances` and `lpTokenSupply`.
     /// Wraps {IWellFunction.getBalance}.
     function getBalance(
         Call memory wf,
