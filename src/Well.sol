@@ -461,12 +461,11 @@ contract Well is
     }
 
     /// @dev returns the index of token in tokens
-    function getJ(IERC20[] memory _tokens, IERC20 iToken)
+    function getJ(IERC20[] memory _tokens, IERC20 jToken)
         internal
         pure
-        returns (uint i)
+        returns (uint j)
     {
-        for (uint k; k < _tokens.length; ++k)
-            if (iToken == _tokens[i]) return k;
+        for (j; jToken != _tokens[j]; ++j) {}
     }
 }

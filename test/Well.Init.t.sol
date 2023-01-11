@@ -13,21 +13,7 @@ contract WellInitTest is TestHelper {
 
     function setUp() public {
         setupWell(2);
-        // TODO: add name/symbol tests
     }
-
-    // function testWellInfo() public {
-    //     WellInfo memory wi = well.wellInfo();
-    //     for (uint i = 0; i < tokens.length; i++)
-    //         assertEq(address(wi.tokens[i]), address(tokens[i]));
-    //     for (uint i = 0; i < pumps.length; i++) {
-    //         assertEq(wi.pumps[i].target, pumps[i].target);
-    //         assertEq(wi.pumps[i].data, pumps[i].data);
-    //     }
-    //     console.log(wi.wellFunction.target);
-    //     assertEq(wi.wellFunction.target, wellFunction.target);
-    //     assertEq(wi.wellFunction.data, wellFunction.data);
-    // }
 
     function testTokens() public {
         IERC20[] memory wellTokens = well.tokens();

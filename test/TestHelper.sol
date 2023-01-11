@@ -9,6 +9,7 @@ import "oz/utils/Strings.sol";
 import "src/Well.sol";
 import "src/WellBuilder.sol";
 import "src/functions/ConstantProduct2.sol";
+import "src/functions/ConstantProduct.sol";
 
 import "mocks/tokens/MockToken.sol";
 import "utils/Users.sol";
@@ -21,9 +22,9 @@ abstract contract TestHelper is Test {
     WellBuilder wellBuilder;
     Well well;
 
-    using Strings for uint256;
+    using Strings for uint;
 
-    function setupWell(uint256 n) internal {
+    function setupWell(uint n) internal {
         initUser();
         deployMockTokens(n);
         wellBuilder = new WellBuilder();
@@ -40,10 +41,9 @@ abstract contract TestHelper is Test {
         user = users.getNextUserAddress();
     }
 
-    function deployMockTokens(uint256 n) internal {
+    function deployMockTokens(uint n) internal {
         IERC20[] memory _tokens = new IERC20[](n);
-        console2.log(n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint i = 0; i < n; i++) {
             IERC20 temp = IERC20(
                 new MockToken(
                     string.concat("Token ", i.toString()),
@@ -51,25 +51,25 @@ abstract contract TestHelper is Test {
                     18
                 )
             );
-            uint256 j;
+            uint j;
             if (i > 0) {
                 for (j = i; j >= 1 && temp < _tokens[j - 1]; j--)
                     _tokens[j] = _tokens[j - 1];
                 _tokens[j] = temp;
             } else _tokens[0] = temp;
         }
-        for (uint256 i = 0; i < n; i++) tokens.push(_tokens[i]);
+        for (uint i = 0; i < n; i++) tokens.push(_tokens[i]);
     }
 
-    function mintTokens(address recipient, uint256 amount) internal {
-        for (uint256 i = 0; i < tokens.length; i++)
+    function mintTokens(address recipient, uint amount) internal {
+        for (uint i = 0; i < tokens.length; i++)
             MockToken(address(tokens[i])).mint(recipient, amount);
     }
 
     function approveMaxTokens(address owner, address spender) internal {
         vm.startPrank(owner);
-        for (uint256 i = 0; i < tokens.length; i++)
-            tokens[i].approve(spender, type(uint256).max);
+        for (uint i = 0; i < tokens.length; i++)
+            tokens[i].approve(spender, type(uint).max);
         vm.stopPrank();
     }
 
@@ -79,10 +79,10 @@ abstract contract TestHelper is Test {
         return well;
     }
 
-    function addLiquidtyEqualAmount(address from, uint256 amount) internal {
+    function addLiquidtyEqualAmount(address from, uint amount) internal {
         vm.startPrank(from);
-        uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) amounts[i] = amount;
+        uint[] memory amounts = new uint[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
         well.addLiquidity(amounts, 0, from);
         vm.stopPrank();
     }
@@ -93,13 +93,13 @@ abstract contract TestHelper is Test {
         vm.stopPrank();
     }
 
-    function getTokens(uint256 n)
+    function getTokens(uint n)
         internal
         view
         returns (IERC20[] memory _tokens)
     {
         _tokens = new IERC20[](n);
-        for (uint256 i; i < n; ++i) {
+        for (uint i; i < n; ++i) {
             _tokens[i] = tokens[i];
         }
     }
