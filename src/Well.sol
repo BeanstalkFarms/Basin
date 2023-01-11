@@ -18,19 +18,25 @@ import "src/utils/ImmutableWellFunction.sol";
 /**
  * @author Publius
  * @title Well
- * @dev
- * A Well serves as an constant function AMM allowing the provisioning of liquidity into a single pooled on-chain liquidity position.
- * Each Well has tokens, a pricing function, and a pump.
+ * @dev A Well is a constant function AMM allowing the provisioning of liquidity
+ * into a single pooled on-chain liquidity position.
+
+ * Each Well has tokens, a pricing function, and a Pump.
  * - Tokens defines the set of tokens that can be exchanged in the pool.
- * - The pricing function defines an invariant relationship between the balances of the tokens in the pool and the number of LP tokens. See {IWellFunction}
- * - Pumps are on-chain oracles that are updated every time the pool is interacted with. See {IPump}. Including a Pump is optional.
- *   Only 1 Pump can be attached to a Well, but a Pump can call other Pumps, allowing multiple Pumps to be used.
- * a Well's tokens, well function and pump are stored as immutable variables to prevent unnessary SLOAD calls.
+ * - The pricing function defines an invariant relationship between the balances
+ *   of the tokens in the pool and the number of LP tokens. See {IWellFunction}.
+ * - Pumps are on-chain oracles that are updated every time the pool is
+ *   interacted with. See {IPump}.
+ * 
+ * Including a Pump is optional. Only 1 Pump can be attached to a Well, but a
+ * Pump can call other Pumps, allowing multiple Pumps to be used.
+ * 
+ * A Well's tokens, pricing function, and Pump are stored as immutable variables
+ * to prevent unnessary SLOAD calls.
  * 
  * Users can swap tokens in and add/remove liquidity to a Well.
  *
  * Implementation of ERC-20, ERC-2612 and {IWell} interface.
- *
  **/
 
 contract Well is
