@@ -146,7 +146,13 @@ contract Well is
                 -int(maxAmountIn)
             )
         );
-        _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
+        _executeSwap(
+            fromToken,
+            toToken,
+            amountIn,
+            amountOut,
+            recipient
+        );
     }
 
     /// @dev see {IWell.getSwapIn}
@@ -155,7 +161,13 @@ contract Well is
         IERC20 toToken,
         uint amountOut
     ) external view returns (uint amountIn) {
-        amountIn = uint(-getSwap(toToken, fromToken, -int(amountOut)));
+        amountIn = uint(
+            -getSwap(
+                toToken,
+                fromToken,
+                -int(amountOut)
+            )
+        );
     }
 
     /// @dev see {IWell.getSwapOut}
@@ -164,7 +176,13 @@ contract Well is
         IERC20 toToken,
         uint amountIn
     ) external view returns (uint amountOut) {
-        amountOut = uint(getSwap(fromToken, toToken, int(amountIn)));
+        amountOut = uint(
+            getSwap(
+                fromToken,
+                toToken,
+                int(amountIn)
+            )
+        );
     }
 
     /// @dev low level swap function. Fetches balances, indexes of tokens and returns swap output.
@@ -204,8 +222,17 @@ contract Well is
         int amountIn
     ) public view returns (int amountOut) {
         Call memory _wellFunction = wellFunction();
-        balances[i] = amountIn > 0 ? balances[i] + uint(amountIn) : balances[i] - uint(-amountIn);
-        amountOut = int(balances[j]) - int(getBalance(_wellFunction, balances, j, totalSupply()));
+        balances[i] = amountIn > 0 
+            ? balances[i] + uint(amountIn) 
+            : balances[i] - uint(-amountIn);
+        amountOut = int(balances[j]) - int(
+            getBalance(
+                _wellFunction,
+                balances,
+                j,
+                totalSupply()
+            )
+        );
     }
 
     /// @dev executes token transfers and emits Swap event.
@@ -356,7 +383,12 @@ contract Well is
     ) private view returns (uint tokenAmountOut) {
         uint j = getJ(_tokens, token);
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
-        uint newBalanceJ = getBalance(wellFunction(), balances, j, newLpTokenSupply);
+        uint newBalanceJ = getBalance(
+            wellFunction(),
+            balances,
+            j,
+            newLpTokenSupply
+        );
         tokenAmountOut = balances[j] - newBalanceJ;
     }
 
