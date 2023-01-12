@@ -38,7 +38,6 @@ import "src/utils/ImmutableWellFunction.sol";
  *
  * Implementation of ERC-20, ERC-2612 and {IWell} interface.
  **/
-
 contract Well is
     ERC20Permit,
     IWell,
@@ -486,13 +485,13 @@ contract Well is
     /// @dev Gets the jth balance given a list of `balances` and `lpTokenSupply`.
     /// Wraps {IWellFunction.getBalance}.
     function getBalance(
-        Call memory wf,
+        Call memory _wellFunction,
         uint[] memory balances,
         uint j,
         uint lpTokenSupply
     ) internal view returns (uint balance) {
-        balance = IWellFunction(wf.target).getBalance(
-            wf.data,
+        balance = IWellFunction(_wellFunction.target).getBalance(
+            _wellFunction.data,
             balances,
             j,
             lpTokenSupply
