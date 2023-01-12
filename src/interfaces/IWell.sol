@@ -66,19 +66,29 @@ interface IWell {
     );
 
     /**
-     * @notice returns the tokens of the Well
+     * @notice Returns the tokens of the Well.
      */
     function tokens() external view returns (IERC20[] memory);
 
     /**
-     * @notice returns the Pump of the Well
+     * @notice Returns the Well function.
+     */
+    function wellFunction() external view returns (Call memory);
+
+    /**
+     * @notice Returns the Pump of the Well.
      */
     function pump() external view returns (Call memory);
 
     /**
-     * @notice returns the Well function
+     * @notice Returns all three defining components of the Well:
+     * tokens, wellFunction, and Pump.
      */
-    function wellFunction() external view returns (Call memory);
+    function well() external view returns (
+        IERC20[] memory _tokens,
+        Call memory _wellFunction,
+        Call memory _pump
+    );
 
     /**
      * Swap
