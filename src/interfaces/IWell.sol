@@ -211,13 +211,13 @@ interface IWell {
 
     /**
      * @notice Removes liquidity from the Well in exchange for one token in the Well
-     * @param token The token to remove liquidity to
+     * @param tokenOut The token to remove liquidity to
      * @param lpAmountIn The exact amount of LP tokens to burn
      * @param minTokenAmountOut The minimum amount of `token` to receive
      * @return tokenAmountOut The amount of `token` received
      */
     function removeLiquidityOneToken(
-        IERC20 token,
+        IERC20 tokenOut,
         uint lpAmountIn,
         uint minTokenAmountOut,
         address recipient

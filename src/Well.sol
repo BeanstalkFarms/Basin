@@ -334,7 +334,7 @@ contract Well is
 
     /// @dev see {IWell.removeLiquidityOneToken}
     function removeLiquidityOneToken(
-        IERC20 token,
+        IERC20 tokenOut,
         uint lpAmountIn,
         uint minTokenAmountOut,
         address recipient
@@ -343,15 +343,15 @@ contract Well is
         uint[] memory balances = pumpBalances(_tokens);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             _tokens,
-            token,
+            tokenOut,
             balances,
             lpAmountIn
         );
         require(tokenAmountOut >= minTokenAmountOut, "Well: slippage");
 
         _burn(msg.sender, lpAmountIn);
-        token.transfer(recipient, tokenAmountOut);
-        emit RemoveLiquidityOneToken(lpAmountIn, token, tokenAmountOut);
+        tokenOut.transfer(recipient, tokenAmountOut);
+        emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
 
         // todo: decide on event signature.
         // uint[] memory tokenAmounts = new uint[](w.tokens.length);
