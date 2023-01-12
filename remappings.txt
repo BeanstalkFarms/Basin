@@ -1,4 +1,4 @@
-prb/math/=lib/prb-test/src/
+prb/math/=lib/prb-math/src/
 forge-std/=lib/forge-std/src/
 oz/=lib/openzeppelin-contracts/contracts
 ozu/=lib/openzeppelin-contracts-upgradeable/contracts
