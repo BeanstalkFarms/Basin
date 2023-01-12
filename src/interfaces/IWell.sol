@@ -217,8 +217,8 @@ interface IWell {
      * @return tokenAmountOut The amount of `token` received
      */
     function removeLiquidityOneToken(
-        IERC20 tokenOut,
         uint lpAmountIn,
+        IERC20 tokenOut,
         uint minTokenAmountOut,
         address recipient
     ) external returns (uint tokenAmountOut);

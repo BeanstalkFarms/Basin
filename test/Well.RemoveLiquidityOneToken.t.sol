@@ -30,7 +30,7 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut);
 
-        uint amountOut = well.removeLiquidityOneToken(tokens[0], lpAmountIn, minTokenAmountOut, user);
+        uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
         assertEq(well.balanceOf(user), 1000 * 1e18);
 
@@ -46,6 +46,6 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
         uint minTokenAmountOut = 876 * 1e18;
 
         vm.expectRevert("Well: slippage");
-        well.removeLiquidityOneToken(tokens[0], lpAmountIn, minTokenAmountOut, user);
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
     }
 }
