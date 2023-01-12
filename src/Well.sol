@@ -66,13 +66,6 @@ contract Well is
             IPump(_pump.target).attach(_pump.data, _tokens.length);
     }
 
-    /// @dev see {IWell.well}
-    function well() external view returns (IERC20[] memory _tokens, Call memory _wellFunction, Call memory _pump) {
-        _tokens = tokens();
-        _wellFunction = wellFunction();
-        _pump = pump();
-    }
-
     /// @dev see {IWell.tokens}
     function tokens()
         public
@@ -81,6 +74,16 @@ contract Well is
         returns (IERC20[] memory ts)
     {
         ts = ImmutableTokens.tokens();
+    }
+
+    /// @dev see {IWell.wellFunction}
+    function wellFunction()
+        public
+        view
+        override(IWell, ImmutableWellFunction)
+        returns (Call memory)
+    {
+        return ImmutableWellFunction.wellFunction();
     }
 
     /// @dev see {IWell.pump}
@@ -93,14 +96,15 @@ contract Well is
         return ImmutablePump.pump();
     }
 
-    /// @dev see {IWell.wellFunction}
-    function wellFunction()
-        public
-        view
-        override(IWell, ImmutableWellFunction)
-        returns (Call memory)
-    {
-        return ImmutableWellFunction.wellFunction();
+    /// @dev see {IWell.well}
+    function well() external view returns (
+        IERC20[] memory _tokens,
+        Call memory _wellFunction,
+        Call memory _pump
+    ) {
+        _tokens = tokens();
+        _wellFunction = wellFunction();
+        _pump = pump();
     }
 
     /**
