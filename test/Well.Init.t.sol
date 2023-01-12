@@ -15,19 +15,48 @@ contract WellInitTest is TestHelper {
         setupWell(2);
     }
 
+    //////////// Well Definition ////////////
+
     function testTokens() public {
-        IERC20[] memory wellTokens = well.tokens();
+        _testTokens(well.tokens());
+    }
+    function _testTokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
-            console.log(address(wellTokens[i]));
-            assertEq(address(wellTokens[i]), address(tokens[i]));
+            console.log(address(_wellTokens[i]));
+            assertEq(address(_wellTokens[i]), address(tokens[i]));
         }
+    }
+ 
+    function testWellFunction() public {
+        _testWellFunction(well.wellFunction());
+    }
+    function _testWellFunction(Call memory _wellFunction) private {
+        assertEq(_wellFunction.target, wellFunction.target);
+        assertEq(_wellFunction.data, wellFunction.data);
     }
 
     function testPumps() public {
-        Call memory wellPump = well.pump();
-        assertEq(wellPump.target, pump.target);
-        assertEq(wellPump.data, pump.data);
+        Call memory _wellPump = well.pump();
+        _testPumps(_wellPump);
     }
+    function _testPumps(Call memory _wellPump) private {
+        assertEq(_wellPump.target, pump.target);
+        assertEq(_wellPump.data, pump.data);
+    }
+
+    function testWell() public {
+        (
+            IERC20[] memory _wellTokens,
+            Call memory _wellFunction,
+            Call memory _wellPump
+        ) = well.well();
+        
+        _testTokens(_wellTokens);
+        _testWellFunction(_wellFunction);
+        _testPumps(_wellPump);
+    }
+
+    //////////// ERC20 Token ////////////
 
     function testName() public {
         assertEq(well.name(), "TOKEN0:TOKEN1 Constant Product Well");

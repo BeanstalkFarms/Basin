@@ -16,9 +16,11 @@ import "utils/Users.sol";
 
 abstract contract TestHelper is Test {
     address user;
+
     IERC20[] tokens;
     Call pump;
     Call wellFunction;
+    
     WellBuilder wellBuilder;
     Well well;
 
