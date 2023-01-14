@@ -23,6 +23,7 @@ contract ImmutableTest is TestHelper, RandomBytes {
         nWellFunction = nWellFunction / 64;
         nTokens = nTokens / 16;
         if (nTokens < 2) nTokens = 2;
+
         bytes memory pumpBytes = getRandomBytes(nPump);
         bytes memory wellFunctionBytes = getRandomBytes(nWellFunction);
         address wellFunction = address(new ConstantProduct2());
@@ -35,11 +36,11 @@ contract ImmutableTest is TestHelper, RandomBytes {
 
         assertEq(_well.pump().target, address(0));
         assertEq(_well.pump().data, pumpBytes);
-        assertEq(_well.wellFunction().data, wellFunctionBytes);
+
         assertEq(_well.wellFunction().target, wellFunction);
+        assertEq(_well.wellFunction().data, wellFunctionBytes);
 
         IERC20[] memory _tokens = _well.tokens();
-
         for (uint i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));
         }
