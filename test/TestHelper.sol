@@ -17,9 +17,9 @@ import "utils/Users.sol";
 abstract contract TestHelper is Test {
     address user;
 
-    IERC20[] tokens;
-    Call pump;
-    Call wellFunction;
+    IERC20[] tokens; // Mock token addresses sorted lexicographically
+    Call pump; // Instantiated during upstream test
+    Call wellFunction; // Instantated during {deployWell}
     
     WellBuilder wellBuilder;
     Well well;
@@ -48,11 +48,12 @@ abstract contract TestHelper is Test {
         for (uint i = 0; i < n; i++) {
             IERC20 temp = IERC20(
                 new MockToken(
-                    string.concat("Token ", i.toString()),
-                    string.concat("TOKEN", i.toString()),
-                    18
+                    string.concat("Token ", i.toString()), // name
+                    string.concat("TOKEN", i.toString()), // symbol
+                    18 // decimals
                 )
             );
+            // Insertion sort
             uint j;
             if (i > 0) {
                 for (j = i; j >= 1 && temp < _tokens[j - 1]; j--)

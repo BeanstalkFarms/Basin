@@ -15,8 +15,7 @@ import "oz/utils/math/SafeCast.sol";
  * Well Builder is an instance of a Well factory and Well registry.
  * Wells can be permissionlessly built given tokens, a well function and optionally a pump.
  * Wells are index by order of creation, each pair of 2 tokens, and all the tokens in a Well.
- **/
-
+ */
 contract WellBuilder is IWellBuilder, ReentrancyGuard {
 
     using LibContractInfo for address;

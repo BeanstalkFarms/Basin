@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-contract WellInfoTest is TestHelper {
+contract WellBuilderTest is TestHelper {
 
     address[] wells;
 

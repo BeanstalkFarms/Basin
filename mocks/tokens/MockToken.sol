@@ -17,8 +17,8 @@ contract MockToken is ERC20Burnable, ERC20Permit {
     uint8 private _decimals = 18;
 
     constructor(string memory name, string memory symbol, uint8 __decimals)
-    ERC20(name, symbol)
-    ERC20Permit(name)
+        ERC20(name, symbol)
+        ERC20Permit(name)
     {
         _decimals = __decimals;
     }
