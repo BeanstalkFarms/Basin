@@ -46,7 +46,17 @@ contract Well is
     ImmutablePump,
     ReentrancyGuard
 {
-    /// @dev see {IWell.initialize}
+    /// @dev Construct a Well. Each Well is defined by its combination of
+    /// ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`). 
+    ///
+    /// For gas efficiency, these three components are placed in immutable
+    /// storage during construction. 
+    /// 
+    /// {ImmutableTokens.sol} stores up to 16 immutable token addresses.
+    /// {ImmutableWellFunction.sol} stores an immutable Well function {Call} struct.
+    /// {ImmutablePump.sol} stores an immutable Pump {Call} struct.
+    ///
+    /// Usage of a Pump is optional: set `_pump.target` to address(0) to disable.
     constructor(
         IERC20[] memory _tokens,
         Call memory _function,
@@ -64,6 +74,8 @@ contract Well is
         if (_pump.target != address(0)) 
             IPump(_pump.target).attach(_pump.data, _tokens.length);
     }
+
+    //////////// WELL DEFINITION ////////////
 
     /// @dev see {IWell.tokens}
     function tokens()
@@ -106,9 +118,7 @@ contract Well is
         _pump = pump();
     }
 
-    /**
-     * Swap
-     **/
+    //////////// SWAP ////////////
 
     /// @dev see {IWell.swapFrom}
     function swapFrom(
@@ -222,9 +232,7 @@ contract Well is
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
 
-    /**
-     * Add Liquidity
-     **/
+    //////////// ADD LIQUIDITY ////////////
 
     /// @dev see {IWell.addLiquidity}
     function addLiquidity(
@@ -261,9 +269,7 @@ contract Well is
         amountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
     }
 
-    /**
-     * Remove Liquidity
-     **/
+    //////////// REMOVE LIQUIDITY: BALANCED ////////////
 
     /// @dev see {IWell.removeLiquidity}
     function removeLiquidity(
@@ -302,9 +308,7 @@ contract Well is
         }
     }
 
-    /**
-     * Remove Liquidity One Token
-     **/
+    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
 
     /// @dev see {IWell.removeLiquidityOneToken}
     function removeLiquidityOneToken(
@@ -366,9 +370,7 @@ contract Well is
         tokenAmountOut = balances[j] - newBalanceJ;
     }
 
-    /**
-     * Remove Liquidity Imbalanced
-     **/
+    //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
     /// @dev see {IWell.removeLiquidityImbalanced}
     function removeLiquidityImbalanced(
@@ -415,7 +417,10 @@ contract Well is
         return totalSupply() - getLpTokenSupply(wellFunction(), balances);
     }
 
+    //////////// UPDATE PUMP ////////////
+
     /// @dev Fetches the current balances of the Well and updates the Pump.
+    /// Typically called before an operation that modifies the Well's balances.
     function pumpBalances(IERC20[] memory _tokens)
         internal
         returns (uint[] memory balances)
@@ -424,7 +429,7 @@ contract Well is
         updatePump(balances);
     }
 
-    /// @dev Updates the Pump with the previous balances.
+    /// @dev If a Pump is attached, update it with `balances`.
     function updatePump(uint[] memory balances)
         internal
     {
@@ -432,8 +437,10 @@ contract Well is
             IPump(pumpAddress()).update(pumpBytes(), balances);
     }
 
-    /// @dev Returns the Well's balances of `_tokens` by calling {balanceOf} on 
-    /// each token.
+    //////////// WELL TOKEN & LP TOKEN BALANCES ////////////
+
+    /// @dev Returns the Well's balances of `_tokens` by calling the ERC-20 
+    /// {balanceOf} method on each token.
     function getBalances(IERC20[] memory _tokens)
         internal
         view
@@ -472,6 +479,8 @@ contract Well is
             lpTokenSupply
         );
     }
+
+    //////////// WELL TOKEN INDEXING ////////////
 
     /// @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
     function getIJ(
