@@ -7,14 +7,63 @@ pragma solidity ^0.8.17;
 import "oz/token/ERC20/IERC20.sol";
 
 contract ImmutableTokens {
-
     uint private constant MAX_TOKENS = 16;
     IERC20 private constant NULL_TOKEN = IERC20(address(0));
 
+    uint private immutable _numberOfTokens;
+    IERC20 private immutable _token0;
+    IERC20 private immutable _token1;
+    IERC20 private immutable _token2;
+    IERC20 private immutable _token3;
+    IERC20 private immutable _token4;
+    IERC20 private immutable _token5;
+    IERC20 private immutable _token6;
+    IERC20 private immutable _token7;
+    IERC20 private immutable _token8;
+    IERC20 private immutable _token9;
+    IERC20 private immutable _token10;
+    IERC20 private immutable _token11;
+    IERC20 private immutable _token12;
+    IERC20 private immutable _token13;
+    IERC20 private immutable _token14;
+    IERC20 private immutable _token15;
+
+    /**
+     * @dev During {Well} construction, the tokens array is copied into 
+     * immutable storage slots for gas efficiency.
+     */
+    constructor(IERC20[] memory _tokens) {
+        require(_tokens.length <= MAX_TOKENS, "Too many tokens");
+        _numberOfTokens = _tokens.length;
+        _token0 = getTokenFromList(0, _tokens);
+        _token1 = getTokenFromList(1, _tokens);
+        _token2 = getTokenFromList(2, _tokens);
+        _token3 = getTokenFromList(3, _tokens);
+        _token4 = getTokenFromList(4, _tokens);
+        _token5 = getTokenFromList(5, _tokens);
+        _token6 = getTokenFromList(6, _tokens);
+        _token7 = getTokenFromList(7, _tokens);
+        _token8 = getTokenFromList(8, _tokens);
+        _token9 = getTokenFromList(9, _tokens);
+        _token10 = getTokenFromList(10, _tokens);
+        _token11 = getTokenFromList(11, _tokens);
+        _token12 = getTokenFromList(12, _tokens);
+        _token13 = getTokenFromList(13, _tokens);
+        _token14 = getTokenFromList(14, _tokens);
+        _token15 = getTokenFromList(15, _tokens);
+    }
+
+    
+    /**
+     * @dev Return the number of tokens held in immutable storage.
+     */
     function numberOfTokens() public virtual view returns (uint __numberOfTokens) {
         __numberOfTokens = _numberOfTokens;
     }
 
+    /**
+     * @dev Reconstruct tokens array from immutable storage slots & immutable length.
+     */
     function tokens() public virtual view returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](_numberOfTokens);
         if (_numberOfTokens == 0) return _tokens;
@@ -51,6 +100,9 @@ contract ImmutableTokens {
         _tokens[15] = _token15;
     }
 
+    /**
+     * @dev Find the immutable storage slot corresponding to token `i`.
+     */
     function token(uint i) public virtual view returns (IERC20 _token) {
         if (i == 0) _token = _token0;
         else if (i == 1) _token = _token1;
@@ -69,49 +121,13 @@ contract ImmutableTokens {
         else if (i == 14) _token = _token14;
         else if (i == 15) _token = _token15;
     }
-
-    constructor(IERC20[] memory _tokens) {
-        require(_tokens.length <= MAX_TOKENS, "Too many tokens");
-        _numberOfTokens = _tokens.length;
-        _token0 = getTokenFromList(0, _tokens);
-        _token1 = getTokenFromList(1, _tokens);
-        _token2 = getTokenFromList(2, _tokens);
-        _token3 = getTokenFromList(3, _tokens);
-        _token4 = getTokenFromList(4, _tokens);
-        _token5 = getTokenFromList(5, _tokens);
-        _token6 = getTokenFromList(6, _tokens);
-        _token7 = getTokenFromList(7, _tokens);
-        _token8 = getTokenFromList(8, _tokens);
-        _token9 = getTokenFromList(9, _tokens);
-        _token10 = getTokenFromList(10, _tokens);
-        _token11 = getTokenFromList(11, _tokens);
-        _token12 = getTokenFromList(12, _tokens);
-        _token13 = getTokenFromList(13, _tokens);
-        _token14 = getTokenFromList(14, _tokens);
-        _token15 = getTokenFromList(15, _tokens);
-    }
-
+    
+    /**
+     * @dev Attempt to fetch a token `i` from `_tokens`, returning `NULL_TOKEN`
+     * if not present. Used during {ImmutableTokens} construction.
+     */
     function getTokenFromList(uint i, IERC20[] memory _tokens) private pure returns (IERC20 _token) {
         if (i >= _tokens.length) _token = NULL_TOKEN;
         else _token = _tokens[i];
     }
-
-    uint private immutable _numberOfTokens;
-    IERC20 private immutable _token0;
-    IERC20 private immutable _token1;
-    IERC20 private immutable _token2;
-    IERC20 private immutable _token3;
-    IERC20 private immutable _token4;
-    IERC20 private immutable _token5;
-    IERC20 private immutable _token6;
-    IERC20 private immutable _token7;
-    IERC20 private immutable _token8;
-    IERC20 private immutable _token9;
-    IERC20 private immutable _token10;
-    IERC20 private immutable _token11;
-    IERC20 private immutable _token12;
-    IERC20 private immutable _token13;
-    IERC20 private immutable _token14;
-    IERC20 private immutable _token15;
-
 }
