@@ -69,11 +69,9 @@ abstract contract TestHelper is Test {
             MockToken(address(tokens[i])).mint(recipient, amount);
     }
 
-    function approveMaxTokens(address owner, address spender) internal {
-        vm.startPrank(owner);
+    function approveMaxTokens(address owner, address spender) prank(owner) internal {
         for (uint i = 0; i < tokens.length; i++)
             tokens[i].approve(spender, type(uint).max);
-        vm.stopPrank();
     }
 
     function deployWell() internal returns (Well) {
@@ -82,18 +80,10 @@ abstract contract TestHelper is Test {
         return well;
     }
 
-    function addLiquidtyEqualAmount(address from, uint amount) internal {
-        vm.startPrank(from);
+    function addLiquidtyEqualAmount(address from, uint amount) prank(from) internal {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
         well.addLiquidity(amounts, 0, from);
-        vm.stopPrank();
-    }
-
-    modifier prank(address from) {
-        vm.startPrank(from);
-        _;
-        vm.stopPrank();
     }
 
     function getTokens(uint n)
@@ -105,5 +95,11 @@ abstract contract TestHelper is Test {
         for (uint i; i < n; ++i) {
             _tokens[i] = tokens[i];
         }
+    }
+
+    modifier prank(address from) {
+        vm.startPrank(from);
+        _;
+        vm.stopPrank();
     }
 }
