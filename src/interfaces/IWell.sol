@@ -159,12 +159,12 @@ interface IWell {
     /**
      * @notice Adds liquidity to the Well using any amounts of all tokens
      * @param tokenAmountsIn The exact amounts of tokens to add. The order should match the order of the tokens in the Well
-     * @param minAmountOut The minimum amount of LP tokens to receive
+     * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
-        uint minAmountOut,
+        uint minLpAmountOut,
         address recipient
     ) external returns (uint lpAmountOut);
 

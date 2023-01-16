@@ -244,7 +244,7 @@ contract Well is
     /// @dev see {IWell.addLiquidity}
     function addLiquidity(
         uint[] memory tokenAmountsIn,
-        uint minAmountOut,
+        uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
@@ -259,7 +259,7 @@ contract Well is
             balances[i] = balances[i] + tokenAmountsIn[i];
         }
         lpAmountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
-        require(lpAmountOut >= minAmountOut, "Well: slippage");
+        require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
