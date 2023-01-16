@@ -8,7 +8,6 @@ import "src/interfaces/IWell.sol";
 import "src/libraries/LibBytes.sol";
 
 contract ImmutableWellFunction {
-
     using LibBytes for bytes;
 
     uint private constant MAX_SIZE = 32*32;
@@ -51,45 +50,44 @@ contract ImmutableWellFunction {
     bytes32 private immutable _bytes31;
 
     constructor(Call memory _call) {
-
         require(_call.target != address(0), "Target address cannot be zero");
         _address = _call.target;
 
         bytes memory data = _call.data;
         require(data.length <= MAX_SIZE, "Bytes too long");
         numberOfBytes = data.length;
-        _bytes0 = getBytes32FromBytes(0, data);
-        _bytes1 = getBytes32FromBytes(1, data);
-        _bytes2 = getBytes32FromBytes(2, data);
-        _bytes3 = getBytes32FromBytes(3, data);
-        _bytes4 = getBytes32FromBytes(4, data);
-        _bytes5 = getBytes32FromBytes(5, data);
-        _bytes6 = getBytes32FromBytes(6, data);
-        _bytes7 = getBytes32FromBytes(7, data);
-        _bytes8 = getBytes32FromBytes(8, data);
-        _bytes9 = getBytes32FromBytes(9, data);
-        _bytes10 = getBytes32FromBytes(10, data);
-        _bytes11 = getBytes32FromBytes(11, data);
-        _bytes12 = getBytes32FromBytes(12, data);
-        _bytes13 = getBytes32FromBytes(13, data);
-        _bytes14 = getBytes32FromBytes(14, data);
-        _bytes15 = getBytes32FromBytes(15, data);
-        _bytes16 = getBytes32FromBytes(16, data);
-        _bytes17 = getBytes32FromBytes(17, data);
-        _bytes18 = getBytes32FromBytes(18, data);
-        _bytes19 = getBytes32FromBytes(19, data);
-        _bytes20 = getBytes32FromBytes(20, data);
-        _bytes21 = getBytes32FromBytes(21, data);
-        _bytes22 = getBytes32FromBytes(22, data);
-        _bytes23 = getBytes32FromBytes(23, data);
-        _bytes24 = getBytes32FromBytes(24, data);
-        _bytes25 = getBytes32FromBytes(25, data);
-        _bytes26 = getBytes32FromBytes(26, data);
-        _bytes27 = getBytes32FromBytes(27, data);
-        _bytes28 = getBytes32FromBytes(28, data);
-        _bytes29 = getBytes32FromBytes(29, data);
-        _bytes30 = getBytes32FromBytes(30, data);
-        _bytes31 = getBytes32FromBytes(31, data);
+        _bytes0 = data.getBytes32FromBytes(0);
+        _bytes1 = data.getBytes32FromBytes(1);
+        _bytes2 = data.getBytes32FromBytes(2);
+        _bytes3 = data.getBytes32FromBytes(3);
+        _bytes4 = data.getBytes32FromBytes(4);
+        _bytes5 = data.getBytes32FromBytes(5);
+        _bytes6 = data.getBytes32FromBytes(6);
+        _bytes7 = data.getBytes32FromBytes(7);
+        _bytes8 = data.getBytes32FromBytes(8);
+        _bytes9 = data.getBytes32FromBytes(9);
+        _bytes10 = data.getBytes32FromBytes(10);
+        _bytes11 = data.getBytes32FromBytes(11);
+        _bytes12 = data.getBytes32FromBytes(12);
+        _bytes13 = data.getBytes32FromBytes(13);
+        _bytes14 = data.getBytes32FromBytes(14);
+        _bytes15 = data.getBytes32FromBytes(15);
+        _bytes16 = data.getBytes32FromBytes(16);
+        _bytes17 = data.getBytes32FromBytes(17);
+        _bytes18 = data.getBytes32FromBytes(18);
+        _bytes19 = data.getBytes32FromBytes(19);
+        _bytes20 = data.getBytes32FromBytes(20);
+        _bytes21 = data.getBytes32FromBytes(21);
+        _bytes22 = data.getBytes32FromBytes(22);
+        _bytes23 = data.getBytes32FromBytes(23);
+        _bytes24 = data.getBytes32FromBytes(24);
+        _bytes25 = data.getBytes32FromBytes(25);
+        _bytes26 = data.getBytes32FromBytes(26);
+        _bytes27 = data.getBytes32FromBytes(27);
+        _bytes28 = data.getBytes32FromBytes(28);
+        _bytes29 = data.getBytes32FromBytes(29);
+        _bytes30 = data.getBytes32FromBytes(30);
+        _bytes31 = data.getBytes32FromBytes(31);
     }
 
     function wellFunction() public virtual view returns (Call memory _call) {
@@ -235,16 +233,5 @@ contract ImmutableWellFunction {
         temp = _bytes31;
         assembly { mstore(add(_bytes, 1024), temp) }
         return _bytes;
-    }
-
-    function getBytes32FromBytes(uint i, bytes memory data) private pure returns (bytes32 _bytes) {
-        uint index = i * 32;
-        if (index > data.length) {
-            _bytes = ZERO_BYTES;
-        } else {
-            assembly {
-                _bytes := mload(add(add(data, index), 32))
-            }
-        }
     }
 }
