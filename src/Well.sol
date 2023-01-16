@@ -139,6 +139,15 @@ contract Well is
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
+    /// @dev see {IWell.getSwapOut}
+    function getSwapOut(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn
+    ) external view returns (uint amountOut) {
+        amountOut = uint(getSwap(fromToken, toToken, int(amountIn)));
+    }
+
     /// @dev see {IWell.swapTo}
     function swapTo(
         IERC20 fromToken,
@@ -165,15 +174,6 @@ contract Well is
         uint amountOut
     ) external view returns (uint amountIn) {
         amountIn = uint(-getSwap(toToken, fromToken, -int(amountOut)));
-    }
-
-    /// @dev see {IWell.getSwapOut}
-    function getSwapOut(
-        IERC20 fromToken,
-        IERC20 toToken,
-        uint amountIn
-    ) external view returns (uint amountOut) {
-        amountOut = uint(getSwap(fromToken, toToken, int(amountIn)));
     }
 
     /// @dev low level swap function. Fetches balances, indexes of tokens and returns swap output.
