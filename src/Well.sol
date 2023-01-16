@@ -243,6 +243,7 @@ contract Well is
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = pumpBalances(_tokens);
         for (uint i; i < _tokens.length; ++i) {
+            if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].transferFrom(
                 msg.sender,
                 address(this),
