@@ -8,7 +8,6 @@ import "src/interfaces/IWell.sol";
 import "src/libraries/LibBytes.sol";
 
 contract ImmutablePump {
-
     using LibBytes for bytes;
 
     uint private constant MAX_SIZE = 32*32;
@@ -50,7 +49,8 @@ contract ImmutablePump {
     bytes32 private immutable _bytes31;
 
     constructor(Call memory _call) {
-
+        // Pumps aren't required for operation of a Well, so we don't require
+        // that _call.target != address(0) as in {ImmutableWellFunction}.
         _address = _call.target;
 
         bytes memory data = _call.data;
