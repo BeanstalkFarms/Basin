@@ -121,7 +121,7 @@ contract Well is
         _pump = pump();
     }
 
-    //////////// SWAP ////////////
+    //////////// SWAP: FROM ////////////
 
     /// @dev see {IWell.swapFrom}
     function swapFrom(
@@ -151,6 +151,8 @@ contract Well is
         amountOut = uint(getSwap(fromToken, toToken, int(amountIn)));
     }
 
+    //////////// SWAP: TO ////////////
+
     /// @dev see {IWell.swapTo}
     function swapTo(
         IERC20 fromToken,
@@ -178,6 +180,8 @@ contract Well is
     ) external view returns (uint amountIn) {
         amountIn = uint(-getSwap(toToken, fromToken, -int(amountOut)));
     }
+
+    //////////// SWAP: UTILITIES ////////////
 
     /// @dev low level swap function. Fetches balances, indexes of tokens and returns swap output.
     /// given a change in balance of iToken, returns change in balance of jToken.

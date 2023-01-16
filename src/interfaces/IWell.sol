@@ -92,7 +92,7 @@ interface IWell {
         Call memory _pump
     );
 
-    //////////// SWAP ////////////
+    //////////// SWAP: FROM ////////////
 
     /**
      * @notice Swaps from an exact amount of one token to at least an amount of another token
@@ -122,6 +122,8 @@ interface IWell {
         IERC20 toToken,
         uint amountIn
     ) external view returns (uint amountOut);
+
+    //////////// SWAP: TO ////////////
 
     /**
      * @notice Swaps from at most an amount of one token to an exact amount of another token
