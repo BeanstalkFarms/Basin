@@ -246,7 +246,7 @@ contract Well is
         uint[] memory tokenAmountsIn,
         uint minAmountOut,
         address recipient
-    ) external nonReentrant returns (uint amountOut) {
+    ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = updatePumpBalances(_tokens);
         for (uint i; i < _tokens.length; ++i) {
@@ -258,23 +258,23 @@ contract Well is
             );
             balances[i] = balances[i] + tokenAmountsIn[i];
         }
-        amountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
-        require(amountOut >= minAmountOut, "Well: slippage");
-        _mint(recipient, amountOut);
-        emit AddLiquidity(tokenAmountsIn, amountOut);
+        lpAmountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        require(lpAmountOut >= minAmountOut, "Well: slippage");
+        _mint(recipient, lpAmountOut);
+        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
     /// @dev see {IWell.getAddLiquidityOut}
     function getAddLiquidityOut(uint[] memory tokenAmountsIn)
         external
         view
-        returns (uint amountOut)
+        returns (uint lpAmountOut) // lpAmountOut
     {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens);
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] + tokenAmountsIn[i];
-        amountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
     }
 
     //////////// REMOVE LIQUIDITY: BALANCED ////////////
