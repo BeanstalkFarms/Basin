@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 
 import "oz/security/ReentrancyGuard.sol";
 import "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "oz/token/ERC20/utils/SafeERC20.sol";
 
 import "src/interfaces/IWell.sol";
 import "src/interfaces/IPump.sol";
@@ -46,6 +47,8 @@ contract Well is
     ImmutablePump,
     ReentrancyGuard
 {
+    using SafeERC20 for IERC20;
+
     /// @dev Construct a Well. Each Well is defined by its combination of
     /// ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`). 
     ///
@@ -227,7 +230,7 @@ contract Well is
         uint amountOut,
         address recipient
     ) internal {
-        fromToken.transferFrom(msg.sender, address(this), amountIn);
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         toToken.transfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
@@ -244,7 +247,7 @@ contract Well is
         uint[] memory balances = pumpBalances(_tokens);
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
-            _tokens[i].transferFrom(
+            _tokens[i].safeTransferFrom(
                 msg.sender,
                 address(this),
                 tokenAmountsIn[i]
