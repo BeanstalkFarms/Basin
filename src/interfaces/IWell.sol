@@ -65,6 +65,8 @@ interface IWell {
         uint tokenAmountOut
     );
 
+    //////////// WELL DEFINITION ////////////
+    
     /**
      * @notice Returns the tokens of the Well.
      */
@@ -90,9 +92,7 @@ interface IWell {
         Call memory _pump
     );
 
-    /**
-     * Swap
-     **/
+    //////////// SWAP ////////////
 
     /**
      * @notice Swaps from an exact amount of one token to at least an amount of another token
@@ -109,6 +109,19 @@ interface IWell {
         uint minAmountOut,
         address recipient
     ) external returns (uint amountOut);
+
+    /**
+     * @notice Calculates the `amountOut` of `toToken` received for `amountIn` of `fromToken` during a swap.
+     * @param fromToken The token to swap from
+     * @param toToken The token to swap to
+     * @param amountIn The amount of `fromToken` to swap
+     * @return amountOut The amount of `toToken` received for swapping `amountIn` of `fromToken`
+     */
+    function getSwapOut(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn
+    ) external view returns (uint amountOut);
 
     /**
      * @notice Swaps from at most an amount of one token to an exact amount of another token
@@ -139,22 +152,7 @@ interface IWell {
         uint amountOut
     ) external view returns (uint amountIn);
 
-    /**
-     * @notice Calculates the `amountOut` of `toToken` received for `amountIn` of `fromToken` during a swap.
-     * @param fromToken The token to swap from
-     * @param toToken The token to swap to
-     * @param amountIn The amount of `fromToken` to swap
-     * @return amountOut The amount of `toToken` received for swapping `amountIn` of `fromToken`
-     */
-    function getSwapOut(
-        IERC20 fromToken,
-        IERC20 toToken,
-        uint amountIn
-    ) external view returns (uint amountOut);
-
-    /**
-     * Add Liquidity
-     **/
+    //////////// ADD LIQUIDITY ////////////
 
     /**
      * @notice Adds liquidity to the Well using any amounts of all tokens
@@ -179,9 +177,7 @@ interface IWell {
         view
         returns (uint amountOut);
 
-    /**
-     * Remove Liquidity
-     **/
+    //////////// REMOVE LIQUIDITY: BALANCED ////////////
 
     /**
      * @notice Removes liquidity from the Well in an balanced ratio of all tokens
@@ -205,9 +201,7 @@ interface IWell {
         view
         returns (uint[] memory tokenAmountsOut);
 
-    /**
-     * Remove Liquidity One Token
-     **/
+    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
 
     /**
      * @notice Removes liquidity from the Well in exchange for one token in the Well
@@ -234,10 +228,7 @@ interface IWell {
         uint lpAmountIn
     ) external view returns (uint tokenAmountOut);
 
-    /**
-     * Remove Liquidity Imbalanced
-     **/
-
+    //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
     /**
      * @notice Removes liquidity from the Well in any amounts of all tokens
