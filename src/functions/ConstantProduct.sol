@@ -9,19 +9,20 @@ import "src/libraries/LibMath.sol";
 
 /**
  * @author Publius
- * @title Constant Product pricing function for wells with 2 tokens
+ * @title Constant Product pricing function for Wells with 2 tokens
+ * 
  * Constant Product Wells use the formula:
- * π(b_i) = (s / n)^n
- * Where
- * s is the supply of LP tokens
- * b_i is the balance at index i
- * n is the number of balances
- **/
+ *  `π(b_i) = (s / n)^n`
+ * 
+ * Where:
+ *  `s` is the supply of LP tokens
+ *  `b_i` is the balance at index `i`
+ *  `n` is the number of balances
+ */
 contract ConstantProduct is IWellFunction {
-
     using LibMath for uint;
 
-    // s = π(b_i)^(1/n) * n
+    /// @dev `s = π(b_i)^(1/n) * n`
     function getLpTokenSupply(
         bytes calldata,
         uint[] calldata balances
@@ -29,7 +30,7 @@ contract ConstantProduct is IWellFunction {
         lpTokenSupply = prodX(balances).nthRoot(balances.length) * balances.length;
     }
 
-    // b_j = (s / n)^n / π_{i!=j}(b_i) 
+    /// @dev `b_j = (s / n)^n / π_{i!=j}(b_i)`
     function getBalance(
         bytes calldata,
         uint[] calldata balances,
