@@ -37,7 +37,7 @@ contract ConstantProduct is IWellFunction {
         uint lpTokenSupply
     ) external override pure returns (uint balance) {
         uint n = balances.length;
-        balance = uint((lpTokenSupply / n) ** n); // unchecked math is safe here.
+        balance = uint((lpTokenSupply / n) ** n);
         for (uint i; i < n; ++i)
             if (i != j) balance = balance / balances[i];
     }
