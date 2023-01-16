@@ -204,7 +204,7 @@ contract Well is
         int minAmountOut
     ) internal returns (int amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = pumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens);
         (uint i, uint j) = getIJ(_tokens, iToken, jToken);
         amountOut = calculateSwap(balances, i, j, amountIn);
         require(amountOut >= minAmountOut, "Well: slippage");
@@ -248,7 +248,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = pumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens);
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].safeTransferFrom(
@@ -286,7 +286,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = pumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens);
         uint lpTokenSupply = totalSupply();
         tokenAmountsOut = new uint[](_tokens.length);
         _burn(msg.sender, lpAmountIn);
@@ -326,7 +326,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = pumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             _tokens,
             tokenOut,
@@ -387,7 +387,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = pumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens);
         lpAmountIn = _getRemoveLiquidityImbalanced(
             _tokens,
             balances,
@@ -429,7 +429,7 @@ contract Well is
 
     /// @dev Fetches the current balances of the Well and updates the Pump.
     /// Typically called before an operation that modifies the Well's balances.
-    function pumpBalances(IERC20[] memory _tokens)
+    function updatePumpBalances(IERC20[] memory _tokens)
         internal
         returns (uint[] memory balances)
     {
