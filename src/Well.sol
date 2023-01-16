@@ -490,8 +490,8 @@ contract Well is
         IERC20 jToken
     ) internal pure returns (uint i, uint j) {
         for (uint k; k < _tokens.length; ++k) {
-            if (iToken == _tokens[i]) i = k;
-            else if (jToken == _tokens[i]) j = k;
+            if (iToken == _tokens[k]) i = k;
+            else if (jToken == _tokens[k]) j = k;
         }
     }
 
