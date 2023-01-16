@@ -434,13 +434,6 @@ contract Well is
         returns (uint[] memory balances)
     {
         balances = getBalances(_tokens);
-        updatePump(balances);
-    }
-
-    /// @dev If a Pump is attached, update it with `balances`.
-    function updatePump(uint[] memory balances)
-        internal
-    {
         if (pumpAddress() != address(0))
             IPump(pumpAddress()).update(pumpBytes(), balances);
     }
