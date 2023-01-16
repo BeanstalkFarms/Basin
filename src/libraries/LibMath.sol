@@ -11,16 +11,17 @@ pragma solidity ^0.8.17;
 library LibMath {
 
     /**
-     * @notice computes the nth root of a given number
+     * @notice Computes the `n`th root of a number `a` using the Newton--Raphson method.
      * @param a The number to compute the root of
      * @param n The root to compute
-     * @return root The nth root of a
+     * @return root The `n`th root of `a`
      * @dev TODO: more testing - https://ethereum.stackexchange.com/questions/38468/calculate-the-nth-root-of-an-arbitrary-uint-using-solidity
-     * @dev https://en.wikipedia.org/wiki/Nth_root_algorithm
+     * https://en.wikipedia.org/wiki/Nth_root_algorithm
      */
     function nthRoot(uint a, uint n) internal pure returns (uint root) {
         assert (n > 1);
         if (n == 2) return sqrt(a); // shortcut for square root
+        
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)
         uint a0 = 10 ** n * a;
@@ -41,14 +42,15 @@ library LibMath {
     }
 
     /**
-     * @notice computes the square root of a given number
+     * @notice Computes the square root of a given number.
      * @param a The number to compute the square root of
-     * @return z The square root of x
-     * @dev 
-     * This function is based on the Babylonian method of computing square roots
+     * @return z The square root of `a`
+     * @dev This function is based on the Babylonian method of computing square roots
      * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
-     * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
-     * based on https://https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
+     * 
+     * Implementation from: 
+     *  https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
+     *  based on https://https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
      */
     function sqrt(uint256 a) public pure returns (uint256 z) {
         assembly {

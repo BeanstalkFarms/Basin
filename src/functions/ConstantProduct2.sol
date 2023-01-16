@@ -17,12 +17,12 @@ import "src/libraries/LibMath.sol";
  * Where:
  *  `s` is the supply of LP tokens
  *  `b_i` is the balance at index `i`
- *  `n` is the number of balances
+ *  The 2 in `s / 2` follows from the fact that there are 2 tokens in the Well
  */
 contract ConstantProduct2 is IWellFunction {
     using LibMath for uint;
 
-    /// @dev `s = n (b_0*b_1)^(1/2) * 2`
+    /// @dev `s = (b_0 * b_1)^(1/2) * 2`
     function getLpTokenSupply(
         bytes calldata,
         uint[] calldata balances
@@ -30,7 +30,7 @@ contract ConstantProduct2 is IWellFunction {
         lpTokenSupply = (balances[0]*balances[1]).sqrt() * 2;
     }
 
-    /// @dev `b_j = (s / 2)^2 /b_{i | i != j}`
+    /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`
     function getBalance(
         bytes calldata,
         uint[] calldata balances,

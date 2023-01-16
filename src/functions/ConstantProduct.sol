@@ -17,7 +17,7 @@ import "src/libraries/LibMath.sol";
  * Where:
  *  `s` is the supply of LP tokens
  *  `b_i` is the balance at index `i`
- *  `n` is the number of balances
+ *  `n` is the number of tokens in the Well
  */
 contract ConstantProduct is IWellFunction {
     using LibMath for uint;
@@ -43,6 +43,7 @@ contract ConstantProduct is IWellFunction {
             if (i != j) balance = balance / balances[i];
     }
 
+    /// @dev calculate the mathematical product of an array of uint[]
     function prodX(uint[] memory xs) private pure returns (uint pX) {
         pX = xs[0];
         for (uint i = 1; i < xs.length; ++i)
