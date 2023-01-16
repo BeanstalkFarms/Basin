@@ -1,10 +1,8 @@
 prb/math/=lib/prb-math/src/
 forge-std/=lib/forge-std/src/
-oz/=lib/openzeppelin-contracts/contracts
-ozu/=lib/openzeppelin-contracts-upgradeable/contracts
-
+oz/=lib/openzeppelin-contracts/contracts/
+ozu/=lib/openzeppelin-contracts-upgradeable/contracts/
 src/=src/
-
 mocks=mocks/
 tests=tests/
 utils=utils/
