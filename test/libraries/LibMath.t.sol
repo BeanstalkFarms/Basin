@@ -7,7 +7,39 @@ import "test/TestHelper.sol";
 import "src/libraries/LibMath.sol";
 
 contract LibMathTest is TestHelper {
+    // Wells only permit 16 tokens. Currently, `nthRoot` is only used
+    // with `a = balances.length` which is constrained to `2 <= a <= 16`.
+    uint MAX_NTH_ROOT = 16;
+
     function setUp() public {}
+
+    //////////// NTH ROOT ////////////
+    
+    /// @dev check requirements
+    function testNthRootRevert() public {
+        vm.expectRevert();
+        LibMath.nthRoot(0, 0); // reverts when n == 0 
+
+        vm.expectRevert();
+        LibMath.nthRoot(0, 1); // reverts when n == 1
+    }
+
+    /// @dev zero cases
+    function testNthRootOfZero() public {
+        for (uint n = 2; n <= MAX_NTH_ROOT; ++n) {
+            assertEq(LibMath.nthRoot(0, n), 0);
+        }
+    }
+    
+    /// @dev verify uses sqrt when n == 2
+    function testNth2IsSqrt() public {
+        assertEq(
+            LibMath.nthRoot(4, 2),
+            LibMath.sqrt(4)
+        );
+    }
+
+    //////////// SQRT ////////////
 
     /// @dev zero case
     function testSqrt0() public {

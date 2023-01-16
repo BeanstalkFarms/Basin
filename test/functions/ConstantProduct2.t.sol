@@ -37,7 +37,7 @@ contract ConstantProduct2Test is TestHelper {
         assertEq(_function.getLpTokenSupply(data, balances), 0);
     }
 
-    /// @dev getLpTokenSupply: manual calc for 2 balances of 
+    /// @dev getLpTokenSupply: same decimals, manual calc for 2 equal balances
     function testLpTokenSupplySameDecimals() public {
         uint[] memory balances = new uint[](2);
         balances[0] = 10 * 1e18;
@@ -55,7 +55,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[1] = 1250 * 1e6; // ex. 1250 BEAN
         assertEq(
             _function.getLpTokenSupply(data, balances),
-            70710678118654
+            70710678118654 // sqrt(1e18 * 1250e6) * 2
         );
     }
 
@@ -66,7 +66,7 @@ contract ConstantProduct2Test is TestHelper {
         uint[] memory balances = new uint[](2);
         uint lpTokenSupply;
 
-        // find balances[0]
+        // find balances[0] (matches {testLpTokenSupplySameDecimals})
         lpTokenSupply = 20 * 1e18;
         balances[0] = 0; // placeholder
         balances[1] = 10 * 1e18;
@@ -89,15 +89,22 @@ contract ConstantProduct2Test is TestHelper {
     /// matches example in testLpTokenSupplyDiffDecimals()
     function testBalanceDiffDecimals() public {
         uint[] memory balances = new uint[](2);
-        uint lpTokenSupply;
+        uint lpTokenSupply  = 70710678118654;
 
         // find balances[0]
-        lpTokenSupply = 70710678118654;
         balances[0] = 0; // placeholder
         balances[1] = 1250 * 1e6; // ex. 1250 BEAN
         assertEq(
             _function.getBalance(data, balances, 0, lpTokenSupply),
-            1 * 1e18 // (70710678118654 / 2)^2 / 1250e6 = 1e18
+            1 * 1e18 // (70710678118654 / 2)^2 / 1250e6 = ~1e18
+        );
+
+        // find balances[1]
+        balances[0] = 1 * 1e18; // placeholder
+        balances[1] = 0; // ex. 1250 BEAN
+        assertEq(
+            _function.getBalance(data, balances, 1, lpTokenSupply),
+            1250e6 // (70710678118654 / 2)^2 / 1e18 = 1250e6
         );
     }
 

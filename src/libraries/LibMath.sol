@@ -24,7 +24,7 @@ library LibMath {
         
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)
-        uint a0 = 10 ** n * a;
+        uint a0 = (10 ** n) * a;
 
         uint xNew = 10;
         uint x;
