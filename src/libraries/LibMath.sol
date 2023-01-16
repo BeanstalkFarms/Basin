@@ -47,7 +47,8 @@ library LibMath {
      * @dev 
      * This function is based on the Babylonian method of computing square roots
      * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
-     * Implementation from: https://github.com/Uniswap/v2-core/blob/master/contracts/libraries/Math.sol#L11
+     * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
+     * based on https://https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
      */
     function sqrt(uint256 a) public pure returns (uint256 z) {
         assembly {
