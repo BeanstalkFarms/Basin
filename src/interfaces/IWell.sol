@@ -249,7 +249,7 @@ interface IWell {
      * @param tokenAmountsOut The exact amounts of tokens to receive. The order should match the order of the tokens in the Well
      * @return lpAmountIn The amount of LP tokens burned
      */
-    function getRemoveLiquidityImbalanced(
+    function getRemoveLiquidityImbalancedIn(
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
 }

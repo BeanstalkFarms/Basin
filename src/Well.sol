@@ -400,8 +400,8 @@ contract Well is
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /// @dev see {IWell.getRemoveLiquidityImbalanced}
-    function getRemoveLiquidityImbalanced(uint[] calldata tokenAmountsOut)
+    /// @dev see {IWell.getRemoveLiquidityImbalancedIn}
+    function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut)
         external
         view
         returns (uint lpAmountIn)
