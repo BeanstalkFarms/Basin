@@ -20,6 +20,8 @@ contract SwapTest is TestHelper {
         setupWell(2);
     }
 
+    //////////// SWAP: OUT ////////////
+
     function testGetSwapOut() public {
         uint amountIn = 1000 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn);
@@ -50,6 +52,8 @@ contract SwapTest is TestHelper {
         vm.expectRevert("Well: slippage");
         well.swapFrom(tokens[0], tokens[1], amountIn, 501 * 1e18, user);
     }
+
+    //////////// SWAP: IN ////////////
 
     function testGetSwapIn() public {
         uint amountOut = 500 * 1e18;

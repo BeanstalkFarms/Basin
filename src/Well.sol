@@ -21,7 +21,7 @@ import "src/utils/ImmutableWellFunction.sol";
  * @title Well
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
-
+ *
  * Each Well has tokens, a pricing function, and a Pump.
  * - Tokens defines the set of tokens that can be exchanged in the pool.
  * - The pricing function defines an invariant relationship between the balances

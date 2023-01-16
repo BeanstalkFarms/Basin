@@ -38,12 +38,12 @@ interface IWellFunction {
     ) external view returns (uint256 lpTokenSupply);
 
     /**
-     @notice returns the name of the well function. Used in Well builing.
+     * @notice returns the name of the well function. Used in Well builing.
      */
     function name() external view returns (string memory);
 
     /**
-     @notice returns the symbol of the well function. Used in Well builing.
+     * @notice returns the symbol of the well function. Used in Well builing.
      */
     function symbol() external view returns (string memory);
 }
