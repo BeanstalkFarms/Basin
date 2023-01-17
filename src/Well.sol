@@ -87,7 +87,9 @@ contract Well is
 
     //////////// WELL DEFINITION ////////////
 
-    /// @dev see {IWell.tokens}
+    /**
+     * @dev See {IWell.tokens}
+     */
     function tokens()
         public
         view
@@ -97,7 +99,9 @@ contract Well is
         ts = ImmutableTokens.tokens();
     }
 
-    /// @dev see {IWell.wellFunction}
+    /**
+     * @dev See {IWell.wellFunction}
+     */
     function wellFunction()
         public
         view
@@ -107,7 +111,9 @@ contract Well is
         return ImmutableWellFunction.wellFunction();
     }
 
-    /// @dev see {IWell.pump}
+    /**
+     * @dev See {IWell.pump}
+     */
     function pump()
         public
         view
@@ -117,7 +123,9 @@ contract Well is
         return ImmutablePump.pump();
     }
 
-    /// @dev see {IWell.well}
+    /**
+     * @dev See {IWell.well}
+     */
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
@@ -130,7 +138,9 @@ contract Well is
 
     //////////// SWAP: FROM ////////////
 
-    /// @dev see {IWell.swapFrom}
+    /**
+     * @dev See {IWell.swapFrom}
+     */
     function swapFrom(
         IERC20 fromToken,
         IERC20 toToken,
@@ -149,7 +159,9 @@ contract Well is
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /// @dev see {IWell.getSwapOut}
+    /**
+     * @dev See {IWell.getSwapOut}
+     */
     function getSwapOut(
         IERC20 fromToken,
         IERC20 toToken,
@@ -160,7 +172,9 @@ contract Well is
 
     //////////// SWAP: TO ////////////
 
-    /// @dev see {IWell.swapTo}
+    /**
+     * @dev See {IWell.swapTo}
+     */
     function swapTo(
         IERC20 fromToken,
         IERC20 toToken,
@@ -179,7 +193,9 @@ contract Well is
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /// @dev see {IWell.getSwapIn}
+    /**
+     * @dev See {IWell.getSwapIn}
+     */
     function getSwapIn(
         IERC20 fromToken,
         IERC20 toToken,
@@ -207,7 +223,9 @@ contract Well is
         amountOut = calculateSwap(balances, i, j, amountIn);
     }
 
-    /// @dev same as {getSwap}, but also updates the Pump.
+    /**
+     * @dev same as {getSwap}, but also updates the Pump.
+     */
     function updatePumpsAndgetSwap(
         IERC20 fromToken,
         IERC20 toToken,
@@ -251,7 +269,9 @@ contract Well is
         amountOut = int(balances[j]) - int(getBalance(_wellFunction, balances, j, totalSupply()));
     }
 
-    /// @dev executes token transfers and emits Swap event.
+    /**
+     * @dev executes token transfers and emits Swap event.
+     */
     function _executeSwap(
         IERC20 fromToken,
         IERC20 toToken,
@@ -266,7 +286,9 @@ contract Well is
 
     //////////// ADD LIQUIDITY ////////////
 
-    /// @dev see {IWell.addLiquidity}
+    /**
+     * @dev See {IWell.addLiquidity}
+     */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
@@ -289,7 +311,9 @@ contract Well is
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
-    /// @dev see {IWell.getAddLiquidityOut}
+    /**
+     * @dev See {IWell.getAddLiquidityOut}
+     */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn)
         external
         view
@@ -304,7 +328,9 @@ contract Well is
 
     //////////// REMOVE LIQUIDITY: BALANCED ////////////
 
-    /// @dev see {IWell.removeLiquidity}
+    /**
+     * @dev See {IWell.removeLiquidity}
+     */
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
@@ -326,7 +352,9 @@ contract Well is
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /// @dev see {IWell.getRemoveLiquidityOut}
+    /**
+     * @dev See {IWell.getRemoveLiquidityOut}
+     */
     function getRemoveLiquidityOut(uint lpAmountIn)
         external
         view
@@ -343,7 +371,9 @@ contract Well is
 
     //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
 
-    /// @dev see {IWell.removeLiquidityOneToken}
+    /**
+     * @dev See {IWell.removeLiquidityOneToken}
+     */
     function removeLiquidityOneToken(
         uint lpAmountIn,
         IERC20 tokenOut,
@@ -370,7 +400,9 @@ contract Well is
         // emit RemoveLiquidity(lpAmountIn, tokenAmounts);
     }
 
-    /// @dev see {IWell.getRemoveLiquidityOneTokenOut}
+    /**
+     * @dev See {IWell.getRemoveLiquidityOneTokenOut}
+     */
     function getRemoveLiquidityOneTokenOut(IERC20 token, uint lpAmountIn)
         external
         view
@@ -386,6 +418,9 @@ contract Well is
         );
     }
 
+    /**
+     * @dev TODO
+     */
     function _getRemoveLiquidityOneTokenOut(
         IERC20[] memory _tokens,
         IERC20 token,
@@ -405,7 +440,9 @@ contract Well is
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
-    /// @dev see {IWell.removeLiquidityImbalanced}
+    /**
+     * @dev See {IWell.removeLiquidityImbalanced}
+     */
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
@@ -425,7 +462,9 @@ contract Well is
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /// @dev see {IWell.getRemoveLiquidityImbalancedIn}
+    /**
+     * @dev See {IWell.getRemoveLiquidityImbalancedIn}
+     */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut)
         external
         view
@@ -440,6 +479,9 @@ contract Well is
         );
     }
 
+    /**
+     * @dev TODO
+     */
     function _getRemoveLiquidityImbalanced(
         IERC20[] memory _tokens,
         uint[] memory balances,
@@ -522,7 +564,9 @@ contract Well is
 
     //////////// WELL TOKEN INDEXING ////////////
 
-    /// @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
+    /**
+     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
+     */
     function getIJ(
         IERC20[] memory _tokens,
         IERC20 iToken,
@@ -533,8 +577,10 @@ contract Well is
             else if (jToken == _tokens[k]) j = k;
         }
     }
-
-    /// @dev Returns the index of `jToken` in `_tokens`.
+    
+    /**
+     * @dev Returns the index of `jToken` in `_tokens`.
+     */
     function getJ(IERC20[] memory _tokens, IERC20 jToken)
         internal
         pure
