@@ -1,13 +1,11 @@
-/**
- * SPDX-License-Identifier: MIT
-**/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 /**
- * @author Publius
  * @title Well Function Interface
+ * @author Publius
  */
 interface IWellFunction {
 
@@ -17,7 +15,7 @@ interface IWellFunction {
      * @param j The index of the balance to solve for
      * @param lpTokenSupply The supply of LP tokens
      * @param data Well function data provided on every call
-     * @return balance The balance at the jth index
+     * @return balance The resulting balance at the jth index
      */
     function getBalance(
         uint256[] memory balances,
@@ -30,7 +28,7 @@ interface IWellFunction {
      * @notice Gets the LP token supply given a list of balances.
      * @param balances A list of token balances
      * @param data Well function data provided on every call
-     * @return lpTokenSupply The supply of LP tokens given the list of balances
+     * @return lpTokenSupply The resulting supply of LP tokens
      */
     function getLpTokenSupply(
         uint256[] memory balances,
@@ -38,12 +36,14 @@ interface IWellFunction {
     ) external view returns (uint256 lpTokenSupply);
 
     /**
-     * @notice Returns the name of the Well function. Used in Well building.
+     * @notice Returns the name of the Well function.
+     * @dev Used in Well building.
      */
     function name() external view returns (string memory);
 
     /**
-     * @notice Returns the symbol of the Well function. Used in Well building.
+     * @notice Returns the symbol of the Well function.
+     * @dev Used in Well building.
      */
     function symbol() external view returns (string memory);
 }

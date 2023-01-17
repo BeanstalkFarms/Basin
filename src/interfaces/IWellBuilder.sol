@@ -7,16 +7,15 @@ import "src/interfaces/IWell.sol";
 /**
  * @author Publius
  * @title Well Builder Inferface
- **/
-
+ */
 interface IWellBuilder {
 
     /**
      * @notice Emitted when a Well is built.
-     * @param well The address of the new Well
+     * @param well The address of the Well
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
-     * @param pump The pump in the Well
+     * @param pump The Pump attached to the Well
      */
     event BuildWell(
         address well,
@@ -26,14 +25,10 @@ interface IWellBuilder {
     );
 
     /**
-     * Management
-    **/
-
-    /**
-     * @notice builds a Well with given parameters
+     * @notice Builds a Well with the provided components.
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
-     * @param pump The pump in the Well
+     * @param pump The Pump attached to the Well
      * @return wellAddress The address of the Well
      */
     function buildWell(
@@ -43,27 +38,27 @@ interface IWellBuilder {
     ) external payable returns (address wellAddress);
 
     /**
-     * @notice returns the Well at a given index.
+     * @notice Returns the Well at a given index.
      */
     function getWellByIndex(uint index) external view returns (address well);
 
     /**
-     * @notice returns all wells with a given pair of tokens.
+     * @notice Returns all Wells with a given pair of tokens.
      */
     function getWellsBy2Tokens(IERC20 token0, IERC20 token1) external view returns (address[] memory wells);
 
     /**
-     * @notice returns the ith well with a given pair of tokens.
+     * @notice Returns the `i`th Well with a given pair of tokens.
      */
     function getWellBy2Tokens(IERC20 token0, IERC20 token1, uint i) external view returns (address well);
 
     /**
-     * @notice returns all wells with a given list of tokens.
+     * @notice Returns all Wells with a given list of tokens.
      */
     function getWellsByNTokens(IERC20[] calldata tokens) external view returns (address[] memory wells);
 
     /**
-     * @notice returns the ith well with a given list of tokens.
+     * @notice Returns the `i`th Well with a given list of tokens.
      */
     function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well);
 }

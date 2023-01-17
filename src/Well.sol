@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
@@ -21,28 +19,6 @@ import "src/utils/ImmutableWellFunction.sol";
  * @author Publius, Silo Chad
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
- * 
- * Each Well is defined by its Tokens, Well function, and Pump.
- * - **Tokens** define the set of ERC-20 tokens that can be exchanged in the Well.
- * - The **Well function** defines an invariant relationship between the balances
- *   of the tokens in the Well and the number of LP tokens. See {IWellFunction}.
- * - **Pumps** are on-chain oracles that are updated every time the Well is
- *   interacted with. See {IPump}.
- * 
- * A Well's Tokens, Well function, and Pump are stored as immutable variables
- * during Well construction to prevent unnessary SLOAD calls during operation.
- *
- * Wells support swapping, adding liquidity, and removing liquidity in balanced
- * or imbalanced proportions.
- * 
- * Wells are stateless beyond the issuance of an ERC-20 LP token. The balance of
- * tokens in the Well is read directly from each token's {IERC20-balanceOf} method.
- * Well functions and Pumps can independently choose to be stateful or stateless.
- *
- * Including a Pump is optional. Only 1 Pump can be attached to a Well, but a
- * Pump can call other Pumps, allowing multiple Pumps to be used.
- *
- * Each Well implements ERC-20, ERC-2612 and the {IWell} interface.
  */
 contract Well is
     ERC20Permit,
@@ -241,7 +217,7 @@ contract Well is
     /**
      * @dev See {IWell.calculateSwap}.
      * 
-     * During Well operation, `balances` are loaded prior prior to this function.
+     * During Well operation, `balances` are loaded prior to calling this function.
      * It is exposed publicly to allow Well consumers to calculate swap rates
      * for any given set of token balances.
      * 
