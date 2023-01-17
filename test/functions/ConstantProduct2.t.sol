@@ -24,9 +24,9 @@ contract ConstantProduct2Test is TestHelper {
     /// @dev getLpTokenSupply: Should revert if balances.length < 2
     function testLpTokenRevertBalancesLength() public {
         vm.expectRevert();
-        _function.getLpTokenSupply(data, new uint[](0));
+        _function.getLpTokenSupply(new uint[](0), data);
         vm.expectRevert();
-        _function.getLpTokenSupply(data, new uint[](1));
+        _function.getLpTokenSupply(new uint[](1), data);
     }
 
     /// @dev getLpTokenSupply: 0 balances = 0 supply
@@ -34,7 +34,7 @@ contract ConstantProduct2Test is TestHelper {
         uint[] memory balances = new uint[](2);
         balances[0] = 0;
         balances[1] = 0;
-        assertEq(_function.getLpTokenSupply(data, balances), 0);
+        assertEq(_function.getLpTokenSupply(balances, data), 0);
     }
 
     /// @dev getLpTokenSupply: same decimals, manual calc for 2 equal balances
@@ -43,7 +43,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 10 * 1e18;
         balances[1] = 10 * 1e18;
         assertEq(
-            _function.getLpTokenSupply(data, balances),
+            _function.getLpTokenSupply(balances, data),
             20 * 1e27 // sqrt(10e18 * 10e18) * 2
         );
     }
@@ -54,7 +54,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 1 * 1e18; // ex. 1 WETH
         balances[1] = 1250 * 1e6; // ex. 1250 BEAN
         assertEq(
-            _function.getLpTokenSupply(data, balances),
+            _function.getLpTokenSupply(balances, data),
             70710678118654752440084 // sqrt(1e18 * 1250e6) * 2
         );
     }
@@ -71,7 +71,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 0; // placeholder
         balances[1] = 10 * 1e18;
         assertEq(
-            _function.getBalance(data, balances, 0, lpTokenSupply),
+            _function.getBalance(balances, 0, lpTokenSupply, data),
             10 * 1e18 // (20e18/2) ^ 2 / 10e18 = 10e18
         );
 
@@ -80,7 +80,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 20 * 1e18; 
         balances[1] = 0; // placeholder
         assertEq(
-            _function.getBalance(data, balances, 1, lpTokenSupply),
+            _function.getBalance(balances, 1, lpTokenSupply, data),
             31250000000000000000 // (50e18/2) ^ 2 / 20e18 = 31.25e19
         );
     }
@@ -95,7 +95,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 0; // placeholder
         balances[1] = 1250 * 1e6; // ex. 1250 BEAN
         assertEq(
-            _function.getBalance(data, balances, 0, lpTokenSupply),
+            _function.getBalance(balances, 0, lpTokenSupply, data),
             1 * 1e18 // (70710678118654 / 2)^2 / 1250e6 = ~1e18
         );
 
@@ -103,7 +103,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[0] = 1 * 1e18; // placeholder
         balances[1] = 0; // ex. 1250 BEAN
         assertEq(
-            _function.getBalance(data, balances, 1, lpTokenSupply),
+            _function.getBalance(balances, 1, lpTokenSupply, data),
             1250e6 // (70710678118654 / 2)^2 / 1e18 = 1250e6
         );
     }

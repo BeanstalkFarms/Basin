@@ -26,18 +26,18 @@ contract ConstantProduct2 is IWellFunction {
 
     /// @dev `s = (b_0 * b_1)^(1/2) * 2`
     function getLpTokenSupply(
-        bytes calldata,
-        uint[] calldata balances
+        uint[] calldata balances,
+        bytes calldata
     ) external override pure returns (uint lpTokenSupply) {
         lpTokenSupply = (balances[0]*balances[1]*EXP_PRECISION).sqrt() * 2;
     }
 
     /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`
     function getBalance(
-        bytes calldata,
         uint[] calldata balances,
         uint j,
-        uint lpTokenSupply
+        uint lpTokenSupply,
+        bytes calldata
     ) external override pure returns (uint balance) {
         balance = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
         balance = (balance - 1) / balances[j == 1 ? 0 : 1] + 1; // Round

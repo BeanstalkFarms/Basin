@@ -24,18 +24,18 @@ contract ConstantProduct is IWellFunction {
 
     /// @dev `s = π(b_i)^(1/n) * n`
     function getLpTokenSupply(
-        bytes calldata,
-        uint[] calldata balances
+        uint[] calldata balances,
+        bytes calldata
     ) external override pure returns (uint lpTokenSupply) {
         lpTokenSupply = prodX(balances).nthRoot(balances.length) * balances.length;
     }
 
     /// @dev `b_j = (s / n)^n / π_{i!=j}(b_i)`
     function getBalance(
-        bytes calldata,
         uint[] calldata balances,
         uint j,
-        uint lpTokenSupply
+        uint lpTokenSupply,
+        bytes calldata
     ) external override pure returns (uint balance) {
         uint n = balances.length;
         balance = uint((lpTokenSupply / n) ** n);

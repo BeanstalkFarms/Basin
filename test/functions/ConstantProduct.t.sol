@@ -28,7 +28,7 @@ contract ConstantProductTest is TestHelper {
         uint[] memory balances = new uint[](n);
         for(uint i = 0; i < n; ++i) 
             balances[i] = 0;
-        assertEq(_function.getLpTokenSupply(data, balances), 0);
+        assertEq(_function.getLpTokenSupply(balances, data), 0);
     }
 
     /// @dev getLpTokenSupply: `n` equal balances should summate with the token supply
@@ -38,7 +38,7 @@ contract ConstantProductTest is TestHelper {
         uint[] memory balances = new uint[](n);
         for(uint i = 0; i < n; ++i) 
             balances[i] = 1;
-        assertEq(_function.getLpTokenSupply(data, balances), 1 * n);
+        assertEq(_function.getLpTokenSupply(balances, data), 1 * n);
     }
 
     // function _getNBalances(uint n, uint v) internal returns (uint[] memory balances) {
