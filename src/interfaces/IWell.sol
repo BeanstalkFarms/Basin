@@ -250,7 +250,7 @@ interface IWell {
     /**
      * @notice Calculates the amount of each token received from removing liquidity in a balanced ratio
      * @param lpAmountIn The amount of LP tokens to burn
-     * @return tokenAmountsOut The amount of each token received
+     * @return tokenAmountsOut The amount of each token to receive
      */
     function getRemoveLiquidityOut(uint lpAmountIn)
         external
@@ -260,9 +260,9 @@ interface IWell {
     //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
 
     /**
-     * @notice Removes liquidity from the Well as a single token.
+     * @notice Removes liquidity from the Well as a single underlying token.
      * @param lpAmountIn The amount of LP tokens to burn
-     * @param tokenOut The token to remove from the Well
+     * @param tokenOut The underlying token to remove from the Well
      * @param minTokenAmountOut The minimum amount of `tokenOut` to receive
      * @param recipient The address to receive tokens
      * @return tokenAmountOut The amount of `tokenOut` received
@@ -275,10 +275,12 @@ interface IWell {
     ) external returns (uint tokenAmountOut);
 
     /**
-     * @notice Calculates the amount received from removing liquidity as a single token
-     * @param tokenOut The token to remove from the Well
+     * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
+     * @param tokenOut The underlying token to remove from the Well
      * @param lpAmountIn The amount of LP tokens to burn
-     * @return tokenAmountOut The amount of `tokenOut` received
+     * @return tokenAmountOut The amount of `tokenOut` to receive
+     *
+     * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
         IERC20 tokenOut,
@@ -288,10 +290,10 @@ interface IWell {
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
     /**
-     * @notice Removes liquidity from the Well as a combination of tokens.
+     * @notice Removes liquidity from the Well as multiple underlying tokens in any ratio.
      * @param maxLpAmountIn The maximum amount of LP tokens to burn
-     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens}
-     * @param recipient The address to receive tokens
+     * @param tokenAmountsOut The amount of each underlying token to remove; MUST match the indexing of {Well.tokens}
+     * @param recipient The address to receive the underlying tokens
      * @return lpAmountIn The amount of LP tokens burned
      */
     function removeLiquidityImbalanced(
@@ -301,9 +303,9 @@ interface IWell {
     ) external returns (uint lpAmountIn);
 
     /**
-     * @notice Get the amount of LP tokens to burn to remove liquidity in any amounts of all tokens
-     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens}
-     * @return lpAmountIn The amount of LP tokens burned
+     * @notice Gets the amount of LP tokens to burn from removing liquidity as multiple underlying tokens in any ratio.
+     * @param tokenAmountsOut The amount of each underlying token to remove; MUST match the indexing of {Well.tokens}
+     * @return lpAmountIn The amount of LP tokens to burn
      */
     function getRemoveLiquidityImbalancedIn(
         uint[] calldata tokenAmountsOut
