@@ -194,17 +194,7 @@ contract Well is
      * @notice Given a change in Well balance of `fromToken` by `amountIn`,
      * return the change in Well balance of `toToken`. Loads balances and indices
      * of tokens, then calculates Swap output.
-     * 
-     * @dev Accounting is performed from the perspective of the Well. Positive 
-     * values represent token flows into the Well, negative values represent 
-     * token flows out of the Well.
-     * 
-     * | `fromToken` | `toToken` | `amountIn` | `amountOut` | Note                              |
-     * |-------------|-----------|------------|-------------|-----------------------------------|
-     * | 0xBEAN      | 0xDAI     | 100 BEAN   | -100 DAI    | User spends BEAN and receives DAI |
-     * | 0xBEAN      | 0xDAI     | -100 BEAN  | 100 DAI     | User spends DAI and receives BEAN |
-     * | 0xDAI       | 0xBEAN    | 100 DAI    | -100 BEAN   | User spends DAI and receives BEAN |
-     * | 0xDAI       | 0xBEAN    | -100 DAI   | 100 BEAN    | User spends BEAN and receives DAI |
+     * @dev See {calculateSwap} for details re: signed math.
      */
     function getSwap(
         IERC20 fromToken,
@@ -217,23 +207,37 @@ contract Well is
         amountOut = calculateSwap(balances, i, j, amountIn);
     }
 
-    /// @dev same as {getSwap}, but also updates pumps
+    /// @dev same as {getSwap}, but also updates the Pump.
     function updatePumpsAndgetSwap(
-        IERC20 iToken,
-        IERC20 jToken,
+        IERC20 fromToken,
+        IERC20 toToken,
         int amountIn,
         int minAmountOut
     ) internal returns (int amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = updatePumpBalances(_tokens);
-        (uint i, uint j) = getIJ(_tokens, iToken, jToken);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
         amountOut = calculateSwap(balances, i, j, amountIn);
         require(amountOut >= minAmountOut, "Well: slippage");
     }
-
-    /// @dev contains core swap logic.
-    /// A swap to a specified amount is the same as a swap from a negative specified amount.
-    /// Thus, swapFrom and swapTo can use the same swap logic using signed math.
+    
+    /**
+     * @notice 
+     * @dev A swap to a specified amount is the same as a swap from a negative
+     * specified amount. Allows {swapFrom} and {swapTo} can use the same swap
+     * logic using signed math.
+     * 
+     * Accounting is performed from the perspective of the Well. Positive 
+     * values represent token flows into the Well, negative values represent 
+     * token flows out of the Well.
+     * 
+     * | `fromToken` | `toToken` | `amountIn` | `amountOut` | Note                              |
+     * |-------------|-----------|------------|-------------|-----------------------------------|
+     * | 0xBEAN      | 0xDAI     | 100 BEAN   | -100 DAI    | User spends BEAN and receives DAI |
+     * | 0xBEAN      | 0xDAI     | -100 BEAN  | 100 DAI     | User spends DAI and receives BEAN |
+     * | 0xDAI       | 0xBEAN    | 100 DAI    | -100 BEAN   | User spends DAI and receives BEAN |
+     * | 0xDAI       | 0xBEAN    | -100 DAI   | 100 BEAN    | User spends BEAN and receives DAI |
+     */
     function calculateSwap(
         uint[] memory balances,
         uint i,
