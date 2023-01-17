@@ -22,12 +22,14 @@ import "src/libraries/LibMath.sol";
 contract ConstantProduct2 is IWellFunction {
     using LibMath for uint;
 
+    uint constant EXP_PRECISION = 1e18;
+
     /// @dev `s = (b_0 * b_1)^(1/2) * 2`
     function getLpTokenSupply(
         bytes calldata,
         uint[] calldata balances
     ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = (balances[0]*balances[1]).sqrt() * 2;
+        lpTokenSupply = (balances[0]*balances[1]*EXP_PRECISION).sqrt() * 2;
     }
 
     /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`
@@ -37,8 +39,8 @@ contract ConstantProduct2 is IWellFunction {
         uint j,
         uint lpTokenSupply
     ) external override pure returns (uint balance) {
-        balance = uint((lpTokenSupply / 2) ** 2);
-        balance = balance / balances[j == 1 ? 0 : 1];
+        balance = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
+        balance = (balance - 1) / balances[j == 1 ? 0 : 1] + 1; // Round
     }
 
     function name() external override pure returns (string memory) {

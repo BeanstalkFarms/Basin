@@ -44,7 +44,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[1] = 10 * 1e18;
         assertEq(
             _function.getLpTokenSupply(data, balances),
-            20 * 1e18 // sqrt(10e18 * 10e18) * 2
+            20 * 1e27 // sqrt(10e18 * 10e18) * 2
         );
     }
     
@@ -55,7 +55,7 @@ contract ConstantProduct2Test is TestHelper {
         balances[1] = 1250 * 1e6; // ex. 1250 BEAN
         assertEq(
             _function.getLpTokenSupply(data, balances),
-            70710678118654 // sqrt(1e18 * 1250e6) * 2
+            70710678118654752440084 // sqrt(1e18 * 1250e6) * 2
         );
     }
 
@@ -67,7 +67,7 @@ contract ConstantProduct2Test is TestHelper {
         uint lpTokenSupply;
 
         // find balances[0] (matches {testLpTokenSupplySameDecimals})
-        lpTokenSupply = 20 * 1e18;
+        lpTokenSupply = 20 * 1e27;
         balances[0] = 0; // placeholder
         balances[1] = 10 * 1e18;
         assertEq(
@@ -76,7 +76,7 @@ contract ConstantProduct2Test is TestHelper {
         );
 
         // find balances[1]
-        lpTokenSupply = 50 * 1e18;
+        lpTokenSupply = 50 * 1e27;
         balances[0] = 20 * 1e18; 
         balances[1] = 0; // placeholder
         assertEq(
@@ -89,7 +89,7 @@ contract ConstantProduct2Test is TestHelper {
     /// matches example in testLpTokenSupplyDiffDecimals()
     function testBalanceDiffDecimals() public {
         uint[] memory balances = new uint[](2);
-        uint lpTokenSupply  = 70710678118654;
+        uint lpTokenSupply  = 70710678118654752440084;
 
         // find balances[0]
         balances[0] = 0; // placeholder

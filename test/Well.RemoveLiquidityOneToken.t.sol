@@ -19,12 +19,12 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
     }
 
     function testGetRemoveLiquidityOneTokenOut() public {
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(tokens[0], 1000 * 1e18);
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(tokens[0], 1000 * 1e27);
         assertEq(amountOut, 875 * 1e18);
     }
 
     function testRemoveLiquidityOneToken() prank(user) public {
-        uint lpAmountIn = 1000 * 1e18;
+        uint lpAmountIn = 1000 * 1e27;
         uint minTokenAmountOut = 875 * 1e18;
 
         vm.expectEmit(true, true, true, true);
@@ -32,7 +32,7 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
 
         uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
-        assertEq(well.balanceOf(user), 1000 * 1e18);
+        assertEq(well.balanceOf(user), lpAmountIn);
 
         assertEq(tokens[0].balanceOf(user), amountOut);
         assertEq(tokens[1].balanceOf(user), 0);

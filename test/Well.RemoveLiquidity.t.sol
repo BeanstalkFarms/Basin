@@ -15,12 +15,12 @@ contract RemoveLiquidityTest is TestHelper {
     }
 
     function testGetRemoveLiquidityOut() public {
-        uint[] memory amountsOut = well.getRemoveLiquidityOut(2000 * 1e18);
+        uint[] memory amountsOut = well.getRemoveLiquidityOut(2000 * 1e27);
         for (uint i = 0; i < tokens.length; i++) assertEq(amountsOut[i], 1000 * 1e18);
     }
 
     function testRemoveLiquidity() prank(user) public {
-        uint lpAmountIn = 2000 * 1e18;
+        uint lpAmountIn = 2000 * 1e27;
         uint[] memory amountsOut = new uint[](2);
         amountsOut[0] = 1000 * 1e18;
         amountsOut[1] = 1000 * 1e18;

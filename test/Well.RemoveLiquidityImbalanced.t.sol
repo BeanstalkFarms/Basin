@@ -20,19 +20,19 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
 
     function testGetRemoveLiquidityImbalancedOut() public {
 
-        uint lpAmountIn = well.getRemoveLiquidityImbalanced(tokenAmountsOut);
-        assertEq(lpAmountIn, 580 * 1e18);
+        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
+        assertEq(lpAmountIn, 580 * 1e27);
     }
 
     function testRemoveLiquidityImbalanced() prank(user) public {
-        uint maxLPAmountIn = 580 * 1e18;
+        uint maxLPAmountIn = 580 * 1e27;
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLPAmountIn, tokenAmountsOut);
 
         well.removeLiquidityImbalanced(maxLPAmountIn, tokenAmountsOut, user);
 
-        assertEq(well.balanceOf(user), (2000 - 580) * 1e18);
+        assertEq(well.balanceOf(user), (2000 - 580) * 1e27);
 
         assertEq(tokens[0].balanceOf(user), tokenAmountsOut[0]);
         assertEq(tokens[1].balanceOf(user), tokenAmountsOut[1]);
@@ -42,7 +42,7 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
     }
 
     function testRemoveLiquidityImbalancedAmountOutTooHigh() prank(user) public {
-        uint maxLPAmountIn = 579 * 1e18;
+        uint maxLPAmountIn = 579 * 1e27;
 
         vm.expectRevert("Well: slippage");
         well.removeLiquidityImbalanced(maxLPAmountIn, tokenAmountsOut, user);
