@@ -17,13 +17,10 @@ import "src/utils/ImmutablePump.sol";
 import "src/utils/ImmutableWellFunction.sol";
 
 /**
- * @author Publius
  * @title Well
+ * @author Publius, Silo Chad
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
- *
- * DEFINITION
- * ----------
  * 
  * Each Well is defined by its Tokens, Well function, and Pump.
  * - **Tokens** define the set of ERC-20 tokens that can be exchanged in the Well.
@@ -34,41 +31,18 @@ import "src/utils/ImmutableWellFunction.sol";
  * 
  * A Well's Tokens, Well function, and Pump are stored as immutable variables
  * during Well construction to prevent unnessary SLOAD calls during operation.
-
+ *
  * Wells support swapping, adding liquidity, and removing liquidity in balanced
  * or imbalanced proportions.
  * 
+ * Wells are stateless beyond the issuance of an ERC-20 LP token. The balance of
+ * tokens in the Well is read directly from each token's {IERC20-balanceOf} method.
+ * Well functions and Pumps can independently choose to be stateful or stateless.
+ *
  * Including a Pump is optional. Only 1 Pump can be attached to a Well, but a
  * Pump can call other Pumps, allowing multiple Pumps to be used.
  *
  * Each Well implements ERC-20, ERC-2612 and the {IWell} interface.
- *
- * MOTIVATION
- * ----------
- * 
- * Allowing composability of the pricing function & oracle at the Well level is
- * a deliberate design decision with significant implications. 
- *
- * In paticular, a standard AMM interface invoking composable components allows
- * for developers to iterate upon the underlying pricing functions & oracles
- * which greatly impact gas and capital efficiency.
- *
- * However, this architecture shifts much of the attack surface area to the
- * Well's components. Users of Wells should be aware that anyone can deploy a 
- * Well with malicious components, and that new Wells SHOULD NOT be trusted 
- * without careful review. This understanding is particularly important in the 
- * DeFi context in which Well information may be consumed via on-chain registries
- * or off-chain indexing systems.
- *
- * The Wells architecture aims to outline a simple interface for composable
- * AMMs and leave the process of evaluating a given Well's trustworthiness as the
- * responsibility of the user and of DeFi.
- *
- * To this end, future work may focus on development of on-chain Well registries
- * and factories which create or highlight Wells composed of known components.
- * An example factory implementation is provided in {WellBuilder} without opinion
- * regarding the trustworthiness of Well functions and Pumps deployed using it. 
- * Wells are not required to be deployed via this mechanism.
  */
 contract Well is
     ERC20Permit,
@@ -87,9 +61,9 @@ contract Well is
      * For gas efficiency, these three components are placed in immutable
      * storage during construction. 
      * 
-     * {ImmutableTokens.sol} stores up to 16 immutable token addresses.
-     * {ImmutableWellFunction.sol} stores an immutable Well function {Call} struct.
-     * {ImmutablePump.sol} stores an immutable Pump {Call} struct.
+     * {ImmutableTokens} stores up to 16 immutable token addresses.
+     * {ImmutableWellFunction} stores an immutable Well function {Call} struct.
+     * {ImmutablePump} stores an immutable Pump {Call} struct.
      *
      * Usage of a Pump is optional: set `_pump.target` to address(0) to disable.
      */
@@ -113,9 +87,7 @@ contract Well is
 
     //////////// WELL DEFINITION ////////////
 
-    /**
-     * @dev see {IWell.tokens}
-     */
+    /// @dev see {IWell.tokens}
     function tokens()
         public
         view
@@ -462,8 +434,10 @@ contract Well is
 
     //////////// UPDATE PUMP ////////////
 
-    /// @dev Fetches the current balances of the Well and updates the Pump.
-    /// Typically called before an operation that modifies the Well's balances.
+    /**
+     * @dev Fetches the current token balances of the Well and updates the Pump.
+     * Typically called before an operation that modifies the Well's balances.
+     */
     function updatePumpBalances(IERC20[] memory _tokens)
         internal
         returns (uint[] memory balances)
@@ -473,10 +447,12 @@ contract Well is
             IPump(pumpAddress()).update(pumpBytes(), balances);
     }
 
-    //////////// WELL TOKEN & LP TOKEN BALANCES ////////////
+    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
 
-    /// @dev Returns the Well's balances of `_tokens` by calling the ERC-20 
-    /// {balanceOf} method on each token.
+    /**
+     * @dev Returns the Well's balances of `_tokens` by calling the ERC-20 
+     * {balanceOf} method on each token.
+     */
     function getBalances(IERC20[] memory _tokens)
         internal
         view
@@ -487,8 +463,13 @@ contract Well is
             balances[i] = _tokens[i].balanceOf(address(this));
     }
 
-    /// @dev Gets the LP token supply given a list of `balances`.
-    /// Wraps {IWellFunction.getLpTokenSupply}.
+    /**
+     * @dev  Gets the LP token supply given a list of `balances` from the provided
+     * `_wellFunction`. Wraps {IWellFunction.getLpTokenSupply}.
+     *
+     * The Well function is passed as a parameter to minimize gas in instances
+     * where it is called multiple times in one transaction.
+     */
     function getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
         internal
         view
@@ -500,8 +481,13 @@ contract Well is
         );
     }
 
-    /// @dev Gets the jth balance given a list of `balances` and `lpTokenSupply`.
-    /// Wraps {IWellFunction.getBalance}.
+    /**
+     * @dev Gets the `j`th balance given a list of `balances` and `lpTokenSupply`
+     * from the provided `_wellFunction`. Wraps {IWellFunction.getBalance}.
+     * 
+     * The Well function is passed as a parameter to minimize gas in instances
+     * where it is called multiple times in one transaction.
+     */
     function getBalance(
         Call memory _wellFunction,
         uint[] memory balances,
