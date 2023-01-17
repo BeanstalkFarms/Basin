@@ -411,7 +411,7 @@ contract Well is
     /**
      * @dev See {IWell.getRemoveLiquidityOneTokenOut}
      */
-    function getRemoveLiquidityOneTokenOut(IERC20 token, uint lpAmountIn)
+    function getRemoveLiquidityOneTokenOut(IERC20 tokenOut, uint lpAmountIn)
         external
         view
         returns (uint tokenAmountOut)
@@ -420,7 +420,7 @@ contract Well is
         uint[] memory balances = getBalances(_tokens);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             _tokens,
-            token,
+            tokenOut,
             balances,
             lpAmountIn
         );

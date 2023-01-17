@@ -276,12 +276,12 @@ interface IWell {
 
     /**
      * @notice Calculates the amount received from removing liquidity as a single token
-     * @param token The token to remove from the Well
+     * @param tokenOut The token to remove from the Well
      * @param lpAmountIn The amount of LP tokens to burn
-     * @return tokenAmountOut The amount of `token` received
+     * @return tokenAmountOut The amount of `tokenOut` received
      */
     function getRemoveLiquidityOneTokenOut(
-        IERC20 token,
+        IERC20 tokenOut,
         uint lpAmountIn
     ) external view returns (uint tokenAmountOut);
 
