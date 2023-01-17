@@ -1,12 +1,12 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
+
 pragma solidity ^0.8.17;
 
+import "forge-std/console2.sol";
 import "test/TestHelper.sol";
 import "utils/RandomBytes.sol";
-
-import "forge-std/console2.sol";
 
 contract ImmutableTest is TestHelper, RandomBytes {
     function setUp() public {
