@@ -127,7 +127,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         amountOut = uint(
-            updatePumpsAndgetSwap(
+            _getSwapAndUpdatePump(
                 fromToken,
                 toToken,
                 int(amountIn),
@@ -161,7 +161,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         amountIn = uint(
-            -updatePumpsAndgetSwap(
+            -_getSwapAndUpdatePump(
                 toToken,
                 fromToken,
                 -int(amountOut),
@@ -242,7 +242,7 @@ contract Well is
     /**
      * @dev Internal version of {getSwap} which also updates the Pump.
      */
-    function updatePumpsAndgetSwap(
+    function _getSwapAndUpdatePump(
         IERC20 fromToken,
         IERC20 toToken,
         int amountIn,
