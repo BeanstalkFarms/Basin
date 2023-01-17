@@ -401,11 +401,6 @@ contract Well is
         _burn(msg.sender, lpAmountIn);
         tokenOut.transfer(recipient, tokenAmountOut);
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
-
-        // todo: decide on event signature.
-        // uint[] memory tokenAmounts = new uint[](w.tokens.length);
-        // tokenAmounts[i] = tokenAmountOut;
-        // emit RemoveLiquidity(lpAmountIn, tokenAmounts);
     }
 
     /**
