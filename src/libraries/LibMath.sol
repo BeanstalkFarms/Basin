@@ -8,7 +8,11 @@ pragma solidity ^0.8.17;
  * @author Publius
  * @title Lib Math contains math operations
  **/
+import "oz/utils/math/SafeMath.sol";
+
 library LibMath {
+
+    error PRBMath_MulDiv_Overflow(uint256 x, uint256 y, uint256 denominator);
 
     /**
      * @notice Computes the `n`th root of a number `a` using the Newton--Raphson method.
@@ -41,17 +45,16 @@ library LibMath {
         root = (xNew + 5) / 10;
     }
 
-    /**
-     * @notice Computes the square root of a given number.
-     * @param a The number to compute the square root of
-     * @return z The square root of `a`
-     * @dev This function is based on the Babylonian method of computing square roots
-     * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
-     * 
-     * Implementation from: 
-     *  https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
-     *  based on https://https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
-     */
+    // /**
+    //  * @notice computes the square root of a given number
+    //  * @param a The number to compute the square root of
+    //  * @return z The square root of x
+    //  * @dev 
+    //  * This function is based on the Babylonian method of computing square roots
+    //  * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
+    //  * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
+    //  * based on https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
+    //  */
     function sqrt(uint256 a) public pure returns (uint256 z) {
         assembly {
             // This segment is to get a reasonable initial estimate for the Babylonian method.
@@ -113,4 +116,58 @@ library LibMath {
             }
         }
     }
+
+    // function recalculateRoot(uint256 root) internal pure returns (uint256) {
+    //     uint256 lastRootDigit = SafeMath.mod(root,10);
+    //     uint256 rootWithoutLastDigit = uint256(root/10);
+    //     return (rootWithoutLastDigit * 100) + lastRootDigit;
+    // }
+
+    // function normalize(uint256 num) internal pure returns (uint256, int128) {
+    //     int128 normalizationSteps = 0;
+    //     uint256 rangedNumber = num;
+    //     for (int i = 0; i < 256; ++i) {
+    //         if (rangedNumber <= 100) {
+    //             normalizationSteps = int128(i);
+    //             break;
+    //         }
+    //         rangedNumber = rangedNumber/100;
+    //     }
+    //     return (rangedNumber, normalizationSteps);
+    // }
+
+    // function sqrtHFP(uint256 num, int128 fractionLength) internal pure returns (uint256) {
+    //     uint256 normalizedNumber;
+    //     int128 normalizationSteps;
+    //     (normalizedNumber, normalizationSteps) = normalize(num);
+    //     normalizationSteps =normalizationSteps + fractionLength + 1;
+
+    //     uint256 root = 5;
+    //     uint256 rootCalculation = normalizedNumber * root;
+
+    //     int128 fractionLengthCounter = 0;
+
+    //     for (uint i = 0; i < 256; i++) {
+    //         if (fractionLengthCounter == normalizationSteps) {
+    //             break;
+    //         }
+    //         if (rootCalculation >= root) {
+    //             rootCalculation = rootCalculation - root;
+    //             root = root + 10.0;
+    //         } else {
+    //             rootCalculation =rootCalculation * 100;
+    //             root = recalculateRoot(root);
+    //             fractionLengthCounter = fractionLengthCounter + 1;
+    //         }
+    //     }
+    //     return uint256(root / 100);
+    // }
+
+    // function sqrt(uint256 num, int128 fractionLength) public pure returns (uint256) {
+    //     return sqrtHFP(num, fractionLength);
+    // }
+
+    // function sqrtUint256(uint256 num, int128 fractionLength) public pure returns (uint256) {
+    //     return sqrtHFP(uint256(num), fractionLength);
+    // }
 }
