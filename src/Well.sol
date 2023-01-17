@@ -82,7 +82,7 @@ contract Well is
         ReentrancyGuard()
     {
         if (_pump.target != address(0)) 
-            IPump(_pump.target).attach(_pump.data, _tokens.length);
+            IPump(_pump.target).attach(_tokens.length, _pump.data);
     }
 
     //////////// WELL DEFINITION ////////////
@@ -504,7 +504,7 @@ contract Well is
     {
         balances = getBalances(_tokens);
         if (pumpAddress() != address(0))
-            IPump(pumpAddress()).update(pumpBytes(), balances);
+            IPump(pumpAddress()).update(balances, pumpBytes());
     }
 
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
@@ -536,8 +536,8 @@ contract Well is
         returns (uint lpTokenSupply)
     {
         lpTokenSupply = IWellFunction(_wellFunction.target).getLpTokenSupply(
-            _wellFunction.data,
-            balances
+            balances,
+            _wellFunction.data
         );
     }
 
@@ -555,10 +555,10 @@ contract Well is
         uint lpTokenSupply
     ) internal view returns (uint balance) {
         balance = IWellFunction(_wellFunction.target).getBalance(
-            _wellFunction.data,
             balances,
             j,
-            lpTokenSupply
+            lpTokenSupply,
+            _wellFunction.data
         );
     }
 
