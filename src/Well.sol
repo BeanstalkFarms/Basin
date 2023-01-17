@@ -191,15 +191,15 @@ contract Well is
     //////////// SWAP: UTILITIES ////////////
 
     /// @dev low level swap function. Fetches balances, indexes of tokens and returns swap output.
-    /// given a change in balance of iToken, returns change in balance of jToken.
+    /// given a change in balance of fromToken, returns change in balance of toToken.
     function getSwap(
-        IERC20 iToken,
-        IERC20 jToken,
+        IERC20 fromToken,
+        IERC20 toToken,
         int amountIn
     ) public view returns (int amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens);
-        (uint i, uint j) = getIJ(_tokens, iToken, jToken);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
         amountOut = calculateSwap(balances, i, j, amountIn);
     }
 
