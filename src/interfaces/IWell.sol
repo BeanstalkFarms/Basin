@@ -7,24 +7,24 @@ pragma solidity ^0.8.17;
 import "oz/token/ERC20/IERC20.sol";
 
 /**
- * @title Call is the struct that contains the target address and extra calldata of a generic call
- **/
+ * @title Call is the struct that contains the target address and extra calldata of a generic call.
+ */
 struct Call {
     address target; // The address the call is executed on.
-    bytes data; // Extra calldata to be passed to the call
+    bytes data; // Extra calldata to be passed during the call
 }
 
 /**
- * @title IWell is the interface for the Well contract
- **/
+ * @title IWell is the interface for the Well contract.
+ */
 interface IWell {
 
     /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
      * @param toToken The token swapped to
-     * @param amountIn The amount of `fromToken` added to the Well
-     * @param amountOut The amount of `toToken` received from the Well
+     * @param amountIn The amount of `fromToken` transferred into the Well
+     * @param amountOut The amount of `toToken` transferred out of the Well
      */
     event Swap(
         IERC20 fromToken,
@@ -44,9 +44,9 @@ interface IWell {
     );
 
     /**
-     * @notice Emitted when liquidity is removed from the Well.
+     * @notice Emitted when liquidity is removed from the Well as multiple underlying tokens.
      * @param lpAmountIn The amount of LP tokens burned
-     * @param tokenAmountsOut The amounts of each token received from the Well
+     * @param tokenAmountsOut The amount of each underlying token removed
      * @dev Gas cost scales with `n` tokens.
      */
     event RemoveLiquidity(
@@ -55,12 +55,12 @@ interface IWell {
     );
     
     /**
-     * @notice Emitted when liquidity is removed from the Well as a single token.
+     * @notice Emitted when liquidity is removed from the Well as a single underlying token.
      * @param lpAmountIn The amount of LP tokens burned
-     * @param tokenOut The token received
-     * @param tokenAmountOut The amount of `tokenOut` received
-     * @dev Emitting a separate event when removing liquidity to a single token
-     * saves gas since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
+     * @param tokenOut The underlying token removed
+     * @param tokenAmountOut The amount of `tokenOut` removed
+     * @dev Emitting a separate event when removing liquidity as a single token
+     * saves gas, since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
      * for each token in the Well.
      */
     event RemoveLiquidityOneToken(
@@ -77,8 +77,9 @@ interface IWell {
     function tokens() external view returns (IERC20[] memory);
 
     /**
-     * @notice Returns the Well function as a Call struct, which contains the 
-     * address of the Well function contract and extra data to pass during calls.
+     * @notice Returns the Well function as a Call struct.
+     * @dev Contains the address of the Well function contract and extra data to 
+     * pass during calls.
      * 
      * **Well functions** define a relationship between the balances of the
      * tokens in the Well and the number of LP tokens.
@@ -88,8 +89,9 @@ interface IWell {
     function wellFunction() external view returns (Call memory);
 
     /**
-     * @notice Returns the Pump attached to the Well as a Call struct, which
-     * contains the address of the Pump contract and extra data to pass during calls.
+     * @notice Returns the Pump attached to the Well as a Call struct.
+     * @dev Contains the address of the Pump contract and extra data to pass
+     * during calls.
      *
      * **Pumps** are on-chain oracles that are updated every time the Well is
      * interacted with.
@@ -102,8 +104,7 @@ interface IWell {
     function pump() external view returns (Call memory);
 
     /**
-     * @notice Returns the Tokens, Well function, and Pump associated with
-     * this Well.
+     * @notice Returns the tokens, Well function, and Pump associated with this Well.
      */
     function well() external view returns (
         IERC20[] memory _tokens,
@@ -114,12 +115,12 @@ interface IWell {
     //////////// SWAP: FROM ////////////
 
     /**
-     * @notice Swaps from an *exact* amount of one token to a *minimum* amount of another token.
+     * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken`.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
-     * @param amountIn The exact amount of `fromToken` to spend
+     * @param amountIn The amount of `fromToken` to spend
      * @param minAmountOut The minimum amount of `toToken` to receive
-     * @param recipient The address to receive tokens
+     * @param recipient The address to receive `toToken`
      * @return amountOut The amount of `toToken` received
      */
     function swapFrom(
@@ -134,8 +135,8 @@ interface IWell {
      * @notice Gets the amount of one token received for swapping an amount of another token.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
-     * @param amountIn The exact amount of `fromToken` to spend
-     * @return amountOut The amount of `toToken` received
+     * @param amountIn The amount of `fromToken` to spend
+     * @return amountOut The amount of `toToken` to receive
      */
     function getSwapOut(
         IERC20 fromToken,
@@ -146,12 +147,12 @@ interface IWell {
     //////////// SWAP: TO ////////////
 
     /**
-     * @notice Swaps from a *maximum* amount of one token to an *exact* amount of another token.
+     * @notice Swaps from a maximum amount of `fromToken` to an exact amount of `toToken`.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param maxAmountIn The maximum amount of `fromToken` to spend
-     * @param amountOut The exact amount of `toToken` to receive
-     * @param recipient The address to receive tokens
+     * @param amountOut The amount of `toToken` to receive
+     * @param recipient The address to receive `toToken`
      * @return amountIn The amount of `toToken` received
      */
     function swapTo(
@@ -163,11 +164,11 @@ interface IWell {
     ) external returns (uint amountIn);
 
     /**
-     * @notice Gets the amount of one token required to receive an amount of another token during a swap.
+     * @notice Gets the amount of one token that must be spent to receive an amount of another token during a swap.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param amountOut The amount of `toToken` desired
-     * @return amountIn The amount of `fromToken` required to receive `amountOut` of `toToken`
+     * @return amountIn The amount of `fromToken` that must be spent
      */
     function getSwapIn(
         IERC20 fromToken,
@@ -210,10 +211,10 @@ interface IWell {
     //////////// ADD LIQUIDITY ////////////
 
     /**
-     * @notice Adds liquidity to the Well using any combination of tokens
-     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens}
+     * @notice Adds liquidity to the Well as multiple tokens in any ratio.
+     * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @param minLpAmountOut The minimum amount of LP tokens to receive
-     * @param recipient The address to receive tokens
+     * @param recipient The address to receive the LP tokens
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
@@ -223,9 +224,9 @@ interface IWell {
     ) external returns (uint lpAmountOut);
 
     /**
-     * @notice Calculates the amount of LP tokens to receive from adding liquidity with any combination of tokens
-     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens}
-     * @return lpAmountOut The amount of LP tokens received
+     * @notice Gets the amount of LP tokens received from adding liquidity as multiple tokens in any ratio.
+     * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+     * @return lpAmountOut The amount of LP tokens to receive
      */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn)
         external
