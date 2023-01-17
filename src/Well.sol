@@ -190,8 +190,22 @@ contract Well is
 
     //////////// SWAP: UTILITIES ////////////
 
-    /// @dev low level swap function. Fetches balances, indexes of tokens and returns swap output.
-    /// given a change in balance of fromToken, returns change in balance of toToken.
+    /**
+     * @notice Given a change in Well balance of `fromToken` by `amountIn`,
+     * return the change in Well balance of `toToken`. Loads balances and indices
+     * of tokens, then calculates Swap output.
+     * 
+     * @dev Accounting is performed from the perspective of the Well. Positive 
+     * values represent token flows into the Well, negative values represent 
+     * token flows out of the Well.
+     * 
+     * | `fromToken` | `toToken` | `amountIn` | `amountOut` | Note                              |
+     * |-------------|-----------|------------|-------------|-----------------------------------|
+     * | 0xBEAN      | 0xDAI     | 100 BEAN   | -100 DAI    | User spends BEAN and receives DAI |
+     * | 0xBEAN      | 0xDAI     | -100 BEAN  | 100 DAI     | User spends DAI and receives BEAN |
+     * | 0xDAI       | 0xBEAN    | 100 DAI    | -100 BEAN   | User spends DAI and receives BEAN |
+     * | 0xDAI       | 0xBEAN    | -100 DAI   | 100 BEAN    | User spends BEAN and receives DAI |
+     */
     function getSwap(
         IERC20 fromToken,
         IERC20 toToken,
