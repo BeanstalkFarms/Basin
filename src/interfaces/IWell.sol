@@ -78,20 +78,18 @@ interface IWell {
 
     /**
      * @notice Returns the Well function as a Call struct, which contains the 
-     * address of the Well function contract and extra calldata to pass during
-     * calls.
+     * address of the Well function contract and extra data to pass during calls.
      * 
      * **Well functions** define a relationship between the balances of the
      * tokens in the Well and the number of LP tokens.
      * 
-     * The Well function should implement {IWellFunction}.
+     * A Well function MUST implement {IWellFunction}.
      */
     function wellFunction() external view returns (Call memory);
 
     /**
      * @notice Returns the Pump attached to the Well as a Call struct, which
-     * contains the address of the Pump contract and extra calldata to pass
-     * during calls.
+     * contains the address of the Pump contract and extra data to pass during calls.
      *
      * **Pumps** are on-chain oracles that are updated every time the Well is
      * interacted with.
@@ -99,7 +97,7 @@ interface IWell {
      * A Pump is not required for Well operation. For Wells without a Pump:
      * `pump().target = address(0)`.
      * 
-     * The Pump should implement {IPump}.
+     * An attached Pump MUST implement {IPump}.
      */
     function pump() external view returns (Call memory);
 
@@ -116,13 +114,12 @@ interface IWell {
     //////////// SWAP: FROM ////////////
 
     /**
-     * @notice Swaps from an *exact* amount of one token to *at least* an amount
-     * of another token.
+     * @notice Swaps from an *exact* amount of one token to a *minimum* amount of another token.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param amountIn The exact amount of `fromToken` to spend
      * @param minAmountOut The minimum amount of `toToken` to receive
-     * @param recipient The address to deliver tokens to
+     * @param recipient The address to receive tokens
      * @return amountOut The amount of `toToken` received
      */
     function swapFrom(
@@ -134,8 +131,7 @@ interface IWell {
     ) external returns (uint amountOut);
 
     /**
-     * @notice Calculates the `amountOut` of `toToken` received for `amountIn`
-     * of `fromToken` during a swap.
+     * @notice Gets the amount of one token received for swapping an amount of another token.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param amountIn The exact amount of `fromToken` to spend
@@ -150,13 +146,12 @@ interface IWell {
     //////////// SWAP: TO ////////////
 
     /**
-     * @notice Swaps from *at most* an amount of one token to an *exact* amount
-     * of another token.
+     * @notice Swaps from a *maximum* amount of one token to an *exact* amount of another token.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param maxAmountIn The maximum amount of `fromToken` to spend
      * @param amountOut The exact amount of `toToken` to receive
-     * @param recipient The address to deliver tokens to
+     * @param recipient The address to receive tokens
      * @return amountIn The amount of `toToken` received
      */
     function swapTo(
@@ -168,7 +163,7 @@ interface IWell {
     ) external returns (uint amountIn);
 
     /**
-     * @notice Calculates the `amountIn` of `fromToken` required to receive `amountOut` of `toToken` during a swap.
+     * @notice Gets the amount of one token required to receive an amount of another token during a swap.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param amountOut The amount of `toToken` desired
@@ -180,13 +175,45 @@ interface IWell {
         uint amountOut
     ) external view returns (uint amountIn);
 
+    //////////// SWAP: UTILITIES ////////////
+
+    /**
+     * @notice Gets the output of a swap using the Well's current token balances.
+     * @param fromToken The token to swap from
+     * @param toToken The token to swap to
+     * @param amountIn The Well's change in balance of `fromToken`
+     * @return amountOut The Well's change in balance of `toToken`
+     * @dev Uses signed integer accounting.
+     */
+    function getSwap(
+        IERC20 fromToken,
+        IERC20 toToken,
+        int amountIn
+    ) external view returns (int amountOut);
+
+    /**
+     * @notice Calculates the output of a swap given a list of token balances.
+     * @param balances A list of token balances; MUST match the indexing of {Well.tokens}
+     * @param i The index of the token to swap from
+     * @param j The index of the token to swap to
+     * @param amountIn The Well's change in balance of token `i`
+     * @return amountOut The Well's change in balance of token `j`
+     * @dev Uses signed integer accounting.
+     */
+    function calculateSwap(
+        uint[] memory balances,
+        uint i,
+        uint j,
+        int amountIn
+    ) external view returns (int amountOut);
+
     //////////// ADD LIQUIDITY ////////////
 
     /**
      * @notice Adds liquidity to the Well using any combination of tokens
-     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens()}
+     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens}
      * @param minLpAmountOut The minimum amount of LP tokens to receive
-     * @param recipient The address to deliver tokens to
+     * @param recipient The address to receive tokens
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
@@ -197,7 +224,7 @@ interface IWell {
 
     /**
      * @notice Calculates the amount of LP tokens to receive from adding liquidity with any combination of tokens
-     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens()}
+     * @param tokenAmountsIn The exact amount of each token to add; MUST match the indexing of {Well.tokens}
      * @return lpAmountOut The amount of LP tokens received
      */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn)
@@ -210,9 +237,9 @@ interface IWell {
     /**
      * @notice Removes liquidity from the Well in an balanced ratio of all tokens
      * @param lpAmountIn The exact amount of LP tokens to burn
-     * @param minTokenAmountsOut The minimum amount of each token to receive; MUST match the indexing of {Well.tokens()}
-     * @param recipient The address to deliver tokens to
-     * @return tokenAmountsOut The amounts of tokens received
+     * @param minTokenAmountsOut The minimum amount of each token to receive; MUST match the indexing of {Well.tokens}
+     * @param recipient The address to receive tokens
+     * @return tokenAmountsOut The amount of each token received
      */
     function removeLiquidity(
         uint lpAmountIn,
@@ -221,9 +248,9 @@ interface IWell {
     ) external returns (uint[] memory tokenAmountsOut);
 
     /**
-     * @notice Calculates the amounts of tokens received from removing liquidity in a balanced ratio
-     * @param lpAmountIn The exact amount of LP tokens to burn
-     * @return tokenAmountsOut The amounts of tokens received from removing liquidity in a balanced ratio
+     * @notice Calculates the amount of each token received from removing liquidity in a balanced ratio
+     * @param lpAmountIn The amount of LP tokens to burn
+     * @return tokenAmountsOut The amount of each token received
      */
     function getRemoveLiquidityOut(uint lpAmountIn)
         external
@@ -233,11 +260,11 @@ interface IWell {
     //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
 
     /**
-     * @notice Removes liquidity from the Well in exchange for one token in the Well
-     * @param lpAmountIn The exact amount of LP tokens to burn
-     * @param tokenOut The token to remove liquidity to
+     * @notice Removes liquidity from the Well as a single token.
+     * @param lpAmountIn The amount of LP tokens to burn
+     * @param tokenOut The token to remove from the Well
      * @param minTokenAmountOut The minimum amount of `tokenOut` to receive
-     * @param recipient The address to deliver tokens to
+     * @param recipient The address to receive tokens
      * @return tokenAmountOut The amount of `tokenOut` received
      */
     function removeLiquidityOneToken(
@@ -248,10 +275,10 @@ interface IWell {
     ) external returns (uint tokenAmountOut);
 
     /**
-     * @notice Calculates the amount of `token` to receive from removing liquidity in exchange for one token
-     * @param token The token to remove liquidity to
-     * @param lpAmountIn The exact amount of LP tokens to burn
-     * @return tokenAmountOut The amount of `token` received from removing liquidity in exchange for one token
+     * @notice Calculates the amount received from removing liquidity as a single token
+     * @param token The token to remove from the Well
+     * @param lpAmountIn The amount of LP tokens to burn
+     * @return tokenAmountOut The amount of `token` received
      */
     function getRemoveLiquidityOneTokenOut(
         IERC20 token,
@@ -261,9 +288,10 @@ interface IWell {
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
     /**
-     * @notice Removes liquidity from the Well in any amounts of all tokens
+     * @notice Removes liquidity from the Well as a combination of tokens.
      * @param maxLpAmountIn The maximum amount of LP tokens to burn
-     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens()}
+     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens}
+     * @param recipient The address to receive tokens
      * @return lpAmountIn The amount of LP tokens burned
      */
     function removeLiquidityImbalanced(
@@ -273,8 +301,8 @@ interface IWell {
     ) external returns (uint lpAmountIn);
 
     /**
-     * @notice Calculates the amount of LP tokens to burn to remove liquidity in any amounts of all tokens
-     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens()}
+     * @notice Get the amount of LP tokens to burn to remove liquidity in any amounts of all tokens
+     * @param tokenAmountsOut The exact amount amount of each token to receive; MUST match the indexing of {Well.tokens}
      * @return lpAmountIn The amount of LP tokens burned
      */
     function getRemoveLiquidityImbalancedIn(

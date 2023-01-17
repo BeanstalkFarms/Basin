@@ -207,42 +207,10 @@ contract Well is
     //////////// SWAP: UTILITIES ////////////
 
     /**
-     * @notice Given a change in Well balance of `fromToken` by `amountIn`,
-     * return the change in Well balance of `toToken`. Loads balances and indices
-     * of tokens, then calculates Swap output.
-     * @dev See {calculateSwap} for details re: signed math.
-     */
-    function getSwap(
-        IERC20 fromToken,
-        IERC20 toToken,
-        int amountIn
-    ) public view returns (int amountOut) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances(_tokens);
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
-        amountOut = calculateSwap(balances, i, j, amountIn);
-    }
-
-    /**
-     * @dev same as {getSwap}, but also updates the Pump.
-     */
-    function updatePumpsAndgetSwap(
-        IERC20 fromToken,
-        IERC20 toToken,
-        int amountIn,
-        int minAmountOut
-    ) internal returns (int amountOut) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens);
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
-        amountOut = calculateSwap(balances, i, j, amountIn);
-        require(amountOut >= minAmountOut, "Well: slippage");
-    }
-    
-    /**
-     * @notice 
-     * @dev A swap to a specified amount is the same as a swap from a negative
-     * specified amount. Allows {swapFrom} and {swapTo} can use the same swap
+     * @dev See {IWell.getSwap}.
+     *
+     * A swap to a specified amount is the same as a swap from a negative
+     * specified amount. Allows {swapFrom} and {swapTo} to employ the same Swap
      * logic using signed math.
      * 
      * Accounting is performed from the perspective of the Well. Positive 
@@ -255,6 +223,30 @@ contract Well is
      * | 0xBEAN      | 0xDAI     | -100 BEAN  | 100 DAI     | User spends DAI and receives BEAN |
      * | 0xDAI       | 0xBEAN    | 100 DAI    | -100 BEAN   | User spends DAI and receives BEAN |
      * | 0xDAI       | 0xBEAN    | -100 DAI   | 100 BEAN    | User spends BEAN and receives DAI |
+     *
+     * Conversion back to uint256 should occur in upstream {getSwapFrom} and
+     * {getSwapTo} methods.
+     */
+    function getSwap(
+        IERC20 fromToken,
+        IERC20 toToken,
+        int amountIn
+    ) public view returns (int amountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory balances = getBalances(_tokens);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        amountOut = calculateSwap(balances, i, j, amountIn);
+    }
+    
+    /**
+     * @dev See {IWell.calculateSwap}.
+     * 
+     * During Well operation, `balances` are loaded prior prior to this function.
+     * It is exposed publicly to allow Well consumers to calculate swap rates
+     * for any given set of token balances.
+     * 
+     * For both `amountIn` and `amountOut`, positive values indicate a token 
+     * inflow to the Well, and negative values indicate a token outflow.
      */
     function calculateSwap(
         uint[] memory balances,
@@ -267,6 +259,22 @@ contract Well is
             ? balances[i] + uint(amountIn)
             : balances[i] - uint(-amountIn);
         amountOut = int(balances[j]) - int(getBalance(_wellFunction, balances, j, totalSupply()));
+    }
+
+    /**
+     * @dev Internal version of {getSwap} which also updates the Pump.
+     */
+    function updatePumpsAndgetSwap(
+        IERC20 fromToken,
+        IERC20 toToken,
+        int amountIn,
+        int minAmountOut
+    ) internal returns (int amountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory balances = updatePumpBalances(_tokens);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        amountOut = calculateSwap(balances, i, j, amountIn);
+        require(amountOut >= minAmountOut, "Well: slippage");
     }
 
     /**
@@ -577,7 +585,7 @@ contract Well is
             else if (jToken == _tokens[k]) j = k;
         }
     }
-    
+
     /**
      * @dev Returns the index of `jToken` in `_tokens`.
      */
