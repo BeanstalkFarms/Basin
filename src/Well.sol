@@ -22,23 +22,54 @@ import "src/utils/ImmutableWellFunction.sol";
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  *
- * Each Well has tokens, a pricing function, and a Pump.
- * - Tokens defines the set of tokens that can be exchanged in the pool.
- * - The pricing function defines an invariant relationship between the balances
- *   of the tokens in the pool and the number of LP tokens. See {IWellFunction}.
- * - Pumps are on-chain oracles that are updated every time the pool is
+ * DEFINITION
+ * ----------
+ * 
+ * Each Well is defined by its Tokens, Well function, and Pump.
+ * - **Tokens** define the set of ERC-20 tokens that can be exchanged in the Well.
+ * - The **Well function** defines an invariant relationship between the balances
+ *   of the tokens in the Well and the number of LP tokens. See {IWellFunction}.
+ * - **Pumps** are on-chain oracles that are updated every time the Well is
  *   interacted with. See {IPump}.
+ * 
+ * A Well's Tokens, Well function, and Pump are stored as immutable variables
+ * during Well construction to prevent unnessary SLOAD calls during operation.
+
+ * Wells support swapping, adding liquidity, and removing liquidity in balanced
+ * or imbalanced proportions.
  * 
  * Including a Pump is optional. Only 1 Pump can be attached to a Well, but a
  * Pump can call other Pumps, allowing multiple Pumps to be used.
- * 
- * A Well's tokens, pricing function, and Pump are stored as immutable variables
- * to prevent unnessary SLOAD calls.
- * 
- * Users can swap tokens in and add/remove liquidity to a Well.
  *
- * Implementation of ERC-20, ERC-2612 and {IWell} interface.
- **/
+ * Each Well implements ERC-20, ERC-2612 and the {IWell} interface.
+ *
+ * MOTIVATION
+ * ----------
+ * 
+ * Allowing composability of the pricing function & oracle at the Well level is
+ * a deliberate design decision with significant implications. 
+ *
+ * In paticular, a standard AMM interface invoking composable components allows
+ * for developers to iterate upon the underlying pricing functions & oracles
+ * which greatly impact gas and capital efficiency.
+ *
+ * However, this architecture shifts much of the attack surface area to the
+ * Well's components. Users of Wells should be aware that anyone can deploy a 
+ * Well with malicious components, and that new Wells SHOULD NOT be trusted 
+ * without careful review. This understanding is particularly important in the 
+ * DeFi context in which Well information may be consumed via on-chain registries
+ * or off-chain indexing systems.
+ *
+ * The Wells architecture aims to outline a simple interface for composable
+ * AMMs and leave the process of evaluating a given Well's trustworthiness as the
+ * responsibility of the user and of DeFi.
+ *
+ * To this end, future work may focus on development of on-chain Well registries
+ * and factories which create or highlight Wells composed of known components.
+ * An example factory implementation is provided in {WellBuilder} without opinion
+ * regarding the trustworthiness of Well functions and Pumps deployed using it. 
+ * Wells are not required to be deployed via this mechanism.
+ */
 contract Well is
     ERC20Permit,
     IWell,
@@ -49,17 +80,19 @@ contract Well is
 {
     using SafeERC20 for IERC20;
 
-    /// @dev Construct a Well. Each Well is defined by its combination of
-    /// ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`). 
-    ///
-    /// For gas efficiency, these three components are placed in immutable
-    /// storage during construction. 
-    /// 
-    /// {ImmutableTokens.sol} stores up to 16 immutable token addresses.
-    /// {ImmutableWellFunction.sol} stores an immutable Well function {Call} struct.
-    /// {ImmutablePump.sol} stores an immutable Pump {Call} struct.
-    ///
-    /// Usage of a Pump is optional: set `_pump.target` to address(0) to disable.
+    /**
+     * @dev Construct a Well. Each Well is defined by its combination of
+     * ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`). 
+     *
+     * For gas efficiency, these three components are placed in immutable
+     * storage during construction. 
+     * 
+     * {ImmutableTokens.sol} stores up to 16 immutable token addresses.
+     * {ImmutableWellFunction.sol} stores an immutable Well function {Call} struct.
+     * {ImmutablePump.sol} stores an immutable Pump {Call} struct.
+     *
+     * Usage of a Pump is optional: set `_pump.target` to address(0) to disable.
+     */
     constructor(
         IERC20[] memory _tokens,
         Call memory _function,
@@ -80,7 +113,9 @@ contract Well is
 
     //////////// WELL DEFINITION ////////////
 
-    /// @dev see {IWell.tokens}
+    /**
+     * @dev see {IWell.tokens}
+     */
     function tokens()
         public
         view
