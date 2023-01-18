@@ -496,7 +496,7 @@ contract Well is
         if (numberOfPumps() == 0) return balances;
 
         if (numberOfPumps() == 1) {
-        IPump(firstPumpAddress()).update(balances, firstPumpBytes());
+            IPump(firstPumpAddress()).update(balances, firstPumpBytes());
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
