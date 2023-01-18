@@ -146,9 +146,9 @@ contract ImmutablePumps {
         // _bytes3_6 = getCallBytesFromList(calls, 3, 6);
         // _bytes3_7 = getCallBytesFromList(calls, 3, 7);
 
-        // bytesLegnth = getCallNumberOfBytesFromList(calls, 4);
-        // require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        // numberOfBytes4 = bytesLegnth;
+        // bytesLength = getCallNumberOfBytesFromList(calls, 4);
+        // require(bytesLength <= MAX_SIZE, "Too many bytes");
+        // numberOfBytes4 = bytesLength;
         // _bytes4_0 = getCallBytesFromList(calls, 4, 0);
         // _bytes4_1 = getCallBytesFromList(calls, 4, 1);
         // _bytes4_2 = getCallBytesFromList(calls, 4, 2);
@@ -158,9 +158,9 @@ contract ImmutablePumps {
         // _bytes4_6 = getCallBytesFromList(calls, 4, 6);
         // _bytes4_7 = getCallBytesFromList(calls, 4, 7);
 
-        // bytesLegnth = getCallNumberOfBytesFromList(calls, 5);
-        // require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        // numberOfBytes5 = bytesLegnth;
+        // bytesLength = getCallNumberOfBytesFromList(calls, 5);
+        // require(bytesLength <= MAX_SIZE, "Too many bytes");
+        // numberOfBytes5 = bytesLength;
         // _bytes5_0 = getCallBytesFromList(calls, 5, 0);
         // _bytes5_1 = getCallBytesFromList(calls, 5, 1);
         // _bytes5_2 = getCallBytesFromList(calls, 5, 2);
@@ -171,11 +171,13 @@ contract ImmutablePumps {
         // _bytes5_7 = getCallBytesFromList(calls, 5, 7);
     }
 
+    /// @dev Get `calls[i].target` or return ZERO_TARGET if `i` is out of bounds.
     function getCallTargetFromList(Call[] memory calls, uint i) private pure returns (address _target) {
         if (i >= calls.length) _target = ZERO_TARGET;
         else _target = calls[i].target;
     }
 
+    /// @dev Get `calls[i].data[j].getBytes32FromBytes()` or return ZERO_BYTES if `i` is out of bounds.
     function getCallBytesFromList(Call[] memory calls, uint i, uint j) private pure returns (bytes32 _bytes) {
         if (i >= calls.length) _bytes = ZERO_BYTES;
         else _bytes = calls[i].data.getBytes32FromBytes(j);
