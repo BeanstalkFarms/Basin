@@ -10,12 +10,14 @@ import "forge-std/Test.sol";
 import "oz/utils/Strings.sol";
 
 import {Well, Call, IERC20} from "src/Well.sol";
-import {WellBuilder} from "src/WellBuilder.sol";
+import {Auger} from "src/Auger.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {MockToken} from "mocks/tokens/MockToken.sol";
-import {Users} from "utils/Users.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
+
+import {Users} from "utils/Users.sol";
+
 abstract contract TestHelper is Test {
     using Strings for uint;
 

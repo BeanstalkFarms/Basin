@@ -8,18 +8,18 @@ import "src/interfaces/IWell.sol";
 
 /**
  * @author Publius
- * @title Well Builder Inferface
+ * @title Auger Inferface
  */
-interface IWellBuilder {
+interface IAuger {
     
     /**
-     * @notice Builds a Well with the provided components.
+     * @notice Bores a Well with the provided components.
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
      * @param pumps The Pumps attached to the Well
      * @return well The address of the Well
      */
-    function buildWell(
+    function bore(
         string calldata name,
         string calldata symbol,
         IERC20[] calldata tokens,

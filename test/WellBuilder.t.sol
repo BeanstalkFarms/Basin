@@ -5,7 +5,7 @@
 
 // import "test/TestHelper.sol";
 
-// contract WellBuilderTest is TestHelper {
+// contract AugerTest is TestHelper {
 
 //     address[] wells;
 
@@ -14,7 +14,7 @@
 //     function setUp() public {
 //         initUser();
 //         deployMockTokens(10);
-//         wellBuilder = new WellBuilder();
+//         wellBuilder = new Auger();
 //         Call memory wf = Call(address(new ConstantProduct()), new bytes(0));
 //         Call memory pump;
 //         wells.push(wellBuilder.buildWell(getTokens(2), wf, pump));

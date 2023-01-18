@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWellBuilder.sol";
+import "src/interfaces/IAuger.sol";
 import "src/Well.sol";
 
 /**
- * @title Well Builder 
+ * @title Auger 
  * @author Publius
  */
-contract WellBuilder is IWellBuilder {
+contract Auger is IAuger {
     constructor() {}
 
-    /// @dev see {IWellBuilder.buildWell}
-    function buildWell(
+    /// @dev see {IAuger.bore}
+    function bore(
         string calldata name,
         string calldata symbol,
         IERC20[] calldata tokens,
