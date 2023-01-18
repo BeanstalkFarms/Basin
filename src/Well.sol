@@ -17,7 +17,6 @@ import "src/utils/ImmutableTokens.sol";
 import "src/utils/ImmutablePumps.sol";
 import "src/utils/ImmutableWellFunction.sol";
 
-
 /**
  * @title Well
  * @author Publius, Silo Chad, Brean
@@ -133,7 +132,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         amountOut = uint(
-            _getSwapAndUpdatePump(// pumps
+            _getSwapAndUpdatePumps(
                 fromToken,
                 toToken,
                 int(amountIn),
@@ -167,7 +166,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         amountIn = uint(
-            -_getSwapAndUpdatePump( // pumps
+            -_getSwapAndUpdatePumps(
                 toToken,
                 fromToken,
                 -int(amountOut),
@@ -230,7 +229,7 @@ contract Well is
     /**
      * @dev Internal version of {getSwap} which also updates the Pump.
      */
-    function _getSwapAndUpdatePump(
+    function _getSwapAndUpdatePumps(
         IERC20 fromToken,
         IERC20 toToken,
         int amountIn,
