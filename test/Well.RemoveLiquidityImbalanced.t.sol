@@ -60,7 +60,7 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
     }
 
     /// @dev Fuzz test: EQUAL token balances, IMBALANCED removal
-    /// The Well contains equal balances of all underlying tokens.
+    /// The Well contains equal balances of all underlying tokens before execution.
     function test_removeLiquidityImbalanced_fuzz(uint a0, uint a1) prank(user) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts may or may not be equal
@@ -76,17 +76,16 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         // lpAmountIn should be <= user's LP balance
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
-        // Calculate expected LP amount to deliver by computing the new LP token
-        // supply for the Well's balances after performing the removal. The `user`
-        // should receive the delta.
-        uint newLpTokenSupply =  cp.getLpTokenSupply(balances,data);
-        uint totalSupply = well.totalSupply();
-        uint amountOut = totalSupply - newLpTokenSupply;
+        // Calculate the new LP token supply after the Well's balances are changed.
+        // The delta `lpAmountBurned` is the amount of LP that should be burned
+        // when this liquidity is removed.
+        uint newLpTokenSupply =  cp.getLpTokenSupply(balances, data);
+        uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove all of `user`'s liquidity and deliver them the tokens
         uint maxLpAmountIn = well.balanceOf(user);
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(amountOut, amounts);
+        emit RemoveLiquidity(lpAmountBurned, amounts);
         well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
 
         // `user` balance of LP tokens decreases
@@ -137,16 +136,16 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         // lpAmountIn should be <= user's LP balance
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
-        // Calculate expected LP amount to deliver by computing the new LP token
-        // supply for the Well's balances after performing the removal. The `user`
-        // should receive the delta.
+        // Calculate the new LP token supply after the Well's balances are changed.
+        // The delta `lpAmountBurned` is the amount of LP that should be burned
+        // when this liquidity is removed.
         uint newLpTokenSupply = cp.getLpTokenSupply(balances, data);
-        uint lpAmountOut = well.totalSupply() - newLpTokenSupply;
+        uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove some of `user`'s liquidity and deliver them the tokens
         uint maxLpAmountIn = well.balanceOf(user);
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(lpAmountOut, amounts);
+        emit RemoveLiquidity(lpAmountBurned, amounts);
         well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
 
         // `user` balance of LP tokens decreases

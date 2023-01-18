@@ -126,6 +126,4 @@ contract RemoveLiquidityTest is TestHelper {
         assertEq(tokens[0].balanceOf(address(well)), postWellExpectedBalances[0], "Incorrect token0 well balance");
         assertEq(tokens[1].balanceOf(address(well)), postWellExpectedBalances[1], "Incorrect token1 well balance");
     }
-
-    
 }
