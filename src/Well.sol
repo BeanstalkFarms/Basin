@@ -270,7 +270,7 @@ contract Well is
         address recipient
     ) internal {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
-        toToken.transfer(recipient, amountOut);
+        toToken.safeTransfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
 
@@ -337,7 +337,7 @@ contract Well is
                 tokenAmountsOut[i] >= minTokenAmountsOut[i],
                 "Well: slippage"
             );
-            _tokens[i].transfer(recipient, tokenAmountsOut[i]);
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         }
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
@@ -381,7 +381,7 @@ contract Well is
         require(tokenAmountOut >= minTokenAmountOut, "Well: slippage");
 
         _burn(msg.sender, lpAmountIn);
-        tokenOut.transfer(recipient, tokenAmountOut);
+        tokenOut.safeTransfer(recipient, tokenAmountOut);
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
 
@@ -443,7 +443,7 @@ contract Well is
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
         for (uint i; i < _tokens.length; ++i)
-            _tokens[i].transfer(recipient, tokenAmountsOut[i]);
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
