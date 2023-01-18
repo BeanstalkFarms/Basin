@@ -11,7 +11,9 @@ import "src/WellBuilder.sol";
 import "src/functions/ConstantProduct2.sol";
 import "src/functions/ConstantProduct.sol";
 
+import "mocks/pumps/MockPump.sol";
 import "mocks/tokens/MockToken.sol";
+
 import "utils/Users.sol";
 
 abstract contract TestHelper is Test {

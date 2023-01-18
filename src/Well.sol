@@ -39,9 +39,9 @@ contract Well is
      * For gas efficiency, these three components are placed in immutable
      * storage during construction. 
      * 
-     * {ImmutableTokens} stores up to 16 immutable token addresses.
+     * {ImmutableTokens} stores up to 4 immutable token addresses.
      * {ImmutableWellFunction} stores an immutable Well function {Call} struct.
-     * {ImmutablePump} stores an immutable Pump {Call[]} struct.
+     * {ImmutablePump} stores up to 4 immutable Pump {Call[]} structs.
      *
      * Usage of Pumps is optional: set `_pumps.length` to 0 to disable.
      */

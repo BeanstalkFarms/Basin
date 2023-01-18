@@ -14,15 +14,15 @@ contract ImmutableTest is TestHelper {
 
     function testImmutable(
         uint8 numberOfPumps,
-        bytes[6] memory pumpBytes,
-        address[6] memory pumpTargets,
+        bytes[4] memory pumpBytes,
+        address[4] memory pumpTargets,
         bytes memory wellFunctionBytes,
         uint8 nTokens
     ) public {
-        for (uint i = 0; i < 6; i++)
-            vm.assume(pumpBytes[i].length < 8 * 32);
-        vm.assume(numberOfPumps < 6);
-        vm.assume(wellFunctionBytes.length < 32 * 32);
+        vm.assume(numberOfPumps < 5);
+        for (uint i = 0; i < numberOfPumps; i++)
+            vm.assume(pumpBytes[i].length <= 4 * 32);
+        vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
 
         Call[] memory pumps = new Call[](numberOfPumps);
