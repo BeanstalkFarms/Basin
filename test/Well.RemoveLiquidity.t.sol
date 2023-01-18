@@ -65,12 +65,11 @@ contract RemoveLiquidityTest is TestHelper {
         well.removeLiquidity(lpAmountIn, amountsOut, user);
     }
 
-    /// @dev removeLiquidity: fuzzed
-    function testRemoveLiqudityFuzz(uint x) prank(user) public {
+    function testRemoveLiqudityFuzz(uint tknRemoved) prank(user) public {
         uint[] memory amounts = new uint[](2);
 
-        // limit remoove liquidity to account for slippage
-        amounts[0] = bound(x, 0, 750e18); 
+
+        amounts[0] = bound(tknRemoved, 0, 1000e18); 
         amounts[1] = amounts[0];
 
         uint userLPBalance = well.balanceOf(user);
@@ -78,14 +77,11 @@ contract RemoveLiquidityTest is TestHelper {
         bytes memory data = "";
         uint[] memory balances = new uint[](2);
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
-        console.log("lpAmountIn", lpAmountIn);
         balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
         balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
 
         uint newLpTokenSupply =  cp.getLpTokenSupply(balances,data);
-        console.log("NewTknSupply", newLpTokenSupply);
         uint totalSupply = well.totalSupply();
-        console.log("TotalSupply",totalSupply);
         uint amountOut = totalSupply - newLpTokenSupply;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(amountOut,amounts);
@@ -100,4 +96,49 @@ contract RemoveLiquidityTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well balance");
 
     }
+
+    function testRemoveLiqudityFuzzUnbalanced(uint tknRemoved, uint imbalanceBias) public {
+        uint[] memory amounts = new uint[](2);
+        
+        // limit remove liquidity to account for slippage
+        amounts[0] = bound(tknRemoved, 0, 950e18); 
+        amounts[1] = amounts[0];
+        imbalanceBias = bound(imbalanceBias,0,10e18);
+       
+        vm.prank(user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        
+        uint[] memory balancePre = new uint[](2);
+        balancePre[0] = tokens[0].balanceOf(address(well));
+        balancePre[1] = tokens[1].balanceOf(address(well));
+
+        uint userLPBalance = well.balanceOf(user);
+        cp = new ConstantProduct2();
+        bytes memory data = "";
+        uint[] memory balances = new uint[](2);
+        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
+        balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
+        balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
+
+        uint newLpTokenSupply = cp.getLpTokenSupply(balances,data);
+        uint totalSupply = well.totalSupply();
+        uint amountOut = totalSupply - newLpTokenSupply;
+        vm.expectEmit(true, true, true, true);
+        emit RemoveLiquidity(amountOut,amounts);
+        uint[] memory minAmt = new uint[](2);
+        well.removeLiquidity(amountOut,minAmt,user);
+
+        assertEq(well.balanceOf(user), userLPBalance - lpAmountIn, "Incorrect lp output");
+
+        assertEq(tokens[0].balanceOf(user), amounts[0], "Incorrect token0 user balance");
+        assertEq(tokens[1].balanceOf(user), amounts[1], "Incorrect token1 user balance");
+        assertEq(tokens[0].balanceOf(address(well)), balancePre[0] - amounts[0], "Incorrect token0 well balance");
+        assertEq(tokens[1].balanceOf(address(well)), balancePre[1] - amounts[1], "Incorrect token1 well balance");
+
+    }
+
+    
 }
