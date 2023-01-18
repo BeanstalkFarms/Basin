@@ -19,13 +19,27 @@ library LibMath {
      * @param a The number to compute the root of
      * @param n The root to compute
      * @return root The `n`th root of `a`
-     * @dev TODO: more testing - https://ethereum.stackexchange.com/questions/38468/calculate-the-nth-root-of-an-arbitrary-uint-using-solidity
+     * @dev TODO: more testing - https://ethereum.stackexchange.com/questions
+     * /38468/calculate-the-nth-root-of-an-arbitrary-uint-using-solidity
      * https://en.wikipedia.org/wiki/Nth_root_algorithm
+     * This is used in {ConstantProduct.Sol}, where the number of tokens are 
+     * restricted to 16. even roots are much cheaper to compute than uneven,
+     * thus we recursively call sqrt(). 
+     * 
      */
     function nthRoot(uint a, uint n) internal pure returns (uint root) {
         assert (n > 1);
-        if (n == 2) return sqrt(a); // shortcut for square root
-        
+        if(a == 0) return 0;
+        if(n % 2 == 0) {
+            if (n == 2) return sqrt(a); // shortcut for square root
+            if (n == 4) return sqrt(sqrt(a));
+            if (n == 6) return sqrt(sqrt(sqrt(a)));
+            if (n == 8) return sqrt(sqrt(sqrt(sqrt(a))));
+            if (n == 10) return sqrt(sqrt(sqrt(sqrt(sqrt(a)))));
+            if (n == 12) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))));
+            if (n == 14) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a)))))));
+            if (n == 16) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+        }
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)
         uint a0 = (10 ** n) * a;
@@ -45,17 +59,18 @@ library LibMath {
         root = (xNew + 5) / 10;
     }
 
-    // /**
-    //  * @notice computes the square root of a given number
-    //  * @param a The number to compute the square root of
-    //  * @return z The square root of x
-    //  * @dev 
-    //  * This function is based on the Babylonian method of computing square roots
-    //  * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
-    //  * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
-    //  * based on https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
-    //  */
-    function sqrt(uint256 a) public pure returns (uint256 z) {
+    /**
+     * @notice computes the square root of a given number
+     * @param a The number to compute the square root of
+     * @return z The square root of x
+     * @dev 
+     * This function is based on the Babylonian method of computing square roots
+     * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
+     * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
+     * based on https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
+     */
+    
+    function sqrt(uint256 a) internal pure returns (uint256 z) {
         assembly {
             // This segment is to get a reasonable initial estimate for the Babylonian method.
             // If the initial estimate is bad, the number of correct bits increases ~linearly
@@ -116,58 +131,4 @@ library LibMath {
             }
         }
     }
-
-    // function recalculateRoot(uint256 root) internal pure returns (uint256) {
-    //     uint256 lastRootDigit = SafeMath.mod(root,10);
-    //     uint256 rootWithoutLastDigit = uint256(root/10);
-    //     return (rootWithoutLastDigit * 100) + lastRootDigit;
-    // }
-
-    // function normalize(uint256 num) internal pure returns (uint256, int128) {
-    //     int128 normalizationSteps = 0;
-    //     uint256 rangedNumber = num;
-    //     for (int i = 0; i < 256; ++i) {
-    //         if (rangedNumber <= 100) {
-    //             normalizationSteps = int128(i);
-    //             break;
-    //         }
-    //         rangedNumber = rangedNumber/100;
-    //     }
-    //     return (rangedNumber, normalizationSteps);
-    // }
-
-    // function sqrtHFP(uint256 num, int128 fractionLength) internal pure returns (uint256) {
-    //     uint256 normalizedNumber;
-    //     int128 normalizationSteps;
-    //     (normalizedNumber, normalizationSteps) = normalize(num);
-    //     normalizationSteps =normalizationSteps + fractionLength + 1;
-
-    //     uint256 root = 5;
-    //     uint256 rootCalculation = normalizedNumber * root;
-
-    //     int128 fractionLengthCounter = 0;
-
-    //     for (uint i = 0; i < 256; i++) {
-    //         if (fractionLengthCounter == normalizationSteps) {
-    //             break;
-    //         }
-    //         if (rootCalculation >= root) {
-    //             rootCalculation = rootCalculation - root;
-    //             root = root + 10.0;
-    //         } else {
-    //             rootCalculation =rootCalculation * 100;
-    //             root = recalculateRoot(root);
-    //             fractionLengthCounter = fractionLengthCounter + 1;
-    //         }
-    //     }
-    //     return uint256(root / 100);
-    // }
-
-    // function sqrt(uint256 num, int128 fractionLength) public pure returns (uint256) {
-    //     return sqrtHFP(num, fractionLength);
-    // }
-
-    // function sqrtUint256(uint256 num, int128 fractionLength) public pure returns (uint256) {
-    //     return sqrtHFP(uint256(num), fractionLength);
-    // }
 }

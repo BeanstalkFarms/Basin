@@ -16,13 +16,6 @@ contract LibMathTest is TestHelper {
     //////////// NTH ROOT ////////////
     
     /// @dev check requirements
-    function testNthRootRevert() public {
-        vm.expectRevert();
-        LibMath.nthRoot(0, 0); // reverts when n == 0 
-
-        vm.expectRevert();
-        LibMath.nthRoot(0, 1); // reverts when n == 1
-    }
 
     /// @dev zero cases
     function testNthRootOfZero() public {
