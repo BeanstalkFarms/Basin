@@ -17,6 +17,7 @@ contract WellInitTest is TestHelper {
 
     //////////// Well Definition ////////////
     
+    /// @dev tokens
     function testTokens() public {
         _testTokens(well.tokens());
     }
@@ -27,6 +28,7 @@ contract WellInitTest is TestHelper {
         }
     }
  
+    /// @dev well function
     function testWellFunction() public {
         _testWellFunction(well.wellFunction());
     }
@@ -35,6 +37,7 @@ contract WellInitTest is TestHelper {
         assertEq(_wellFunction.data, wellFunction.data);
     }
 
+    /// @dev pumps
     function testPumps() public {
         Call memory _wellPump = well.pump();
         _testPumps(_wellPump);
@@ -44,6 +47,7 @@ contract WellInitTest is TestHelper {
         assertEq(_wellPump.data, pump.data);
     }
 
+    /// @dev well
     function testWell() public {
         (
             IERC20[] memory _wellTokens,
@@ -68,5 +72,10 @@ contract WellInitTest is TestHelper {
 
     function testDecimals() public {
         assertEq(well.decimals(), 18);
+    }
+
+    function testTotalSupply() public {
+        // initializing a 2-token well adds 1000 * 1e18 of each token as liquidity
+        assertEq(well.totalSupply(), 2000 * 1e27);
     }
 }
