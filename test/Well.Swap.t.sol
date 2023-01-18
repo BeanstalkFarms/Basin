@@ -86,27 +86,32 @@ contract SwapTest is TestHelper {
         well.swapTo(tokens[0], tokens[1], 999 * 1e18, amountOut, user);
     }
 
-    function testSwapInFuzz() prank(user) public {
-        uint amountOut = 500 * 1e18;
-        uint maxAmountIn = 1000 * 1e18;
-
-        vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut);
+    function testSwapInFuzz(uint amountOut) prank(user) public {
+        // amountOut is bounded lower due to well function
+        amountOut = bound(amountOut, 0, 500 * 1e18);
 
         uint balanceBefore0 = tokens[0].balanceOf(user);
         uint balanceBefore1 = tokens[1].balanceOf(user);
+        uint[] memory wellBalances = new uint[](2);
+        wellBalances[0] = tokens[0].balanceOf(address(well));
+        wellBalances[1] = tokens[1].balanceOf(address(well));
 
-        uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        uint calcAmountIn = uint256(-well.calculateSwap(wellBalances,1,0,-int(amountOut)));
 
-        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
+        vm.expectEmit(true, true, true, true);
+        emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut);
+
+        well.swapTo(tokens[0], tokens[1], 1000e18, amountOut, user);
+
+        assertEq(balanceBefore0 - tokens[0].balanceOf(user), calcAmountIn, "incorrect token0 user amt");
         assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
 
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
-        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token1 well amt");
+        assertEq(tokens[0].balanceOf(address(well)),  wellBalances[0] + calcAmountIn, "incorrect token0 well amt");
+        assertEq(tokens[1].balanceOf(address(well)), wellBalances[1] - amountOut, "incorrect token1 well amt");
     }
 
     function testSwapOutFuzz(uint amountIn) prank(user) public {
-        amountIn =bound(amountIn,0,1000 * 1e18); 
+        amountIn = bound(amountIn, 0, 1000 * 1e18); 
         uint balanceBefore0 = tokens[0].balanceOf(user);
         uint balanceBefore1 = tokens[1].balanceOf(user);
         uint[] memory wellBalances = new uint[](2);
