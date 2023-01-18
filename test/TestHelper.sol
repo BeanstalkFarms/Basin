@@ -76,7 +76,7 @@ abstract contract TestHelper is Test {
 
     function deployWell() internal returns (Well) {
         wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
-        well = Well(wellBuilder.buildWell(tokens, wellFunction, pump));
+        well = Well(wellBuilder.buildWell("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", tokens, wellFunction, pump));
         return well;
     }
 

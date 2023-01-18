@@ -48,7 +48,7 @@ contract Well is
     constructor(
         IERC20[] memory _tokens,
         Call memory _function,
-        Call memory _pump,
+        Call memory _pump, // array
         string memory _name,
         string memory _symbol
     )
@@ -107,11 +107,11 @@ contract Well is
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call memory _pump
+        Call memory _pump // array
     ) {
         _tokens = tokens();
         _wellFunction = wellFunction();
-        _pump = pump();
+        _pump = pump(); // array, pumps
     }
 
     //////////// SWAP: FROM ////////////
@@ -127,7 +127,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         amountOut = uint(
-            _getSwapAndUpdatePump(
+            _getSwapAndUpdatePump(// pumps
                 fromToken,
                 toToken,
                 int(amountIn),
@@ -161,7 +161,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         amountIn = uint(
-            -_getSwapAndUpdatePump(
+            -_getSwapAndUpdatePump( // pumps
                 toToken,
                 fromToken,
                 -int(amountOut),
@@ -233,9 +233,13 @@ contract Well is
         int amountIn
     ) public view returns (int amountOut) {
         Call memory _wellFunction = wellFunction();
+
         balances[i] = amountIn > 0
             ? balances[i] + uint(amountIn)
             : balances[i] - uint(-amountIn);
+        
+        // Note: The rounding approach of the Well function determines whether
+        // slippage from imprecision goes to the Well or to the User.
         amountOut = int(balances[j]) - int(getBalance(_wellFunction, balances, j, totalSupply()));
     }
 
@@ -249,7 +253,7 @@ contract Well is
         int minAmountOut
     ) internal returns (int amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens); // pumps?
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
         amountOut = calculateSwap(balances, i, j, amountIn);
         require(amountOut >= minAmountOut, "Well: slippage");
@@ -484,7 +488,7 @@ contract Well is
         returns (uint[] memory balances)
     {
         balances = getBalances(_tokens);
-        if (pumpAddress() != address(0))
+        if (pumpAddress() != address(0)) // loop; immutable storage 1 or N check
             IPump(pumpAddress()).update(balances, pumpBytes());
     }
 

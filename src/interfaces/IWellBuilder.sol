@@ -11,56 +11,19 @@ import "src/interfaces/IWell.sol";
  * @title Well Builder Inferface
  */
 interface IWellBuilder {
-
-    /**
-     * @notice Emitted when a Well is built.
-     * @param well The address of the Well
-     * @param tokens The tokens in the Well
-     * @param wellFunction The Well function
-     * @param pump The Pump attached to the Well
-     */
-    event BuildWell(
-        address well,
-        IERC20[] tokens,
-        Call wellFunction,
-        Call pump
-    );
-
+    
     /**
      * @notice Builds a Well with the provided components.
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
      * @param pump The Pump attached to the Well
-     * @return wellAddress The address of the Well
+     * @return well The address of the Well
      */
     function buildWell(
+        string calldata name,
+        string calldata symbol,
         IERC20[] calldata tokens,
         Call calldata wellFunction,
         Call calldata pump
-    ) external payable returns (address wellAddress);
-
-    /**
-     * @notice Returns the Well at a given index.
-     */
-    function getWellByIndex(uint index) external view returns (address well);
-
-    /**
-     * @notice Returns all Wells with a given pair of tokens.
-     */
-    function getWellsBy2Tokens(IERC20 token0, IERC20 token1) external view returns (address[] memory wells);
-
-    /**
-     * @notice Returns the `i`th Well with a given pair of tokens.
-     */
-    function getWellBy2Tokens(IERC20 token0, IERC20 token1, uint i) external view returns (address well);
-
-    /**
-     * @notice Returns all Wells with a given list of tokens.
-     */
-    function getWellsByNTokens(IERC20[] calldata tokens) external view returns (address[] memory wells);
-
-    /**
-     * @notice Returns the `i`th Well with a given list of tokens.
-     */
-    function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well);
+    ) external payable returns (address well);
 }
