@@ -29,7 +29,7 @@ contract ConstantProduct2 is IWellFunction {
     function getLpTokenSupply(
         uint[] calldata balances,
         bytes calldata
-    ) external override view returns (uint lpTokenSupply) {
+    ) external override pure returns (uint lpTokenSupply) {
         lpTokenSupply = (balances[0]*balances[1]*EXP_PRECISION).sqrt() * 2;
     }
 

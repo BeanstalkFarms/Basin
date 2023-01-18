@@ -83,4 +83,6 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well balance");
         assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well balance");
     }
+    
+    // TODO: fuzz test: imbalanced ratio of tokens
 }

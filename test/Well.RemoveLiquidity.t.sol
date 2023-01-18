@@ -139,6 +139,5 @@ contract RemoveLiquidityTest is TestHelper {
     //     assertEq(tokens[1].balanceOf(address(well)), balancePre[1] - amounts[1], "Incorrect token1 well balance");
 
     // }
-
     
 }
