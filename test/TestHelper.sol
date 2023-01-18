@@ -22,7 +22,6 @@ abstract contract TestHelper is Test {
     using Strings for uint;
 
     address user;
-    address user2;
 
     IERC20[] tokens; // Mock token addresses sorted lexicographically
     Call[] pumps; // Instantiated during upstream test
@@ -57,9 +56,7 @@ abstract contract TestHelper is Test {
 
         // Mint mock tokens to user
         mintTokens(user, 1000 * 1e18);
-        mintTokens(user2,1000 * 1e18);
         approveMaxTokens(user, address(well));
-<<<<<<< Updated upstream
         
         // Mint mock tokens to TestHelper
         mintTokens(address(this), 1000 * 1e18);
@@ -67,18 +64,11 @@ abstract contract TestHelper is Test {
 
         // Add initial liquidity from TestHelper
         addLiquidityEqualAmount(address(this), 1000 * 1e18);
-=======
-        approveMaxTokens(user2, address(well));
-        addLiquidtyEqualAmount(address(this), 1000 * 1e18);
->>>>>>> Stashed changes
     }
 
     function initUser() internal {
         Users users = new Users();
-        address[] memory _users = new address[](2);
-        _users = users.createUsers(2);
-        user = _users[0];
-        user2 = _users[1];
+        user = users.getNextUserAddress();
     }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
