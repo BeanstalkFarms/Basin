@@ -7,20 +7,13 @@ pragma solidity ^0.8.17;
 import "src/interfaces/IWell.sol";
 import "src/libraries/LibBytes.sol";
 
-contract ImmutableWellFunction {
+contract ImmutablePump {
     using LibBytes for bytes;
 
-    /// Configuration
-    /// MAX_SIZE = N * 32 where N is the number of immutable storage
-    /// slots contained in this contract. `_bytes0` through `_bytes(N-1)`
-    /// should be enabled.
     uint private constant MAX_SIZE = 4*32;
-    bytes32 private constant ZERO_BYTES = bytes32(0);
 
-    /// Target
     address private immutable _address;
 
-    /// Data
     uint private immutable numberOfBytes;
     bytes32 private immutable _bytes0;
     bytes32 private immutable _bytes1;
@@ -56,7 +49,8 @@ contract ImmutableWellFunction {
     // bytes32 private immutable _bytes31;
 
     constructor(Call memory _call) {
-        require(_call.target != address(0), "Target address cannot be zero");
+        // Pumps aren't required for operation of a Well, so we don't require
+        // that _call.target != address(0) as in {ImmutableWellFunction}.
         _address = _call.target;
 
         bytes memory data = _call.data;
@@ -96,16 +90,16 @@ contract ImmutableWellFunction {
         // _bytes31 = data.getBytes32FromBytes(31);
     }
 
-    function wellFunction() public virtual view returns (Call memory _call) {
-        _call.data = wellFunctionBytes();
+    function pump() public virtual view returns (Call memory _call) {
+        _call.data = pumpBytes();
         _call.target = _address;
     }
 
-    function wellFunctionAddress() public view returns (address __address) {
+    function pumpAddress() public view returns (address __address) {
         __address = _address;
     }
 
-    function wellFunctionBytes() public view returns (bytes memory _bytes) {
+    function pumpBytes() public view returns (bytes memory _bytes) {
         if (numberOfBytes == 0) return _bytes;
 
         _bytes = new bytes(numberOfBytes);

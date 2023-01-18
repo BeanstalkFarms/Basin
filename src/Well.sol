@@ -129,7 +129,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         amountOut = uint(
-            _getSwapAndUpdatePump(
+            _getSwapAndUpdatePump(// pumps
                 fromToken,
                 toToken,
                 int(amountIn),
@@ -163,7 +163,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         amountIn = uint(
-            -_getSwapAndUpdatePump(
+            -_getSwapAndUpdatePump( // pumps
                 toToken,
                 fromToken,
                 -int(amountOut),
@@ -235,9 +235,13 @@ contract Well is
         int amountIn
     ) public view returns (int amountOut) {
         Call memory _wellFunction = wellFunction();
+
         balances[i] = amountIn > 0
             ? balances[i] + uint(amountIn)
             : balances[i] - uint(-amountIn);
+        
+        // Note: The rounding approach of the Well function determines whether
+        // slippage from imprecision goes to the Well or to the User.
         amountOut = int(balances[j]) - int(getBalance(_wellFunction, balances, j, totalSupply()));
     }
 
@@ -251,7 +255,7 @@ contract Well is
         int minAmountOut
     ) internal returns (int amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens);
+        uint[] memory balances = updatePumpBalances(_tokens); // pumps?
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
         amountOut = calculateSwap(balances, i, j, amountIn);
         require(amountOut >= minAmountOut, "Well: slippage");
@@ -268,7 +272,7 @@ contract Well is
         address recipient
     ) internal {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
-        toToken.transfer(recipient, amountOut);
+        toToken.safeTransfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
 
@@ -335,7 +339,7 @@ contract Well is
                 tokenAmountsOut[i] >= minTokenAmountsOut[i],
                 "Well: slippage"
             );
-            _tokens[i].transfer(recipient, tokenAmountsOut[i]);
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         }
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
@@ -379,7 +383,7 @@ contract Well is
         require(tokenAmountOut >= minTokenAmountOut, "Well: slippage");
 
         _burn(msg.sender, lpAmountIn);
-        tokenOut.transfer(recipient, tokenAmountOut);
+        tokenOut.safeTransfer(recipient, tokenAmountOut);
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
 
@@ -441,7 +445,7 @@ contract Well is
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
         for (uint i; i < _tokens.length; ++i)
-            _tokens[i].transfer(recipient, tokenAmountsOut[i]);
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
@@ -491,7 +495,7 @@ contract Well is
         if (numberOfPumps() == 0) return balances;
 
         if (numberOfPumps() == 1) {
-            IPump(firstPumpAddress()).update(balances, firstPumpBytes());
+        IPump(firstPumpAddress()).update(balances, firstPumpBytes());
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {

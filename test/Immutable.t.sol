@@ -23,9 +23,7 @@ contract ImmutableTest is TestHelper {
             vm.assume(pumpBytes[i].length < 8 * 32);
         vm.assume(numberOfPumps < 6);
         vm.assume(wellFunctionBytes.length < 32 * 32);
-        vm.assume(nTokens < 16);
-
-        if (nTokens < 2) nTokens = 2;
+        vm.assume(nTokens < 4 && nTokens > 1);
 
         Call[] memory pumps = new Call[](numberOfPumps);
         for (uint i = 0; i < numberOfPumps; i++) {
@@ -36,6 +34,8 @@ contract ImmutableTest is TestHelper {
         address wellFunction = address(new ConstantProduct2());
 
         Well _well = Well(wellBuilder.buildWell(
+            "",
+            "",
             getTokens(nTokens), 
             Call(wellFunction, wellFunctionBytes), 
             pumps
