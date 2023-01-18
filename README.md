@@ -25,10 +25,6 @@ In particular, a standard AMM interface invoking composable components allows fo
 
 However, this architecture shifts much of the attack surface area to the Well's components. Users of Wells should be aware that anyone can deploy a Well with malicious components, and that new Wells SHOULD NOT be trusted without careful review. This understanding is particularly important in the DeFi context in which Well data may be consumed via on-chain registries or off-chain indexing systems.
 
-The Wells architecture aims to outline a simple interface for composable AMMs and leave the process of evaluating a given Well's trustworthiness as the responsibility of the user.
+The Wells architecture aims to outline a simple interface for composable AMMs and leave the process of evaluating a given Well's trustworthiness as the responsibility of the user. To this end, future work may focus on development of on-chain Well registries and factories which create or highlight Wells composed of known components.
 
-To this end, future work may focus on development of on-chain Well registries and factories which create or highlight Wells composed of known components.
-
-An example factory implementation is provided in [{WellBuilder}](/src/WellBuilder.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. 
-
-Wells are not required to be deployed via this mechanism.
+An example factory implementation is provided in [{WellBuilder}](/src/WellBuilder.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
