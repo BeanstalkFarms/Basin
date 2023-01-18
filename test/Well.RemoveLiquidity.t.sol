@@ -65,7 +65,7 @@ contract RemoveLiquidityTest is TestHelper {
         well.removeLiquidity(lpAmountIn, amountsOut, user);
     }
 
-    function testRemoveLiqudityFuzz(uint tknRemoved) prank(user) public {
+    function testRemoveLiquidityFuzz(uint tknRemoved) prank(user) public {
         uint[] memory amounts = new uint[](2);
 
 
@@ -97,51 +97,35 @@ contract RemoveLiquidityTest is TestHelper {
 
     }
 
-    function testRemoveLiqudityFuzzUnbalanced(uint tknRemoved, uint imbalanceBias) public {
-        uint[] memory amounts = new uint[](2);
+    function testRemoveLiquidityFuzzImbalanced(uint LPtknRemoved, uint imbalanceBias) public {
         cp = new ConstantProduct2();
-        bytes memory data = "";
-        
-        // limit remove liquidity to account for slippage
-        amounts[0] = bound(tknRemoved, 1, 950e18);
-        amounts[1] = amounts[0];
+        uint userLPBalance = well.balanceOf(user);
+        LPtknRemoved = bound(LPtknRemoved, 100, well.balanceOf(user)); 
         imbalanceBias = bound(imbalanceBias,0,10e18);
-       
+
         vm.prank(user2);
         well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
         vm.stopPrank();
-
         vm.startPrank(user);
-        
-        uint[] memory preWellBalance = new uint[](2);
-        preWellBalance[0] = tokens[0].balanceOf(address(well));
-        preWellBalance[1] = tokens[1].balanceOf(address(well));
 
-        uint[] memory preUserBalance = new uint[](2);
-        preUserBalance[0] = tokens[0].balanceOf(address(user));
-        preUserBalance[1] = tokens[1].balanceOf(address(user));
+        uint[] memory tokensExpectedOut = new uint[](2);
+        tokensExpectedOut = well.getRemoveLiquidityOut(LPtknRemoved);
+        uint[] memory postWellExpectedBalances = new uint[](2);
+        postWellExpectedBalances[0] = tokens[0].balanceOf(address(well)) - tokensExpectedOut[0];
+        postWellExpectedBalances[1] = tokens[1].balanceOf(address(well)) - tokensExpectedOut[1];
 
-        uint userLPBalance = well.balanceOf(user);
-        uint[] memory balances = new uint[](2);
-        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
-        balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
-        balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
-
-        uint newLpTokenSupply = cp.getLpTokenSupply(balances,data);
-        uint totalSupply = well.totalSupply();
-        uint amountOut = totalSupply - newLpTokenSupply;
-        // vm.expectEmit(true, true, true, true);
-        // emit RemoveLiquidity(amountOut,amounts);
+        vm.expectEmit(true, true, true, true);
+        emit RemoveLiquidity(LPtknRemoved,tokensExpectedOut);
         uint[] memory minAmt = new uint[](2);
-        well.removeLiquidityImbalanced(userLPBalance,amounts,user);
+        well.removeLiquidity(LPtknRemoved,minAmt,user);
 
-        assertEq(well.balanceOf(user), userLPBalance - lpAmountIn, "Incorrect lp output");
+        assertEq(well.balanceOf(user), userLPBalance - LPtknRemoved, "Incorrect lp output");
 
-        assertApproxEqAbs(tokens[0].balanceOf(user), preUserBalance[0] + amounts[0], 1e8, "Incorrect token0 user balance");
-        assertApproxEqAbs(tokens[1].balanceOf(user),  preUserBalance[1] + amounts[1], 1e8, "Incorrect token1 user balance");
-        assertApproxEqAbs(tokens[0].balanceOf(address(well)), preWellBalance[0] - amounts[0], 1e8, "Incorrect token0 well balance");
-        assertApproxEqAbs(tokens[1].balanceOf(address(well)), preWellBalance[1] - amounts[1], 1e8, "Incorrect token1 well balance");
-
+        assertEq(tokens[0].balanceOf(user), tokensExpectedOut[0], "Incorrect token0 user balance");
+        assertEq(tokens[1].balanceOf(user), tokensExpectedOut[1], "Incorrect token1 user balance");
+        assertEq(tokens[0].balanceOf(address(well)), postWellExpectedBalances[0], "Incorrect token0 well balance");
+        assertEq(tokens[1].balanceOf(address(well)), postWellExpectedBalances[1], "Incorrect token1 well balance");
     }
+
     
 }
