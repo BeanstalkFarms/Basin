@@ -12,13 +12,12 @@ import "forge-std/console.sol";
 
 
 contract AddLiquidityTest is TestHelper {
-    ConstantProduct2 cp;
 
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
     event RemoveLiquidity(uint lpAmountIn,uint[] tokenAmountsOut);
 
     function setUp() public {
-        setupWell(2); // ConstantProduct2, no token
+        setupWell(2);
     }
 
     /// @dev liquidity is initially added in {TestHelper}

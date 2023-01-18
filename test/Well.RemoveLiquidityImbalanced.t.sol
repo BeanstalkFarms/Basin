@@ -6,10 +6,9 @@ pragma solidity ^0.8.17;
 import "test/TestHelper.sol";
 
 contract RemoveLiquidityImbalancedTest is TestHelper {
-    uint[] tokenAmountsOut;
-    
     ConstantProduct2 cp;
     bytes constant data = "";
+    uint[] tokenAmountsOut;
 
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
@@ -73,7 +72,8 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
         balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
 
-        // lpAmountIn should be <= user's LP balance
+        // lpAmountIn should be <= umaxLpAmountIn
+        uint maxLpAmountIn = well.balanceOf(user);
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         // Calculate the new LP token supply after the Well's balances are changed.
@@ -83,7 +83,6 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove all of `user`'s liquidity and deliver them the tokens
-        uint maxLpAmountIn = well.balanceOf(user);
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts);
         well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);

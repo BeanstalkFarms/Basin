@@ -23,13 +23,13 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
         addLiquidityEqualAmount(user, 1000 * 1e18);
     }
 
-    /// @dev 
+    /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityOneTokenOut() public {
         uint amountOut = well.getRemoveLiquidityOneTokenOut(tokens[0], 1000 * 1e27);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 
-    /// @dev base case
+    /// @dev Base case
     function test_removeLiquidityOneToken() prank(user) public {
         uint lpAmountIn = 1000 * 1e27;
         uint minTokenAmountOut = 875 * 1e18;

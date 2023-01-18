@@ -60,8 +60,6 @@ abstract contract TestHelper is Test {
         mintTokens(user2, 1000 * 1e18);
         approveMaxTokens(user, address(well));
         approveMaxTokens(user2, address(well));
-
-        
         
         // Mint mock tokens to TestHelper
         mintTokens(address(this), 1000 * 1e18);
