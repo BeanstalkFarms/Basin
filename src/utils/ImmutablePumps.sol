@@ -13,7 +13,7 @@ contract ImmutablePumps {
     bytes32 private constant ZERO_BYTES = bytes32(0);
     address private constant ZERO_TARGET = address(0);
 
-    uint private MAX_CALLS = 6;
+    uint private constant MAX_CALLS = 6;
 
     uint private constant MAX_SIZE = 8*32;
 
