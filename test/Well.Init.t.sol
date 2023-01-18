@@ -16,7 +16,7 @@ contract WellInitTest is TestHelper {
     }
 
     //////////// Well Definition ////////////
-
+    
     function testTokens() public {
         _testTokens(well.tokens());
     }
