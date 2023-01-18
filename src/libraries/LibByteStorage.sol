@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 
 /**
  * @author Publius
- * @title LibByteStorage provides an interface for storying bytes.
+ * @title LibByteStorage provides an interface for storing bytes.
  **/
 library LibByteStorage {
 

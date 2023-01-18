@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 
 import "src/interfaces/IWellFunction.sol";
 import "src/libraries/LibMath.sol";
+import "forge-std/console.sol";
 
 /**
  * @author Publius
@@ -28,7 +29,7 @@ contract ConstantProduct2 is IWellFunction {
     function getLpTokenSupply(
         uint[] calldata balances,
         bytes calldata
-    ) external override pure returns (uint lpTokenSupply) {
+    ) external override view returns (uint lpTokenSupply) {
         lpTokenSupply = (balances[0]*balances[1]*EXP_PRECISION).sqrt() * 2;
     }
 
