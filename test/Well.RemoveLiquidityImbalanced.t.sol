@@ -15,7 +15,6 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
     function setUp() public {
         setupWell(2);
         addLiquidityEqualAmount(user, 1000 * 1e18);
-
         tokenAmountsOut.push(500 * 1e18);
         tokenAmountsOut.push(506 * 1e17);
     }
@@ -62,14 +61,11 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
         bytes memory data = "";
         uint[] memory balances = new uint[](2);
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
-        console.log("lpAmountIn",lpAmountIn);
         balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
         balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
 
         uint newLpTokenSupply =  cp.getLpTokenSupply(balances,data);
-        console.log("NewTknSupply", newLpTokenSupply);
         uint totalSupply = well.totalSupply();
-        console.log("TotalSupply",totalSupply);
         uint amountOut = totalSupply - newLpTokenSupply;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(amountOut,amounts);
@@ -85,4 +81,50 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
     }
     
     // TODO: fuzz test: imbalanced ratio of tokens
+    function testRemoveLiqudityFuzzUnbalanced(uint tknRemoved, uint imbalanceBias) public {
+        uint[] memory amounts = new uint[](2);
+        cp = new ConstantProduct2();
+        bytes memory data = "";
+        
+        // limit remove liquidity to account for slippage
+        amounts[0] = bound(tknRemoved, 1, 950e18);
+        amounts[1] = amounts[0];
+        imbalanceBias = bound(imbalanceBias,0,10e18);
+       
+        vm.prank(user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        
+        uint[] memory preWellBalance = new uint[](2);
+        preWellBalance[0] = tokens[0].balanceOf(address(well));
+        preWellBalance[1] = tokens[1].balanceOf(address(well));
+
+        uint[] memory preUserBalance = new uint[](2);
+        preUserBalance[0] = tokens[0].balanceOf(address(user));
+        preUserBalance[1] = tokens[1].balanceOf(address(user));
+
+        uint userLPBalance = well.balanceOf(user);
+        uint[] memory balances = new uint[](2);
+        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
+        balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
+        balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
+
+        uint newLpTokenSupply = cp.getLpTokenSupply(balances,data);
+        uint totalSupply = well.totalSupply();
+        uint amountOut = totalSupply - newLpTokenSupply;
+        // vm.expectEmit(true, true, true, true);
+        // emit RemoveLiquidity(amountOut,amounts);
+        uint[] memory minAmt = new uint[](2);
+        well.removeLiquidityImbalanced(userLPBalance,amounts,user);
+
+        assertEq(well.balanceOf(user), userLPBalance - lpAmountIn, "Incorrect lp output");
+
+        assertApproxEqAbs(tokens[0].balanceOf(user), preUserBalance[0] + amounts[0], 1e8, "Incorrect token0 user balance");
+        assertApproxEqAbs(tokens[1].balanceOf(user),  preUserBalance[1] + amounts[1], 1e8, "Incorrect token1 user balance");
+        assertApproxEqAbs(tokens[0].balanceOf(address(well)), preWellBalance[0] - amounts[0], 1e8, "Incorrect token0 well balance");
+        assertApproxEqAbs(tokens[1].balanceOf(address(well)), preWellBalance[1] - amounts[1], 1e8, "Incorrect token1 well balance");
+
+    }
 }
