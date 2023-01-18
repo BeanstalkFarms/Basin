@@ -98,9 +98,9 @@ contract ImmutablePumps {
         // _target4 = getCallTargetFromList(calls, 4);
         // _target5 = getCallTargetFromList(calls, 5);
 
-        uint bytesLegnth = getCallNumberOfBytesFromList(calls, 0);
-        require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        numberOfBytes0 = bytesLegnth;
+        uint bytesLength = getCallNumberOfBytesFromList(calls, 0);
+        require(bytesLength <= MAX_SIZE, "Too many bytes");
+        numberOfBytes0 = bytesLength;
         _bytes0_0 = getCallBytesFromList(calls, 0, 0);
         _bytes0_1 = getCallBytesFromList(calls, 0, 1);
         _bytes0_2 = getCallBytesFromList(calls, 0, 2);
@@ -110,9 +110,9 @@ contract ImmutablePumps {
         // _bytes0_6 = getCallBytesFromList(calls, 0, 6);
         // _bytes0_7 = getCallBytesFromList(calls, 0, 7);
 
-        bytesLegnth = getCallNumberOfBytesFromList(calls, 1);
-        require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        numberOfBytes1 = bytesLegnth;
+        bytesLength = getCallNumberOfBytesFromList(calls, 1);
+        require(bytesLength <= MAX_SIZE, "Too many bytes");
+        numberOfBytes1 = bytesLength;
         _bytes1_0 = getCallBytesFromList(calls, 1, 0);
         _bytes1_1 = getCallBytesFromList(calls, 1, 1);
         _bytes1_2 = getCallBytesFromList(calls, 1, 2);
@@ -122,9 +122,9 @@ contract ImmutablePumps {
         // _bytes1_6 = getCallBytesFromList(calls, 1, 6);
         // _bytes1_7 = getCallBytesFromList(calls, 1, 7);
 
-        bytesLegnth = getCallNumberOfBytesFromList(calls, 2);
-        require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        numberOfBytes2 = bytesLegnth;
+        bytesLength = getCallNumberOfBytesFromList(calls, 2);
+        require(bytesLength <= MAX_SIZE, "Too many bytes");
+        numberOfBytes2 = bytesLength;
         _bytes2_0 = getCallBytesFromList(calls, 2, 0);
         _bytes2_1 = getCallBytesFromList(calls, 2, 1);
         _bytes2_2 = getCallBytesFromList(calls, 2, 2);
@@ -134,9 +134,9 @@ contract ImmutablePumps {
         // _bytes2_6 = getCallBytesFromList(calls, 2, 6);
         // _bytes2_7 = getCallBytesFromList(calls, 2, 7);
 
-        bytesLegnth = getCallNumberOfBytesFromList(calls, 3);
-        require(bytesLegnth <= MAX_SIZE, "Too many bytes");
-        numberOfBytes3 = bytesLegnth;
+        bytesLength = getCallNumberOfBytesFromList(calls, 3);
+        require(bytesLength <= MAX_SIZE, "Too many bytes");
+        numberOfBytes3 = bytesLength;
         _bytes3_0 = getCallBytesFromList(calls, 3, 0);
         _bytes3_1 = getCallBytesFromList(calls, 3, 1);
         _bytes3_2 = getCallBytesFromList(calls, 3, 2);
