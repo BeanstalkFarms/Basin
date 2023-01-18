@@ -14,7 +14,7 @@ contract MockPump is IPump {
 
     bytes public lastData;
 
-    function attach(uint _n, bytes calldata pumpData) external {
+    function attach(uint _n, bytes calldata data) external {
         lastData = "0xATTACHED";
     }
 
