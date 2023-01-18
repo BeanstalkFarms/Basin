@@ -8,7 +8,6 @@ import "test/TestHelper.sol";
 contract RemoveLiquidityTest is TestHelper {
     ConstantProduct2 cp;
 
-
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
     function setUp() public {
@@ -53,8 +52,9 @@ contract RemoveLiquidityTest is TestHelper {
 
     function testRemoveLiqudityFuzz(uint x) prank(user) public {
         uint[] memory amounts = new uint[](2);
+
         // limit remoove liquidity to account for slippage
-        amounts[0] = bound(x,0,750e18); 
+        amounts[0] = bound(x, 0, 750e18); 
         amounts[1] = amounts[0];
 
         uint userLPBalance = well.balanceOf(user);
@@ -62,7 +62,7 @@ contract RemoveLiquidityTest is TestHelper {
         bytes memory data = "";
         uint[] memory balances = new uint[](2);
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
-        console.log("lpAmountIn",lpAmountIn);
+        console.log("lpAmountIn", lpAmountIn);
         balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
         balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
 

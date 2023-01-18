@@ -4,14 +4,18 @@
 
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import "forge-std/console2.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Well, Call, TestHelper, IERC20} from "test/TestHelper.sol";
+import {RandomBytes} from "utils/RandomBytes.sol";
 
 contract ImmutableTest is TestHelper {
     function setUp() public {
         deployMockTokens(16);
-        wellBuilder = new WellBuilder();
+        // wellBuilder = new WellBuilder();
     }
 
+    /// @dev immutable storage should work when any number of its slots are filled
     function testImmutable(
         uint8 numberOfPumps,
         bytes[4] memory pumpBytes,
@@ -33,13 +37,13 @@ contract ImmutableTest is TestHelper {
 
         address wellFunction = address(new ConstantProduct2());
 
-        Well _well = Well(wellBuilder.buildWell(
-            "",
-            "",
+        Well _well = new Well(
             getTokens(nTokens), 
             Call(wellFunction, wellFunctionBytes), 
-            pumps
-        ));
+            pumps,
+            "",
+            ""
+        );
 
         Call[] memory _pumps = _well.pumps();
 
@@ -48,9 +52,11 @@ contract ImmutableTest is TestHelper {
             assertEq(_pumps[i].data, pumps[i].data);
         }
 
+        // Check well function
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
 
+        // Check token addresses; 
         IERC20[] memory _tokens = _well.tokens();
         for (uint i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));
