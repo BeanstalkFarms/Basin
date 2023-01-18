@@ -22,7 +22,6 @@ contract WellInitTest is TestHelper {
     }
     function _testTokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
-            console.log(address(_wellTokens[i]));
             assertEq(address(_wellTokens[i]), address(tokens[i]));
         }
     }

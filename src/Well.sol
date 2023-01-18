@@ -60,8 +60,7 @@ contract Well is
         ReentrancyGuard()
     {
         for (uint i; i < _pumps.length; ++i) {
-            // TODO
-            // IPump(_pumps[0].target).attach(_tokens.length, _pumps[0].data);
+            IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
         }
     }
 

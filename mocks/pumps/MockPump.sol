@@ -14,11 +14,11 @@ contract MockPump is IPump {
 
     bytes public lastData;
 
-    function attach(uint _n, bytes calldata pumpData) external {}
+    function attach(uint _n, bytes calldata pumpData) external {
+        lastData = "0xATTACHED";
+    }
 
-    function update(uint[] calldata, bytes calldata data)
-        external
-    {
+    function update(uint[] calldata, bytes calldata data) external {
         lastData = data;
     }
 
@@ -26,5 +26,7 @@ contract MockPump is IPump {
         external
         view
         returns (bytes memory data)
-    {}
+    {
+        return lastData;
+    }
 }
