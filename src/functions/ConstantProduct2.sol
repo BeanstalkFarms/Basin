@@ -9,35 +9,38 @@ import "src/libraries/LibMath.sol";
 
 /**
  * @author Publius
- * @title Gas efficient Constant Product pricing function for wells with 2 tokens
+ * @title Gas efficient Constant Product pricing function for Wells with 2 tokens.
+ * 
  * Constant Product Wells with 2 tokens use the formula:
- * b_0*b_1 = (s / 2)^2
- * Where
- * s is the supply of LP tokens
- * b_i is the balance at index i
- * n is the number of balances
- **/
+ *  `b_0 * b_1 = (s / 2)^2`
+ * 
+ * Where:
+ *  `s` is the supply of LP tokens
+ *  `b_i` is the balance at index `i`
+ *  The 2 in `s / 2` follows from the fact that there are 2 tokens in the Well
+ */
 contract ConstantProduct2 is IWellFunction {
-
     using LibMath for uint;
 
-    // s = n (b_0*b_1)^(1/2) * 2
+    uint constant EXP_PRECISION = 1e18;
+
+    /// @dev `s = (b_0 * b_1)^(1/2) * 2`
     function getLpTokenSupply(
-        bytes calldata,
-        uint[] calldata balances
+        uint[] calldata balances,
+        bytes calldata
     ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = (balances[0]*balances[1]).sqrt() * 2;
+        lpTokenSupply = (balances[0]*balances[1]*EXP_PRECISION).sqrt() * 2;
     }
 
-    // b_j = (s / 2)^2 /b_{i | i != j} 
+    /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`
     function getBalance(
-        bytes calldata,
         uint[] calldata balances,
         uint j,
-        uint lpTokenSupply
+        uint lpTokenSupply,
+        bytes calldata
     ) external override pure returns (uint balance) {
-        balance = uint((lpTokenSupply / 2) ** 2);
-        balance = balance / balances[j == 1 ? 0 : 1];
+        balance = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
+        balance = (balance - 1) / balances[j == 1 ? 0 : 1] + 1; // Round
     }
 
     function name() external override pure returns (string memory) {

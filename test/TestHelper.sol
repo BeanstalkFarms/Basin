@@ -1,3 +1,6 @@
+/**
+ * SPDX-License-Identifier: MIT
+ **/
 pragma solidity ^0.8.17;
 
 import "forge-std/console2.sol";
@@ -6,34 +9,61 @@ import "forge-std/Test.sol";
 
 import "oz/utils/Strings.sol";
 
-import "src/Well.sol";
-import "src/WellBuilder.sol";
-import "src/functions/ConstantProduct2.sol";
-import "src/functions/ConstantProduct.sol";
+import {Well, Call, IERC20} from "src/Well.sol";
+import {Auger} from "src/Auger.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
-import "mocks/tokens/MockToken.sol";
-import "utils/Users.sol";
+import {MockToken} from "mocks/tokens/MockToken.sol";
+import {MockPump} from "mocks/pumps/MockPump.sol";
+
+import {Users} from "utils/Users.sol";
 
 abstract contract TestHelper is Test {
-    address user;
-    IERC20[] tokens;
-    Call pump;
-    Call wellFunction;
-    WellBuilder wellBuilder;
-    Well well;
-
     using Strings for uint;
 
+    address user;
+
+    IERC20[] tokens; // Mock token addresses sorted lexicographically
+    Call[] pumps; // Instantiated during upstream test
+    Call wellFunction; // Instantated during {deployWell}
+    Well well;
+
     function setupWell(uint n) internal {
+        Call[] memory _pumps = new Call[](0);
+        setupWell(
+            n,
+            Call(address(new ConstantProduct2()), new bytes(0)),
+            _pumps
+        );
+    }
+
+    function setupWell(uint n, Call memory _function, Call[] memory _pumps) internal {
+        wellFunction = _function;
+        for(uint i = 0; i < _pumps.length; i++)
+            pumps.push(_pumps[i]);
+
         initUser();
         deployMockTokens(n);
-        wellBuilder = new WellBuilder();
-        deployWell();
-        mintTokens(address(this), 1000 * 1e18);
-        approveMaxTokens(address(this), address(well));
+
+        // FIXME: manual name/symbol
+        well = new Well(
+            tokens,
+            _function,
+            _pumps,
+            "TOKEN0:TOKEN1 Constant Product Well",
+            "TOKEN0TOKEN1CPw"
+        );
+
+        // Mint mock tokens to user
         mintTokens(user, 1000 * 1e18);
         approveMaxTokens(user, address(well));
-        addLiquidtyEqualAmount(address(this), 1000 * 1e18);
+        
+        // Mint mock tokens to TestHelper
+        mintTokens(address(this), 1000 * 1e18);
+        approveMaxTokens(address(this), address(well));
+
+        // Add initial liquidity from TestHelper
+        addLiquidityEqualAmount(address(this), 1000 * 1e18);
     }
 
     function initUser() internal {
@@ -41,16 +71,18 @@ abstract contract TestHelper is Test {
         user = users.getNextUserAddress();
     }
 
+    /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokens(uint n) internal {
         IERC20[] memory _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
             IERC20 temp = IERC20(
                 new MockToken(
-                    string.concat("Token ", i.toString()),
-                    string.concat("TOKEN", i.toString()),
-                    18
+                    string.concat("Token ", i.toString()), // name
+                    string.concat("TOKEN", i.toString()), // symbol
+                    18 // decimals
                 )
             );
+            // Insertion sort
             uint j;
             if (i > 0) {
                 for (j = i; j >= 1 && temp < _tokens[j - 1]; j--)
@@ -61,38 +93,38 @@ abstract contract TestHelper is Test {
         for (uint i = 0; i < n; i++) tokens.push(_tokens[i]);
     }
 
+    /// @dev mint mock tokens to each recipient
     function mintTokens(address recipient, uint amount) internal {
         for (uint i = 0; i < tokens.length; i++)
             MockToken(address(tokens[i])).mint(recipient, amount);
     }
 
-    function approveMaxTokens(address owner, address spender) internal {
-        vm.startPrank(owner);
+    /// @dev approve `spender` to use `owner` tokens
+    function approveMaxTokens(address owner, address spender) prank(owner) internal {
         for (uint i = 0; i < tokens.length; i++)
             tokens[i].approve(spender, type(uint).max);
-        vm.stopPrank();
     }
 
-    function deployWell() internal returns (Well) {
-        wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
-        well = Well(wellBuilder.buildWell(tokens, wellFunction, pump));
-        return well;
-    }
+    // function deployWell() internal returns (Well) {
+    //     wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
+    //     well = Well(wellBuilder.buildWell(
+    //         "TOKEN0:TOKEN1 Constant Product Well",
+    //         "TOKEN0TOKEN1CPw",
+    //         tokens,
+    //         wellFunction,
+    //         pump
+    //     ));
+    //     return well;
+    // }
 
-    function addLiquidtyEqualAmount(address from, uint amount) internal {
-        vm.startPrank(from);
+    /// @dev add the same `amount` of liquidity for all underlying tokens
+    function addLiquidityEqualAmount(address from, uint amount) prank(from) internal {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
         well.addLiquidity(amounts, 0, from);
-        vm.stopPrank();
     }
 
-    modifier prank(address from) {
-        vm.startPrank(from);
-        _;
-        vm.stopPrank();
-    }
-
+    /// @dev gets the first `n` mock tokens
     function getTokens(uint n)
         internal
         view
@@ -102,5 +134,11 @@ abstract contract TestHelper is Test {
         for (uint i; i < n; ++i) {
             _tokens[i] = tokens[i];
         }
+    }
+
+    modifier prank(address from) {
+        vm.startPrank(from);
+        _;
+        vm.stopPrank();
     }
 }

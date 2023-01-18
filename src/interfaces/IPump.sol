@@ -1,38 +1,40 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.8.17;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title IPump is the interface for the Pump contract
-**/
+ * @title IPump provides an interface for a Pump, an on-chain oracle that is 
+ * updated upon each interaction with a {IWell}.
+ * @author Publius
+ */
 interface IPump {
 
     /**
-     * @notice attaches the pump to a well
-     * @param pumpData pump specific data
-     * @param n The number of tokens in the well
-     * @dev 
-     * Should be called by a Well on deployment.
+     * @notice Attaches the Pump to a Well.
+     * @param n The number of tokens in the Well
+     * @param data Pump data provided on every call
+     * @dev Should be called by a Well during construction. See {Well-constructor}.
      * `msg.sender` should be assumed to be the Well address.
      */
-    function attach(bytes calldata pumpData, uint n) external;
+    function attach(uint n, bytes calldata data) external;
 
     /**
-     * @notice updates the pump with given data
-     * @param pumpData pump specific data
-     * @param balances The previous balances of the tokens in the well
-     * @dev called everytime someone swaps, adds liquidity or removes liquidity from a well
+     * @notice Updates the Pump with the given balances.
+     * @param balances The previous balances of the tokens in the Well.
+     * @param data Pump data provided on every call
+     * @dev Pumps are updated every time a user swaps, adds liquidity, or
+     * removes liquidity from a Well.
      */
-    function update(bytes calldata pumpData, uint[] calldata balances) external;
+    function update(uint[] calldata balances, bytes calldata data) external;
 
     /**
-     * @notice reads the pump with given data
-     * @param well The address of the well
-     * @param n The number of tokens in the well
-     * @return balances The balances of the tokens in the well
+     * @notice Reads Pump data related to an attached Well.
+     * @param well The address of the Well
+     * @param readData The data to be read by the Pump
+     * @return data The data read from the Pump
      */
-    function read(address well, uint n) view external returns (uint256[] memory balances);
+    function read(address well, bytes calldata readData) view external returns (bytes memory data);
 } 
