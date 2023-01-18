@@ -14,7 +14,7 @@ contract RemoveLiquidityImbalancedTest is TestHelper {
 
     function setUp() public {
         setupWell(2);
-        addLiquidtyEqualAmount(user, 1000 * 1e18);
+        addLiquidityEqualAmount(user, 1000 * 1e18);
 
         tokenAmountsOut.push(500 * 1e18);
         tokenAmountsOut.push(506 * 1e17);

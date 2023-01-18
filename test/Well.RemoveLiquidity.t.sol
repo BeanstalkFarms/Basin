@@ -12,12 +12,13 @@ contract RemoveLiquidityTest is TestHelper {
 
     function setUp() public {
         setupWell(2);
-        addLiquidtyEqualAmount(user, 1000 * 1e18);
+        addLiquidityEqualAmount(user, 1000 * 1e18);
     }
 
     function testGetRemoveLiquidityOut() public {
         uint[] memory amountsOut = well.getRemoveLiquidityOut(2000 * 1e27);
-        for (uint i = 0; i < tokens.length; i++) assertEq(amountsOut[i], 1000 * 1e18, "incorrect getRemoveLiquidityOut");
+        for (uint i = 0; i < tokens.length; i++) 
+            assertEq(amountsOut[i], 1000 * 1e18, "incorrect getRemoveLiquidityOut");
     }
 
     function testRemoveLiquidity() prank(user) public {

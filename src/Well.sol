@@ -277,7 +277,8 @@ contract Well is
     //////////// ADD LIQUIDITY ////////////
 
     /**
-     * @dev See {IWell.addLiquidity}
+     * @dev See {IWell.addLiquidity}. 
+     * Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
      */
     function addLiquidity(
         uint[] memory tokenAmountsIn,

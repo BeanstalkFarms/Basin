@@ -17,7 +17,7 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
 
     function setUp() public {
         setupWell(2);
-        addLiquidtyEqualAmount(user, 1000 * 1e18);
+        addLiquidityEqualAmount(user, 1000 * 1e18);
     }
 
     function testGetRemoveLiquidityOneTokenOut() public {

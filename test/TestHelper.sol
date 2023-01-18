@@ -49,12 +49,17 @@ abstract contract TestHelper is Test {
             "TOKEN0:TOKEN1 Constant Product Well",
             "TOKEN0TOKEN1CPw"
         );
-        
-        mintTokens(address(this), 1000 * 1e18);
-        approveMaxTokens(address(this), address(well));
+
+        // Mint mock tokens to user
         mintTokens(user, 1000 * 1e18);
         approveMaxTokens(user, address(well));
-        addLiquidtyEqualAmount(address(this), 1000 * 1e18);
+        
+        // Mint mock tokens to TestHelper
+        mintTokens(address(this), 1000 * 1e18);
+        approveMaxTokens(address(this), address(well));
+
+        // Add initial liquidity from TestHelper
+        addLiquidityEqualAmount(address(this), 1000 * 1e18);
     }
 
     function initUser() internal {
@@ -109,7 +114,7 @@ abstract contract TestHelper is Test {
     // }
 
     /// @dev add the same `amount` of liquidity for all underlying tokens
-    function addLiquidtyEqualAmount(address from, uint amount) prank(from) internal {
+    function addLiquidityEqualAmount(address from, uint amount) prank(from) internal {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
         well.addLiquidity(amounts, 0, from);
