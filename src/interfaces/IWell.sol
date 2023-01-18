@@ -89,19 +89,19 @@ interface IWell {
     function wellFunction() external view returns (Call memory);
 
     /**
-     * @notice Returns the Pump attached to the Well as a Call struct.
-     * @dev Contains the address of the Pump contract and extra data to pass
+     * @notice Returns the Pumps attached to the Well as Call structs.
+     * @dev Contains the addresses of the Pumps contract and extra data to pass
      * during calls.
      *
      * **Pumps** are on-chain oracles that are updated every time the Well is
      * interacted with.
      *
      * A Pump is not required for Well operation. For Wells without a Pump:
-     * `pump().target = address(0)`.
+     * `pumps().length = 0`.
      * 
      * An attached Pump MUST implement {IPump}.
      */
-    function pump() external view returns (Call memory);
+    function pumps() external view returns (Call[] memory);
 
     /**
      * @notice Returns the tokens, Well function, and Pump associated with this Well.
@@ -109,7 +109,7 @@ interface IWell {
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call memory _pump
+        Call[] memory _pumps
     );
 
     //////////// SWAP: FROM ////////////

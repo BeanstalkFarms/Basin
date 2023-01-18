@@ -18,7 +18,7 @@ abstract contract TestHelper is Test {
     address user;
 
     IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call pump; // Instantiated during upstream test
+    Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
     
     WellBuilder wellBuilder;
@@ -76,7 +76,7 @@ abstract contract TestHelper is Test {
 
     function deployWell() internal returns (Well) {
         wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
-        well = Well(wellBuilder.buildWell(tokens, wellFunction, pump));
+        well = Well(wellBuilder.buildWell(tokens, wellFunction, pumps));
         return well;
     }
 

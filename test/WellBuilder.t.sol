@@ -16,10 +16,10 @@ contract WellBuilderTest is TestHelper {
         deployMockTokens(10);
         wellBuilder = new WellBuilder();
         Call memory wf = Call(address(new ConstantProduct()), new bytes(0));
-        Call memory pump;
-        wells.push(wellBuilder.buildWell(getTokens(2), wf, pump));
-        wells.push(wellBuilder.buildWell(getTokens(2), wf, pump));
-        wells.push(wellBuilder.buildWell(getTokens(3), wf, pump));
+        Call[] memory pumps;
+        wells.push(wellBuilder.buildWell(getTokens(2), wf, pumps));
+        wells.push(wellBuilder.buildWell(getTokens(2), wf, pumps));
+        wells.push(wellBuilder.buildWell(getTokens(3), wf, pumps));
     }
 
     function testGetWellsBy2Tokens() external {

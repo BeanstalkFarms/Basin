@@ -17,26 +17,26 @@ interface IWellBuilder {
      * @param well The address of the Well
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
-     * @param pump The Pump attached to the Well
+     * @param pumps The Pumps attached to the Well
      */
     event BuildWell(
         address well,
         IERC20[] tokens,
         Call wellFunction,
-        Call pump
+        Call[] pumps
     );
 
     /**
      * @notice Builds a Well with the provided components.
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
-     * @param pump The Pump attached to the Well
+     * @param pumps The Pumps attached to the Well
      * @return wellAddress The address of the Well
      */
     function buildWell(
         IERC20[] calldata tokens,
         Call calldata wellFunction,
-        Call calldata pump
+        Call[] calldata pumps
     ) external payable returns (address wellAddress);
 
     /**

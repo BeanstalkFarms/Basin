@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 
 /**
  * @author Publius
- * @title Lib Math contains math operations
+ * @title Lib Bytes contains bytes operations
  **/
 
 library LibBytes {

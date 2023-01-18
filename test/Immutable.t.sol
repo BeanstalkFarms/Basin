@@ -4,38 +4,49 @@
 
 pragma solidity ^0.8.17;
 
-import "forge-std/console2.sol";
 import "test/TestHelper.sol";
-import "utils/RandomBytes.sol";
 
-contract ImmutableTest is TestHelper, RandomBytes {
+contract ImmutableTest is TestHelper {
     function setUp() public {
         deployMockTokens(16);
         wellBuilder = new WellBuilder();
     }
 
     function testImmutable(
-        uint16 nPump,
-        uint16 nWellFunction,
+        uint8 numberOfPumps,
+        bytes[6] memory pumpBytes,
+        address[6] memory pumpTargets,
+        bytes memory wellFunctionBytes,
         uint8 nTokens
     ) public {
-        nPump = nPump / 64;
-        nWellFunction = nWellFunction / 64;
-        nTokens = nTokens / 16;
+        for (uint i = 0; i < 6; i++)
+            vm.assume(pumpBytes[i].length < 8 * 32);
+        vm.assume(numberOfPumps < 6);
+        vm.assume(wellFunctionBytes.length < 32 * 32);
+        vm.assume(nTokens < 16);
+
         if (nTokens < 2) nTokens = 2;
 
-        bytes memory pumpBytes = getRandomBytes(nPump);
-        bytes memory wellFunctionBytes = getRandomBytes(nWellFunction);
+        Call[] memory pumps = new Call[](numberOfPumps);
+        for (uint i = 0; i < numberOfPumps; i++) {
+            pumps[i].target = pumpTargets[i];
+            pumps[i].data = pumpBytes[i];
+        }
+
         address wellFunction = address(new ConstantProduct2());
 
         Well _well = Well(wellBuilder.buildWell(
             getTokens(nTokens), 
             Call(wellFunction, wellFunctionBytes), 
-            Call(address(0), pumpBytes)
+            pumps
         ));
 
-        assertEq(_well.pump().target, address(0));
-        assertEq(_well.pump().data, pumpBytes);
+        Call[] memory _pumps = _well.pumps();
+
+        for (uint i = 0; i < numberOfPumps; i++) {
+            assertEq(_pumps[i].target, pumps[i].target);
+            assertEq(_pumps[i].data, pumps[i].data);
+        }
 
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);

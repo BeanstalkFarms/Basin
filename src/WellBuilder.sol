@@ -36,7 +36,7 @@ contract WellBuilder is IWellBuilder, ReentrancyGuard {
     function buildWell(
         IERC20[] calldata tokens,
         Call calldata wellFunction,
-        Call calldata pump
+        Call[] calldata pumps
     ) external nonReentrant payable returns (address well) {
         for (uint i; i < tokens.length - 1; i++) {
             require(
@@ -56,11 +56,11 @@ contract WellBuilder is IWellBuilder, ReentrancyGuard {
         name = string.concat(name, " ", wellFunction.target.getName(), " Well");
         symbol = string.concat(symbol, wellFunction.target.getSymbol(), "w");
 
-        well = address(new Well(tokens, wellFunction, pump, name, symbol));
+        well = address(new Well(tokens, wellFunction, pumps, name, symbol));
 
         indexWell(well, tokens);
 
-        emit BuildWell(well, tokens, wellFunction, pump);
+        emit BuildWell(well, tokens, wellFunction, pumps);
     }
 
     function indexWell(address well, IERC20[] memory tokens) private {
