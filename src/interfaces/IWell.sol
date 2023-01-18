@@ -192,22 +192,6 @@ interface IWell {
         int amountIn
     ) external view returns (int amountOut);
 
-    /**
-     * @notice Calculates the output of a swap given a list of token balances.
-     * @param balances A list of token balances; MUST match the indexing of {Well.tokens}
-     * @param i The index of the token to swap from
-     * @param j The index of the token to swap to
-     * @param amountIn The Well's change in balance of token `i`
-     * @return amountOut The Well's change in balance of token `j`
-     * @dev Uses signed integer accounting.
-     */
-    function calculateSwap(
-        uint[] memory balances,
-        uint i,
-        uint j,
-        int amountIn
-    ) external view returns (int amountOut);
-
     //////////// ADD LIQUIDITY ////////////
 
     /**

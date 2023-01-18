@@ -96,7 +96,7 @@ contract SwapTest is TestHelper {
         wellBalances[0] = tokens[0].balanceOf(address(well));
         wellBalances[1] = tokens[1].balanceOf(address(well));
 
-        uint calcAmountIn = uint256(-well.calculateSwap(wellBalances,1,0,-int(amountOut)));
+        uint calcAmountIn = uint256(-well.getSwap(tokens[1], tokens[0],-int(amountOut)));
 
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut);
@@ -118,7 +118,7 @@ contract SwapTest is TestHelper {
         wellBalances[0] = tokens[0].balanceOf(address(well));
         wellBalances[1] = tokens[1].balanceOf(address(well));
 
-        uint calcAmountOut = uint256(well.calculateSwap(wellBalances,0,1,int(amountIn)));
+        uint calcAmountOut = uint256(well.getSwap(tokens[0], tokens[1], int(amountIn)));
 
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut);
