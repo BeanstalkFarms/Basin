@@ -40,11 +40,11 @@ contract SwapTest is TestHelper {
 
         uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
-        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn);
-        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut);
+        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
+        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
 
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18);
-        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18);
+        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
+        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token0 well amt");
     }
 
     function testSwapOutMinTooHigh() prank(user) public {
@@ -73,16 +73,58 @@ contract SwapTest is TestHelper {
 
         uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
-        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn);
-        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut);
+        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
+        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
 
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18);
-        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18);
+        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
+        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token1 well amt");
     }
 
     function testSwapOutMaxTooLow() prank(user) public {
         uint amountOut = 500 * 1e18;
         vm.expectRevert("Well: slippage");
         well.swapTo(tokens[0], tokens[1], 999 * 1e18, amountOut, user);
+    }
+
+    function testSwapInFuzz() prank(user) public {
+        uint amountOut = 500 * 1e18;
+        uint maxAmountIn = 1000 * 1e18;
+
+        vm.expectEmit(true, true, true, true);
+        emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut);
+
+        uint balanceBefore0 = tokens[0].balanceOf(user);
+        uint balanceBefore1 = tokens[1].balanceOf(user);
+
+        uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+
+        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
+        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
+
+        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
+        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token1 well amt");
+    }
+
+    function testSwapOutFuzz(uint amountIn) prank(user) public {
+        amountIn =bound(amountIn,0,1000 * 1e18); 
+        uint balanceBefore0 = tokens[0].balanceOf(user);
+        uint balanceBefore1 = tokens[1].balanceOf(user);
+        uint[] memory wellBalances = new uint[](2);
+        wellBalances[0] = tokens[0].balanceOf(address(well));
+        wellBalances[1] = tokens[1].balanceOf(address(well));
+
+        uint calcAmountOut = uint256(well.calculateSwap(wellBalances,0,1,int(amountIn)));
+
+        vm.expectEmit(true, true, true, true);
+        emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut);
+
+        uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
+
+        assertEq(amountOut,calcAmountOut,"actual vs expected output");
+        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "input amt for swap");
+        assertEq(tokens[1].balanceOf(user) - balanceBefore1, calcAmountOut, "output amt for swap");
+
+        assertEq(tokens[0].balanceOf(address(well)), wellBalances[0] + amountIn, "token0 well balance");
+        assertEq(tokens[1].balanceOf(address(well)), wellBalances[1] - calcAmountOut, "token1 well balance");
     }
 }
