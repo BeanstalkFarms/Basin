@@ -12,4 +12,9 @@ contract RandomBytes {
             assembly { mstore(add(_bytes, i), temp) }
         }
     }
+
+    function getRandomAddress(uint seed) internal view returns (address __address) {
+        bytes32 _bytes = keccak256(abi.encodePacked(block.timestamp, seed));
+        assembly { __address := mload(add(_bytes, 32)) }
+    }
 }

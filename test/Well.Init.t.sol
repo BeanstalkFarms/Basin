@@ -23,7 +23,6 @@ contract WellInitTest is TestHelper {
     }
     function _testTokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
-            console.log(address(_wellTokens[i]));
             assertEq(address(_wellTokens[i]), address(tokens[i]));
         }
     }
@@ -39,12 +38,15 @@ contract WellInitTest is TestHelper {
 
     /// @dev pumps
     function testPumps() public {
-        Call memory _wellPump = well.pump();
-        _testPumps(_wellPump);
+        Call[] memory _wellPumps = well.pumps();
+        _testPumps(_wellPumps);
     }
-    function _testPumps(Call memory _wellPump) private {
-        assertEq(_wellPump.target, pump.target);
-        assertEq(_wellPump.data, pump.data);
+    function _testPumps(Call[] memory _wellPumps) private {
+        assertEq(_wellPumps.length, pumps.length);
+        for (uint i = 0; i < pumps.length; i++) {
+            assertEq(_wellPumps[i].target, pumps[i].target);
+            assertEq(_wellPumps[i].data, pumps[i].data);
+        }
     }
 
     /// @dev well
@@ -52,12 +54,12 @@ contract WellInitTest is TestHelper {
         (
             IERC20[] memory _wellTokens,
             Call memory _wellFunction,
-            Call memory _wellPump
+            Call[] memory _wellPumps
         ) = well.well();
         
         _testTokens(_wellTokens);
         _testWellFunction(_wellFunction);
-        _testPumps(_wellPump);
+        _testPumps(_wellPumps);
     }
 
     //////////// ERC20 Token ////////////

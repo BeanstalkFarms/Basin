@@ -10,10 +10,12 @@ import "forge-std/Test.sol";
 import "oz/utils/Strings.sol";
 
 import {Well, Call, IERC20} from "src/Well.sol";
-import {WellBuilder} from "src/WellBuilder.sol";
+import {Auger} from "src/Auger.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {MockToken} from "mocks/tokens/MockToken.sol";
+import {MockPump} from "mocks/pumps/MockPump.sol";
+
 import {Users} from "utils/Users.sol";
 
 abstract contract TestHelper is Test {
@@ -22,21 +24,23 @@ abstract contract TestHelper is Test {
     address user;
 
     IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call pump; // Instantiated during upstream test
+    Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
     Well well;
 
     function setupWell(uint n) internal {
+        Call[] memory _pumps = new Call[](0);
         setupWell(
             n,
             Call(address(new ConstantProduct2()), new bytes(0)),
-            Call(address(0), new bytes(0))
+            _pumps
         );
     }
 
-    function setupWell(uint n, Call memory _function, Call memory _pump) internal {
+    function setupWell(uint n, Call memory _function, Call[] memory _pumps) internal {
         wellFunction = _function;
-        pump = _pump;
+        for(uint i = 0; i < _pumps.length; i++)
+            pumps.push(_pumps[i]);
 
         initUser();
         deployMockTokens(n);
@@ -45,7 +49,7 @@ abstract contract TestHelper is Test {
         well = new Well(
             tokens,
             _function,
-            _pump,
+            _pumps,
             "TOKEN0:TOKEN1 Constant Product Well",
             "TOKEN0TOKEN1CPw"
         );

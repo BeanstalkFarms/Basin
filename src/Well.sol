@@ -13,7 +13,7 @@ import "src/interfaces/IPump.sol";
 import "src/interfaces/IWellFunction.sol";
 
 import "src/utils/ImmutableTokens.sol";
-import "src/utils/ImmutablePump.sol";
+import "src/utils/ImmutablePumps.sol";
 import "src/utils/ImmutableWellFunction.sol";
 
 /**
@@ -27,7 +27,7 @@ contract Well is
     IWell,
     ImmutableTokens,
     ImmutableWellFunction,
-    ImmutablePump,
+    ImmutablePumps,
     ReentrancyGuard
 {
     using SafeERC20 for IERC20;
@@ -39,16 +39,16 @@ contract Well is
      * For gas efficiency, these three components are placed in immutable
      * storage during construction. 
      * 
-     * {ImmutableTokens} stores up to 16 immutable token addresses.
+     * {ImmutableTokens} stores up to 4 immutable token addresses.
      * {ImmutableWellFunction} stores an immutable Well function {Call} struct.
-     * {ImmutablePump} stores an immutable Pump {Call} struct.
+     * {ImmutablePump} stores up to 4 immutable Pump {Call[]} structs.
      *
-     * Usage of a Pump is optional: set `_pump.target` to address(0) to disable.
+     * Usage of Pumps is optional: set `_pumps.length` to 0 to disable.
      */
     constructor(
         IERC20[] memory _tokens,
         Call memory _function,
-        Call memory _pump, // array
+        Call[] memory _pumps,
         string memory _name,
         string memory _symbol
     )
@@ -56,11 +56,12 @@ contract Well is
         ERC20Permit(_name)
         ImmutableTokens(_tokens)
         ImmutableWellFunction(_function)
-        ImmutablePump(_pump)
+        ImmutablePumps(_pumps)
         ReentrancyGuard()
     {
-        if (_pump.target != address(0)) 
-            IPump(_pump.target).attach(_tokens.length, _pump.data);
+        for (uint i; i < _pumps.length; ++i) {
+            IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
+        }
     }
 
     //////////// WELL DEFINITION ////////////
@@ -90,15 +91,15 @@ contract Well is
     }
 
     /**
-     * @dev See {IWell.pump}
+     * @dev See {IWell.pumps}
      */
-    function pump()
+    function pumps()
         public
         view
-        override(IWell, ImmutablePump)
-        returns (Call memory)
+        override(IWell, ImmutablePumps)
+        returns (Call[] memory)
     {
-        return ImmutablePump.pump();
+        return ImmutablePumps.pumps();
     }
 
     /**
@@ -107,11 +108,11 @@ contract Well is
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call memory _pump // array
+        Call[] memory _pumps
     ) {
         _tokens = tokens();
         _wellFunction = wellFunction();
-        _pump = pump(); // array, pumps
+        _pumps = pumps();
     }
 
     //////////// SWAP: FROM ////////////
@@ -481,7 +482,7 @@ contract Well is
     //////////// UPDATE PUMP ////////////
 
     /**
-     * @dev Fetches the current token balances of the Well and updates the Pump.
+     * @dev Fetches the current token balances of the Well and updates the Pumps.
      * Typically called before an operation that modifies the Well's balances.
      */
     function updatePumpBalances(IERC20[] memory _tokens)
@@ -489,8 +490,18 @@ contract Well is
         returns (uint[] memory balances)
     {
         balances = getBalances(_tokens);
-        if (pumpAddress() != address(0)) // loop; immutable storage 1 or N check
-            IPump(pumpAddress()).update(balances, pumpBytes());
+
+        // TODO: experiment with this
+        if (numberOfPumps() == 0) return balances;
+
+        if (numberOfPumps() == 1) {
+        IPump(firstPumpAddress()).update(balances, firstPumpBytes());
+        } else {
+            Call[] memory _pumps = pumps();
+            for (uint i; i < _pumps.length; ++i) {
+                IPump(_pumps[i].target).update(balances, _pumps[i].data);
+            }
+        }
     }
 
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
