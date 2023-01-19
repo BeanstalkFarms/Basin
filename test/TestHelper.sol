@@ -28,8 +28,8 @@ abstract contract TestHelper is Test {
     Auger auger;
     Well well;
     IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
+    Call[] pumps; // Instantiated during upstream test
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);

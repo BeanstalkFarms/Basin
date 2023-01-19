@@ -60,7 +60,7 @@ contract ByteStorageTest is TestHelper, ByteStorage {
 
         // Use the first `n` balances. Cast uint128 balances -> uint256
         uint[] memory balances = new uint[](numBalances);
-        for (uint i = 0; i < _balances.length; i++)
+        for (uint i = 0; i < numBalances; i++)
             balances[i] = uint(_balances[i]);
 
         // Bump the balance at `tooLargeIndex` outside the uin128 range

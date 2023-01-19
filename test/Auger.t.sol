@@ -1,61 +1,29 @@
-// /**
-//  * SPDX-License-Identifier: MIT
-//  **/
-// pragma solidity ^0.8.17;
+/**
+ * SPDX-License-Identifier: MIT
+ *
+ */
+pragma solidity ^0.8.17;
 
-// import "test/TestHelper.sol";
+import {TestHelper} from "test/TestHelper.sol";
+import {Well} from "src/Well.sol";
 
-// contract AugerTest is TestHelper {
+contract AugerTest is TestHelper {
+    Well well2;
+    Well well3;
 
-//     address[] wells;
+    function setUp() public {
+        setupWell(2); // initializes well components
+        well2 = new Well("Well", "WELL", tokens, wellFunction, pumps);
+        well3 = Well(auger.bore("Well", "WELL", tokens, wellFunction, pumps));
+    }
 
-//     event AddLiquidity(uint[] amounts);
+    function test_wellAuger() public {
+        assertEq(well2.auger(), address(this)); // deployed by AugerTest
+        assertEq(well3.auger(), address(auger)); // deployed by auger
+    }
 
-//     function setUp() public {
-//         initUser();
-//         deployMockTokens(10);
-//         wellBuilder = new Auger();
-//         Call memory wf = Call(address(new ConstantProduct()), new bytes(0));
-//         Call memory pump;
-//         wells.push(wellBuilder.buildWell(getTokens(2), wf, pump));
-//         wells.push(wellBuilder.buildWell(getTokens(2), wf, pump));
-//         wells.push(wellBuilder.buildWell(getTokens(3), wf, pump));
-//     }
-
-//     function testGetWellsBy2Tokens() external {
-//         address[] memory _wells = wellBuilder.getWellsBy2Tokens(tokens[0], tokens[1]);
-//         assertEq(_wells[0], wells[0]);
-//         assertEq(_wells[1], wells[1]);
-//         assertEq(_wells[2], wells[2]);
-//     }
-
-//     function testGetWellBy2Tokens() external {
-//         address _well = wellBuilder.getWellBy2Tokens(tokens[0], tokens[1], 0);
-//         assertEq(_well, wells[0]);
-//         _well = wellBuilder.getWellBy2Tokens(tokens[0], tokens[1], 1);
-//         assertEq(_well, wells[1]);
-//         _well = wellBuilder.getWellBy2Tokens(tokens[0], tokens[1], 2);
-//         assertEq(_well, wells[2]);
-//         _well = wellBuilder.getWellBy2Tokens(tokens[1], tokens[2], 0);
-//         assertEq(_well, wells[2]);
-//         _well = wellBuilder.getWellBy2Tokens(tokens[0], tokens[2], 0);
-//         assertEq(_well, wells[2]);
-//     }
-
-//     function testGetWellByNTokens() external {
-//         address _well = wellBuilder.getWellByNTokens(getTokens(2), 0);
-//         assertEq(_well, wells[0]);
-//         _well = wellBuilder.getWellByNTokens(getTokens(2), 1);
-//         assertEq(_well, wells[1]);
-//         _well = wellBuilder.getWellByNTokens(getTokens(3), 0);
-//         assertEq(_well, wells[2]);
-//     }
-
-//     function testGetWellsByNTokens() external {
-//         address[] memory _wells = wellBuilder.getWellsByNTokens(getTokens(2));
-//         assertEq(_wells[0], wells[0]);
-//         assertEq(_wells[1], wells[1]);
-//         _wells = wellBuilder.getWellsByNTokens(getTokens(3));
-//         assertEq(_wells[0], wells[2]);
-//     }
-// }
+    /// @dev Deploy a Well manually and via the auger; bytecode should match
+    // function test_bytecodeMatch() public {
+    //     assertEq(address(well2).code, address(well3).code);
+    // }
+}
