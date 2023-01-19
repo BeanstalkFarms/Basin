@@ -534,7 +534,7 @@ contract Well is
     }
 
     /**
-     * @dev  Gets the LP token supply given a list of `balances` from the provided
+     * @dev Gets the LP token supply given a list of `balances` from the provided
      * `_wellFunction`. Wraps {IWellFunction.getLpTokenSupply}.
      *
      * The Well function is passed as a parameter to minimize gas in instances

@@ -7,7 +7,7 @@ import "test/TestHelper.sol";
 
 import "src/utils/ByteStorage.sol";
 
-contract LibByteStorageTest is TestHelper, ByteStorage {
+contract ByteStorageTest is TestHelper, ByteStorage {
 
     bytes32 constant BALANCES_STORAGE_SLOT = keccak256("balances.storage.slot");
 
