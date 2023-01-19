@@ -11,7 +11,7 @@ import "src/functions/ConstantProduct2.sol";
 import "forge-std/console.sol";
 
 
-contract AddLiquidityTest is TestHelper {
+contract WellAddLiquidityTest is TestHelper {
 
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
     event RemoveLiquidity(uint lpAmountIn,uint[] tokenAmountsOut);

@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-contract SwapTest is TestHelper {
+contract WellSwapTest is TestHelper {
 
     event AddLiquidity(uint[] amounts);
 

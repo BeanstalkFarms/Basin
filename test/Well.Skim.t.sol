@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-contract WellInitTest is TestHelper {
+contract WellSkimTest is TestHelper {
 
     function setUp() public {
         setupWell(2);

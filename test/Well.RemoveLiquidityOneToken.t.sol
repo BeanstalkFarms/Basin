@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-contract RemoveLiquidityOneTokenTest is TestHelper {
+contract WellRemoveLiquidityOneTokenTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
 

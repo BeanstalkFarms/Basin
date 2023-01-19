@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import "test/TestHelper.sol";
 import "mocks/functions/MockFunctionNoName.sol";
 
-contract UpdatePumpTest is TestHelper {
+contract WellUpdatePumpTest is TestHelper {
     Call _wellFunction;
 
     function setUp() public {
