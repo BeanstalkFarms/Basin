@@ -4,13 +4,11 @@
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
+import {WellFunctionHelper} from "./WellFunctionHelper.sol";
 import "src/functions/ConstantProduct2.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
-contract ConstantProduct2Test is TestHelper {
-    ConstantProduct2 _function;
-    bytes _data = "";
-
+contract ConstantProduct2Test is WellFunctionHelper {
     /// State A: Same decimals
     uint STATE_A_B0 = 10 * 1e18;
     uint STATE_A_B1 = 10 * 1e18;
@@ -30,6 +28,7 @@ contract ConstantProduct2Test is TestHelper {
 
     function setUp() public {
         _function = new ConstantProduct2();
+        _data = "";
     }
 
     function test_metadata() public {
@@ -39,20 +38,9 @@ contract ConstantProduct2Test is TestHelper {
 
     //////////// LP TOKEN SUPPLY ////////////
 
-    /// @dev getLpTokenSupply: Should revert if balances.length < 2
-    function test_getLpTokenSupply_revertIfBalancesTooShort() public {
-        vm.expectRevert(); // "Index out of bounds"
-        _function.getLpTokenSupply(new uint[](0), _data);
-        vm.expectRevert(); // "Index out of bounds"
-        _function.getLpTokenSupply(new uint[](1), _data);
-    }
-
-    /// @dev getLpTokenSupply: Zero case. 0 balances = 0 supply
-    function test_getLpTokenSupply_zeroCase() public {
-        uint[] memory balances = new uint[](2);
-        balances[0] = 0;
-        balances[1] = 0;
-        assertEq(_function.getLpTokenSupply(balances, _data), 0);
+    /// @dev reverts when trying to calculate lp token supply with < 2 balances
+    function test_getLpTokenSupply_minBalancesLength() public {
+        check_getLpTokenSupply_minBalancesLength(2);
     }
 
     /// @dev getLpTokenSupply: same decimals, manual calc for 2 equal balances
