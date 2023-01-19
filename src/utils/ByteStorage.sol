@@ -4,6 +4,8 @@
 
 pragma solidity ^0.8.17;
 
+import "forge-std/console.sol";
+
 /**
  * @title ByteStorage provides an interface for storing bytes.
  * @author Publius
@@ -82,13 +84,32 @@ contract ByteStorage {
             return balances;
         }
 
+        /*
+        i=1 iByte=0 i%2==1 = false
+        2
+        3
+        4
+        */
+
         uint256 iByte;
         for (uint256 i = 1; i <= n; ++i) {
-            iByte = (i-1)/2;
+            iByte = (i-1)/2; // 0 0 1 1 2 2 
+            console.log("loop", i, iByte);
             if (i % 2 == 1) {
-                assembly { mstore(add(balances, mul(i,32)), shr(128, sload(add(slot,iByte)))) }
+                assembly { 
+                    mstore(
+                        // store at index i * 32; i = 0 is skipped by loop
+                        add(balances, mul(i, 32)),
+                        shr(128, sload(add(slot, iByte)))
+                    )
+                }
             } else {
-                assembly { mstore(add(balances, mul(i,32)), sload(add(slot,iByte))) }
+                assembly {
+                    mstore(
+                        add(balances, mul(i, 32)),
+                        sload(add(slot, iByte))
+                    )
+                }
             }
         }
     }
