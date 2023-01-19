@@ -9,13 +9,15 @@ import "forge-std/console.sol";
 /**
  * @title ByteStorage provides an interface for storing bytes.
  * @author Publius
+ * @dev Balances are passed as an uint256[], but values within must be <= max uint128
+ * to allow for packing into a single slot.
  */
 contract ByteStorage {
     /**
      * @dev Store `balances` in storage at position `slot`.
      */
     function storeUint128(bytes32 slot, uint256[] memory balances) internal {
-        // Shortcut: two balances can be cheaply packed into one slot
+        // Shortcut: two balances can be packed into one slot without a loop
         if (balances.length == 2) {
             bytes16 temp;
             require(balances[0] <= type(uint128).max, "ByteStorage: too large");
@@ -84,17 +86,12 @@ contract ByteStorage {
             return balances;
         }
 
-        /*
-        i=1 iByte=0 i%2==1 = false
-        2
-        3
-        4
-        */
-
         uint256 iByte;
         for (uint256 i = 1; i <= n; ++i) {
-            iByte = (i-1)/2 * 32; // 0 0 1 1 2 2
-            console.log("loop", i, iByte);
+            // `iByte` is the byte position for the current slot:
+            // i        1 2 3 4 5 6
+            // iByte    0 0 1 1 2 2
+            iByte = (i-1)/2 * 32;
             if (i % 2 == 1) {
                 assembly { 
                     mstore(
