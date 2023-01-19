@@ -3,8 +3,7 @@
 pragma solidity ^0.8.17;
 
 import "src/interfaces/IAuger.sol";
-import "src/Well.sol";
-
+import "src/wells/Well.sol";
 /**
  * @title Auger 
  * @author Publius

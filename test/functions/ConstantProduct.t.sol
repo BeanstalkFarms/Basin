@@ -4,7 +4,7 @@
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
-import "src/functions/ConstantProduct.sol";
+import "src/wellFunctions/ConstantProduct.sol";
 
 contract ConstantProductTest is TestHelper {
     ConstantProduct _function;

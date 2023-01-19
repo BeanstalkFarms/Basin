@@ -9,9 +9,10 @@ import "forge-std/Test.sol";
 
 import "oz/utils/Strings.sol";
 
-import {Well, Call, IERC20} from "src/Well.sol";
-import {Auger} from "src/Auger.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Well, Call, IERC20} from "src/wells/Well.sol";
+import {Auger} from "src/augers/Auger.sol";
+import {Aquifer} from "src/aquifers/Aquifer.sol";
+import {ConstantProduct2} from "src/wellFunctions/ConstantProduct2.sol";
 
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
@@ -29,7 +30,8 @@ abstract contract TestHelper is Test {
     Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
     Well well;
-    address auger;
+    Aquifer aquifer;
+    Auger auger;
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
@@ -49,7 +51,7 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        auger = address(new Auger());
+        auger = new Auger();
         well = Well(Auger(auger).bore(
             "TOKEN0:TOKEN1 Constant Product Well",
             "TOKEN0TOKEN1CPw",
