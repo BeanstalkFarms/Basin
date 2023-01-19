@@ -21,6 +21,7 @@ import {Users} from "utils/Users.sol";
 abstract contract TestHelper is Test {
     using Strings for uint;
 
+    Users users;
     address user;
     address user2;
 
@@ -72,7 +73,7 @@ abstract contract TestHelper is Test {
     }
 
     function initUser() internal {
-        Users users = new Users();
+        users = new Users();
         address[] memory _user = new address[](2);
         _user = users.createUsers(2);
         user = _user[0];

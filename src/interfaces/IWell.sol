@@ -104,15 +104,14 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
-     * @notice Returns the Auger that bore this Well.
+     * @notice Returns the Auger that bored this Well.
      * @dev Contains the address of the Auger contract.
      * 
      * The Auger determines the Well's implementation. Different Augers can be
      * implemented to deploy Wells with implementations that optimize for
-     * different use cases.
+     * particular use cases.
      * 
      * Only Wells deployed by a verified Auger should be considered legitimate.
-     * 
      */
     function auger() external view returns (address);
 
@@ -310,12 +309,14 @@ interface IWell {
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
 
+    //////////// SKIM ////////////
+
     /**
-     * @notice Sends excess ERC-20 tokens to the `recipient`
+     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`
      * @param recipient The address to send the tokens
-     * @return skimmedAmounts The amount of each token skimmed
+     * @return skimAmounts The amount of each token skimmed
      */
     function skim(
         address recipient
-    ) external returns (uint[] memory skimmedAmounts);
+    ) external returns (uint[] memory skimAmounts);
 }
