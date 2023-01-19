@@ -25,11 +25,11 @@ abstract contract TestHelper is Test {
     address user;
     address user2;
 
+    Auger auger;
+    Well well;
     IERC20[] tokens; // Mock token addresses sorted lexicographically
     Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
-    Well well;
-    address auger;
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
@@ -49,8 +49,8 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        auger = address(new Auger());
-        well = Well(Auger(auger).bore(
+        auger = new Auger();
+        well = Well(auger.bore(
             "TOKEN0:TOKEN1 Constant Product Well",
             "TOKEN0TOKEN1CPw",
             tokens,

@@ -12,7 +12,6 @@ import {RandomBytes} from "utils/RandomBytes.sol";
 contract ImmutableTest is TestHelper {
     function setUp() public {
         deployMockTokens(16);
-        // auger = new Auger();
     }
 
     /// @dev immutable storage should work when any number of its slots are filled
