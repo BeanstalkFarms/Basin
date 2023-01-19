@@ -25,7 +25,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     }
 
     /// @dev Assumes use of ConstantProduct2
-    function test_getRemoveLiquidityImbalancedOut() public {
+    function test_getRemoveLiquidityImbalancedIn() public {
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
         assertEq(lpAmountIn, 580 * 1e27);
     }
@@ -52,7 +52,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     }
 
     /// @dev not enough LP to receive `tokenAmountsOut`
-    function test_removeLiquidityImbalanced_notEnoughLP() prank(user) public {
+    function test_removeLiquidityImbalanced_revertIf_notEnoughLP() prank(user) public {
         uint maxLpAmountIn = 10 * 1e27;
         vm.expectRevert("Well: slippage");
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
@@ -60,7 +60,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev Fuzz test: EQUAL token balances, IMBALANCED removal
     /// The Well contains equal balances of all underlying tokens before execution.
-    function test_removeLiquidityImbalanced_fuzz(uint a0, uint a1) prank(user) public {
+    function testFuzz_removeLiquidityImbalanced(uint a0, uint a1) prank(user) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts may or may not be equal
         uint[] memory amounts = new uint[](2);
@@ -102,7 +102,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     /// @dev Fuzz test: UNEQUAL token balances, IMBALANCED removal
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias` 
     /// before liquidity is removed by `user`.
-    function test_removeLiquidityImbalanced_fuzzSwapBias(uint a0, uint imbalanceBias) public {
+    function testFuzz_removeLiquidityImbalanced_withSwap(uint a0, uint imbalanceBias) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts[0] is bounded at 1 to prevent slippage overflow
         // failure, bug fix in progress

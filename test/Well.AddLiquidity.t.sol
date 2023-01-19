@@ -22,7 +22,7 @@ contract WellAddLiquidityTest is TestHelper {
 
     /// @dev liquidity is initially added in {TestHelper}
     /// this will ensure that subsequent tests run correctly.
-    function testLiquidityInitialized() public {
+    function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for(uint i = 0; i < tokens.length; i++) {
             assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token balance");
@@ -32,7 +32,7 @@ contract WellAddLiquidityTest is TestHelper {
     /// @dev getAddLiquidityOut: equal amounts.
     /// adding liquidity in equal proportions should summate and be
     /// scaled up by sqrt(ConstantProduct2.EXP_PRECISION)
-    function testGetAddLiquidityOutEqual() public {
+    function test_getAddLiquidityOut_equalAmounts() public {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = 1000 * 1e18;
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
@@ -40,7 +40,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: equal amounts.
-    function testAddLiquidityEqual() prank(user) public {
+    function test_addLiquidity_equalAmounts() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = 1000 * 1e18;
         uint lpAmountOut = 2000 * 1e27;
@@ -63,7 +63,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev getAddLiquidityOut: one-sided.
-    function testGetAddLiquidityOutOne() public {
+    function test_getAddLiquidityOut_oneToken() public {
         uint[] memory amounts = new uint[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
@@ -73,7 +73,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: one-sided.
-    function testAddLiquidityOne() prank(user) public {
+    function test_addLiquidity_oneToken() prank(user) public {
         uint[] memory amounts = new uint[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
@@ -92,7 +92,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: reverts for slippage
-    function testAddMinAmountOutTooHigh() prank(user) public {
+    function test_addLiquidity_revertIf_minAmountOutTooHigh() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = 1000 * 1e18;
         vm.expectRevert("Well: slippage");
@@ -100,7 +100,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity -> removeLiquidity: zero hysteresis
-    function testAddAndRemoveLiquidity() prank(user) public {
+    function test_addAndRemoveLiquidity() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) amounts[i] = 1000 * 1e18;
         uint lpAmountOut = 2000 * 1e27;
@@ -129,13 +129,12 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change balances
-    function testAddZeroLiquidity() prank(user) public {
+    function test_addLiquidity_zeroChange() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
         uint liquidity = 0;
 
         vm.expectEmit(true, true, true, true);
         emit AddLiquidity(amounts, liquidity);
-
         well.addLiquidity(amounts, liquidity, user);
 
         assertEq(well.balanceOf(user), 0, "incorrect well user amt");
@@ -146,7 +145,7 @@ contract WellAddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: two-token fuzzed
-    function testAddLiqudityFuzz(uint x, uint y) prank(user) public {
+    function testFuzz_addLiquidity(uint x, uint y) prank(user) public {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
         amounts[0] = bound(x, 0, 1000e18);

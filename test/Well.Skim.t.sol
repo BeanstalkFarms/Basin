@@ -17,7 +17,7 @@ contract WellSkimTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 1000e18);
     }
     
-    function test_skim(uint[2] calldata amounts) prank(user) public {
+    function testFuzz_skim(uint[2] calldata amounts) prank(user) public {
         vm.assume(amounts[0] <= 800e18);
         vm.assume(amounts[1] <= 800e18);
 

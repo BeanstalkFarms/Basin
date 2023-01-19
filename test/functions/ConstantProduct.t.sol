@@ -14,7 +14,7 @@ contract ConstantProductTest is TestHelper {
         _function = new ConstantProduct();
     }
 
-    function testName() public {
+    function test_name() public {
         assertEq(_function.name(), "Constant Product");
         assertEq(_function.symbol(), "CP");
     }
@@ -22,7 +22,7 @@ contract ConstantProductTest is TestHelper {
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev getLpTokenSupply: 0 balances = 0 supply
-    function testLpTokenSupplyEmpty(uint n) public {
+    function test_getLpTokenSupply_empty(uint n) public {
         vm.assume(n < 16);
         vm.assume(n >= 2);
         uint[] memory balances = new uint[](n);

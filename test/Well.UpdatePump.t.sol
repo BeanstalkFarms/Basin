@@ -13,22 +13,27 @@ contract WellUpdatePumpTest is TestHelper {
         _wellFunction = Call(address(new MockFunctionNoName()), "");
     }
 
-    function testUpdatePump(
-        uint8 numberOfPumps,
-        bytes[4] memory pumpBytes
-    ) public {
-        vm.assume(numberOfPumps < 5);
-        for (uint i = 0; i < numberOfPumps; i++)
+    function test_updatePump(uint8 numPumps, bytes[4] memory pumpBytes) public {
+        // The base Well supports 4 pumps with up to 
+        // 4 * 32 bytes of extra data each
+        vm.assume(numPumps <= 4);
+        for (uint i = 0; i < numPumps; i++)
             vm.assume(pumpBytes[i].length <= 4 * 32);
         
-        Call[] memory pumps = new Call[](numberOfPumps);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        // Create `numPumps` Call structs
+        Call[] memory pumps = new Call[](numPumps);
+        for (uint i = 0; i < numPumps; i++) {
             pumps[i].target = address(new MockPump());
             pumps[i].data = pumpBytes[i];
         }
         
+        // Setup a Well with multiple pumps and test each
+        // FIXME: this works because liquidity is deployed which switches
+        // lastData from "0xATTACHED" to the `data` param which is passed during
+        // the `update()` call. If liquidity is not added, this will fail.
         setupWell(2, _wellFunction, pumps);
-        for (uint i = 0; i < numberOfPumps; i++)
+        for (uint i = 0; i < numPumps; i++) {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
+        }
     }
 }

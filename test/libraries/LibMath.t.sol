@@ -7,7 +7,7 @@ import "test/TestHelper.sol";
 import "src/libraries/LibMath.sol";
 
 contract LibMathTest is TestHelper {
-    // Wells only permit 16 tokens. Currently, `nthRoot` is only used
+    // Wells permit up to  16 tokens. Currently, `nthRoot` is only used
     // with `a = balances.length` which is constrained to `2 <= a <= 16`.
     uint MAX_NTH_ROOT = 16;
 
@@ -17,19 +17,34 @@ contract LibMathTest is TestHelper {
     
     /// @dev check requirements
 
-    /// @dev zero cases
-    function testNthRootOfZero() public {
+    /// @dev zero cases for all 
+    function test_nthRoot_zero() public {
         for (uint n = 2; n <= MAX_NTH_ROOT; ++n) {
             assertEq(LibMath.nthRoot(0, n), 0);
         }
     }
     
-    /// @dev verify uses sqrt when n == 2
-    function testNth2IsSqrt() public {
-        assertEq(
-            LibMath.nthRoot(4, 2),
-            LibMath.sqrt(4)
-        );
+    /// @dev verify exact match of LibMath.sqrt when n == 2
+    function test_nthRoot_sqrtMatch() public {
+        assertEq(LibMath.nthRoot(4, 2), LibMath.sqrt(4));
+    }
+
+    function testFuzz_nthRoot_sqrtMatch(uint a) public {
+        vm.assume(a < type(uint256).max);
+        assertEq(LibMath.nthRoot(a, 2), LibMath.sqrt(a));
+    }
+
+    /// @dev for all even roots, nthRoot exactly matches `n` sqrt iterations
+    function testFuzz_nthRoot_sqrtMatchAll(uint a) public {
+        // every even nth root: 2 4 6 8 10 12 14 16
+        for(uint i = 2; i < MAX_NTH_ROOT; i += 2) {
+            uint v = a;
+            // run sqrt up to i/2 times
+            for (uint j = 0; j < i/2; ++j) {
+                v = LibMath.sqrt(v);
+            }
+            assertEq(LibMath.nthRoot(a, i), v, "nthRoot != nth sqrt");
+        }
     }
 
     //////////// SQRT ////////////
