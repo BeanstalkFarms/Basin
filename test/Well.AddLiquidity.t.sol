@@ -128,6 +128,7 @@ contract AddLiquidityTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 1000 * 1e18, "incorrect token1 well amt");
     }
 
+
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change balances
     function testAddZeroLiquidity() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
@@ -146,11 +147,11 @@ contract AddLiquidityTest is TestHelper {
     }
 
     /// @dev addLiquidity: two-token fuzzed
-    function testAddLiqudityFuzz(uint x, uint y) prank(user) public {
+    function testAddLiqudityFuzz(uint token0Amt, uint token1Amt) prank(user) public {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(x, 0, 1000e18);
-        amounts[1] = bound(y, 0, 1000e18);
+        amounts[0] = bound(token0Amt, 0, 1000e18);
+        amounts[1] = bound(token1Amt, 0, 1000e18);
 
         // expected new balances after above amounts are added
         uint[] memory balances = new uint[](2);

@@ -28,7 +28,11 @@ contract UpdatePumpTest is TestHelper {
         }
         
         setupWell(2, _wellFunction, pumps);
+        vm.prank(user);
+        // call {swapFrom} for test coverage in updating pumps.
+        well.swapFrom(tokens[0],tokens[1],1e18,1,user);
         for (uint i = 0; i < numberOfPumps; i++)
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
     }
+
 }
