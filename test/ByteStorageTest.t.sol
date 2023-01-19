@@ -44,7 +44,7 @@ contract LibByteStorageTest is TestHelper, ByteStorage {
         for (uint i = 0; i < _balances.length; i++)
             balances[i] = _balances[i];
 
-        balances[tooLargeIndex] = type(uint256).max;
+        balances[tooLargeIndex] += uint(type(uint128).max)+1;
 
         console.log(balances[tooLargeIndex]);
 
@@ -56,7 +56,7 @@ contract LibByteStorageTest is TestHelper, ByteStorage {
         for (uint i = 1; i < 8; ++i) {
             for (uint j = 0; j < i; ++j) {
                 uint[] memory balances = new uint[](i);
-                balances[j] = type(uint256).max;
+                balances[j] = uint(type(uint128).max) + 1;
                 vm.expectRevert("ByteStorage: too large");
                 storeUint128(BALANCES_STORAGE_SLOT, balances);
             }

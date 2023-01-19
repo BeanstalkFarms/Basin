@@ -36,6 +36,8 @@ contract Well is
 
     bytes32 constant BALANCES_STORAGE_SLOT = keccak256("balances.storage.slot");
 
+    address immutable __auger;
+
     /**
      * @dev Construct a Well. Each Well is defined by its combination of
      * ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`). 
@@ -50,11 +52,11 @@ contract Well is
      * Usage of Pumps is optional: set `_pumps.length` to 0 to disable.
      */
     constructor(
+        string memory _name,
+        string memory _symbol,
         IERC20[] memory _tokens,
         Call memory _function,
-        Call[] memory _pumps,
-        string memory _name,
-        string memory _symbol
+        Call[] memory _pumps
     )
         ERC20(_name, _symbol)
         ERC20Permit(_name)
@@ -66,6 +68,7 @@ contract Well is
         for (uint i; i < _pumps.length; ++i) {
             IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
         }
+        __auger = msg.sender;
     }
 
     //////////// WELL DEFINITION ////////////
@@ -107,16 +110,25 @@ contract Well is
     }
 
     /**
+     * @dev See {IWell.auger}
+     */
+    function auger() external view override returns (address) {
+        return __auger;
+    }
+
+    /**
      * @dev See {IWell.well}
      */
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call[] memory _pumps
+        Call[] memory _pumps,
+        address _auger
     ) {
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
+        _auger = __auger;
     }
 
     //////////// SWAP: FROM ////////////

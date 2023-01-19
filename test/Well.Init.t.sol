@@ -41,6 +41,7 @@ contract WellInitTest is TestHelper {
         Call[] memory _wellPumps = well.pumps();
         _testPumps(_wellPumps);
     }
+
     function _testPumps(Call[] memory _wellPumps) private {
         assertEq(_wellPumps.length, pumps.length);
         for (uint i = 0; i < pumps.length; i++) {
@@ -49,17 +50,28 @@ contract WellInitTest is TestHelper {
         }
     }
 
+    // @dev auger
+    function testAuger() public {
+        _testAuger(well.auger());
+    }
+
+    function _testAuger(address _auger) public {
+        assertEq(_auger, address(auger));
+    }
+
     /// @dev well
     function testWell() public {
         (
             IERC20[] memory _wellTokens,
             Call memory _wellFunction,
-            Call[] memory _wellPumps
+            Call[] memory _wellPumps,
+            address _auger
         ) = well.well();
         
         _testTokens(_wellTokens);
         _testWellFunction(_wellFunction);
         _testPumps(_wellPumps);
+        _testAuger(_auger);
     }
 
     //////////// ERC20 Token ////////////

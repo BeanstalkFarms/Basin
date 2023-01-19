@@ -104,12 +104,26 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
+     * @notice Returns the Auger that bore this Well.
+     * @dev Contains the address of the Auger contract.
+     * 
+     * The Auger determines the Well's implementation. Different Augers can be
+     * implemented to deploy Wells with implementations that optimize for
+     * different use cases.
+     * 
+     * Only Wells deployed by a verified Auger should be considered legitimate.
+     * 
+     */
+    function auger() external view returns (address);
+
+    /**
      * @notice Returns the tokens, Well function, and Pump associated with this Well.
      */
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call[] memory _pumps
+        Call[] memory _pumps,
+        address _auger
     );
 
     //////////// SWAP: FROM ////////////

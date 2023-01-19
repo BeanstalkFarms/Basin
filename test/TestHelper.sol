@@ -28,6 +28,7 @@ abstract contract TestHelper is Test {
     Call[] pumps; // Instantiated during upstream test
     Call wellFunction; // Instantated during {deployWell}
     Well well;
+    address auger;
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
@@ -47,13 +48,14 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        well = new Well(
+        auger = address(new Auger());
+        well = Well(Auger(auger).bore(
+            "TOKEN0:TOKEN1 Constant Product Well",
+            "TOKEN0TOKEN1CPw",
             tokens,
             _function,
-            _pumps,
-            "TOKEN0:TOKEN1 Constant Product Well",
-            "TOKEN0TOKEN1CPw"
-        );
+            _pumps
+        ));
 
         // Mint mock tokens to user
         mintTokens(user, 1000 * 1e18);

@@ -13,8 +13,8 @@ contract ByteStorage {
     function storeUint128(bytes32 slot, uint256[] memory balances) internal {
         if (balances.length == 2) {
             bytes16 temp;
-            require(balances[0] < type(uint256).max, "ByteStorage: too large");
-            require(balances[1] < type(uint256).max, "ByteStorage: too large");
+            require(balances[0] <= type(uint128).max, "ByteStorage: too large");
+            require(balances[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
                 temp := mload(add(balances, 64))
                 sstore(
@@ -29,8 +29,8 @@ contract ByteStorage {
             uint256 maxI = balances.length / 2;
             uint256 iByte;
             for (uint i; i < maxI; ++i) {
-                require(balances[2*i] < type(uint256).max, "ByteStorage: too large");
-                require(balances[2*i+1] < type(uint256).max, "ByteStorage: too large");
+                require(balances[2*i] <= type(uint128).max, "ByteStorage: too large");
+                require(balances[2*i+1] <= type(uint128).max, "ByteStorage: too large");
                 iByte = i * 64;
                 assembly {
                     sstore(
@@ -46,7 +46,7 @@ contract ByteStorage {
                 }
             }
             if (balances.length % 2 == 1) {
-                require(balances[balances.length-1] < type(uint256).max, "ByteStorage: too large");
+                require(balances[balances.length-1] <= type(uint128).max, "ByteStorage: too large");
                 iByte = maxI * 64;
                 assembly {
                     sstore(
