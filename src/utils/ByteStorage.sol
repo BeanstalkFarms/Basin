@@ -39,7 +39,7 @@ contract ByteStorage {
                 iByte = i * 64;
                 assembly {
                     sstore(
-                        add(slot, i),
+                        add(slot, mul(i, 32)),
                         add(
                             shl(128, mload(add(balances, add(iByte, 32)))),
                             shr(
@@ -57,7 +57,7 @@ contract ByteStorage {
                 iByte = maxI * 64;
                 assembly {
                     sstore(
-                        add(slot, maxI),
+                        add(slot, mul(maxI, 32)),
                         add(
                             shl(128, mload(add(balances, add(iByte, 32)))),
                             shr(128, shl(128, sload(add(slot, maxI))))
@@ -93,7 +93,7 @@ contract ByteStorage {
 
         uint256 iByte;
         for (uint256 i = 1; i <= n; ++i) {
-            iByte = (i-1)/2; // 0 0 1 1 2 2 
+            iByte = (i-1)/2 * 32; // 0 0 1 1 2 2
             console.log("loop", i, iByte);
             if (i % 2 == 1) {
                 assembly { 
@@ -107,7 +107,7 @@ contract ByteStorage {
                 assembly {
                     mstore(
                         add(balances, mul(i, 32)),
-                        sload(add(slot, iByte))
+                        shr(128, shl(128, sload(add(slot, iByte))))
                     )
                 }
             }
