@@ -309,4 +309,13 @@ interface IWell {
     function getRemoveLiquidityImbalancedIn(
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
+
+    /**
+     * @notice Sends excess ERC-20 tokens to the `recipient`
+     * @param recipient The address to send the tokens
+     * @return skimmedAmounts The amount of each token skimmed
+     */
+    function skim(
+        address recipient
+    ) external returns (uint[] memory skimmedAmounts);
 }

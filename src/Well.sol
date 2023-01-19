@@ -471,6 +471,21 @@ contract Well is
         return totalSupply() - getLpTokenSupply(wellFunction(), balances);
     }
 
+    //////////// SKIM ////////////
+
+    /**
+     * @dev See {IWell.skim}
+     */
+    function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory balances = getBalances(_tokens.length);
+        skimAmounts = new uint[](_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            skimAmounts[i] = _tokens[i].balanceOf(address(this)) - balances[i];
+            if (skimAmounts[i] > 0) _tokens[i].safeTransfer(recipient, skimAmounts[i]);
+        }
+    }
+
     //////////// UPDATE PUMP ////////////
 
     /**
