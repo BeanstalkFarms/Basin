@@ -8,7 +8,7 @@ import "oz/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
- * @title Lib Contract Info contains logic to call functions that return information about a given contract.
+ * @title LibContractInfo contains logic to call functions that return information about a given contract.
  **/
 library LibContractInfo {
 
