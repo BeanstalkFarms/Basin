@@ -133,4 +133,28 @@ contract WellSwapTest is TestHelper {
         assertEq(tokens[0].balanceOf(address(well)), wellBalances[0] + calcAmountIn, "Incorrect token0 well balance");
         assertEq(tokens[1].balanceOf(address(well)), wellBalances[1] - amountOut, "Incorrect token1 well balance");
     }
+
+    /// @dev swapFrom: identical tokens results in no change in balances
+    function test_swapFrom_sameToken() prank(user) check_noTokenBalanceChange() public {
+        well.swapFrom(tokens[0], tokens[0], 100e6, 0, user);
+    }
+
+    /// @dev swapTo: identical tokens results in no change in balances
+    function test_swapTo_sameToken() prank(user) check_noTokenBalanceChange() public {
+        well.swapTo(tokens[0], tokens[0], 100e6, 0, user);
+    }
+
+    modifier check_noTokenBalanceChange() {
+        Balances memory userBefore = getBalances(address(user));
+        Balances memory wellBefore = getBalances(address(well));
+        _;
+        Balances memory userAfter = getBalances(address(user));
+        Balances memory wellAfter = getBalances(address(well));
+        // no change in token balances
+        for (uint i = 0; i < tokens.length; ++i) {
+            assertEq(userAfter.tokens[i], userBefore.tokens[i], "user token balance mismatch");
+            assertEq(wellAfter.tokens[i], wellBefore.tokens[i], "well token balance mismatch");
+        }
+    }
+
 }
