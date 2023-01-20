@@ -149,8 +149,8 @@ contract WellAddLiquidityTest is TestHelper {
     function testFuzz_addLiquidity(uint x, uint y) prank(user) public {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(token0Amt, 0, 1000e18);
-        amounts[1] = bound(token1Amt, 0, 1000e18);
+        amounts[0] = bound(x, 0, 1000e18);
+        amounts[1] = bound(y, 0, 1000e18);
 
         // expected new balances after above amounts are added
         uint[] memory balances = new uint[](2);
