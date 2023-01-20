@@ -313,7 +313,7 @@ contract Well is
     function getAddLiquidityOut(uint[] memory tokenAmountsIn)
         external
         view
-        returns (uint lpAmountOut) // lpAmountOut
+        returns (uint lpAmountOut)
     {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens.length);
@@ -416,7 +416,11 @@ contract Well is
     }
 
     /**
-     * @dev TODO
+     * @dev Shared logic for removing a single token from liquidity.
+     * Calculates change in balance `j` given a change in LP token supply.
+     * 
+     * Note: `lpAmountIn` is the amount of LP the user is burning in exchange
+     * for some amount of token `j`.
      */
     function _getRemoveLiquidityOneTokenOut(
         uint j,
