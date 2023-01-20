@@ -498,11 +498,13 @@ contract Well is
     {
         balances = getBalances(numberOfTokens);
 
-        // TODO: experiment with this
-        if (numberOfPumps() == 0) return balances;
+        if (numberOfPumps() == 0) {
+            return balances;
+        }
 
+        // gas optimization: avoid looping if there is only one pump
         if (numberOfPumps() == 1) {
-            IPump(firstPumpAddress()).update(balances, firstPumpBytes());
+            IPump(firstPumpTarget()).update(balances, firstPumpBytes());
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
