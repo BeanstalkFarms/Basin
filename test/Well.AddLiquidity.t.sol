@@ -128,6 +128,7 @@ contract WellAddLiquidityTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 1000 * 1e18, "incorrect token1 well amt");
     }
 
+
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change balances
     function test_addLiquidity_zeroChange() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
@@ -148,8 +149,8 @@ contract WellAddLiquidityTest is TestHelper {
     function testFuzz_addLiquidity(uint x, uint y) prank(user) public {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(x, 0, 1000e18);
-        amounts[1] = bound(y, 0, 1000e18);
+        amounts[0] = bound(token0Amt, 0, 1000e18);
+        amounts[1] = bound(token1Amt, 0, 1000e18);
 
         // expected new balances after above amounts are added
         uint[] memory balances = new uint[](2);
@@ -166,8 +167,8 @@ contract WellAddLiquidityTest is TestHelper {
         emit AddLiquidity(amounts, lpAmountOut);
         well.addLiquidity(amounts, 0, user);
 
-        assertEq(well.balanceOf(user), lpAmountOut,"incorrect well user amt");
-        assertEq(tokens[0].balanceOf(user), 1000e18 - amounts[0],"incorrect token0 user amt");
+        assertEq(well.balanceOf(user), lpAmountOut, "incorrect well user amt");
+        assertEq(tokens[0].balanceOf(user), 1000e18 - amounts[0], "incorrect token0 user amt");
         assertEq(tokens[1].balanceOf(user), 1000e18 - amounts[1], "incorrect token1 user amt");
         assertEq(tokens[0].balanceOf(address(well)), 1000e18 + amounts[0], "incorrect token0 well amt");
         assertEq(tokens[1].balanceOf(address(well)), 1000e18 + amounts[1], "incorrect token1 well amt");
