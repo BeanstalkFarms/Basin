@@ -8,7 +8,7 @@ import {Auger} from "../src/Augers/Auger.sol";
 // Augers bore wells.
 contract AugerScript is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("ANVILPK");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
         Auger auger = new Auger();
         vm.stopBroadcast();

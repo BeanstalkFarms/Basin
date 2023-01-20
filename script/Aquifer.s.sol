@@ -8,7 +8,7 @@ import {Aquifer} from "../src/aquifers/Aquifer.sol";
 // see {Aquifer}.
 contract AquiferScript is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("ANVILPK");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
         Aquifer aquifer = new Aquifer();
         vm.stopBroadcast();
