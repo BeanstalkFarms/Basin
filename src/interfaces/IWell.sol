@@ -107,9 +107,12 @@ interface IWell {
      * @notice Returns the Auger that bored this Well.
      * @dev Contains the address of the Auger contract.
      * 
-     * The Auger determines the Well's implementation. Different Augers can be
-     * implemented to deploy Wells with implementations that optimize for
-     * particular use cases.
+     * The Auger determines the Well's configurating. For example, one Auger might
+     * deploy Wells which support up to 8 tokens, while another might reduce the 
+     * number of token slots to 2 to save bytecode size.
+     * 
+     * Augers can be implemented to deploy Wells that optimize for particular
+     * use cases.
      * 
      * Only Wells deployed by a verified Auger should be considered legitimate.
      */
