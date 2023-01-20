@@ -5,9 +5,9 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-import "src/utils/ByteStorage.sol";
+import {LibBytes} from "src/libraries/LibBytes.sol";
 
-contract ByteStorageTest is TestHelper, ByteStorage {
+contract ByteStorageTest is TestHelper {
 
     uint256 constant MAX_BALANCES = 8;
     bytes32 constant BALANCES_STORAGE_SLOT = keccak256("balances.storage.slot");
@@ -24,10 +24,10 @@ contract ByteStorageTest is TestHelper, ByteStorage {
         for (uint i = 0; i < numBalances; i++) {
             balances[i] = uint(_balances[i]);
         }
-        storeUint128(BALANCES_STORAGE_SLOT, balances);
+        LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
 
         // Re-read balances and compare
-        uint[] memory balances2 = readUint128(BALANCES_STORAGE_SLOT, numBalances);
+        uint[] memory balances2 = LibBytes.readUint128(BALANCES_STORAGE_SLOT, numBalances);
         for (uint i = 0; i < balances2.length; i++) {
             assertEq(balances2[i], balances[i], "ByteStorage: balances mismatch");
         }
@@ -42,7 +42,7 @@ contract ByteStorageTest is TestHelper, ByteStorage {
                 uint[] memory balances = new uint[](numBalances);
                 balances[j] = uint(type(uint128).max) + 10;
                 vm.expectRevert("ByteStorage: too large");
-                storeUint128(BALANCES_STORAGE_SLOT, balances);
+                LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
             }
         }
     }
@@ -68,6 +68,6 @@ contract ByteStorageTest is TestHelper, ByteStorage {
 
         // Storage write should revert
         vm.expectRevert("ByteStorage: too large");
-        storeUint128(BALANCES_STORAGE_SLOT, balances);
+        LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
     }
 }

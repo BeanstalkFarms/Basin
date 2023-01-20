@@ -4,18 +4,19 @@
 
 pragma solidity ^0.8.17;
 
-import "oz/security/ReentrancyGuard.sol";
-import "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "oz/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
+import {ERC20, ERC20Permit} from "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
+import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 
-import "src/interfaces/IWell.sol";
-import "src/interfaces/IPump.sol";
-import "src/interfaces/IWellFunction.sol";
+import {IWell, Call} from "src/interfaces/IWell.sol";
+import {IPump} from "src/interfaces/IPump.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
-import "src/utils/ByteStorage.sol";
-import "src/utils/ImmutableTokens.sol";
-import "src/utils/ImmutablePumps.sol";
-import "src/utils/ImmutableWellFunction.sol";
+import {LibBytes} from "src/libraries/LibBytes.sol";
+
+import {ImmutableTokens} from "src/utils/ImmutableTokens.sol";
+import {ImmutablePumps} from "src/utils/ImmutablePumps.sol";
+import {ImmutableWellFunction} from "src/utils/ImmutableWellFunction.sol";
 
 /**
  * @title Well
@@ -24,7 +25,6 @@ import "src/utils/ImmutableWellFunction.sol";
  * into a single pooled on-chain liquidity position.
  */
 contract Well is
-    ByteStorage,
     ERC20Permit,
     IWell,
     ImmutableTokens,
@@ -523,7 +523,7 @@ contract Well is
         view
         returns (uint[] memory balances)
     {
-        balances = readUint128(BALANCES_STORAGE_SLOT, numberOfTokens);
+        balances = LibBytes.readUint128(BALANCES_STORAGE_SLOT, numberOfTokens);
     }
 
     /**
@@ -532,7 +532,7 @@ contract Well is
     function setBalances(uint[] memory balances)
         internal
     {
-        storeUint128(BALANCES_STORAGE_SLOT, balances);
+        LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
     }
 
     /**
