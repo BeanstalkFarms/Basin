@@ -135,6 +135,8 @@ contract Well is
 
     /**
      * @dev See {IWell.swapFrom}
+     * 
+     * Note: `amountIn` and `minAmountOut` are constrained to [0, type(int128).max].
      */
     function swapFrom(
         IERC20 fromToken,
@@ -156,6 +158,8 @@ contract Well is
 
     /**
      * @dev See {IWell.getSwapOut}
+     * 
+     * Note: `amountIn` is constrained to [0, type(int128).max].
      */
     function getSwapOut(
         IERC20 fromToken,
@@ -169,6 +173,8 @@ contract Well is
 
     /**
      * @dev See {IWell.swapTo}
+     * 
+     * Note: `amountOut` and `maxAmountIn` are constrained to [0, type(int128).max].
      */
     function swapTo(
         IERC20 fromToken,
@@ -190,6 +196,8 @@ contract Well is
 
     /**
      * @dev See {IWell.getSwapIn}
+     * 
+     * Note: `amountOut` is constrained to [0, type(int128).max].
      */
     function getSwapIn(
         IERC20 fromToken,
@@ -206,21 +214,23 @@ contract Well is
      *
      * A swap to a specified amount is the same as a swap from a negative
      * specified amount. Allows {swapFrom} and {swapTo} to employ the same Swap
-     * logic using signed math.
+     * logic using signed math. Conversion back to uint256 should occur upstream.
      * 
-     * Accounting is performed from the perspective of the Well. Positive 
-     * values represent token flows into the Well, negative values represent 
-     * token flows out of the Well.
+     * ## Example
+     * ConstantProduct2
+     * tokens[0] = 0xBEAN   balances[0] = 1033E18
+     * tokens[1] = 0xDAI    balances[1] = 1000E18
      * 
-     * | `fromToken` | `toToken` | `amountIn` | `amountOut` | Note                              |
-     * |-------------|-----------|------------|-------------|-----------------------------------|
-     * | 0xBEAN      | 0xDAI     | 100 BEAN   | -100 DAI    | User spends BEAN and receives DAI |
-     * | 0xBEAN      | 0xDAI     | -100 BEAN  | 100 DAI     | User spends DAI and receives BEAN |
-     * | 0xDAI       | 0xBEAN    | 100 DAI    | -100 BEAN   | User spends DAI and receives BEAN |
-     * | 0xDAI       | 0xBEAN    | -100 DAI   | 100 BEAN    | User spends BEAN and receives DAI |
-     *
-     * Conversion back to uint256 should occur in upstream {getSwapFrom} and
-     * {getSwapTo} methods.
+     * | getSwap() parameters                    | returns       |                                                            |     
+     * | `fromToken` | `toToken` | `amountIn`    | `amountOut`   | Explanation                                                |
+     * |-------------|-----------|---------------|---------------|------------------------------------------------------------|
+     * | 0xBEAN      | 0xDAI     | 100,000 BEAN  | 96,805 DAI    | User spends `amountIn` BEAN to receive `amountOut` DAI     |
+     * | 0xBEAN      | 0xDAI     | -100,000 BEAN | -96,806 DAI   | User must spend `amountOut` DAI to receive `amountIn` BEAN |
+     * | 0xDAI       | 0xBEAN    | 100,000 DAI   | 103,300 BEAN  | User spends `amountIn` DAI to receive `amountOut` BEAN     |
+     * | 0xDAI       | 0xBEAN    | -100,000 DAI  | -103,300 BEAN | User must spend `amountOut` BEAN to receive `amountIn` DAI |
+     * 
+     * Should revert if the Well is unable to complete the requested swap due to
+     * insufficient balances.
      */
     function getSwap(
         IERC20 fromToken,
@@ -230,16 +240,32 @@ contract Well is
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens.length);
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+
+        // Verify that the User hasn't asked for an `amountIn` greater than Well balance
+        if (amountIn < 0) {
+            require(balances[i] >= uint(-amountIn), "Well: insufficient balances");
+        }
+
         balances[i] = amountIn > 0
             ? balances[i] + uint(amountIn)
-            : balances[i] - uint(-amountIn);
+            : balances[i] - uint(-amountIn); // underflow handled in above check
+        
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
         amountOut = int(balances[j]) - int(getBalance(wellFunction(), balances, j, totalSupply()));
+    
+        // Verify that the Well function hasn't returned an `amountOut` greater than Well balance
+        if (amountIn > 0) {
+            require(amountOut >= 0, "Well: insufficient balances");
+        }
     }
 
     /**
-     * @dev Internal version of {getSwap} which also updates the Pump.
+     * @dev Internal version of {getSwap} which also updates Pumps.
+     * 
+     * The checks performed in {getSwap} are skipped; instead they are handled
+     * by {_executeSwap} which reverts when the User or the Well has insufficient
+     * balances to complete the Swap.
      */
     function _getSwapAndUpdatePumps(
         IERC20 fromToken,
@@ -250,6 +276,7 @@ contract Well is
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = updatePumpBalances(_tokens.length); // pumps?
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+
         balances[i] = amountIn > 0
             ? balances[i] + uint(amountIn)
             : balances[i] - uint(-amountIn);

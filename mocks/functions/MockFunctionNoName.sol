@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWellFunction.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 contract MockFunctionNoName is IWellFunction {
 
