@@ -4,13 +4,11 @@
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
+import {WellFunctionHelper} from "./WellFunctionHelper.sol";
 import "src/functions/ConstantProduct2.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
-contract ConstantProduct2Test is TestHelper {
-    ConstantProduct2 _function;
-    bytes _data = "";
-
+contract ConstantProduct2Test is WellFunctionHelper {
     /// State A: Same decimals
     uint STATE_A_B0 = 10 * 1e18;
     uint STATE_A_B1 = 10 * 1e18;
@@ -30,33 +28,23 @@ contract ConstantProduct2Test is TestHelper {
 
     function setUp() public {
         _function = new ConstantProduct2();
+        _data = "";
     }
 
-    function testMetadata() public {
+    function test_metadata() public {
         assertEq(_function.name(), "Constant Product");
         assertEq(_function.symbol(), "CP");
     }
 
     //////////// LP TOKEN SUPPLY ////////////
 
-    /// @dev getLpTokenSupply: Should revert if balances.length < 2
-    function testLpTokenRevertBalancesLength() public {
-        vm.expectRevert();
-        _function.getLpTokenSupply(new uint[](0), _data);
-        vm.expectRevert();
-        _function.getLpTokenSupply(new uint[](1), _data);
-    }
-
-    /// @dev getLpTokenSupply: Zero case. 0 balances = 0 supply
-    function testLpTokenSupplyEmpty() public {
-        uint[] memory balances = new uint[](2);
-        balances[0] = 0;
-        balances[1] = 0;
-        assertEq(_function.getLpTokenSupply(balances, _data), 0);
+    /// @dev reverts when trying to calculate lp token supply with < 2 balances
+    function test_getLpTokenSupply_minBalancesLength() public {
+        check_getLpTokenSupply_minBalancesLength(2);
     }
 
     /// @dev getLpTokenSupply: same decimals, manual calc for 2 equal balances
-    function testLpTokenSupplySameDecimals() public {
+    function test_getLpTokenSupply_sameDecimals() public {
         uint[] memory balances = new uint[](2);
         balances[0] = STATE_A_B0;
         balances[1] = STATE_A_B1;
@@ -67,7 +55,7 @@ contract ConstantProduct2Test is TestHelper {
     }
     
     /// @dev getLpTokenSupply: diff decimals
-    function testLpTokenSupplyDiffDecimals() public {
+    function test_getLpTokenSupply_diffDecimals() public {
         uint[] memory balances = new uint[](2);
         balances[0] = STATE_B_B0; // ex. 1 WETH
         balances[1] = STATE_B_B1; // ex. 1250 BEAN
@@ -81,7 +69,7 @@ contract ConstantProduct2Test is TestHelper {
 
     /// @dev getBalance: same decimals, both positions
     /// Matches example in {testLpTokenSupplySameDecimals}.
-    function testBalanceSameDecimals() public {
+    function test_getBalance_sameDecimals() public {
         uint[] memory balances = new uint[](2);
 
         /// STATE A
@@ -113,7 +101,7 @@ contract ConstantProduct2Test is TestHelper {
 
     /// @dev getBalance: diff decimals, both positions
     /// Matches example in {testLpTokenSupplyDiffDecimals}.
-    function testBalanceDiffDecimals() public {
+    function test_getBalance_diffDecimals() public {
         uint[] memory balances = new uint[](2);
 
         /// STATE B

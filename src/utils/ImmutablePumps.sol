@@ -204,11 +204,14 @@ contract ImmutablePumps {
         else numberOfBytes = calls[i].data.length;
     }
 
-    ///
-    function firstPumpAddress() public view returns (address _target) {
+    //////////// First Pump ////////////
+
+    /// @dev shortcut: first pump target
+    function firstPumpTarget() public view returns (address _target) {
         _target = _target0;
     }
 
+    /// @dev shortcut: first pump bytes
     function firstPumpBytes() public view returns (bytes memory _bytes) {
         if (numberOfBytes0 > 0) {
             uint slots = (numberOfBytes0-1) / 32 + 1;
@@ -245,6 +248,8 @@ contract ImmutablePumps {
             }
         }
     }
+
+    //////////// All Pumps ////////////
 
     function numberOfPumps() public view returns (uint _numberOfPumps) {
         _numberOfPumps = numberOfCalls;

@@ -104,12 +104,28 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
+     * @notice Returns the Auger that bored this Well.
+     * @dev Contains the address of the Auger contract.
+     * 
+     * The Auger determines the Well's configurating. For example, one Auger might
+     * deploy Wells which support up to 8 tokens, while another might reduce the 
+     * number of token slots to 2 to save bytecode size.
+     * 
+     * Augers can be implemented to deploy Wells that optimize for particular
+     * use cases.
+     * 
+     * Only Wells deployed by a verified Auger should be considered legitimate.
+     */
+    function auger() external view returns (address);
+
+    /**
      * @notice Returns the tokens, Well function, and Pump associated with this Well.
      */
     function well() external view returns (
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call[] memory _pumps
+        Call[] memory _pumps,
+        address _auger
     );
 
     //////////// SWAP: FROM ////////////
@@ -189,22 +205,6 @@ interface IWell {
     function getSwap(
         IERC20 fromToken,
         IERC20 toToken,
-        int amountIn
-    ) external view returns (int amountOut);
-
-    /**
-     * @notice Calculates the output of a swap given a list of token balances.
-     * @param balances A list of token balances; MUST match the indexing of {Well.tokens}
-     * @param i The index of the token to swap from
-     * @param j The index of the token to swap to
-     * @param amountIn The Well's change in balance of token `i`
-     * @return amountOut The Well's change in balance of token `j`
-     * @dev Uses signed integer accounting.
-     */
-    function calculateSwap(
-        uint[] memory balances,
-        uint i,
-        uint j,
         int amountIn
     ) external view returns (int amountOut);
 
@@ -311,4 +311,15 @@ interface IWell {
     function getRemoveLiquidityImbalancedIn(
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
+
+    //////////// SKIM ////////////
+
+    /**
+     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`
+     * @param recipient The address to send the tokens
+     * @return skimAmounts The amount of each token skimmed
+     */
+    function skim(
+        address recipient
+    ) external returns (uint[] memory skimAmounts);
 }

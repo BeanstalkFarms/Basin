@@ -21,13 +21,15 @@ import {Users} from "utils/Users.sol";
 abstract contract TestHelper is Test {
     using Strings for uint;
 
+    Users users;
     address user;
     address user2;
 
-    IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call[] pumps; // Instantiated during upstream test
-    Call wellFunction; // Instantated during {deployWell}
+    Auger auger;
     Well well;
+    IERC20[] tokens; // Mock token addresses sorted lexicographically
+    Call wellFunction; // Instantated during {deployWell}
+    Call[] pumps; // Instantiated during upstream test
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
@@ -47,13 +49,14 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        well = new Well(
+        auger = new Auger();
+        well = Well(auger.bore(
+            "TOKEN0:TOKEN1 Constant Product Well",
+            "TOKEN0TOKEN1CPw",
             tokens,
             _function,
-            _pumps,
-            "TOKEN0:TOKEN1 Constant Product Well",
-            "TOKEN0TOKEN1CPw"
-        );
+            _pumps
+        ));
 
         // Mint mock tokens to user
         mintTokens(user, 1000 * 1e18);
@@ -70,7 +73,7 @@ abstract contract TestHelper is Test {
     }
 
     function initUser() internal {
-        Users users = new Users();
+        users = new Users();
         address[] memory _user = new address[](2);
         _user = users.createUsers(2);
         user = _user[0];

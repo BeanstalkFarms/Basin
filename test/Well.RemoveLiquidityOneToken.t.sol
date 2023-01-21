@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 
-contract RemoveLiquidityOneTokenTest is TestHelper {
+contract WellRemoveLiquidityOneTokenTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
 
@@ -49,7 +49,7 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
-    function test_removeLiquidityOneToken_amountOutTooLow() prank(user) public {
+    function test_removeLiquidityOneToken_revertIf_amountOutTooLow() prank(user) public {
         uint lpAmountIn = 1000 * 1e18;
         uint minTokenAmountOut = 876 * 1e18;
         vm.expectRevert("Well: slippage");
@@ -58,7 +58,7 @@ contract RemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Fuzz test: EQUAL token balances, IMBALANCED removal
     /// The Well contains equal balances of all underlying tokens before execution.
-    function test_removeLiquidityOneToken_fuzz(uint a0) prank(user) public {    
+    function testFuzz_removeLiquidityOneToken(uint a0) prank(user) public {    
         // Assume we're removing tokens[0]
         uint[] memory amounts = new uint[](2);
         amounts[0] = bound(a0, 1e6, 750e18); 
