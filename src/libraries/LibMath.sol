@@ -15,6 +15,21 @@ library LibMath {
     error PRBMath_MulDiv_Overflow(uint256 x, uint256 y, uint256 denominator);
 
     /**
+     * @param a numerator
+     * @param b denominator
+     * @dev Division, round to nearest integer (AKA round-half-up).
+     * 
+     * Skip explicit checks for division by zero as Solidity will natively revert.
+     * 
+     * Implementation: 
+     * https://github.com/cryptoticket/openzeppelin-solidity/blob/04e62a7a1ece4832bee411ca5de024d2ce0b15e6/contracts/math/RoundedDivMath.sol#L31
+     */
+    function roundedDiv(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 halfB = (b % 2 == 0) ? (b / 2) : (b / 2 + 1);
+        return (a % b >= halfB) ? (a / b + 1) : (a / b);
+    }
+
+    /**
      * @notice Computes the `n`th root of a number `a` using the Newton--Raphson method.
      * @param a The number to compute the root of
      * @param n The root to compute

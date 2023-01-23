@@ -135,8 +135,6 @@ contract Well is
 
     /**
      * @dev See {IWell.swapFrom}
-     * 
-     * Note: `amountIn` and `minAmountOut` are constrained to [0, type(int128).max].
      */
     function swapFrom(
         IERC20 fromToken,
@@ -151,10 +149,12 @@ contract Well is
 
         balances[i] += amountIn;
         uint balanceJBefore = balances[j];
+        balances[j] = getBalance(wellFunction(), balances, j, totalSupply());
+
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
-        balances[j] = getBalance(wellFunction(), balances, j, totalSupply());
         amountOut = balanceJBefore - balances[j];
+
         require(amountOut >= minAmountOut, "Well: slippage");
         setBalances(balances);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
@@ -162,8 +162,6 @@ contract Well is
 
     /**
      * @dev See {IWell.getSwapOut}
-     * 
-     * Note: `amountIn` is constrained to [0, type(int128).max].
      */
     function getSwapOut(
         IERC20 fromToken,
@@ -173,7 +171,7 @@ contract Well is
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens.length);
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
-        balances[i] = balances[i] += amountIn;
+        balances[i] += amountIn;
         amountOut = balances[j] - getBalance(wellFunction(), balances, j, totalSupply());
     }
 
@@ -181,8 +179,6 @@ contract Well is
 
     /**
      * @dev See {IWell.swapTo}
-     * 
-     * Note: `amountOut` and `maxAmountIn` are constrained to [0, type(int128).max].
      */
     function swapTo(
         IERC20 fromToken,
@@ -192,15 +188,17 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length); // pumps?
+        uint[] memory balances = updatePumpBalances(_tokens.length);
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
 
         balances[j] -= amountOut;
         uint balanceIBefore = balances[i];
+        balances[i] = getBalance(wellFunction(), balances, i, totalSupply());
+
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
-        balances[i] = getBalance(wellFunction(), balances, i, totalSupply());
         amountIn = balances[i] - balanceIBefore;
+        
         require(amountIn <= maxAmountIn, "Well: slippage");
         setBalances(balances);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
@@ -208,8 +206,6 @@ contract Well is
 
     /**
      * @dev See {IWell.getSwapIn}
-     * 
-     * Note: `amountOut` is constrained to [0, type(int128).max].
      */
     function getSwapIn(
         IERC20 fromToken,
@@ -219,7 +215,7 @@ contract Well is
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances(_tokens.length);
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
-        balances[j] = balances[j] -= amountOut;
+        balances[j] -= amountOut;
         amountIn = getBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
     }
 

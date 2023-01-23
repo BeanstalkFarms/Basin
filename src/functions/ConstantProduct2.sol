@@ -41,7 +41,7 @@ contract ConstantProduct2 is IWellFunction {
         bytes calldata
     ) external override pure returns (uint balance) {
         balance = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
-        balance = (balance - 1) / balances[j == 1 ? 0 : 1] + 1; // Round
+        balance = LibMath.roundedDiv(balance, balances[j == 1 ? 0 : 1]);
     }
 
     function name() external override pure returns (string memory) {

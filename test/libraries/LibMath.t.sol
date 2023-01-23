@@ -85,4 +85,19 @@ contract LibMathTest is TestHelper {
     function testSqrtImperfectLargeGte() public {
         assertEq(LibMath.sqrt(8 * 1e18), 2828427124); // rounds down from 2.828...e9
     }
+
+    ///
+    function test_roundedDiv_revertIf_denomIsZero() public {
+        vm.expectRevert();
+        LibMath.roundedDiv(1, 0);
+    }
+
+    function test_roundedDiv() public {
+        assertEq(LibMath.roundedDiv(1, 3), 0);
+        assertEq(LibMath.roundedDiv(1, 2), 1);
+        assertEq(LibMath.roundedDiv(2, 3), 1);
+        assertEq(LibMath.roundedDiv(2, 2), 1);
+        assertEq(LibMath.roundedDiv(3, 2), 2);
+        assertEq(LibMath.roundedDiv(5, 4), 1);
+    }
 }
