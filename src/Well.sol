@@ -253,7 +253,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _updatePumps(_tokens.length);
+        uint[] memory reserves = _updatePumps(_tokens.length);
 
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
@@ -262,13 +262,13 @@ contract Well is
                 address(this),
                 tokenAmountsIn[i]
             );
-            balances[i] = balances[i] + tokenAmountsIn[i];
+            reserves[i] = reserves[i] + tokenAmountsIn[i];
         }
-        lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
 
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
-        _setReserves(balances);
+        _setReserves(reserves);
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
