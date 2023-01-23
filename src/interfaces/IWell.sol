@@ -189,22 +189,6 @@ interface IWell {
         uint amountOut
     ) external view returns (uint amountIn);
 
-    //////////// SWAP: UTILITIES ////////////
-
-    /**
-     * @notice Gets the output of a swap using the Well's current token balances.
-     * @param fromToken The token to swap from
-     * @param toToken The token to swap to
-     * @param amountIn The Well's change in balance of `fromToken`
-     * @return amountOut The Well's change in balance of `toToken`
-     * @dev Uses signed integer accounting.
-     */
-    function getSwap(
-        IERC20 fromToken,
-        IERC20 toToken,
-        int amountIn
-    ) external view returns (int amountOut);
-
     //////////// ADD LIQUIDITY ////////////
 
     /**
