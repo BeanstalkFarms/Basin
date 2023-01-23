@@ -498,7 +498,7 @@ contract Well is
     }
 
     /**
-     * @dev Gets the Well's token reserves from byte storage.
+     * @dev Gets the Well's token reserves by reading from byte storage.
      */
     function _getReserves(uint numberOfTokens)
         internal
@@ -509,7 +509,7 @@ contract Well is
     }
 
     /**
-     * @dev Sets the Well's balances of tokens by writing to byte storage.
+     * @dev Sets the Well's reserves of each token by writing to byte storage.
      */
     function _setReserves(uint[] memory reserves)
         internal
@@ -518,38 +518,38 @@ contract Well is
     }
 
     /**
-     * @dev Calculates the LP token supply given a list of `balances` from the provided
+     * @dev Calculates the LP token supply given a list of `reserves` from the provided
      * `_wellFunction`. Wraps {IWellFunction.calcLpTokenSupply}.
      *
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
-    function _calcLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
+    function _calcLpTokenSupply(Call memory _wellFunction, uint[] memory reserves)
         internal    
         view
         returns (uint lpTokenSupply)
     {
         lpTokenSupply = IWellFunction(_wellFunction.target).calcLpTokenSupply(
-            balances,
+            reserves,
             _wellFunction.data
         );
     }
 
     /**
-     * @dev Calculates the `j`th balance given a list of `balances` and `lpTokenSupply`
-     * from the provided `_wellFunction`. Wraps {IWellFunction.getBalance}.
+     * @dev Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`
+     * from the provided `_wellFunction`. Wraps {IWellFunction.calcReserve}.
      * 
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
     function _calcReserve(
         Call memory _wellFunction,
-        uint[] memory balances,
+        uint[] memory reserves,
         uint j,
         uint lpTokenSupply
-    ) internal view returns (uint balance) {
-        balance = IWellFunction(_wellFunction.target).calcReserve(
-            balances,
+    ) internal view returns (uint reserve) {
+        reserve = IWellFunction(_wellFunction.target).calcReserve(
+            reserves,
             j,
             lpTokenSupply,
             _wellFunction.data
