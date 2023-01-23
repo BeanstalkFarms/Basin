@@ -47,7 +47,7 @@ library LibBytes {
             }
         } else {
             uint256 maxI = balances.length / 2; // number of fully-packed slots
-            uint256 iByte; // byte offset of the current balance
+            uint256 iByte; // byte offset of the current reserve
             for (uint i; i < maxI; ++i) {
                 require(balances[2*i] <= type(uint128).max, "ByteStorage: too large");
                 require(balances[2*i+1] <= type(uint128).max, "ByteStorage: too large");
@@ -65,7 +65,7 @@ library LibBytes {
                     )
                 }
             }
-            // If there is an odd number of balances, create a slot with the last balance
+            // If there is an odd number of balances, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
             if (balances.length % 2 == 1) {
                 require(balances[balances.length-1] <= type(uint128).max, "ByteStorage: too large");

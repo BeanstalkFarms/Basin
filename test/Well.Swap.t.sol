@@ -72,8 +72,8 @@ contract WellSwapTest is TestHelper {
     //     assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "Incorrect token0 user balance");
     //     assertEq(tokens[1].balanceOf(user) - balanceBefore1, calcAmountOut, "Incorrect token1 user balance");
 
-    //     assertEq(tokens[0].balanceOf(address(well)), wellBalances[0] + amountIn, "Incorrect token0 well balance");
-    //     assertEq(tokens[1].balanceOf(address(well)), wellBalances[1] - calcAmountOut, "Incorrect token1 well balance");
+    //     assertEq(tokens[0].balanceOf(address(well)), wellBalances[0] + amountIn, "Incorrect token0 well reserve");
+    //     assertEq(tokens[1].balanceOf(address(well)), wellBalances[1] - calcAmountOut, "Incorrect token1 well reserve");
     // }
 
     //////////// SWAP TO (UNKNOWN AMOUNT IN -> KNOWN AMOUNT OUT) ////////////
@@ -120,7 +120,7 @@ contract WellSwapTest is TestHelper {
         Balances memory userBalancesBefore = getBalances(user);
         Balances memory wellBalancesBefore = getBalances(address(well));
 
-        // Decrease balance of token 1 by `amountOut` which is paid to user
+        // Decrease reserve of token 1 by `amountOut` which is paid to user
         // FIXME: refactor for N tokens
         uint[] memory calcBalances = new uint[](wellBalancesBefore.tokens.length);
         calcBalances[0] = wellBalancesBefore.tokens[0];
@@ -144,8 +144,8 @@ contract WellSwapTest is TestHelper {
 
         assertEq(userBalancesBefore.tokens[0] - userBalancesAfter.tokens[0], calcAmountIn, "Incorrect token0 user balance");
         assertEq(userBalancesAfter.tokens[1] - userBalancesBefore.tokens[1], amountOut, "Incorrect token1 user balance");
-        assertEq(wellBalancesAfter.tokens[0], wellBalancesBefore.tokens[0] + calcAmountIn, "Incorrect token0 well balance");
-        assertEq(wellBalancesAfter.tokens[1], wellBalancesBefore.tokens[1] - amountOut, "Incorrect token1 well balance");
+        assertEq(wellBalancesAfter.tokens[0], wellBalancesBefore.tokens[0] + calcAmountIn, "Incorrect token0 well reserve");
+        assertEq(wellBalancesAfter.tokens[1], wellBalancesBefore.tokens[1] - amountOut, "Incorrect token1 well reserve");
     }
 
     //////////// EDGE CASE: IDENTICAL TOKENS ////////////
@@ -183,7 +183,7 @@ contract WellSwapTest is TestHelper {
         // no change in token balances
         for (uint i = 0; i < tokens.length; ++i) {
             assertEq(userAfter.tokens[i], userBefore.tokens[i], "user token balance mismatch");
-            assertEq(wellAfter.tokens[i], wellBefore.tokens[i], "well token balance mismatch");
+            assertEq(wellAfter.tokens[i], wellBefore.tokens[i], "well token reserve mismatch");
         }
     }
 

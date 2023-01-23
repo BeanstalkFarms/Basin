@@ -25,7 +25,7 @@ contract WellAddLiquidityTest is TestHelper {
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for(uint i = 0; i < tokens.length; i++) {
-            assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token balance");
+            assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token reserve");
         }
     }
 

@@ -10,7 +10,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * @dev Implements a mock broken WellFunction implementation.
  * 
  * Used to verify that {Well.getSwap} throws an error when a Well function
- * returns a balance that is higher than Well balances.
+ * returns a reserve that is higher than Well balances.
  * 
  * DO NOT COPY IN PRODUCTION.
  */
@@ -29,7 +29,7 @@ contract MockFunctionBad is IWellFunction {
         uint256 j,
         uint256 lpTokenSupply,
         bytes calldata data
-    ) external pure returns (uint balance) {
+    ) external pure returns (uint reserve) {
         return 1000;
     }
 

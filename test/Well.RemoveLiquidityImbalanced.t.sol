@@ -46,9 +46,9 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), tokenAmountsOut[0], "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), tokenAmountsOut[1], "Incorrect token1 user balance");
 
-        // Well's balance of underlying tokens decreases
-        assertEq(tokens[0].balanceOf(address(well)), 1500 * 1e18, "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 19494 * 1e17, "Incorrect token1 well balance");
+        // Well's reserve of underlying tokens decreases
+        assertEq(tokens[0].balanceOf(address(well)), 1500 * 1e18, "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 19494 * 1e17, "Incorrect token1 well reserve");
     }
 
     /// @dev not enough LP to receive `tokenAmountsOut`
@@ -94,9 +94,9 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), amounts[0], "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), amounts[1], "Incorrect token1 user balance");
 
-        // Well's balance of underlying tokens decreases
-        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well balance");
+        // Well's reserve of underlying tokens decreases
+        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well reserve");
     }
     
     /// @dev Fuzz test: UNEQUAL token balances, IMBALANCED removal
@@ -154,8 +154,8 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), preUserBalance[0] + amounts[0], "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), preUserBalance[1] + amounts[1], "Incorrect token1 user balance");
         
-        // Well's balance of underlying tokens decreases
-        assertEq(tokens[0].balanceOf(address(well)), preWellBalance[0] - amounts[0], "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), preWellBalance[1] - amounts[1], "Incorrect token1 well balance");
+        // Well's reserve of underlying tokens decreases
+        assertEq(tokens[0].balanceOf(address(well)), preWellBalance[0] - amounts[0], "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), preWellBalance[1] - amounts[1], "Incorrect token1 well reserve");
     }
 }

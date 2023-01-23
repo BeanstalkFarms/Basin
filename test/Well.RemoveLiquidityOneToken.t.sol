@@ -44,8 +44,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), amountOut, "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), 0, "Incorrect token1 user balance");
 
-        assertEq(tokens[0].balanceOf(address(well)), 1125 * 1e18, "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "Incorrect token1 well balance");
+        assertEq(tokens[0].balanceOf(address(well)), 1125 * 1e18, "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "Incorrect token1 well reserve");
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
@@ -88,8 +88,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(well.balanceOf(user), userLpBalance - lpAmountIn, "Incorrect lp output");
         assertEq(tokens[0].balanceOf(user), amounts[0], "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), amounts[1], "Incorrect token1 user balance"); // should stay the same
-        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well balance"); // should stay the same  
+        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well reserve"); // should stay the same  
     }
 
     // TODO: fuzz test: imbalanced ratio of tokens

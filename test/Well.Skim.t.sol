@@ -40,7 +40,7 @@ contract WellSkimTest is TestHelper {
 
         well.skim(_user);
 
-        // Since only 1000e18 of each token was added as liquidity, the Well's balance
+        // Since only 1000e18 of each token was added as liquidity, the Well's reserve
         // should be reset back to this.
         assertEq(tokens[0].balanceOf(address(well)), 1000e18);
         assertEq(tokens[1].balanceOf(address(well)), 1000e18);
