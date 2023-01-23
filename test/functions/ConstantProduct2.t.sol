@@ -43,24 +43,24 @@ contract ConstantProduct2Test is WellFunctionHelper {
         check_getLpTokenSupply_minBalancesLength(2);
     }
 
-    /// @dev getLpTokenSupply: same decimals, manual calc for 2 equal balances
+    /// @dev calcLpTokenSupply: same decimals, manual calc for 2 equal balances
     function test_getLpTokenSupply_sameDecimals() public {
         uint[] memory balances = new uint[](2);
         balances[0] = STATE_A_B0;
         balances[1] = STATE_A_B1;
         assertEq(
-            _function.getLpTokenSupply(balances, _data),
+            _function.calcLpTokenSupply(balances, _data),
             STATE_A_LP // sqrt(10e18 * 10e18) * 2
         );
     }
     
-    /// @dev getLpTokenSupply: diff decimals
+    /// @dev calcLpTokenSupply: diff decimals
     function test_getLpTokenSupply_diffDecimals() public {
         uint[] memory balances = new uint[](2);
         balances[0] = STATE_B_B0; // ex. 1 WETH
         balances[1] = STATE_B_B1; // ex. 1250 BEAN
         assertEq(
-            _function.getLpTokenSupply(balances, _data),
+            _function.calcLpTokenSupply(balances, _data),
             STATE_B_LP // sqrt(1e18 * 1250e6) * 2
         );
     }
@@ -77,7 +77,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         balances[0] = 0;
         balances[1] = STATE_A_B1;
         assertEq(
-            _function.getBalance(balances, 0, STATE_A_LP, _data),
+            _function.calcReserve(balances, 0, STATE_A_LP, _data),
             STATE_A_B0 // (20e18/2) ^ 2 / 10e18 = 10e18
         );
 
@@ -85,7 +85,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         balances[0] = STATE_A_B0;
         balances[1] = 0;
         assertEq(
-            _function.getBalance(balances, 1, STATE_A_LP, _data),
+            _function.calcReserve(balances, 1, STATE_A_LP, _data),
             STATE_A_B1
         );
 
@@ -94,7 +94,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         balances[0] = STATE_C_B0; 
         balances[1] = 0;
         assertEq(
-            _function.getBalance(balances, 1, STATE_C_LP, _data),
+            _function.calcReserve(balances, 1, STATE_C_LP, _data),
             STATE_C_B1 // (50e18/2) ^ 2 / 20e18 = 31.25e19
         );
     }
@@ -109,7 +109,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         balances[0] = 0;
         balances[1] = STATE_B_B1;
         assertEq(
-            _function.getBalance(balances, 0, STATE_B_LP, _data),
+            _function.calcReserve(balances, 0, STATE_B_LP, _data),
             STATE_B_B0 // (70710678118654 / 2)^2 / 1250e6 = ~1e18
         );
 
@@ -117,7 +117,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         balances[0] = STATE_B_B0; // placeholder
         balances[1] = 0; // ex. 1250 BEAN
         assertEq(
-            _function.getBalance(balances, 1, STATE_B_LP, _data),
+            _function.calcReserve(balances, 1, STATE_B_LP, _data),
             STATE_B_B1 // (70710678118654 / 2)^2 / 1e18 = 1250e6
         );
     }

@@ -158,7 +158,7 @@ contract WellAddLiquidityTest is TestHelper {
 
         // calculate new LP tokens delivered to user
         Call memory _function = well.wellFunction();
-        uint newLpTokenSupply = IWellFunction(_function.target).getLpTokenSupply(balances, _function.data);
+        uint newLpTokenSupply = IWellFunction(_function.target).calcLpTokenSupply(balances, _function.data);
         uint totalSupply = well.totalSupply(); 
         uint lpAmountOut = newLpTokenSupply - totalSupply;
         

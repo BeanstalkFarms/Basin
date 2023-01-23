@@ -510,7 +510,7 @@ contract Well is
 
     /**
      * @dev Calculates the LP token supply given a list of `balances` from the provided
-     * `_wellFunction`. Wraps {IWellFunction.getLpTokenSupply}.
+     * `_wellFunction`. Wraps {IWellFunction.calcLpTokenSupply}.
      *
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
@@ -520,7 +520,7 @@ contract Well is
         view
         returns (uint lpTokenSupply)
     {
-        lpTokenSupply = IWellFunction(_wellFunction.target).getLpTokenSupply(
+        lpTokenSupply = IWellFunction(_wellFunction.target).calcLpTokenSupply(
             balances,
             _wellFunction.data
         );
@@ -539,7 +539,7 @@ contract Well is
         uint j,
         uint lpTokenSupply
     ) internal view returns (uint balance) {
-        balance = IWellFunction(_wellFunction.target).getBalance(
+        balance = IWellFunction(_wellFunction.target).calcReserve(
             balances,
             j,
             lpTokenSupply,

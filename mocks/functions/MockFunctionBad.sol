@@ -16,7 +16,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  */
 contract MockFunctionBad is IWellFunction {
 
-    function getLpTokenSupply(
+    function calcLpTokenSupply(
         uint256[] memory balances,
         bytes calldata data
     ) external pure returns (uint lpTokenSupply) {
@@ -24,7 +24,7 @@ contract MockFunctionBad is IWellFunction {
     }
 
     /// @dev returns non-zero regardless of balances & lp token supply. WRONG!
-    function getBalance(
+    function calcReserve(
         uint256[] memory balances,
         uint256 j,
         uint256 lpTokenSupply,

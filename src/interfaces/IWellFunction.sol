@@ -21,7 +21,7 @@ interface IWellFunction {
      * @param data Well function data provided on every call
      * @return reserve The resulting reserve at the jth index
      */
-    function getReserve(
+    function calcReserve(
         uint256[] memory reserves,
         uint256 j,
         uint256 lpTokenSupply,
@@ -34,7 +34,7 @@ interface IWellFunction {
      * @param data Well function data provided on every call
      * @return lpTokenSupply The resulting supply of LP tokens
      */
-    function getLpTokenSupply(
+    function calcLpTokenSupply(
         uint256[] memory reserves,
         bytes calldata data
     ) external view returns (uint256 lpTokenSupply);

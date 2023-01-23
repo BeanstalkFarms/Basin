@@ -128,7 +128,7 @@ contract WellSwapTest is TestHelper {
 
         console.log(calcBalances[1], wellBalancesBefore.tokens[1]);
         
-        uint calcAmountIn = IWellFunction(wellFunction.target).getBalance(
+        uint calcAmountIn = IWellFunction(wellFunction.target).calcReserve(
             calcBalances,
             0, // j
             wellBalancesBefore.lpSupply,

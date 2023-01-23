@@ -78,7 +78,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         // Calculate the new LP token supply after the Well's balances are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply =  cp.getLpTokenSupply(balances, data);
+        uint newLpTokenSupply =  cp.calcLpTokenSupply(balances, data);
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
