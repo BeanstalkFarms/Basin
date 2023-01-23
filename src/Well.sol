@@ -172,6 +172,8 @@ contract Well is
         uint[] memory balances = getBalances();
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[i] += amountIn;
+
+        // underflow is desired; Well Function cannot increase balance of both `i` and `j`
         amountOut = balances[j] - _calcBalance(wellFunction(), balances, j, totalSupply());
     }
 
@@ -487,7 +489,7 @@ contract Well is
     }
 
     /**
-     * @dev Returns the Well's balances of tokens by reading from byte storage.
+     * @dev Gets the Well's token balances from byte storage.
      */
     function _getBalances(uint numberOfTokens)
         internal
@@ -507,7 +509,7 @@ contract Well is
     }
 
     /**
-     * @dev Gets the LP token supply given a list of `balances` from the provided
+     * @dev Calculates the LP token supply given a list of `balances` from the provided
      * `_wellFunction`. Wraps {IWellFunction.getLpTokenSupply}.
      *
      * The Well function is passed as a parameter to minimize gas in instances
@@ -525,7 +527,7 @@ contract Well is
     }
 
     /**
-     * @dev Gets the `j`th balance given a list of `balances` and `lpTokenSupply`
+     * @dev Calculates the `j`th balance given a list of `balances` and `lpTokenSupply`
      * from the provided `_wellFunction`. Wraps {IWellFunction.getBalance}.
      * 
      * The Well function is passed as a parameter to minimize gas in instances
