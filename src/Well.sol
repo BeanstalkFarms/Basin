@@ -149,7 +149,7 @@ contract Well is
 
         balances[i] += amountIn;
         uint balanceJBefore = balances[j];
-        balances[j] = _getBalance(wellFunction(), balances, j, totalSupply());
+        balances[j] = _calcBalance(wellFunction(), balances, j, totalSupply());
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
@@ -172,7 +172,7 @@ contract Well is
         uint[] memory balances = getBalances();
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[i] += amountIn;
-        amountOut = balances[j] - _getBalance(wellFunction(), balances, j, totalSupply());
+        amountOut = balances[j] - _calcBalance(wellFunction(), balances, j, totalSupply());
     }
 
     //////////// SWAP: TO ////////////
@@ -193,7 +193,7 @@ contract Well is
 
         balances[j] -= amountOut;
         uint balanceIBefore = balances[i];
-        balances[i] = _getBalance(wellFunction(), balances, i, totalSupply());
+        balances[i] = _calcBalance(wellFunction(), balances, i, totalSupply());
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
@@ -216,7 +216,7 @@ contract Well is
         uint[] memory balances = getBalances();
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[j] -= amountOut;
-        amountIn = _getBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
+        amountIn = _calcBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
     }
 
     //////////// SWAP: UTILITIES ////////////
@@ -249,6 +249,7 @@ contract Well is
     ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = _updatePumpBalances(_tokens.length);
+
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].safeTransferFrom(
@@ -258,11 +259,12 @@ contract Well is
             );
             balances[i] = balances[i] + tokenAmountsIn[i];
         }
-        lpAmountOut = _getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
+
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
-        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
         _setBalances(balances);
+        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
     /**
@@ -277,7 +279,7 @@ contract Well is
         uint[] memory balances = getBalances();
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] + tokenAmountsIn[i];
-        lpAmountOut = _getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
     }
 
     //////////// REMOVE LIQUIDITY: BALANCED ////////////
@@ -386,7 +388,7 @@ contract Well is
         uint lpAmountIn
     ) private view returns (uint tokenAmountOut) {
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
-        uint newBalanceJ = _getBalance(
+        uint newBalanceJ = _calcBalance(
             wellFunction(),
             balances,
             j,
@@ -411,7 +413,7 @@ contract Well is
             _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             balances[i] = balances[i] - tokenAmountsOut[i];
         }
-        lpAmountIn = totalSupply() - _getLpTokenSupply(wellFunction(), balances);
+        lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
         _setBalances(balances);
@@ -430,7 +432,7 @@ contract Well is
         uint[] memory balances = getBalances();
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] - tokenAmountsOut[i];
-        return totalSupply() - _getLpTokenSupply(wellFunction(), balances);
+        return totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
     }
 
     //////////// SKIM ////////////
@@ -478,7 +480,7 @@ contract Well is
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
 
     /**
-     * 
+     * @dev See {IWell.getBalances}
      */
     function getBalances() public view returns (uint[] memory balances) {
         return _getBalances(numberOfTokens());
@@ -511,7 +513,7 @@ contract Well is
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
-    function _getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
+    function _calcLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
         internal    
         view
         returns (uint lpTokenSupply)
@@ -529,7 +531,7 @@ contract Well is
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
-    function _getBalance(
+    function _calcBalance(
         Call memory _wellFunction,
         uint[] memory balances,
         uint j,

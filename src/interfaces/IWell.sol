@@ -296,15 +296,15 @@ interface IWell {
 
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
 
-    // function getBalances(uint numberOfTokens)
-    //     public
-    //     view
-    //     returns (uint[] memory balances)
+    /**
+     * @notice Gets the balance of each token held by the Well.
+     */
+    function getBalances() external view returns (uint[] memory balances);
 
     //////////// SKIM ////////////
 
     /**
-     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`
+     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`.
      * @param recipient The address to send the tokens
      * @return skimAmounts The amount of each token skimmed
      */
