@@ -511,10 +511,10 @@ contract Well is
     /**
      * @dev Sets the Well's balances of tokens by writing to byte storage.
      */
-    function _setReserves(uint[] memory balances)
+    function _setReserves(uint[] memory reserves)
         internal
     {
-        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, balances);
+        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
 
     /**
