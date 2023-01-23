@@ -34,7 +34,7 @@ contract Well is
 {
     using SafeERC20 for IERC20;
 
-    bytes32 constant BALANCES_STORAGE_SLOT = keccak256("balances.storage.slot");
+    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
     address immutable __auger;
 
@@ -496,7 +496,7 @@ contract Well is
         view
         returns (uint[] memory balances)
     {
-        balances = LibBytes.readUint128(BALANCES_STORAGE_SLOT, numberOfTokens);
+        balances = LibBytes.readUint128(RESERVES_STORAGE_SLOT, numberOfTokens);
     }
 
     /**
@@ -505,7 +505,7 @@ contract Well is
     function _setBalances(uint[] memory balances)
         internal
     {
-        LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
+        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, balances);
     }
 
     /**
