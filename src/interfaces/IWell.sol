@@ -258,15 +258,15 @@ interface IWell {
 
     /**
      * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
-     * @param tokenOut The underlying token to receive
      * @param lpAmountIn The amount of LP tokens to burn
+     * @param tokenOut The underlying token to receive
      * @return tokenAmountOut The amount of `tokenOut` to receive
      *
      * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
-        IERC20 tokenOut,
-        uint lpAmountIn
+        uint lpAmountIn,
+        IERC20 tokenOut
     ) external view returns (uint tokenAmountOut);
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////

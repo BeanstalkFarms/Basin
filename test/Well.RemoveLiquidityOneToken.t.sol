@@ -25,7 +25,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityOneTokenOut() public {
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(tokens[0], 1000 * 1e27);
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(1000 * 1e27, tokens[0]);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 

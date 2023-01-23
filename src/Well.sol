@@ -352,9 +352,9 @@ contract Well is
         uint j = _getJ(_tokens, tokenOut);
 
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
+            lpAmountIn,
             j,
-            reserves,
-            lpAmountIn
+            reserves
         );
         require(tokenAmountOut >= minTokenAmountOut, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
@@ -368,7 +368,7 @@ contract Well is
     /**
      * @dev See {IWell.getRemoveLiquidityOneTokenOut}
      */
-    function getRemoveLiquidityOneTokenOut(IERC20 tokenOut, uint lpAmountIn)
+    function getRemoveLiquidityOneTokenOut(uint lpAmountIn, IERC20 tokenOut)
         external
         view
         returns (uint tokenAmountOut)
@@ -377,9 +377,9 @@ contract Well is
         uint[] memory reserves = _getReserves(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
+            lpAmountIn,
             j,
-            reserves,
-            lpAmountIn
+            reserves
         );
     }
 
@@ -391,9 +391,9 @@ contract Well is
      * for some amount of token `j`.
      */
     function _getRemoveLiquidityOneTokenOut(
+        uint lpAmountIn,
         uint j,
-        uint[] memory reserves,
-        uint lpAmountIn
+        uint[] memory reserves
     ) private view returns (uint tokenAmountOut) {
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
         uint newReserveJ = _calcReserve(
