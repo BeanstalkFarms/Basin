@@ -156,7 +156,7 @@ contract Well is
         amountOut = reserveJBefore - reserves[j];
 
         require(amountOut >= minAmountOut, "Well: slippage");
-        _setBalances(reserves);
+        _setReserves(reserves);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
@@ -191,19 +191,19 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _updatePumps(_tokens.length);
+        uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
 
-        balances[j] -= amountOut;
-        uint balanceIBefore = balances[i];
-        balances[i] = _calcReserve(wellFunction(), balances, i, totalSupply());
+        reserves[j] -= amountOut;
+        uint reserveIBefore = reserves[i];
+        reserves[i] = _calcReserve(wellFunction(), reserves, i, totalSupply());
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
-        amountIn = balances[i] - balanceIBefore;
+        amountIn = reserves[i] - reserveIBefore;
         
         require(amountIn <= maxAmountIn, "Well: slippage");
-        _setBalances(balances);
+        _setReserves(reserves);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
@@ -266,7 +266,7 @@ contract Well is
 
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
-        _setBalances(balances);
+        _setReserves(balances);
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
@@ -309,7 +309,7 @@ contract Well is
             _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             balances[i] = balances[i] - tokenAmountsOut[i];
         }
-        _setBalances(balances);
+        _setReserves(balances);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
@@ -355,7 +355,7 @@ contract Well is
         tokenOut.safeTransfer(recipient, tokenAmountOut);
 
         balances[j] = balances[j] - tokenAmountOut;
-        _setBalances(balances);
+        _setReserves(balances);
 
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
@@ -419,7 +419,7 @@ contract Well is
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
-        _setBalances(balances);
+        _setReserves(balances);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
@@ -503,7 +503,7 @@ contract Well is
     /**
      * @dev Sets the Well's balances of tokens by writing to byte storage.
      */
-    function _setBalances(uint[] memory balances)
+    function _setReserves(uint[] memory balances)
         internal
     {
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, balances);
