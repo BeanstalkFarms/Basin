@@ -166,7 +166,11 @@ contract Well is
         IERC20 toToken,
         uint amountIn
     ) external view returns (uint amountOut) {
-        amountOut = uint(getSwap(fromToken, toToken, int(amountIn)));
+        IERC20[] memory _tokens = tokens();
+        uint[] memory balances = getBalances(_tokens.length);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        balances[i] = balances[i] += amountIn;
+        amountOut = balances[j] - getBalance(wellFunction(), balances, j, totalSupply());
     }
 
     //////////// SWAP: TO ////////////
@@ -204,7 +208,11 @@ contract Well is
         IERC20 toToken,
         uint amountOut
     ) external view returns (uint amountIn) {
-        amountIn = uint(-getSwap(toToken, fromToken, -int(amountOut)));
+        IERC20[] memory _tokens = tokens();
+        uint[] memory balances = getBalances(_tokens.length);
+        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        balances[i] = balances[i] -= amountOut;
+        amountIn = getBalance(wellFunction(), balances, j, totalSupply()) - balances[j];
     }
 
     //////////// SWAP: UTILITIES ////////////
