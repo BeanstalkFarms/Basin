@@ -385,24 +385,24 @@ contract Well is
 
     /**
      * @dev Shared logic for removing a single token from liquidity.
-     * Calculates change in balance `j` given a change in LP token supply.
+     * Calculates change in reserve `j` given a change in LP token supply.
      * 
      * Note: `lpAmountIn` is the amount of LP the user is burning in exchange
      * for some amount of token `j`.
      */
     function _getRemoveLiquidityOneTokenOut(
         uint j,
-        uint[] memory balances,
+        uint[] memory reserves,
         uint lpAmountIn
     ) private view returns (uint tokenAmountOut) {
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
-        uint newBalanceJ = _calcReserve(
+        uint newReserveJ = _calcReserve(
             wellFunction(),
-            balances,
+            reserves,
             j,
             newLpTokenSupply
         );
-        tokenAmountOut = balances[j] - newBalanceJ;
+        tokenAmountOut = reserves[j] - newReserveJ;
     }
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
