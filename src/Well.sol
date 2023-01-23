@@ -439,10 +439,11 @@ contract Well is
         returns (uint lpAmountIn)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
-        for (uint i; i < _tokens.length; ++i)
-            balances[i] = balances[i] - tokenAmountsOut[i];
-        return totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
+        uint[] memory reserves = _getReserves(_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = reserves[i] - tokenAmountsOut[i];
+        }
+        lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
     }
 
     //////////// SKIM ////////////
@@ -493,7 +494,7 @@ contract Well is
      * @dev See {IWell.getBalances}
      */
     function getBalances() external view returns (uint[] memory balances) {
-        return _getReserves(numberOfTokens());
+        balances = _getReserves(numberOfTokens());
     }
 
     /**
