@@ -222,7 +222,7 @@ contract WellSwapTest is TestHelper {
             pumps
         );
         
-        // check assumption that balances are empty
+        // check assumption that reserves are empty
         Balances memory wellBalances = getBalances(address(badWell));
         assertEq(wellBalances.tokens[0], 0, "bad assumption: wellBalances.tokens[0] != 0");
         assertEq(wellBalances.tokens[1], 0, "bad assumption: wellBalances.tokens[1] != 0");
@@ -231,7 +231,7 @@ contract WellSwapTest is TestHelper {
         vm.assume(i < _tokens.length); // swap token `i` -> all other tokens
 
         // find an input amount that produces an output amount higher than what the Well has.
-        // When the Well is deployed it has zero balances, so any nonzero value should revert.
+        // When the Well is deployed it has zero reserves, so any nonzero value should revert.
         vm.assume(amountIn > 0);
         vm.assume(amountIn <= uint128(type(int128).max));   
 

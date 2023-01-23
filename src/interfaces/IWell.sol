@@ -81,7 +81,7 @@ interface IWell {
      * @dev Contains the address of the Well function contract and extra data to 
      * pass during calls.
      * 
-     * **Well functions** define a relationship between the balances of the
+     * **Well functions** define a relationship between the reserves of the
      * tokens in the Well and the number of LP tokens.
      * 
      * A Well function MUST implement {IWellFunction}.

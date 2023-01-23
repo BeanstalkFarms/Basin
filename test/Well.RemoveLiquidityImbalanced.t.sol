@@ -58,8 +58,8 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
     }
 
-    /// @dev Fuzz test: EQUAL token balances, IMBALANCED removal
-    /// The Well contains equal balances of all underlying tokens before execution.
+    /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
+    /// The Well contains equal reserves of all underlying tokens before execution.
     function testFuzz_removeLiquidityImbalanced(uint a0, uint a1) prank(user) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts may or may not be equal
@@ -67,19 +67,19 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         amounts[0] = bound(a0, 0, 750e18); 
         amounts[1] = bound(a1, 0, 750e18);
 
-        // Calculate change in Well balances after removing liquidity
-        uint[] memory balances = new uint[](2);
-        balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
-        balances[1] = tokens[1].balanceOf(address(well)) - amounts[1];
+        // Calculate change in Well reserves after removing liquidity
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = tokens[0].balanceOf(address(well)) - amounts[0];
+        reserves[1] = tokens[1].balanceOf(address(well)) - amounts[1];
 
         // lpAmountIn should be <= umaxLpAmountIn
         uint maxLpAmountIn = well.balanceOf(user);
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
-        // Calculate the new LP token supply after the Well's balances are changed.
+        // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply =  cp.calcLpTokenSupply(balances, data);
+        uint newLpTokenSupply =  cp.calcLpTokenSupply(reserves, data);
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove all of `user`'s liquidity and deliver them the tokens
@@ -99,7 +99,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well reserve");
     }
     
-    /// @dev Fuzz test: UNEQUAL token balances, IMBALANCED removal
+    /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias` 
     /// before liquidity is removed by `user`.
     function testFuzz_removeLiquidityImbalanced_withSwap(uint a0, uint imbalanceBias) public {
@@ -127,18 +127,18 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         preUserBalance[0] = tokens[0].balanceOf(address(user));
         preUserBalance[1] = tokens[1].balanceOf(address(user));
 
-        // Calculate change in Well balances after removing liquidity
-        uint[] memory balances = new uint[](2);
-        balances[0] = preWellBalance[0] - amounts[0];
-        balances[1] = preWellBalance[1] - amounts[1];
+        // Calculate change in Well reserves after removing liquidity
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = preWellBalance[0] - amounts[0];
+        reserves[1] = preWellBalance[1] - amounts[1];
         
         // lpAmountIn should be <= user's LP balance
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
-        // Calculate the new LP token supply after the Well's balances are changed.
+        // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply = cp.calcLpTokenSupply(balances, data);
+        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, data);
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove some of `user`'s liquidity and deliver them the tokens

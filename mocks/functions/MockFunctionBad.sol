@@ -10,22 +10,22 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * @dev Implements a mock broken WellFunction implementation.
  * 
  * Used to verify that {Well.getSwap} throws an error when a Well function
- * returns a reserve that is higher than Well balances.
+ * returns a reserve that is higher than Well reserves.
  * 
  * DO NOT COPY IN PRODUCTION.
  */
 contract MockFunctionBad is IWellFunction {
 
     function calcLpTokenSupply(
-        uint256[] memory balances,
+        uint256[] memory reserves,
         bytes calldata data
     ) external pure returns (uint lpTokenSupply) {
-        return balances[0] + balances[1];
+        return reserves[0] + reserves[1];
     }
 
-    /// @dev returns non-zero regardless of balances & lp token supply. WRONG!
+    /// @dev returns non-zero regardless of reserves & lp token supply. WRONG!
     function calcReserve(
-        uint256[] memory balances,
+        uint256[] memory reserves,
         uint256 j,
         uint256 lpTokenSupply,
         bytes calldata data

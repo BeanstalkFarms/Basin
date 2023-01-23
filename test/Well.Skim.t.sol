@@ -32,11 +32,11 @@ contract WellSkimTest is TestHelper {
 
         // Get a user with a fresh address (no ERC20 tokens)
         address _user = users.getNextUserAddress();
-        uint[] memory balances = new uint[](2);
-        balances[0] = tokens[0].balanceOf(_user);
-        balances[1] = tokens[1].balanceOf(_user);
-        assertEq(balances[0], 0);
-        assertEq(balances[1], 0);
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = tokens[0].balanceOf(_user);
+        reserves[1] = tokens[1].balanceOf(_user);
+        assertEq(reserves[0], 0);
+        assertEq(reserves[1], 0);
 
         well.skim(_user);
 
