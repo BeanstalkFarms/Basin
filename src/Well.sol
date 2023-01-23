@@ -169,7 +169,7 @@ contract Well is
         uint amountIn
     ) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[i] += amountIn;
 
@@ -215,7 +215,7 @@ contract Well is
         uint amountOut
     ) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[j] -= amountOut;
         amountIn = _calcBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
@@ -278,7 +278,7 @@ contract Well is
         returns (uint lpAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] + tokenAmountsIn[i];
         lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
@@ -321,7 +321,7 @@ contract Well is
         returns (uint[] memory tokenAmountsOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         uint lpTokenSupply = totalSupply();
         tokenAmountsOut = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
@@ -368,7 +368,7 @@ contract Well is
         returns (uint tokenAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             j,
@@ -431,7 +431,7 @@ contract Well is
         returns (uint lpAmountIn)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] - tokenAmountsOut[i];
         return totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
@@ -444,7 +444,7 @@ contract Well is
      */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = getBalances();
+        uint[] memory balances = _getBalances(_tokens.length);
         skimAmounts = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
             skimAmounts[i] = _tokens[i].balanceOf(address(this)) - balances[i];
@@ -462,7 +462,7 @@ contract Well is
         internal
         returns (uint[] memory balances)
     {
-        balances = getBalances();
+        balances = _getBalances(numberOfTokens);
 
         if (numberOfPumps() == 0) {
             return balances;
@@ -484,7 +484,7 @@ contract Well is
     /**
      * @dev See {IWell.getBalances}
      */
-    function getBalances() public view returns (uint[] memory balances) {
+    function getBalances() external view returns (uint[] memory balances) {
         return _getBalances(numberOfTokens());
     }
 
