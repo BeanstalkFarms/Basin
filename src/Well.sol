@@ -169,12 +169,13 @@ contract Well is
         uint amountIn
     ) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory reserves = _getReserves(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
-        balances[i] += amountIn;
 
-        // underflow is desired; Well Function cannot increase balance of both `i` and `j`
-        amountOut = balances[j] - _calcReserve(wellFunction(), balances, j, totalSupply());
+        reserves[i] += amountIn;
+
+        // underflow is desired; Well Function SHOULD NOT increase reserves of both `i` and `j`
+        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
     }
 
     //////////// SWAP: TO ////////////
@@ -215,7 +216,7 @@ contract Well is
         uint amountOut
     ) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[j] -= amountOut;
         amountIn = _calcReserve(wellFunction(), balances, i, totalSupply()) - balances[i];
@@ -278,7 +279,7 @@ contract Well is
         returns (uint lpAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] + tokenAmountsIn[i];
         lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
@@ -321,7 +322,7 @@ contract Well is
         returns (uint[] memory tokenAmountsOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         uint lpTokenSupply = totalSupply();
         tokenAmountsOut = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
@@ -368,7 +369,7 @@ contract Well is
         returns (uint tokenAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             j,
@@ -431,7 +432,7 @@ contract Well is
         returns (uint lpAmountIn)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] - tokenAmountsOut[i];
         return totalSupply() - _calcLpTokenSupply(wellFunction(), balances);
@@ -444,7 +445,7 @@ contract Well is
      */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getBalances(_tokens.length);
+        uint[] memory balances = _getReserves(_tokens.length);
         skimAmounts = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
             skimAmounts[i] = _tokens[i].balanceOf(address(this)) - balances[i];
@@ -462,7 +463,7 @@ contract Well is
         internal
         returns (uint[] memory balances)
     {
-        balances = _getBalances(numberOfTokens);
+        balances = _getReserves(numberOfTokens);
 
         if (numberOfPumps() == 0) {
             return balances;
@@ -485,13 +486,13 @@ contract Well is
      * @dev See {IWell.getBalances}
      */
     function getBalances() external view returns (uint[] memory balances) {
-        return _getBalances(numberOfTokens());
+        return _getReserves(numberOfTokens());
     }
 
     /**
      * @dev Gets the Well's token balances from byte storage.
      */
-    function _getBalances(uint numberOfTokens)
+    function _getReserves(uint numberOfTokens)
         internal
         view
         returns (uint[] memory balances)
