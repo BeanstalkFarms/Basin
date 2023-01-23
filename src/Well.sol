@@ -374,11 +374,11 @@ contract Well is
         returns (uint tokenAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
+        uint[] memory reserves = _getReserves(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             j,
-            balances,
+            reserves,
             lpAmountIn
         );
     }
