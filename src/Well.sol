@@ -241,14 +241,10 @@ contract Well is
         uint[] memory balances = getBalances(_tokens.length);
         (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
 
-        // Verify that the User hasn't asked for an `amountIn` greater than Well balance
-        if (amountIn < 0) {
-            require(balances[i] >= uint(-amountIn), "Well: insufficient balances");
-        }
-
         balances[i] = amountIn > 0
             ? balances[i] + uint(amountIn)
-            : balances[i] - uint(-amountIn); // underflow handled in above check
+            // underflows if user asks for an `amountIn` greater than Well balance
+            : balances[i] - uint(-amountIn);
         
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
