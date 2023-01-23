@@ -6,6 +6,9 @@ pragma solidity ^0.8.17;
 
 import "oz/token/ERC20/IERC20.sol";
 
+/**
+ * @title ImmutableTokens provides immutable storage for a list of up to MAX_TOKENS tokens.
+ */
 contract ImmutableTokens {
     uint private constant MAX_TOKENS = 4;
     IERC20 private constant NULL_TOKEN = IERC20(address(0));

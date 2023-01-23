@@ -7,6 +7,9 @@ pragma solidity ^0.8.17;
 import "src/interfaces/IWell.sol";
 import "src/libraries/LibBytes.sol";
 
+/**
+ * @title ImmutablePumps provides immutable storage for a list of up to MAX_CALLS Pumps with up to MAX_SIZE data each.
+ */
 contract ImmutablePumps {
     using LibBytes for bytes;
 

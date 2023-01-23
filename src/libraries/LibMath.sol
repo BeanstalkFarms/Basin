@@ -5,7 +5,6 @@
 pragma solidity ^0.8.17;
 
 /**
- * @author Publius
  * @title Lib Math contains math operations
  **/
 import "oz/utils/math/SafeMath.sol";

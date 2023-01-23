@@ -6,8 +6,8 @@ import "src/interfaces/IAuger.sol";
 import "src/Well.sol";
 
 /**
- * @title Auger 
- * @author Publius
+ * @title An implementation of an Auger. See {IAuger}. Deploys {Well}.
+ * @author Publius, Silo Chad, Brean
  */
 contract Auger is IAuger {
     constructor() {}

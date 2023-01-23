@@ -7,8 +7,13 @@ pragma solidity ^0.8.17;
 import "src/interfaces/IWell.sol";
 
 /**
- * @title Auger Interface
- * @author Publius
+ * @title IAuger defines the interface for an Auger.
+ * 
+ * @dev
+ * Augers bore Wells by deploying implementations of the IWell interface.
+ * Augers provide an on-chain address reference for Well implementations.
+ * A non-malicious Auger should deploy a legitimate Well implementation with the parameters input into bore().
+ * When interacing with a Well, always verify the Well was deployed by a valid Auger.
  */
 interface IAuger {
     

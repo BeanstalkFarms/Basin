@@ -6,7 +6,6 @@ pragma solidity ^0.8.17;
 
 /**
  * @title LibBytes contains bytes operations used during storage reads & writes.
- * @author Publius
  */
 library LibBytes {
     bytes32 private constant ZERO_BYTES = bytes32(0);

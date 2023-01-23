@@ -7,7 +7,6 @@ pragma solidity ^0.8.17;
 import "oz/token/ERC20/IERC20.sol";
 
 /**
- * @author Publius
  * @title LibContractInfo contains logic to call functions that return information about a given contract.
  **/
 library LibContractInfo {

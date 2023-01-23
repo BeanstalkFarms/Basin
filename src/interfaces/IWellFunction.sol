@@ -6,8 +6,12 @@ pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title Well Function Interface
- * @author Publius
+ * @title IWellFunction defines an interface for a Well Function.
+ * 
+ * @dev
+ * Well Functions define a relationship between token balances and LP token supply.
+ * Well Functions can contain arbitrary logic, but should be deterministic if expected to be used alongside a Pump.
+ * When interacing with a Well or Well Function, always verify that the Well Function is valid.
  */
 interface IWellFunction {
 

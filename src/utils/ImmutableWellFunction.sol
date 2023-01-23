@@ -7,6 +7,9 @@ pragma solidity ^0.8.17;
 import "src/interfaces/IWell.sol";
 import "src/libraries/LibBytes.sol";
 
+/**
+ * @title ImmutableWellFunction provides immutable storage for a Well Function with up to MAX_SIZE data.
+ */
 contract ImmutableWellFunction {
     using LibBytes for bytes;
 
