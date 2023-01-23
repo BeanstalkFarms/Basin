@@ -144,19 +144,19 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length); // pumps?
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        uint[] memory balances = _updatePumpBalances(_tokens.length); // pumps?
+        (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
 
         balances[i] += amountIn;
         uint balanceJBefore = balances[j];
-        balances[j] = getBalance(wellFunction(), balances, j, totalSupply());
+        balances[j] = _getBalance(wellFunction(), balances, j, totalSupply());
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
         amountOut = balanceJBefore - balances[j];
 
         require(amountOut >= minAmountOut, "Well: slippage");
-        setBalances(balances);
+        _setBalances(balances);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
@@ -170,9 +170,9 @@ contract Well is
     ) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances();
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[i] += amountIn;
-        amountOut = balances[j] - getBalance(wellFunction(), balances, j, totalSupply());
+        amountOut = balances[j] - _getBalance(wellFunction(), balances, j, totalSupply());
     }
 
     //////////// SWAP: TO ////////////
@@ -188,19 +188,19 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length);
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        uint[] memory balances = _updatePumpBalances(_tokens.length);
+        (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
 
         balances[j] -= amountOut;
         uint balanceIBefore = balances[i];
-        balances[i] = getBalance(wellFunction(), balances, i, totalSupply());
+        balances[i] = _getBalance(wellFunction(), balances, i, totalSupply());
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
         amountIn = balances[i] - balanceIBefore;
         
         require(amountIn <= maxAmountIn, "Well: slippage");
-        setBalances(balances);
+        _setBalances(balances);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
@@ -214,9 +214,9 @@ contract Well is
     ) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances();
-        (uint i, uint j) = getIJ(_tokens, fromToken, toToken);
+        (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
         balances[j] -= amountOut;
-        amountIn = getBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
+        amountIn = _getBalance(wellFunction(), balances, i, totalSupply()) - balances[i];
     }
 
     //////////// SWAP: UTILITIES ////////////
@@ -248,7 +248,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length);
+        uint[] memory balances = _updatePumpBalances(_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].safeTransferFrom(
@@ -258,11 +258,11 @@ contract Well is
             );
             balances[i] = balances[i] + tokenAmountsIn[i];
         }
-        lpAmountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = _getLpTokenSupply(wellFunction(), balances) - totalSupply();
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
-        setBalances(balances);
+        _setBalances(balances);
     }
 
     /**
@@ -277,7 +277,7 @@ contract Well is
         uint[] memory balances = getBalances();
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] + tokenAmountsIn[i];
-        lpAmountOut = getLpTokenSupply(wellFunction(), balances) - totalSupply();
+        lpAmountOut = _getLpTokenSupply(wellFunction(), balances) - totalSupply();
     }
 
     //////////// REMOVE LIQUIDITY: BALANCED ////////////
@@ -291,7 +291,7 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length);
+        uint[] memory balances = _updatePumpBalances(_tokens.length);
         uint lpTokenSupply = totalSupply();
         tokenAmountsOut = new uint[](_tokens.length);
         _burn(msg.sender, lpAmountIn);
@@ -304,7 +304,7 @@ contract Well is
             _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             balances[i] = balances[i] - tokenAmountsOut[i];
         }
-        setBalances(balances);
+        _setBalances(balances);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
@@ -337,8 +337,8 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length);
-        uint j = getJ(_tokens, tokenOut);
+        uint[] memory balances = _updatePumpBalances(_tokens.length);
+        uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             j,
             balances,
@@ -350,7 +350,7 @@ contract Well is
         tokenOut.safeTransfer(recipient, tokenAmountOut);
 
         balances[j] = balances[j] - tokenAmountOut;
-        setBalances(balances);
+        _setBalances(balances);
 
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
@@ -365,7 +365,7 @@ contract Well is
     {
         IERC20[] memory _tokens = tokens();
         uint[] memory balances = getBalances();
-        uint j = getJ(_tokens, tokenOut);
+        uint j = _getJ(_tokens, tokenOut);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(
             j,
             balances,
@@ -386,7 +386,7 @@ contract Well is
         uint lpAmountIn
     ) private view returns (uint tokenAmountOut) {
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
-        uint newBalanceJ = getBalance(
+        uint newBalanceJ = _getBalance(
             wellFunction(),
             balances,
             j,
@@ -406,15 +406,15 @@ contract Well is
         address recipient
     ) external nonReentrant returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = updatePumpBalances(_tokens.length);
+        uint[] memory balances = _updatePumpBalances(_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
             _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             balances[i] = balances[i] - tokenAmountsOut[i];
         }
-        lpAmountIn = totalSupply() - getLpTokenSupply(wellFunction(), balances);
+        lpAmountIn = totalSupply() - _getLpTokenSupply(wellFunction(), balances);
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
-        setBalances(balances);
+        _setBalances(balances);
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
@@ -430,7 +430,7 @@ contract Well is
         uint[] memory balances = getBalances();
         for (uint i; i < _tokens.length; ++i)
             balances[i] = balances[i] - tokenAmountsOut[i];
-        return totalSupply() - getLpTokenSupply(wellFunction(), balances);
+        return totalSupply() - _getLpTokenSupply(wellFunction(), balances);
     }
 
     //////////// SKIM ////////////
@@ -454,7 +454,7 @@ contract Well is
      * @dev Fetches the current token balances of the Well and updates the Pumps.
      * Typically called before an operation that modifies the Well's balances.
      */
-    function updatePumpBalances(uint numberOfTokens)
+    function _updatePumpBalances(uint numberOfTokens)
         internal
         returns (uint[] memory balances)
     {
@@ -498,7 +498,7 @@ contract Well is
     /**
      * @dev Sets the Well's balances of tokens by writing to byte storage.
      */
-    function setBalances(uint[] memory balances)
+    function _setBalances(uint[] memory balances)
         internal
     {
         LibBytes.storeUint128(BALANCES_STORAGE_SLOT, balances);
@@ -511,7 +511,7 @@ contract Well is
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
-    function getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
+    function _getLpTokenSupply(Call memory _wellFunction, uint[] memory balances)
         internal    
         view
         returns (uint lpTokenSupply)
@@ -529,7 +529,7 @@ contract Well is
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
      */
-    function getBalance(
+    function _getBalance(
         Call memory _wellFunction,
         uint[] memory balances,
         uint j,
@@ -548,7 +548,7 @@ contract Well is
     /**
      * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
      */
-    function getIJ(
+    function _getIJ(
         IERC20[] memory _tokens,
         IERC20 iToken,
         IERC20 jToken
@@ -562,7 +562,7 @@ contract Well is
     /**
      * @dev Returns the index of `jToken` in `_tokens`.
      */
-    function getJ(IERC20[] memory _tokens, IERC20 jToken)
+    function _getJ(IERC20[] memory _tokens, IERC20 jToken)
         internal
         pure
         returns (uint j)
