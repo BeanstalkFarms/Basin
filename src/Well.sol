@@ -453,10 +453,10 @@ contract Well is
      */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
+        uint[] memory reserves = _getReserves(_tokens.length);
         skimAmounts = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
-            skimAmounts[i] = _tokens[i].balanceOf(address(this)) - balances[i];
+            skimAmounts[i] = _tokens[i].balanceOf(address(this)) - reserves[i];
             if (skimAmounts[i] > 0) _tokens[i].safeTransfer(recipient, skimAmounts[i]);
         }
     }
