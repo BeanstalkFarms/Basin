@@ -327,11 +327,12 @@ contract Well is
         returns (uint[] memory tokenAmountsOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
+        uint[] memory reserves = _getReserves(_tokens.length);
         uint lpTokenSupply = totalSupply();
+        
         tokenAmountsOut = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
-            tokenAmountsOut[i] = (lpAmountIn * balances[i]) / lpTokenSupply;
+            tokenAmountsOut[i] = (lpAmountIn * reserves[i]) / lpTokenSupply;
         }
     }
 
