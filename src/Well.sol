@@ -469,21 +469,21 @@ contract Well is
      */
     function _updatePumps(uint numberOfTokens)
         internal
-        returns (uint[] memory balances)
+        returns (uint[] memory reserves)
     {
-        balances = _getReserves(numberOfTokens);
+        reserves = _getReserves(numberOfTokens);
 
         if (numberOfPumps() == 0) {
-            return balances;
+            return reserves;
         }
 
         // gas optimization: avoid looping if there is only one pump
         if (numberOfPumps() == 1) {
-            IPump(firstPumpTarget()).update(balances, firstPumpBytes());
+            IPump(firstPumpTarget()).update(reserves, firstPumpBytes());
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
-                IPump(_pumps[i].target).update(balances, _pumps[i].data);
+                IPump(_pumps[i].target).update(reserves, _pumps[i].data);
             }
         }
     }
