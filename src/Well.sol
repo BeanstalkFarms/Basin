@@ -281,10 +281,11 @@ contract Well is
         returns (uint lpAmountOut)
     {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
-        for (uint i; i < _tokens.length; ++i)
-            balances[i] = balances[i] + tokenAmountsIn[i];
-        lpAmountOut = _calcLpTokenSupply(wellFunction(), balances) - totalSupply();
+        uint[] memory reserves = _getReserves(_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = reserves[i] + tokenAmountsIn[i];
+        }
+        lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
     }
 
     //////////// REMOVE LIQUIDITY: BALANCED ////////////
