@@ -498,14 +498,14 @@ contract Well is
     }
 
     /**
-     * @dev Gets the Well's token balances from byte storage.
+     * @dev Gets the Well's token reserves from byte storage.
      */
     function _getReserves(uint numberOfTokens)
         internal
         view
-        returns (uint[] memory balances)
+        returns (uint[] memory reserves)
     {
-        balances = LibBytes.readUint128(RESERVES_STORAGE_SLOT, numberOfTokens);
+        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, numberOfTokens);
     }
 
     /**
