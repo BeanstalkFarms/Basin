@@ -293,6 +293,14 @@ interface IWell {
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
 
+
+    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
+
+    // function getBalances(uint numberOfTokens)
+    //     public
+    //     view
+    //     returns (uint[] memory balances)
+
     //////////// SKIM ////////////
 
     /**
