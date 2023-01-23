@@ -464,8 +464,8 @@ contract Well is
     //////////// UPDATE PUMP ////////////
 
     /**
-     * @dev Fetches the current token balances of the Well and updates the Pumps.
-     * Typically called before an operation that modifies the Well's balances.
+     * @dev Fetches the current token reserves of the Well and updates the Pumps.
+     * Typically called before an operation that modifies the Well's reserves.
      */
     function _updatePumps(uint numberOfTokens)
         internal
@@ -491,10 +491,10 @@ contract Well is
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
 
     /**
-     * @dev See {IWell.getBalances}
+     * @dev See {IWell.getReserves}
      */
-    function getBalances() external view returns (uint[] memory balances) {
-        balances = _getReserves(numberOfTokens());
+    function getReserves() external view returns (uint[] memory reserves) {
+        reserves = _getReserves(numberOfTokens());
     }
 
     /**

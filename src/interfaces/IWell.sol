@@ -297,9 +297,9 @@ interface IWell {
     //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
 
     /**
-     * @notice Gets the balance of each token held by the Well.
+     * @notice Gets the reserves of each token held by the Well.
      */
-    function getBalances() external view returns (uint[] memory balances);
+    function getReserves() external view returns (uint[] memory reserves);
 
     //////////// SKIM ////////////
 
