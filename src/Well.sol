@@ -488,7 +488,7 @@ contract Well is
         }
     }
 
-    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
+    //////////// GET & SET RESERVES ////////////
 
     /**
      * @dev See {IWell.getReserves}
@@ -516,6 +516,8 @@ contract Well is
     {
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
+
+    //////////// WELL FUNCTION INTERACTION ////////////
 
     /**
      * @dev Calculates the LP token supply given a list of `reserves` from the provided
