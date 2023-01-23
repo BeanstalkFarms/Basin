@@ -216,10 +216,12 @@ contract Well is
         uint amountOut
     ) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
-        uint[] memory balances = _getReserves(_tokens.length);
+        uint[] memory reserves = _getReserves(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
-        balances[j] -= amountOut;
-        amountIn = _calcReserve(wellFunction(), balances, i, totalSupply()) - balances[i];
+
+        reserves[j] -= amountOut;
+
+        amountIn = _calcReserve(wellFunction(), reserves, i, totalSupply()) - reserves[i];
     }
 
     //////////// SWAP: UTILITIES ////////////
