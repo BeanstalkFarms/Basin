@@ -4,16 +4,20 @@ A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisionin
 
 Each Well is defined by its Tokens, Well function, and Pump.
 - The **Tokens** define the set of ERC-20 tokens that can be exchanged in the Well.
-- The **Well function** defines an invariant relationship between the balances of the tokens in the Well and the number of LP tokens. See [{IWellFunction}](/src//interfaces/IWellFunction.sol).
-- The **Pump** is an on-chain oracles that is updated upon each interaction with the Well. See [{IPump}](/src/interfaces/IPump.sol).
+- The **Well function** defines an invariant relationship between the Well's reserves and the supply of LP tokens. See [{IWellFunction}](/src//interfaces/IWellFunction.sol).
+- **Pumps** are an on-chain oracles that are updated upon each interaction with the Well. See [{IPump}](/src/interfaces/IPump.sol).
 
-A Well's Tokens, Well function, and Pump are stored as immutable variables during Well construction to prevent unnessary SLOAD calls during operation.
+A Well's tokens, Well function, and Pump are stored as immutable variables during Well construction to prevent unnessary SLOAD calls during operation.
 
 Wells support swapping, adding liquidity, and removing liquidity in balanced or imbalanced proportions.
 
-Wells are stateless beyond the issuance of an ERC-20 LP token. The balance of tokens in the Well is read directly from each token's [{IERC20-balanceOf}](/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol) method. Well functions and Pumps can independently choose to be stateful or stateless.
+Wells maintain two components of state:
+- a balance of tokens received through Well operations ("reserves")
+- an ERC-20 LP token representing pro-rata ownership of the reserves
 
-Including a Pump is optional. Only 1 Pump can be attached to a Well, but a Pump can call other Pumps, allowing multiple Pumps to be used.
+Well functions and Pumps can independently choose to be stateful or stateless.
+
+Including a Pump is optional.
 
 Each Well implements ERC-20, ERC-2612 and the [{IWell}](/src/interfaces/IWell.sol) interface.
 

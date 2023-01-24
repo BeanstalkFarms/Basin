@@ -25,7 +25,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityOneTokenOut() public {
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(tokens[0], 1000 * 1e27);
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(1000 * 1e27, tokens[0]);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 
@@ -44,8 +44,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), amountOut, "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), 0, "Incorrect token1 user balance");
 
-        assertEq(tokens[0].balanceOf(address(well)), 1125 * 1e18, "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "Incorrect token1 well balance");
+        assertEq(tokens[0].balanceOf(address(well)), 1125 * 1e18, "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "Incorrect token1 well reserve");
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
@@ -56,8 +56,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
     }
 
-    /// @dev Fuzz test: EQUAL token balances, IMBALANCED removal
-    /// The Well contains equal balances of all underlying tokens before execution.
+    /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
+    /// The Well contains equal reserves of all underlying tokens before execution.
     function testFuzz_removeLiquidityOneToken(uint a0) prank(user) public {    
         // Assume we're removing tokens[0]
         uint[] memory amounts = new uint[](2);
@@ -70,15 +70,15 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         // amounts. Works even though only amounts[0] is set.
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
         
-        // Calculate change in Well balances after removing liquidity
-        uint[] memory balances = new uint[](2);
-        balances[0] = tokens[0].balanceOf(address(well)) - amounts[0];
-        balances[1] = tokens[1].balanceOf(address(well)) - amounts[1]; // should stay the same
+        // Calculate change in Well reserves after removing liquidity
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = tokens[0].balanceOf(address(well)) - amounts[0];
+        reserves[1] = tokens[1].balanceOf(address(well)) - amounts[1]; // should stay the same
 
-        // Calculate the new LP token supply after the Well's balances are changed.
+        // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply =  cp.getLpTokenSupply(balances, data);
+        uint newLpTokenSupply =  cp.calcLpTokenSupply(reserves, data);
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
@@ -88,8 +88,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(well.balanceOf(user), userLpBalance - lpAmountIn, "Incorrect lp output");
         assertEq(tokens[0].balanceOf(user), amounts[0], "Incorrect token0 user balance");
         assertEq(tokens[1].balanceOf(user), amounts[1], "Incorrect token1 user balance"); // should stay the same
-        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well balance");
-        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well balance"); // should stay the same  
+        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well reserve");
+        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well reserve"); // should stay the same  
     }
 
     // TODO: fuzz test: imbalanced ratio of tokens

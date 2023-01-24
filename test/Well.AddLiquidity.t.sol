@@ -25,7 +25,7 @@ contract WellAddLiquidityTest is TestHelper {
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for(uint i = 0; i < tokens.length; i++) {
-            assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token balance");
+            assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token reserve");
         }
     }
 
@@ -56,7 +56,7 @@ contract WellAddLiquidityTest is TestHelper {
         assertEq(tokens[0].balanceOf(user), 0, "incorrect token0 user amt");
         assertEq(tokens[1].balanceOf(user), 0, "incorrect token1 user amt");
 
-        // Adds to the Well's balances
+        // Adds to the Well's reserves
         // FIXME: need to know that TestHelper adds an initial 1000 * 1e18
         assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
         assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "incorrect token1 well amt");
@@ -128,7 +128,7 @@ contract WellAddLiquidityTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 1000 * 1e18, "incorrect token1 well amt");
     }
 
-    /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change balances
+    /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves
     function test_addLiquidity_zeroChange() prank(user) public {
         uint[] memory amounts = new uint[](tokens.length);
         uint liquidity = 0;
@@ -151,14 +151,14 @@ contract WellAddLiquidityTest is TestHelper {
         amounts[0] = bound(x, 0, 1000e18);
         amounts[1] = bound(y, 0, 1000e18);
 
-        // expected new balances after above amounts are added
-        uint[] memory balances = new uint[](2);
-        balances[0] = amounts[0] + tokens[0].balanceOf(address(well));
-        balances[1] = amounts[1] + tokens[1].balanceOf(address(well));
+        // expected new reserves after above amounts are added
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = amounts[0] + tokens[0].balanceOf(address(well));
+        reserves[1] = amounts[1] + tokens[1].balanceOf(address(well));
 
         // calculate new LP tokens delivered to user
         Call memory _function = well.wellFunction();
-        uint newLpTokenSupply = IWellFunction(_function.target).getLpTokenSupply(balances, _function.data);
+        uint newLpTokenSupply = IWellFunction(_function.target).calcLpTokenSupply(reserves, _function.data);
         uint totalSupply = well.totalSupply(); 
         uint lpAmountOut = newLpTokenSupply - totalSupply;
         

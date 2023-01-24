@@ -8,15 +8,15 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 contract MockFunctionNoName is IWellFunction {
 
-    function getBalance(
-        uint256[] memory balances,
+    function calcReserve(
+        uint256[] memory reserves,
         uint256 j,
         uint256 lpTokenSupply,
         bytes calldata data
     ) external pure returns (uint d) {}
 
-    function getLpTokenSupply(
-        uint256[] memory balances,
+    function calcLpTokenSupply(
+        uint256[] memory reserves,
         bytes calldata data
     ) external pure returns (uint xj) {}
 

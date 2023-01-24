@@ -8,7 +8,7 @@ import "src/libraries/LibMath.sol";
 
 contract LibMathTest is TestHelper {
     // Wells permit up to  16 tokens. Currently, `nthRoot` is only used
-    // with `a = balances.length` which is constrained to `2 <= a <= 16`.
+    // with `a = reserves.length` which is constrained to `2 <= a <= 16`.
     uint MAX_NTH_ROOT = 16;
 
     function setUp() public {}

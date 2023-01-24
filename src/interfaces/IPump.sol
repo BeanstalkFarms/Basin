@@ -24,13 +24,13 @@ interface IPump {
     function attach(uint n, bytes calldata data) external;
 
     /**
-     * @notice Updates the Pump with the given balances.
-     * @param balances The previous balances of the tokens in the Well.
+     * @notice Updates the Pump with the given reserves.
+     * @param reserves The previous reserves of the tokens in the Well.
      * @param data Pump data provided on every call
      * @dev Pumps are updated every time a user swaps, adds liquidity, or
      * removes liquidity from a Well.
      */
-    function update(uint[] calldata balances, bytes calldata data) external;
+    function update(uint[] calldata reserves, bytes calldata data) external;
 
     /**
      * @notice Reads Pump data related to an attached Well.
