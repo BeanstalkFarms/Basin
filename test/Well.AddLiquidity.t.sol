@@ -166,8 +166,8 @@ contract WellAddLiquidityTest is TestHelper {
         emit AddLiquidity(amounts, lpAmountOut);
         well.addLiquidity(amounts, 0, user);
 
-        assertEq(well.balanceOf(user), lpAmountOut,"incorrect well user amt");
-        assertEq(tokens[0].balanceOf(user), 1000e18 - amounts[0],"incorrect token0 user amt");
+        assertEq(well.balanceOf(user), lpAmountOut, "incorrect well user amt");
+        assertEq(tokens[0].balanceOf(user), 1000e18 - amounts[0], "incorrect token0 user amt");
         assertEq(tokens[1].balanceOf(user), 1000e18 - amounts[1], "incorrect token1 user amt");
         assertEq(tokens[0].balanceOf(address(well)), 1000e18 + amounts[0], "incorrect token0 well amt");
         assertEq(tokens[1].balanceOf(address(well)), 1000e18 + amounts[1], "incorrect token1 well amt");

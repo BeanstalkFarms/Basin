@@ -6,7 +6,6 @@ pragma solidity ^0.8.17;
 
 import "src/interfaces/IWellFunction.sol";
 import "src/libraries/LibMath.sol";
-import "forge-std/console.sol";
 
 /**
  * @author Publius

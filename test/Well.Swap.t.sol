@@ -111,6 +111,21 @@ contract WellSwapTest is TestHelper {
         assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token1 well amt");
     }
 
+    function testFuzz_swapFrom_equalSwapFrom(uint token0AmtIn) prank(user) public {
+        vm.assume(token0AmtIn < 1000e18);
+        uint256 token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user);
+        uint256 token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user);
+        assertEq(token0Out,token0AmtIn);
+    }
+
+    function testFuzz_swapTo_equalSwap(uint token0AmtOut) prank(user) public {
+        // assume amtOut is lower due to slippage
+        vm.assume(token0AmtOut < 500e18);
+        uint256 token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut,user);
+        uint256 token0In = well.swapTo(tokens[1], tokens[0], 1000e18, token1In, user);
+        assertEq(token0In,token0AmtOut);
+    }
+
     function testFuzz_swapTo(uint amountOut) prank(user) public {
         // user has 1000 of each token
         // given current liquidity, swapping 1000 of one token gives 500 of the other

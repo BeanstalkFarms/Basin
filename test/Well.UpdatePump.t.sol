@@ -32,8 +32,12 @@ contract WellUpdatePumpTest is TestHelper {
         // lastData from "0xATTACHED" to the `data` param which is passed during
         // the `update()` call. If liquidity is not added, this will fail.
         setupWell(2, _wellFunction, pumps);
+        vm.prank(user);
+        // call {swapFrom} for test coverage in updating pumps.
+        well.swapFrom(tokens[0],tokens[1],1e18,1,user);
         for (uint i = 0; i < numPumps; i++) {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }
     }
+
 }
