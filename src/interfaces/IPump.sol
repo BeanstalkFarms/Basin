@@ -6,9 +6,11 @@ pragma solidity =0.8.17;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title IPump provides an interface for a Pump, an on-chain oracle that is 
- * updated upon each interaction with a {IWell}.
- * @author Publius
+ * @title IPump defines the interface for a Pump.
+ *
+ * @dev
+ * Pumps are on-chain oracles that are updated upon each interaction with a {IWell}.
+ * When reading a Pump, always verify the Pump's functionality.
  */
 interface IPump {
 
@@ -22,13 +24,13 @@ interface IPump {
     function attach(uint n, bytes calldata data) external;
 
     /**
-     * @notice Updates the Pump with the given balances.
-     * @param balances The previous balances of the tokens in the Well.
+     * @notice Updates the Pump with the given reserves.
+     * @param reserves The previous reserves of the tokens in the Well.
      * @param data Pump data provided on every call
      * @dev Pumps are updated every time a user swaps, adds liquidity, or
      * removes liquidity from a Well.
      */
-    function update(uint[] calldata balances, bytes calldata data) external;
+    function update(uint[] calldata reserves, bytes calldata data) external;
 
     /**
      * @notice Reads Pump data related to an attached Well.

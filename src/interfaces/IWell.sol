@@ -81,7 +81,7 @@ interface IWell {
      * @dev Contains the address of the Well function contract and extra data to 
      * pass during calls.
      * 
-     * **Well functions** define a relationship between the balances of the
+     * **Well functions** define a relationship between the reserves of the
      * tokens in the Well and the number of LP tokens.
      * 
      * A Well function MUST implement {IWellFunction}.
@@ -192,22 +192,6 @@ interface IWell {
         uint amountOut
     ) external view returns (uint amountIn);
 
-    //////////// SWAP: UTILITIES ////////////
-
-    /**
-     * @notice Gets the output of a swap using the Well's current token balances.
-     * @param fromToken The token to swap from
-     * @param toToken The token to swap to
-     * @param amountIn The Well's change in balance of `fromToken`
-     * @return amountOut The Well's change in balance of `toToken`
-     * @dev Uses signed integer accounting.
-     */
-    function getSwap(
-        IERC20 fromToken,
-        IERC20 toToken,
-        int amountIn
-    ) external view returns (int amountOut);
-
     //////////// ADD LIQUIDITY ////////////
 
     /**
@@ -277,15 +261,15 @@ interface IWell {
 
     /**
      * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
-     * @param tokenOut The underlying token to receive
      * @param lpAmountIn The amount of LP tokens to burn
+     * @param tokenOut The underlying token to receive
      * @return tokenAmountOut The amount of `tokenOut` to receive
      *
      * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
-        IERC20 tokenOut,
-        uint lpAmountIn
+        uint lpAmountIn,
+        IERC20 tokenOut
     ) external view returns (uint tokenAmountOut);
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
@@ -312,10 +296,18 @@ interface IWell {
         uint[] calldata tokenAmountsOut
     ) external view returns (uint lpAmountIn);
 
+
+    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
+
+    /**
+     * @notice Gets the reserves of each token held by the Well.
+     */
+    function getReserves() external view returns (uint[] memory reserves);
+
     //////////// SKIM ////////////
 
     /**
-     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`
+     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`.
      * @param recipient The address to send the tokens
      * @return skimAmounts The amount of each token skimmed
      */

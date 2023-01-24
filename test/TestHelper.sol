@@ -18,6 +18,13 @@ import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Users} from "utils/Users.sol";
 
+/// @dev helper struct for quickly loading user / well token balances
+struct Balances {
+    uint256[] tokens;
+    uint256 lp;
+    uint256 lpSupply;
+}
+
 abstract contract TestHelper is Test {
     using Strings for uint;
 
@@ -114,18 +121,6 @@ abstract contract TestHelper is Test {
             tokens[i].approve(spender, type(uint).max);
     }
 
-    // function deployWell() internal returns (Well) {
-    //     wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
-    //     well = Well(wellBuilder.buildWell(
-    //         "TOKEN0:TOKEN1 Constant Product Well",
-    //         "TOKEN0TOKEN1CPw",
-    //         tokens,
-    //         wellFunction,
-    //         pump
-    //     ));
-    //     return well;
-    // }
-
     /// @dev add the same `amount` of liquidity for all underlying tokens
     function addLiquidityEqualAmount(address from, uint amount) prank(from) internal {
         uint[] memory amounts = new uint[](tokens.length);
@@ -145,6 +140,20 @@ abstract contract TestHelper is Test {
         }
     }
 
+    /// @dev get `account` balance of each token, lp token, total lp token supply
+    function getBalances(address account) internal view returns (Balances memory balances) {
+        uint[] memory tokenBalances = new uint[](tokens.length);
+        for (uint i = 0; i < tokenBalances.length; ++i) {
+            tokenBalances[i] = tokens[i].balanceOf(account);
+        }
+        balances = Balances(
+            tokenBalances,
+            well.balanceOf(account),
+            well.totalSupply()
+        );
+    }
+
+    /// @dev impersonate `from`
     modifier prank(address from) {
         vm.startPrank(from);
         _;

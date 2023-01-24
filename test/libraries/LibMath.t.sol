@@ -8,7 +8,7 @@ import "src/libraries/LibMath.sol";
 
 contract LibMathTest is TestHelper {
     // Wells permit up to  16 tokens. Currently, `nthRoot` is only used
-    // with `a = balances.length` which is constrained to `2 <= a <= 16`.
+    // with `a = reserves.length` which is constrained to `2 <= a <= 16`.
     uint MAX_NTH_ROOT = 16;
 
     function setUp() public {}
@@ -84,5 +84,20 @@ contract LibMathTest is TestHelper {
     /// 2828427124 = sqrt(8e18)
     function testSqrtImperfectLargeGte() public {
         assertEq(LibMath.sqrt(8 * 1e18), 2828427124); // rounds down from 2.828...e9
+    }
+
+    ///
+    function test_roundedDiv_revertIf_denomIsZero() public {
+        vm.expectRevert();
+        LibMath.roundedDiv(1, 0);
+    }
+
+    function test_roundedDiv() public {
+        assertEq(LibMath.roundedDiv(1, 3), 0);
+        assertEq(LibMath.roundedDiv(1, 2), 1);
+        assertEq(LibMath.roundedDiv(2, 3), 1);
+        assertEq(LibMath.roundedDiv(2, 2), 1);
+        assertEq(LibMath.roundedDiv(3, 2), 2);
+        assertEq(LibMath.roundedDiv(5, 4), 1);
     }
 }

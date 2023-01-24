@@ -16,31 +16,31 @@ import "src/libraries/LibMath.sol";
  * 
  * Where:
  *  `s` is the supply of LP tokens
- *  `b_i` is the balance at index `i`
+ *  `b_i` is the reserve at index `i`
  *  `n` is the number of tokens in the Well
  */
 contract ConstantProduct is IWellFunction {
     using LibMath for uint;
 
     /// @dev `s = π(b_i)^(1/n) * n`
-    function getLpTokenSupply(
-        uint[] calldata balances,
+    function calcLpTokenSupply(
+        uint[] calldata reserves,
         bytes calldata
     ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = prodX(balances).nthRoot(balances.length) * balances.length;
+        lpTokenSupply = prodX(reserves).nthRoot(reserves.length) * reserves.length;
     }
 
     /// @dev `b_j = (s / n)^n / π_{i!=j}(b_i)`
-    function getBalance(
-        uint[] calldata balances,
+    function calcReserve(
+        uint[] calldata reserves,
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external override pure returns (uint balance) {
-        uint n = balances.length;
-        balance = uint((lpTokenSupply / n) ** n);
+    ) external override pure returns (uint reserve) {
+        uint n = reserves.length;
+        reserve = uint((lpTokenSupply / n) ** n);
         for (uint i; i < n; ++i)
-            if (i != j) balance = balance / balances[i];
+            if (i != j) reserve = reserve / reserves[i];
     }
 
     /// @dev calculate the mathematical product of an array of uint[]

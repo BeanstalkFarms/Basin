@@ -11,21 +11,21 @@ abstract contract WellFunctionHelper is TestHelper {
     IWellFunction _function;
     bytes _data;
 
-    /// @dev getLpTokenSupply: 0 balances = 0 supply
+    /// @dev calcLpTokenSupply: 0 reserves = 0 supply
     /// Some Well Functions will choose to support > 2 tokens.
-    /// Additional tokens passed in `balances` should be ignored.
+    /// Additional tokens passed in `reserves` should be ignored.
     function test_getLpTokenSupply_empty(uint n) public {
         vm.assume(n < 16);
         vm.assume(n >= 2);
-        uint[] memory balances = new uint[](n);
-        assertEq(_function.getLpTokenSupply(balances, _data), 0);
+        uint[] memory reserves = new uint[](n);
+        assertEq(_function.calcLpTokenSupply(reserves, _data), 0);
     }
 
-    /// @dev require at least `n` balances to be passed to `getLpTokenSupply`
+    /// @dev require at least `n` reserves to be passed to `calcLpTokenSupply`
     function check_getLpTokenSupply_minBalancesLength(uint n) public {
         for (uint i = 0; i < n; ++i) {
             vm.expectRevert(stdError.indexOOBError); // "Index out of bounds"
-            _function.getLpTokenSupply(new uint[](i), _data);
+            _function.calcLpTokenSupply(new uint[](i), _data);
         }
     }
 }
