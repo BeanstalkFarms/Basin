@@ -1,0 +1,1 @@
+forge script scripts/DeployWell.s.sol:DeployWell --fork-url http://localhost:8545 --broadcast
