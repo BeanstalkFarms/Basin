@@ -71,7 +71,13 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
         // Index
         _indexWell(well, tokens);
-        emit BoreWell(well, tokens, wellFunction, pumps, address(auger));
+        emit BoreWell(
+            well,
+            tokens,
+            wellFunction,
+            pumps,
+            address(auger)
+        );
     }
 
     /// @dev see {IAquifer.getWellByIndex}

@@ -4,8 +4,8 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWellFunction.sol";
-import "src/libraries/LibMath.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
  * @author Publius
@@ -27,7 +27,7 @@ contract ConstantProduct is IWellFunction {
         uint[] calldata reserves,
         bytes calldata
     ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = prodX(reserves).nthRoot(reserves.length) * reserves.length;
+        lpTokenSupply = _prodX(reserves).nthRoot(reserves.length) * reserves.length;
     }
 
     /// @dev `b_j = (s / n)^n / π_{i!=j}(b_i)`
@@ -43,18 +43,18 @@ contract ConstantProduct is IWellFunction {
             if (i != j) reserve = reserve / reserves[i];
     }
 
-    /// @dev calculate the mathematical product of an array of uint[]
-    function prodX(uint[] memory xs) private pure returns (uint pX) {
-        pX = xs[0];
-        for (uint i = 1; i < xs.length; ++i)
-            pX = pX * xs[i];
-    }
-
     function name() external override pure returns (string memory) {
         return "Constant Product";
     }
 
     function symbol() external override pure returns (string memory) {
         return "CP";
+    }
+
+    /// @dev calculate the mathematical product of an array of uint[]
+    function _prodX(uint[] memory xs) private pure returns (uint pX) {
+        pX = xs[0];
+        for (uint i = 1; i < xs.length; ++i)
+            pX = pX * xs[i];
     }
 }

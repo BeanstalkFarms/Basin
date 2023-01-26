@@ -6,17 +6,17 @@ pragma solidity ^0.8.17;
 import "forge-std/console2.sol";
 import "forge-std/console.sol";
 import "forge-std/Test.sol";
-
 import "oz/utils/Strings.sol";
-
-import {Well, Call, IERC20} from "src/Well.sol";
-import {Auger} from "src/Auger.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Users} from "test/helpers/Users.sol";
+
+import {Well, Call, IERC20} from "src/Well.sol";
+import {Auger} from "src/Auger.sol";
+import {Aquifer} from "src/Aquifer.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
@@ -28,15 +28,20 @@ struct Balances {
 abstract contract TestHelper is Test {
     using Strings for uint;
 
+    // Users
     Users users;
     address user;
     address user2;
 
-    Auger auger;
+    // Primary well
     Well well;
     IERC20[] tokens; // Mock token addresses sorted lexicographically
     Call wellFunction; // Instantated during {deployWell}
     Call[] pumps; // Instantiated during upstream test
+
+    // Factory / Registry
+    Auger auger;
+    Aquifer aquifer;
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
