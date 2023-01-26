@@ -16,7 +16,7 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
-import {Users} from "utils/Users.sol";
+import {Users} from "test/helpers/Users.sol";
 
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
