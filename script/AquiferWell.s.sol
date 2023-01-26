@@ -2,12 +2,11 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {Well} from "../src/wells/Well.sol";
-import "src/interfaces/IWell.sol";
-import {Aquifer} from "../src/aquifers/Aquifer.sol";
-import {Auger} from "../src/augers/Auger.sol";
-import {MockPump} from "../mocks/pumps/MockPump.sol";
-import {ConstantProduct2} from "../src/wellFunctions/ConstantProduct2.sol";
+import {Well, IWell, Call} from "src/Well.sol";
+import {Aquifer} from "src/Aquifer.sol";
+import {Auger} from "src/Auger.sol";
+import {MockPump} from "mocks/pumps/MockPump.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 

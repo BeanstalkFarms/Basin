@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {Auger} from "../src/Augers/Auger.sol";
+import {Auger, IAuger} from "src/Auger.sol";
 
 /// @dev Script to deploy an {Auger}. Augers bore Wells.
 contract DeployAuger is Script {

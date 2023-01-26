@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {Aquifer} from "../src/aquifers/Aquifer.sol";
+import {Aquifer} from "src/Aquifer.sol";
 
 // Script to deploy an {Aquifer}.
 // see {Aquifer}.
