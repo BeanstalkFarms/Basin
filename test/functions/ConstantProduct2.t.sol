@@ -1,11 +1,12 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {TestHelper} from "test/TestHelper.sol";
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
-import "src/functions/ConstantProduct2.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
 contract ConstantProduct2Test is WellFunctionHelper {
@@ -17,11 +18,11 @@ contract ConstantProduct2Test is WellFunctionHelper {
     /// State B: Different decimals
     uint STATE_B_B0 = 1 * 1e18;
     uint STATE_B_B1 = 1250 * 1e6;
-    uint STATE_B_LP = 70710678118654752440084;
+    uint STATE_B_LP = 70_710_678_118_654_752_440_084;
 
     /// State C: Similar decimals
     uint STATE_C_B0 = 20 * 1e18;
-    uint STATE_C_B1 = 31250000000000000000; // 3.125e19
+    uint STATE_C_B1 = 31_250_000_000_000_000_000; // 3.125e19
     uint STATE_C_LP = 50 * 1e27;
 
     //////////// SETUP ////////////
@@ -53,7 +54,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
             STATE_A_LP // sqrt(10e18 * 10e18) * 2
         );
     }
-    
+
     /// @dev calcLpTokenSupply: diff decimals
     function test_getLpTokenSupply_diffDecimals() public {
         uint[] memory reserves = new uint[](2);
@@ -84,14 +85,11 @@ contract ConstantProduct2Test is WellFunctionHelper {
         // find reserves[1]
         reserves[0] = STATE_A_B0;
         reserves[1] = 0;
-        assertEq(
-            _function.calcReserve(reserves, 1, STATE_A_LP, _data),
-            STATE_A_B1
-        );
+        assertEq(_function.calcReserve(reserves, 1, STATE_A_LP, _data), STATE_A_B1);
 
         /// STATE C
         // find reserves[1]
-        reserves[0] = STATE_C_B0; 
+        reserves[0] = STATE_C_B0;
         reserves[1] = 0;
         assertEq(
             _function.calcReserve(reserves, 1, STATE_C_LP, _data),
@@ -121,5 +119,4 @@ contract ConstantProduct2Test is WellFunctionHelper {
             STATE_B_B1 // (70710678118654 / 2)^2 / 1e18 = 1250e6
         );
     }
-
 }

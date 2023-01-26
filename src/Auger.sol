@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IAuger.sol";
-import "src/Well.sol";
+import {IAuger} from "src/interfaces/IAuger.sol";
+import {Well, IERC20, Call} from "src/Well.sol";
 
 /**
  * @title An implementation of an Auger. See {IAuger}. Deploys {Well}.
@@ -19,7 +19,11 @@ contract Auger is IAuger {
         IERC20[] calldata tokens,
         Call calldata wellFunction,
         Call[] calldata pumps
-    ) external payable returns (address well) {
+    )
+        external
+        payable
+        returns (address well)
+    {
         well = address(new Well(name, symbol, tokens, wellFunction, pumps));
     }
 }

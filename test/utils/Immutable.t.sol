@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
@@ -21,12 +22,16 @@ contract ImmutableTest is TestHelper {
         address[4] memory pumpTargets,
         bytes memory wellFunctionBytes,
         uint8 nTokens
-    ) public {
+    )
+        public
+    {
         vm.assume(numberOfPumps < 5);
-        for (uint i = 0; i < numberOfPumps; i++)
+        for (uint i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpBytes[i].length <= 4 * 32);
-        for (uint i = 0; i < pumpTargets.length; i++)
+        }
+        for (uint i = 0; i < pumpTargets.length; i++) {
             vm.assume(pumpTargets[i] != address(0));
+        }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
 
@@ -64,7 +69,7 @@ contract ImmutableTest is TestHelper {
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
 
-        // Check token addresses; 
+        // Check token addresses;
         IERC20[] memory _tokens = _well.tokens();
         for (uint i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));

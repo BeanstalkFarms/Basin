@@ -1,12 +1,12 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {TestHelper, Well, IERC20, Call} from "test/TestHelper.sol";
 
 contract WellInitTest is TestHelper {
-
     Well noNameWell;
 
     event AddLiquidity(uint[] amounts);
@@ -16,21 +16,23 @@ contract WellInitTest is TestHelper {
     }
 
     //////////// Well Definition ////////////
-    
+
     /// @dev tokens
     function test_tokens() public {
         check_tokens(well.tokens());
     }
+
     function check_tokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
             assertEq(address(_wellTokens[i]), address(tokens[i]));
         }
     }
- 
+
     /// @dev well function
     function test_wellFunction() public {
         check_wellFunction(well.wellFunction());
     }
+
     function check_wellFunction(Call memory _wellFunction) private {
         assertEq(_wellFunction.target, wellFunction.target);
         assertEq(_wellFunction.data, wellFunction.data);
@@ -41,6 +43,7 @@ contract WellInitTest is TestHelper {
         Call[] memory _wellPumps = well.pumps();
         check_pumps(_wellPumps);
     }
+
     function check_pumps(Call[] memory _wellPumps) private {
         assertEq(_wellPumps.length, pumps.length);
         for (uint i = 0; i < pumps.length; i++) {
@@ -53,19 +56,15 @@ contract WellInitTest is TestHelper {
     function test_auger() public {
         check_auger(well.auger());
     }
+
     function check_auger(address _auger) public {
         assertEq(_auger, address(auger));
     }
 
     /// @dev well
     function test_well() public {
-        (
-            IERC20[] memory _wellTokens,
-            Call memory _wellFunction,
-            Call[] memory _wellPumps,
-            address _auger
-        ) = well.well();
-        
+        (IERC20[] memory _wellTokens, Call memory _wellFunction, Call[] memory _wellPumps, address _auger) = well.well();
+
         check_tokens(_wellTokens);
         check_wellFunction(_wellFunction);
         check_pumps(_wellPumps);

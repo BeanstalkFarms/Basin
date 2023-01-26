@@ -1,19 +1,20 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWellFunction.sol";
-import "src/libraries/LibMath.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
  * @author Publius
  * @title Gas efficient Constant Product pricing function for Wells with 2 tokens.
- * 
+ *
  * Constant Product Wells with 2 tokens use the formula:
  *  `b_0 * b_1 = (s / 2)^2`
- * 
+ *
  * Where:
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
@@ -28,8 +29,13 @@ contract ConstantProduct2 is IWellFunction {
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
-    ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = (reserves[0]*reserves[1]*EXP_PRECISION).sqrt() * 2;
+    )
+        external
+        pure
+        override
+        returns (uint lpTokenSupply)
+    {
+        lpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt() * 2;
     }
 
     /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`
@@ -38,16 +44,21 @@ contract ConstantProduct2 is IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external override pure returns (uint reserve) {
+    )
+        external
+        pure
+        override
+        returns (uint reserve)
+    {
         reserve = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
         reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
     }
 
-    function name() external override pure returns (string memory) {
+    function name() external pure override returns (string memory) {
         return "Constant Product";
     }
 
-    function symbol() external override pure returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return "CP";
     }
 }

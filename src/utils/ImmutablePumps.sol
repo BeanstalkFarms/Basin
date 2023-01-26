@@ -1,11 +1,12 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWell.sol";
-import "src/libraries/LibBytes.sol";
+import {IWell, Call} from "src/interfaces/IWell.sol";
+import {LibBytes} from "src/libraries/LibBytes.sol";
 
 /**
  * @title ImmutablePumps provides immutable storage for a list of up to MAX_CALLS Pumps with up to MAX_SIZE data each.
@@ -13,15 +14,21 @@ import "src/libraries/LibBytes.sol";
 contract ImmutablePumps {
     using LibBytes for bytes;
 
-    /** Null values */
+    /**
+     * Null values
+     */
     address private constant ZERO_TARGET = address(0);
     bytes32 private constant ZERO_BYTES = bytes32(0);
-    
-    /** Constants */
+
+    /**
+     * Constants
+     */
     uint private constant MAX_CALLS = 4; // should match the number of `_target`s, one for each call
     uint private constant MAX_SIZE = 4 * 32; // should match the number of `_bytes` for each call
 
-    /** Targets */
+    /**
+     * Targets
+     */
     uint private immutable numberOfCalls;
     address private immutable _target0;
     address private immutable _target1;
@@ -30,7 +37,9 @@ contract ImmutablePumps {
     // address private immutable _target4;
     // address private immutable _target5;
 
-    /** Data: bytes32 chunks from calls[0].data */
+    /**
+     * Data: bytes32 chunks from calls[0].data
+     */
     uint private immutable numberOfBytes0;
     bytes32 private immutable _bytes0_0;
     bytes32 private immutable _bytes0_1;
@@ -40,8 +49,10 @@ contract ImmutablePumps {
     // bytes32 private immutable _bytes0_5;
     // bytes32 private immutable _bytes0_6;
     // bytes32 private immutable _bytes0_7;
-    
-    /** Data: bytes32 chunks from calls[1].data */
+
+    /**
+     * Data: bytes32 chunks from calls[1].data
+     */
     uint private immutable numberOfBytes1;
     bytes32 private immutable _bytes1_0;
     bytes32 private immutable _bytes1_1;
@@ -52,7 +63,9 @@ contract ImmutablePumps {
     // bytes32 private immutable _bytes1_6;
     // bytes32 private immutable _bytes1_7;
 
-    /** Data: bytes32 chunks from calls[2].data */
+    /**
+     * Data: bytes32 chunks from calls[2].data
+     */
     uint private immutable numberOfBytes2;
     bytes32 private immutable _bytes2_0;
     bytes32 private immutable _bytes2_1;
@@ -63,7 +76,9 @@ contract ImmutablePumps {
     // bytes32 private immutable _bytes2_6;
     // bytes32 private immutable _bytes2_7;
 
-    /** Data: bytes32 chunks from calls[3].data */
+    /**
+     * Data: bytes32 chunks from calls[3].data
+     */
     uint private immutable numberOfBytes3;
     bytes32 private immutable _bytes3_0;
     bytes32 private immutable _bytes3_1;
@@ -74,7 +89,9 @@ contract ImmutablePumps {
     // bytes32 private immutable _bytes3_6;
     // bytes32 private immutable _bytes3_7;
 
-    /** Data: bytes32 chunks from calls[4].data */
+    /**
+     * Data: bytes32 chunks from calls[4].data
+     */
     // uint private immutable numberOfBytes4;
     // bytes32 private immutable _bytes4_0;
     // bytes32 private immutable _bytes4_1;
@@ -85,7 +102,9 @@ contract ImmutablePumps {
     // bytes32 private immutable _bytes4_6;
     // bytes32 private immutable _bytes4_7;
 
-    /** Data: bytes32 chunks from calls[5].data */
+    /**
+     * Data: bytes32 chunks from calls[5].data
+     */
     // uint private immutable numberOfBytes5;
     // bytes32 private immutable _bytes5_0;
     // bytes32 private immutable _bytes5_1;
@@ -101,7 +120,9 @@ contract ImmutablePumps {
 
         numberOfCalls = calls.length;
 
-        /** Targets */
+        /**
+         * Targets
+         */
         _target0 = getCallTargetFromList(calls, 0);
         _target1 = getCallTargetFromList(calls, 1);
         _target2 = getCallTargetFromList(calls, 2);
@@ -109,7 +130,9 @@ contract ImmutablePumps {
         // _target4 = getCallTargetFromList(calls, 4);
         // _target5 = getCallTargetFromList(calls, 5);
 
-        /** Data: bytes32 chunks from calls[0].data */
+        /**
+         * Data: bytes32 chunks from calls[0].data
+         */
         uint bytesLength = getCallNumberOfBytesFromList(calls, 0);
         require(bytesLength <= MAX_SIZE, "Too many bytes");
         numberOfBytes0 = bytesLength;
@@ -122,7 +145,9 @@ contract ImmutablePumps {
         // _bytes0_6 = getCallBytesFromList(calls, 0, 6);
         // _bytes0_7 = getCallBytesFromList(calls, 0, 7);
 
-        /** Data: bytes32 chunks from calls[1].data */
+        /**
+         * Data: bytes32 chunks from calls[1].data
+         */
         bytesLength = getCallNumberOfBytesFromList(calls, 1);
         require(bytesLength <= MAX_SIZE, "Too many bytes");
         numberOfBytes1 = bytesLength;
@@ -135,7 +160,9 @@ contract ImmutablePumps {
         // _bytes1_6 = getCallBytesFromList(calls, 1, 6);
         // _bytes1_7 = getCallBytesFromList(calls, 1, 7);
 
-        /** Data: bytes32 chunks from calls[2].data */
+        /**
+         * Data: bytes32 chunks from calls[2].data
+         */
         bytesLength = getCallNumberOfBytesFromList(calls, 2);
         require(bytesLength <= MAX_SIZE, "Too many bytes");
         numberOfBytes2 = bytesLength;
@@ -148,7 +175,9 @@ contract ImmutablePumps {
         // _bytes2_6 = getCallBytesFromList(calls, 2, 6);
         // _bytes2_7 = getCallBytesFromList(calls, 2, 7);
 
-        /** Data: bytes32 chunks from calls[3].data */
+        /**
+         * Data: bytes32 chunks from calls[3].data
+         */
         bytesLength = getCallNumberOfBytesFromList(calls, 3);
         require(bytesLength <= MAX_SIZE, "Too many bytes");
         numberOfBytes3 = bytesLength;
@@ -161,7 +190,9 @@ contract ImmutablePumps {
         // _bytes3_6 = getCallBytesFromList(calls, 3, 6);
         // _bytes3_7 = getCallBytesFromList(calls, 3, 7);
 
-        /** Data: bytes32 chunks from calls[4].data */
+        /**
+         * Data: bytes32 chunks from calls[4].data
+         */
         // bytesLength = getCallNumberOfBytesFromList(calls, 4);
         // require(bytesLength <= MAX_SIZE, "Too many bytes");
         // numberOfBytes4 = bytesLength;
@@ -174,7 +205,9 @@ contract ImmutablePumps {
         // _bytes4_6 = getCallBytesFromList(calls, 4, 6);
         // _bytes4_7 = getCallBytesFromList(calls, 4, 7);
 
-        /** Data: bytes32 chunks from calls[5].data **/
+        /**
+         * Data: bytes32 chunks from calls[5].data *
+         */
         // bytesLength = getCallNumberOfBytesFromList(calls, 5);
         // require(bytesLength <= MAX_SIZE, "Too many bytes");
         // numberOfBytes5 = bytesLength;
@@ -194,7 +227,7 @@ contract ImmutablePumps {
         else _target = calls[i].target;
     }
 
-    /// @dev Get `calls[i].data` and extract the `j`th set of 32 bytes, or return 
+    /// @dev Get `calls[i].data` and extract the `j`th set of 32 bytes, or return
     /// ZERO_BYTES if `i` is out of bounds.
     function getCallBytesFromList(Call[] memory calls, uint i, uint j) private pure returns (bytes32 _bytes) {
         if (i >= calls.length) _bytes = ZERO_BYTES;
@@ -217,19 +250,27 @@ contract ImmutablePumps {
     /// @dev shortcut: first pump bytes
     function firstPumpBytes() public view returns (bytes memory _bytes) {
         if (numberOfBytes0 > 0) {
-            uint slots = (numberOfBytes0-1) / 32 + 1;
+            uint slots = (numberOfBytes0 - 1) / 32 + 1;
             _bytes = new bytes(numberOfBytes0);
             bytes32 temp = _bytes0_0;
-            assembly { mstore(add(_bytes, 0x20), temp)}
+            assembly {
+                mstore(add(_bytes, 0x20), temp)
+            }
             if (slots > 1) {
                 temp = _bytes0_1;
-                assembly { mstore(add(_bytes, 0x40), temp)}
+                assembly {
+                    mstore(add(_bytes, 0x40), temp)
+                }
                 if (slots > 2) {
                     temp = _bytes0_2;
-                    assembly { mstore(add(_bytes, 0x60), temp)}
+                    assembly {
+                        mstore(add(_bytes, 0x60), temp)
+                    }
                     if (slots > 3) {
                         temp = _bytes0_3;
-                        assembly { mstore(add(_bytes, 0x80), temp)}
+                        assembly {
+                            mstore(add(_bytes, 0x80), temp)
+                        }
                         // if (slots > 4) {
                         //     temp = _bytes0_4;
                         //     assembly { mstore(add(_bytes, 0xa0), temp)}
@@ -258,7 +299,7 @@ contract ImmutablePumps {
         _numberOfPumps = numberOfCalls;
     }
 
-    function pumps() public virtual view returns (Call[] memory _calls) {
+    function pumps() public view virtual returns (Call[] memory _calls) {
         _calls = new Call[](numberOfCalls);
 
         if (numberOfCalls == 0) return _calls;
@@ -267,22 +308,32 @@ contract ImmutablePumps {
         bytes memory tempBytes;
         bytes32 temp;
 
-        /** Call 0 */
+        /**
+         * Call 0
+         */
         _calls[0].target = _target0;
         if (numberOfBytes0 > 0) {
-            slots = (numberOfBytes0-1) / 32 + 1;
+            slots = (numberOfBytes0 - 1) / 32 + 1;
             tempBytes = new bytes(numberOfBytes0);
             temp = _bytes0_0;
-            assembly { mstore(add(tempBytes, 0x20), temp)}
+            assembly {
+                mstore(add(tempBytes, 0x20), temp)
+            }
             if (slots > 1) {
                 temp = _bytes0_1;
-                assembly { mstore(add(tempBytes, 0x40), temp)}
+                assembly {
+                    mstore(add(tempBytes, 0x40), temp)
+                }
                 if (slots > 2) {
                     temp = _bytes0_2;
-                    assembly { mstore(add(tempBytes, 0x60), temp)}
+                    assembly {
+                        mstore(add(tempBytes, 0x60), temp)
+                    }
                     if (slots > 3) {
                         temp = _bytes0_3;
-                        assembly { mstore(add(tempBytes, 0x80), temp)}
+                        assembly {
+                            mstore(add(tempBytes, 0x80), temp)
+                        }
                         // if (slots > 4) {
                         //     temp = _bytes0_4;
                         //     assembly { mstore(add(tempBytes, 0xa0), temp)}
@@ -307,22 +358,32 @@ contract ImmutablePumps {
 
         if (numberOfCalls == 1) return _calls;
 
-        /** Call 1 */
+        /**
+         * Call 1
+         */
         _calls[1].target = _target1;
         if (numberOfBytes1 > 0) {
-            slots = (numberOfBytes1-1) / 32 + 1;
+            slots = (numberOfBytes1 - 1) / 32 + 1;
             tempBytes = new bytes(numberOfBytes1);
             temp = _bytes1_0;
-            assembly { mstore(add(tempBytes, 0x20), temp)}
+            assembly {
+                mstore(add(tempBytes, 0x20), temp)
+            }
             if (slots > 1) {
                 temp = _bytes1_1;
-                assembly { mstore(add(tempBytes, 0x40), temp)}
+                assembly {
+                    mstore(add(tempBytes, 0x40), temp)
+                }
                 if (slots > 2) {
                     temp = _bytes1_2;
-                    assembly { mstore(add(tempBytes, 0x60), temp)}
+                    assembly {
+                        mstore(add(tempBytes, 0x60), temp)
+                    }
                     if (slots > 3) {
                         temp = _bytes1_3;
-                        assembly { mstore(add(tempBytes, 0x80), temp)}
+                        assembly {
+                            mstore(add(tempBytes, 0x80), temp)
+                        }
                         // if (slots > 4) {
                         //     temp = _bytes1_4;
                         //     assembly { mstore(add(tempBytes, 0xa0), temp)}
@@ -347,22 +408,32 @@ contract ImmutablePumps {
 
         if (numberOfCalls == 2) return _calls;
 
-        /** Call 2 */
+        /**
+         * Call 2
+         */
         _calls[2].target = _target2;
         if (numberOfBytes2 > 0) {
-            slots = (numberOfBytes2-1) / 32 + 1;
+            slots = (numberOfBytes2 - 1) / 32 + 1;
             tempBytes = new bytes(numberOfBytes2);
             temp = _bytes2_0;
-            assembly { mstore(add(tempBytes, 0x20), temp)}
+            assembly {
+                mstore(add(tempBytes, 0x20), temp)
+            }
             if (slots > 1) {
                 temp = _bytes2_1;
-                assembly { mstore(add(tempBytes, 0x40), temp)}
+                assembly {
+                    mstore(add(tempBytes, 0x40), temp)
+                }
                 if (slots > 2) {
                     temp = _bytes2_2;
-                    assembly { mstore(add(tempBytes, 0x60), temp)}
+                    assembly {
+                        mstore(add(tempBytes, 0x60), temp)
+                    }
                     if (slots > 3) {
                         temp = _bytes2_3;
-                        assembly { mstore(add(tempBytes, 0x80), temp)}
+                        assembly {
+                            mstore(add(tempBytes, 0x80), temp)
+                        }
                         // if (slots > 4) {
                         //     temp = _bytes2_4;
                         //     assembly { mstore(add(tempBytes, 0xa0), temp)}
@@ -387,22 +458,32 @@ contract ImmutablePumps {
 
         if (numberOfCalls == 3) return _calls;
 
-        /** Call 3 */
+        /**
+         * Call 3
+         */
         _calls[3].target = _target3;
         if (numberOfBytes3 > 0) {
-            slots = (numberOfBytes3-1) / 32 + 1;
+            slots = (numberOfBytes3 - 1) / 32 + 1;
             tempBytes = new bytes(numberOfBytes3);
             temp = _bytes3_0;
-            assembly { mstore(add(tempBytes, 0x20), temp)}
+            assembly {
+                mstore(add(tempBytes, 0x20), temp)
+            }
             if (slots > 1) {
                 temp = _bytes3_1;
-                assembly { mstore(add(tempBytes, 0x40), temp)}
+                assembly {
+                    mstore(add(tempBytes, 0x40), temp)
+                }
                 if (slots > 2) {
                     temp = _bytes3_2;
-                    assembly { mstore(add(tempBytes, 0x60), temp)}
+                    assembly {
+                        mstore(add(tempBytes, 0x60), temp)
+                    }
                     if (slots > 3) {
                         temp = _bytes3_3;
-                        assembly { mstore(add(tempBytes, 0x80), temp)}
+                        assembly {
+                            mstore(add(tempBytes, 0x80), temp)
+                        }
                         // if (slots > 4) {
                         //     temp = _bytes3_4;
                         //     assembly { mstore(add(tempBytes, 0xa0), temp)}
@@ -426,8 +507,10 @@ contract ImmutablePumps {
         }
 
         // if (numberOfCalls == 4) return _calls;
-        
-        /** Call 4 */
+
+        /**
+         * Call 4
+         */
         // _calls[4].target = _target4;
         // if (numberOfBytes4 > 0) {
         //     slots = (numberOfBytes4-1) / 32 + 1;
@@ -467,7 +550,9 @@ contract ImmutablePumps {
 
         // if (numberOfCalls == 5) return _calls;
 
-        /** Call 5 */
+        /**
+         * Call 5
+         */
         // _calls[5].target = _target5;
         // if (slots > numberOfBytes5) {
         //     slots = (numberOfBytes5-1) / 32 + 1;

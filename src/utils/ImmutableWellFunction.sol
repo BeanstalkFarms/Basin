@@ -1,11 +1,12 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWell.sol";
-import "src/libraries/LibBytes.sol";
+import {IWell, Call} from "src/interfaces/IWell.sol";
+import {LibBytes} from "src/libraries/LibBytes.sol";
 
 /**
  * @title ImmutableWellFunction provides immutable storage for a Well Function with up to MAX_SIZE data.
@@ -17,7 +18,7 @@ contract ImmutableWellFunction {
     /// MAX_SIZE = N * 32 where N is the number of immutable storage
     /// slots contained in this contract. `_bytes0` through `_bytes(N-1)`
     /// should be enabled.
-    uint private constant MAX_SIZE = 4*32;
+    uint private constant MAX_SIZE = 4 * 32;
     bytes32 private constant ZERO_BYTES = bytes32(0);
 
     /// Target
@@ -99,7 +100,7 @@ contract ImmutableWellFunction {
         // _bytes31 = data.getBytes32FromBytes(31);
     }
 
-    function wellFunction() public virtual view returns (Call memory _call) {
+    function wellFunction() public view virtual returns (Call memory _call) {
         _call.data = wellFunctionBytes();
         _call.target = _address;
     }
@@ -112,23 +113,31 @@ contract ImmutableWellFunction {
         if (numberOfBytes == 0) return _bytes;
 
         _bytes = new bytes(numberOfBytes);
-        uint slots = (numberOfBytes-1) / 32 + 1;
+        uint slots = (numberOfBytes - 1) / 32 + 1;
         bytes32 temp;
 
         temp = _bytes0;
-        assembly { mstore(add(_bytes, 32), temp) }
+        assembly {
+            mstore(add(_bytes, 32), temp)
+        }
         if (slots == 1) return _bytes;
 
         temp = _bytes1;
-        assembly { mstore(add(_bytes, 64), temp) }
+        assembly {
+            mstore(add(_bytes, 64), temp)
+        }
         if (slots == 2) return _bytes;
 
         temp = _bytes2;
-        assembly { mstore(add(_bytes, 96), temp) }
+        assembly {
+            mstore(add(_bytes, 96), temp)
+        }
         if (slots == 3) return _bytes;
 
         temp = _bytes3;
-        assembly { mstore(add(_bytes, 128), temp) }
+        assembly {
+            mstore(add(_bytes, 128), temp)
+        }
         if (slots == 4) return _bytes;
 
         // temp = _bytes4;

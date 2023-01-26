@@ -1,10 +1,11 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "oz/token/ERC20/IERC20.sol";
+import {IERC20} from "oz/token/ERC20/IERC20.sol";
 
 /**
  * @title ImmutableTokens provides immutable storage for a list of up to MAX_TOKENS tokens.
@@ -32,7 +33,7 @@ contract ImmutableTokens {
     // IERC20 private immutable _token15;
 
     /**
-     * @dev During {Well} construction, the tokens array is copied into 
+     * @dev During {Well} construction, the tokens array is copied into
      * immutable storage slots for gas efficiency.
      */
     constructor(IERC20[] memory _tokens) {
@@ -56,18 +57,17 @@ contract ImmutableTokens {
         // _token15 = getTokenFromList(15, _tokens);
     }
 
-    
     /**
      * @dev Return the number of tokens held in immutable storage.
      */
-    function numberOfTokens() public virtual view returns (uint __numberOfTokens) {
+    function numberOfTokens() public view virtual returns (uint __numberOfTokens) {
         __numberOfTokens = _numberOfTokens;
     }
 
     /**
      * @dev Reconstruct tokens array from immutable storage slots & immutable length.
      */
-    function tokens() public virtual view returns (IERC20[] memory _tokens) {
+    function tokens() public view virtual returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](_numberOfTokens);
         if (_numberOfTokens == 0) return _tokens;
         _tokens[0] = _token0;
@@ -106,7 +106,7 @@ contract ImmutableTokens {
     /**
      * @dev Find the immutable storage slot corresponding to token `i`.
      */
-    function token(uint i) public virtual view returns (IERC20 _token) {
+    function token(uint i) public view virtual returns (IERC20 _token) {
         if (i == 0) _token = _token0;
         else if (i == 1) _token = _token1;
         else if (i == 2) _token = _token2;
@@ -124,7 +124,7 @@ contract ImmutableTokens {
         // else if (i == 14) _token = _token14;
         // else if (i == 15) _token = _token15;
     }
-    
+
     /**
      * @dev Attempt to fetch a token `i` from `_tokens`, returning `NULL_TOKEN`
      * if not present. Used during {ImmutableTokens} construction.
