@@ -2,22 +2,28 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {Well, IWell, Call} from "src/Well.sol";
-import {Aquifer} from "src/Aquifer.sol";
-import {Auger} from "src/Auger.sol";
-import {MockPump} from "mocks/pumps/MockPump.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
-import {MockToken} from "mocks/tokens/MockToken.sol";
 
-// Script to deploy a BEAN-ETH {Well}, 
-// with a constant product pricing function
-// and MockPump via an aquifer.
+import {IWell, Call} from "src/interfaces/IWell.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IPump} from "src/interfaces/IPump.sol";
+
+import {MockToken} from "mocks/tokens/MockToken.sol";
+import {MockPump} from "mocks/pumps/MockPump.sol";
+
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Well} from "src/Well.sol";
+import {Auger} from "src/Auger.sol";
+import {Aquifer} from "src/Aquifer.sol";
+
+/**
+ * @dev Script to deploy a BEAN-ETH {Well} with a ConstantProduct2 pricing function
+ * and MockPump via an Aquifer.
+ */
 contract DeployAquiferWell is Script {
     using SafeERC20 for IERC20;
     
     function run() external {
-        bytes memory data = "";
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
@@ -25,27 +31,38 @@ contract DeployAquiferWell is Script {
         tokens[0] = new MockToken("Token0","TK0",18); 
         tokens[1] = new MockToken("Token1","TK1",18); 
         
-        // deploy Aquifer/Auger 
+        // Deploy Aquifer/Auger 
         Aquifer aquifer = new Aquifer();
         Auger auger = new Auger();
-        // deploy pump/wellFunction/Tokens 
-        MockPump mockPump = new MockPump();
-        ConstantProduct2 cp2 = new ConstantProduct2();
-        // create calls
-        Call[] memory mockPumpCall = new Call[](1);
-        mockPumpCall[0].target = address(mockPump);
-        mockPumpCall[0].data = data;
-        
-        Call memory cp2Call;
-        cp2Call.target = address(cp2);
-        cp2Call.data = data;
+
+        // Well Function
+        IWellFunction cp2 = new ConstantProduct2();
+        Call memory wellFunction = Call(address(cp2), new bytes(0));
+
+        // Pump
+        IPump mockPump = new MockPump();
+        Call[] memory pumps = new Call[](1);
+        pumps[0] = Call(address(mockPump), new bytes(0));
 
         //bore well
-        address well = aquifer.boreWell(
+        Well well = Well(aquifer.boreWell(
             tokens,
-            cp2Call,
-            mockPumpCall,
-            auger);
+            wellFunction,
+            pumps,
+            auger
+        ));
+
+        console.log("Deployed CP2 at address: ", address(cp2));
+        console.log("Deployed Pump at address: ", address(pumps[0].target));
+        console.log("Deployed Well at address: ", address(well));
+
+        console.log(well.name());
+        console.log(well.symbol());
+        console.log(well.auger());
+        console.log(address(well.tokens()[0]));
+        console.log(address(well.tokens()[1]));
+        
+
 
         vm.stopBroadcast();
     }

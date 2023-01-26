@@ -1,24 +1,23 @@
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ **/
 
 pragma solidity ^0.8.17;
 
+import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
+import {SafeCast} from "oz/utils/math/SafeCast.sol";
+
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IAquifer} from "src/interfaces/IAquifer.sol";
 import {IAuger} from "src/interfaces/IAuger.sol";
-import "src/Well.sol";
-import "src/libraries/LibContractInfo.sol";
-import "oz/security/ReentrancyGuard.sol";
-import "oz/utils/math/SafeCast.sol";
+import {Well, IWell, Call, IERC20} from "src/Well.sol";
+import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 
 /**
- * @author Publius
  * @title Aquifer
- * @dev
- * 
- * TODO:
- * Aquifer is an instance of a Well factory.
- * Wells can be permissionlessly built given tokens, a well function and optionally a pump.
- **/
-
+ * @author Publius
+ * @notice Aquifer is a permissionless Well registry.
+ */
 contract Aquifer is IAquifer, ReentrancyGuard {
 
     using LibContractInfo for address;
@@ -32,8 +31,14 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
     constructor() ReentrancyGuard() {}
 
-    /// @dev see {IAquifer.boreWell}
-    /// tokens in Well info struct must be alphabetically sorted
+    /**
+     * @dev see {IAquifer.boreWell}
+     * 
+     * Tokens in Well info struct must be alphabetically sorted.
+     * 
+     * The Aquifer takes an opinionated stance on the `name` and `symbol` of
+     * the deployed Well.
+     */
     function boreWell(
         IERC20[] calldata tokens,
         Call calldata wellFunction,
@@ -46,7 +51,10 @@ contract Aquifer is IAquifer, ReentrancyGuard {
                 "LibWell: Tokens not alphabetical"
             );
         }
-
+        
+        // Prepare
+        IWellFunction wellFunction_ = IWellFunction(wellFunction.target);
+        
         // name is in format `<token0Symbol>:...:<tokenNSymbol> <wellFunctionName> Well`
         // symbol is in format `<token0Symbol>...<tokenNSymbol><wellFunctionSymbol>w`
         string memory name = address(tokens[0]).getSymbol();
@@ -55,29 +63,15 @@ contract Aquifer is IAquifer, ReentrancyGuard {
             name = string.concat(name, ":", address(tokens[i]).getSymbol());
             symbol = string.concat(symbol, address(tokens[i]).getSymbol());
         }
-        name = string.concat(name, " ", wellFunction.target.getName(), " Well");
-        symbol = string.concat(symbol, wellFunction.target.getSymbol(), "w");
+        name = string.concat(name, " ", wellFunction_.name(), " Well");
+        symbol = string.concat(symbol, wellFunction_.symbol(), "w");
+        
+        // Bore
         well = auger.bore(name, symbol, tokens, wellFunction, pumps);
 
-        indexWell(well, tokens);
-
+        // Index
+        _indexWell(well, tokens);
         emit BoreWell(well, tokens, wellFunction, pumps, address(auger));
-    }
-
-    function indexWell(address well, IERC20[] memory tokens) private {
-        wellsByIndex[numberOfWells] = well;
-        numberOfWells++;
-
-        for (uint i; i < tokens.length-1; ++i) {
-            for (uint j = i+1; j < tokens.length; ++j) {
-                wellsBy2Tokens[keccak256(abi.encode(tokens[i], tokens[j]))].push(well);
-            }
-        }
-
-        // For gas efficiency reasons, if the number of tokens is 2, don't need to store it in both mappings.
-        if (tokens.length > 2) {
-            wellsByNTokens[keccak256(abi.encode(tokens))].push(well);
-        }
     }
 
     /// @dev see {IAquifer.getWellByIndex}
@@ -105,5 +99,24 @@ contract Aquifer is IAquifer, ReentrancyGuard {
     function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well) {
         if (tokens.length == 2) well = getWellBy2Tokens(tokens[0], tokens[1], i);
         else well = getWellsByNTokens(tokens)[i];
+    }
+
+    /**
+     * @dev Indexes a Well by its tokens.
+     */
+    function _indexWell(address well, IERC20[] memory tokens) private {
+        wellsByIndex[numberOfWells] = well;
+        numberOfWells++;
+
+        for (uint i; i < tokens.length-1; ++i) {
+            for (uint j = i+1; j < tokens.length; ++j) {
+                wellsBy2Tokens[keccak256(abi.encode(tokens[i], tokens[j]))].push(well);
+            }
+        }
+
+        // For gas efficiency reasons, if the number of tokens is 2, don't need to store it in both mappings.
+        if (tokens.length > 2) {
+            wellsByNTokens[keccak256(abi.encode(tokens))].push(well);
+        }
     }
 }

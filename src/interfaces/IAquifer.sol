@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ **/
 
 pragma solidity ^0.8.17;
 
@@ -9,8 +11,7 @@ import {IAuger} from "src/interfaces/IAuger.sol";
 /**
  * @author Publius
  * @title Aquifer Inferface
- **/
-
+ */
 interface IAquifer {
 
     /**
@@ -28,10 +29,6 @@ interface IAquifer {
         Call[] pumps,
         address auger
     );
-
-    /**
-     * Management
-    **/
 
     /**
      * @notice bores a Well with given parameters

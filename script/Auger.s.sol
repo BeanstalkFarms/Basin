@@ -9,7 +9,10 @@ contract DeployAuger is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
+
         Auger auger = new Auger();
+        console.log("Deployed Auger at address: ", address(auger));
+
         vm.stopBroadcast();
     }
 }
