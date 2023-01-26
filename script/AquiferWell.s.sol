@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: UNLICENSED
+/**
+ * SPDX-License-Identifier: MIT
+ **/
+
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
@@ -8,6 +11,7 @@ import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IPump} from "src/interfaces/IPump.sol";
 
+import {logger} from "script/helpers/Logger.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
@@ -22,14 +26,18 @@ import {Aquifer} from "src/Aquifer.sol";
  */
 contract DeployAquiferWell is Script {
     using SafeERC20 for IERC20;
+
+    IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+    IERC20 constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH9
     
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
+        // Tokens
         IERC20[] memory tokens = new IERC20[](2);
-        tokens[0] = new MockToken("Token0","TK0",18); 
-        tokens[1] = new MockToken("Token1","TK1",18); 
+        tokens[0] = BEAN;
+        tokens[1] = WETH;
         
         // Deploy Aquifer/Auger 
         Aquifer aquifer = new Aquifer();
@@ -54,15 +62,7 @@ contract DeployAquiferWell is Script {
 
         console.log("Deployed CP2 at address: ", address(cp2));
         console.log("Deployed Pump at address: ", address(pumps[0].target));
-        console.log("Deployed Well at address: ", address(well));
-
-        console.log(well.name());
-        console.log(well.symbol());
-        console.log(well.auger());
-        console.log(address(well.tokens()[0]));
-        console.log(address(well.tokens()[1]));
-        
-
+        logger.logWell(well);
 
         vm.stopBroadcast();
     }

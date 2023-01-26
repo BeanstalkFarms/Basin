@@ -1,18 +1,22 @@
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ **/
+
 pragma solidity ^0.8.13;
 
 import "forge-std/console2.sol";
 import "forge-std/console.sol";
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
-import {Well, Call, IWellFunction, IPump, IERC20} from '../src/Well.sol';
-import {ConstantProduct2} from '../src/functions/ConstantProduct2.sol';
-import {MockPump} from '../mocks/pumps/MockPump.sol';
+
+import {logger} from "script/helpers/Logger.sol";
+import {MockPump} from 'mocks/pumps/MockPump.sol';
+
+import {Well, Call, IWellFunction, IPump, IERC20} from 'src/Well.sol';
+import {ConstantProduct2} from 'src/functions/ConstantProduct2.sol';
 
 /**
- * @dev Deploys a BEAN:WETH ConstantProduct2 Well.
- * 
- * Intended for testing.
+ * @dev Deploys a BEAN:WETH ConstantProduct2 Well. Intended for testing.
  */
 contract DeployWell is Script {
 
@@ -48,10 +52,8 @@ contract DeployWell is Script {
 
         console.log("Deployed CP2 at address: ", address(cp2));
         console.log("Deployed Pump at address: ", address(pumps[0].target));
-        console.log("Deployed Well at address: ", address(well));
-        console.log(address(well.tokens()[0]));
-        console.log(address(well.tokens()[1]));
-
+        logger.logWell(well);
+        
         vm.stopBroadcast();
     }
 }
