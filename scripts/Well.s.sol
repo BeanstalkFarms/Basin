@@ -1,55 +1,56 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "forge-std/console2.sol";
+import "forge-std/console.sol";
+import "forge-std/Test.sol";
 import "forge-std/Script.sol";
-import {Well} from "../src/wells/Well.sol";
-import "src/interfaces/IWell.sol";
-import {MockPump} from "../mocks/pumps/MockPump.sol";
-import {ConstantProduct2} from "../src/wellFunctions/ConstantProduct2.sol";
-import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
+import {Well, Call, IWellFunction, IPump, IERC20} from '../src/Well.sol';
+import {ConstantProduct2} from '../src/functions/ConstantProduct2.sol';
+import {MockPump} from '../mocks/pumps/MockPump.sol';
 
+/**
+ * @dev Deploys a BEAN:WETH ConstantProduct2 Well.
+ * 
+ * Intended for testing.
+ */
+contract DeployWell is Script {
 
-// Script to deploy a BEAN-ETH {Well}, 
-// with a constant product pricing function, 
-// and a MockPump.
-// @dev recommended to deploy a well via an aquifer.
-contract WellScript is Script {
-    using SafeERC20 for IERC20;
-    
+    IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+    IERC20 constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH9
+
     function run() external {
-        bytes memory data = "";
-        address BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
-        address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        // uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        // private key for forge testing: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-        uint256 deployerPrivateKey = 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266;
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        string memory name = "TESTWELL";
-        string memory symbol = "TSTw";
-
-        IERC20[] memory tokens = new IERC20[](2);
-        tokens[0] = IERC20(BEAN);
-        tokens[1] = IERC20(WETH);
-        // deploy pump/wellFunction first 
-        MockPump mockPump = new MockPump();
-        ConstantProduct2 cp2 = new ConstantProduct2();
-        // create calls
-        Call[] memory mockPumpCall = new Call[](1);
-        mockPumpCall[0].target = address(mockPump);
-        mockPumpCall[0].data = data;
         
-        Call memory cp2Call;
-        cp2Call.target = address(cp2);
-        cp2Call.data = data;
+        // Tokens
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = BEAN;
+        tokens[1] = WETH;
 
-        //deploy well
+        // Well Function
+        IWellFunction cp2 = new ConstantProduct2();
+        Call memory wellFunction = Call(address(cp2), new bytes(0));
+
+        // Pump
+        IPump mockPump = new MockPump();
+        Call[] memory pumps = new Call[](1);
+        pumps[0] = Call(address(mockPump), new bytes(0));
+
+        // Well
         Well well = new Well(
-            name,
-            symbol,
+            "BEAN:WETH Constant Product Well",
+            "BEAN:WETH",
             tokens,
-            cp2Call,
-            mockPumpCall
+            wellFunction,
+            pumps
         );
+
+        console.log("Deployed CP2 at address: ", address(cp2));
+        console.log("Deployed Pump at address: ", address(pumps[0].target));
+        console.log("Deployed Well at address: ", address(well));
+        console.log(address(well.tokens()[0]));
+        console.log(address(well.tokens()[1]));
 
         vm.stopBroadcast();
     }

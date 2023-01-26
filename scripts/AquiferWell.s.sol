@@ -11,19 +11,15 @@ import {ConstantProduct2} from "../src/wellFunctions/ConstantProduct2.sol";
 import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 
-
-
 // Script to deploy a BEAN-ETH {Well}, 
 // with a constant product pricing function
 // and MockPump via an aquifer.
-contract AquiferWell is Script {
+contract DeployAquiferWell is Script {
     using SafeERC20 for IERC20;
     
     function run() external {
         bytes memory data = "";
-        // uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        // private key for forge testing: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-        uint256 deployerPrivateKey = 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266;
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
         IERC20[] memory tokens = new IERC20[](2);

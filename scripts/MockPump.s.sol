@@ -6,7 +6,7 @@ import {MockPump} from "../mocks/pumps/MockPump.sol";
 
 // Script to deploy a {MockPump}.
 // Mockpump does not provide utility and is solely used for example.
-contract MockPumpScript is Script {
+contract DeployMockPump is Script {
     function run() external {
         // uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         // private key for forge testing: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
