@@ -120,11 +120,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint amountIn,
         uint minAmountOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint amountOut)
-    {
+    ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -167,11 +163,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint maxAmountIn,
         uint amountOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint amountIn)
-    {
+    ) external nonReentrant returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -213,9 +205,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint amountIn,
         uint amountOut,
         address recipient
-    )
-        internal
-    {
+    ) internal {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         toToken.safeTransfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut);
@@ -231,11 +221,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint lpAmountOut)
-    {
+    ) external nonReentrant returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
 
@@ -273,11 +259,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint[] memory tokenAmountsOut)
-    {
+    ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint lpTokenSupply = totalSupply();
@@ -319,11 +301,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         IERC20 tokenOut,
         uint minTokenAmountOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint tokenAmountOut)
-    {
+    ) external nonReentrant returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
@@ -344,11 +322,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,
         IERC20 tokenOut
-    )
-        external
-        view
-        returns (uint tokenAmountOut)
-    {
+    ) external view returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
@@ -366,11 +340,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint lpAmountIn,
         uint j,
         uint[] memory reserves
-    )
-        private
-        view
-        returns (uint tokenAmountOut)
-    {
+    ) private view returns (uint tokenAmountOut) {
         uint newLpTokenSupply = totalSupply() - lpAmountIn;
         uint newReserveJ = _calcReserve(wellFunction(), reserves, j, newLpTokenSupply);
         tokenAmountOut = reserves[j] - newReserveJ;
@@ -385,11 +355,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
         address recipient
-    )
-        external
-        nonReentrant
-        returns (uint lpAmountIn)
-    {
+    ) external nonReentrant returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
 
@@ -428,7 +394,9 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         skimAmounts = new uint[](_tokens.length);
         for (uint i; i < _tokens.length; ++i) {
             skimAmounts[i] = _tokens[i].balanceOf(address(this)) - reserves[i];
-            if (skimAmounts[i] > 0) _tokens[i].safeTransfer(recipient, skimAmounts[i]);
+            if (skimAmounts[i] > 0) {
+                _tokens[i].safeTransfer(recipient, skimAmounts[i]);
+            }
         }
     }
 
@@ -491,11 +459,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
     function _calcLpTokenSupply(
         Call memory _wellFunction,
         uint[] memory reserves
-    )
-        internal
-        view
-        returns (uint lpTokenSupply)
-    {
+    ) internal view returns (uint lpTokenSupply) {
         lpTokenSupply = IWellFunction(_wellFunction.target).calcLpTokenSupply(reserves, _wellFunction.data);
     }
 
@@ -511,11 +475,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         uint[] memory reserves,
         uint j,
         uint lpTokenSupply
-    )
-        internal
-        view
-        returns (uint reserve)
-    {
+    ) internal view returns (uint reserve) {
         reserve = IWellFunction(_wellFunction.target).calcReserve(reserves, j, lpTokenSupply, _wellFunction.data);
     }
 

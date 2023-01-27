@@ -27,10 +27,7 @@ interface IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata data
-    )
-        external
-        view
-        returns (uint reserve);
+    ) external view returns (uint reserve);
 
     /**
      * @notice Gets the LP token supply given a list of reserves.
@@ -41,10 +38,7 @@ interface IWellFunction {
     function calcLpTokenSupply(
         uint[] memory reserves,
         bytes calldata data
-    )
-        external
-        view
-        returns (uint lpTokenSupply);
+    ) external view returns (uint lpTokenSupply);
 
     /**
      * @notice Returns the name of the Well function.

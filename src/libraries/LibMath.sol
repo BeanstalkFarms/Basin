@@ -53,7 +53,9 @@ library LibMath {
             if (n == 10) return sqrt(sqrt(sqrt(sqrt(sqrt(a)))));
             if (n == 12) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))));
             if (n == 14) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a)))))));
-            if (n == 16) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+            if (n == 16) {
+                return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+            }
         }
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)

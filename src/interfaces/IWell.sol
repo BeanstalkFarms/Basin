@@ -128,9 +128,7 @@ interface IWell {
         uint amountIn,
         uint minAmountOut,
         address recipient
-    )
-        external
-        returns (uint amountOut);
+    ) external returns (uint amountOut);
 
     /**
      * @notice Gets the amount of one token received for swapping an amount of another token.
@@ -158,9 +156,7 @@ interface IWell {
         uint maxAmountIn,
         uint amountOut,
         address recipient
-    )
-        external
-        returns (uint amountIn);
+    ) external returns (uint amountIn);
 
     /**
      * @notice Gets the amount of one token that must be spent to receive an amount of another token during a swap.
@@ -184,9 +180,7 @@ interface IWell {
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
         address recipient
-    )
-        external
-        returns (uint lpAmountOut);
+    ) external returns (uint lpAmountOut);
 
     /**
      * @notice Gets the amount of LP tokens received from adding liquidity as multiple tokens in any ratio.
@@ -208,9 +202,7 @@ interface IWell {
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
         address recipient
-    )
-        external
-        returns (uint[] memory tokenAmountsOut);
+    ) external returns (uint[] memory tokenAmountsOut);
 
     /**
      * @notice Gets the amount of each underlying token received from removing liquidity in a balanced ratio.
@@ -234,9 +226,7 @@ interface IWell {
         IERC20 tokenOut,
         uint minTokenAmountOut,
         address recipient
-    )
-        external
-        returns (uint tokenAmountOut);
+    ) external returns (uint tokenAmountOut);
 
     /**
      * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
@@ -249,10 +239,7 @@ interface IWell {
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,
         IERC20 tokenOut
-    )
-        external
-        view
-        returns (uint tokenAmountOut);
+    ) external view returns (uint tokenAmountOut);
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
@@ -267,9 +254,7 @@ interface IWell {
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
         address recipient
-    )
-        external
-        returns (uint lpAmountIn);
+    ) external returns (uint lpAmountIn);
 
     /**
      * @notice Gets the amount of LP tokens to burn from removing liquidity as multiple underlying tokens in any ratio.

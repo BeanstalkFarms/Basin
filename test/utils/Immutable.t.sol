@@ -22,9 +22,7 @@ contract ImmutableTest is TestHelper {
         address[4] memory pumpTargets,
         bytes memory wellFunctionBytes,
         uint8 nTokens
-    )
-        public
-    {
+    ) public {
         vm.assume(numberOfPumps < 5);
         for (uint i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpBytes[i].length <= 4 * 32);

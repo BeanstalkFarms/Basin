@@ -29,12 +29,7 @@ contract ConstantProduct2 is IWellFunction {
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
-    )
-        external
-        pure
-        override
-        returns (uint lpTokenSupply)
-    {
+    ) external pure override returns (uint lpTokenSupply) {
         lpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt() * 2;
     }
 
@@ -44,12 +39,7 @@ contract ConstantProduct2 is IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    )
-        external
-        pure
-        override
-        returns (uint reserve)
-    {
+    ) external pure override returns (uint reserve) {
         reserve = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
         reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
     }

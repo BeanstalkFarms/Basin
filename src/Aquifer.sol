@@ -44,11 +44,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         Call calldata wellFunction,
         Call[] calldata pumps,
         IAuger auger
-    )
-        external
-        nonReentrant
-        returns (address well)
-    {
+    ) external nonReentrant returns (address well) {
         for (uint i; i < tokens.length - 1; i++) {
             require(tokens[i] < tokens[i + 1], "LibWell: Tokens not alphabetical");
         }
@@ -98,8 +94,11 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
     /// @dev see {IAquifer.getWellByNTokens}
     function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well) {
-        if (tokens.length == 2) well = getWellBy2Tokens(tokens[0], tokens[1], i);
-        else well = getWellsByNTokens(tokens)[i];
+        if (tokens.length == 2) {
+            well = getWellBy2Tokens(tokens[0], tokens[1], i);
+        } else {
+            well = getWellsByNTokens(tokens)[i];
+        }
     }
 
     /**

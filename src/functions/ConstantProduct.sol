@@ -27,12 +27,7 @@ contract ConstantProduct is IWellFunction {
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
-    )
-        external
-        pure
-        override
-        returns (uint lpTokenSupply)
-    {
+    ) external pure override returns (uint lpTokenSupply) {
         lpTokenSupply = _prodX(reserves).nthRoot(reserves.length) * reserves.length;
     }
 
@@ -42,12 +37,7 @@ contract ConstantProduct is IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    )
-        external
-        pure
-        override
-        returns (uint reserve)
-    {
+    ) external pure override returns (uint reserve) {
         uint n = reserves.length;
         reserve = uint((lpTokenSupply / n) ** n);
         for (uint i; i < n; ++i) {

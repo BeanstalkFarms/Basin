@@ -37,9 +37,7 @@ interface IAquifer {
         Call calldata wellFunction,
         Call[] calldata pumps,
         IAuger auger
-    )
-        external
-        returns (address wellAddress);
+    ) external returns (address wellAddress);
 
     /**
      * @notice returns the Well at a given index.

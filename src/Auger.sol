@@ -23,11 +23,7 @@ contract Auger is IAuger {
         IERC20[] calldata tokens,
         Call calldata wellFunction,
         Call[] calldata pumps
-    )
-        external
-        payable
-        returns (address well)
-    {
+    ) external payable returns (address well) {
         well = address(new Well(name, symbol, tokens, wellFunction, pumps));
     }
 }
