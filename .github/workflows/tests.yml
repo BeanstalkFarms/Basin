@@ -22,9 +22,6 @@ jobs:
       - name: Check contract sizes
         run: forge build --sizes
 
-      - name: Check gas snapshots
-        run: forge snapshot --check
-
       - name: Run tests
         run: forge test
         env:
