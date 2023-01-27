@@ -8,7 +8,7 @@ pragma solidity ^0.8.17;
 import "forge-std/console2.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {Well, Call, TestHelper, IERC20, MockPump} from "test/TestHelper.sol";
-import {RandomBytes} from "utils/RandomBytes.sol";
+import {RandomBytes} from "test/helpers/RandomBytes.sol";
 
 contract ImmutableTest is TestHelper {
     function setUp() public {

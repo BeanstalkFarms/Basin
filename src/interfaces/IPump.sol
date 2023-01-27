@@ -9,8 +9,7 @@ pragma experimental ABIEncoderV2;
 /**
  * @title IPump defines the interface for a Pump.
  *
- * @dev
- * Pumps are on-chain oracles that are updated upon each interaction with a {IWell}.
+ * @dev Pumps are on-chain oracles that are updated upon each interaction with a {IWell}.
  * When reading a Pump, always verify the Pump's functionality.
  */
 interface IPump {
