@@ -1,7 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- *
- */
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2} from "test/TestHelper.sol";

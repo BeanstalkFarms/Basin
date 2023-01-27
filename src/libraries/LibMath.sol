@@ -1,13 +1,9 @@
-/**
- * SPDX-License-Identifier: MIT
- *
- */
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
 /**
  * @title Lib Math contains math operations
- *
  */
 import {SafeMath} from "oz/utils/math/SafeMath.sol";
 
