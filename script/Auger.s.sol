@@ -7,7 +7,7 @@ import {Auger, IAuger} from "src/Auger.sol";
 /// @dev Script to deploy an {Auger}. Augers bore Wells.
 contract DeployAuger is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
         Auger auger = new Auger();

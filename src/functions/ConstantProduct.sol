@@ -55,11 +55,11 @@ contract ConstantProduct is IWellFunction {
         }
     }
 
-    function name() external override pure returns (string memory) {
+    function name() external pure override returns (string memory) {
         return "Constant Product";
     }
 
-    function symbol() external override pure returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return "CP";
     }
 

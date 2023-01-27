@@ -1,10 +1,11 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {TestHelper, IERC20} from "test/TestHelper.sol";
 
 import {IWell, Call} from "src/interfaces/IWell.sol";
 
@@ -15,18 +16,12 @@ import {Aquifer} from "src/Aquifer.sol";
 contract AquiferTest is TestHelper {
     address[] wells;
 
-    event BoreWell(
-        address well,
-        IERC20[] tokens,
-        Call wellFunction,
-        Call[] pumps,
-        address auger
-    );
+    event BoreWell(address well, IERC20[] tokens, Call wellFunction, Call[] pumps, address auger);
 
     function setUp() public {
         initUser();
         deployMockTokens(10);
-        
+
         // Create Auger & Aquifer
         auger = new Auger();
         aquifer = new Aquifer();
@@ -52,7 +47,7 @@ contract AquiferTest is TestHelper {
             wellFunction,
             pumps,
             address(auger)
-        );
+            );
 
         aquifer.boreWell(_tokens, wellFunction, pumps, auger);
     }

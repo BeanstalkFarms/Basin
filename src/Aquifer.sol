@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
@@ -19,7 +20,6 @@ import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
  * @notice Aquifer is a permissionless Well registry.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
-
     using LibContractInfo for address;
     using SafeCast for uint;
 
@@ -33,9 +33,9 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
     /**
      * @dev see {IAquifer.boreWell}
-     * 
+     *
      * Tokens in Well info struct must be alphabetically sorted.
-     * 
+     *
      * The Aquifer takes an opinionated stance on the `name` and `symbol` of
      * the deployed Well.
      */
@@ -44,17 +44,18 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         Call calldata wellFunction,
         Call[] calldata pumps,
         IAuger auger
-    ) external nonReentrant returns (address well) {
+    )
+        external
+        nonReentrant
+        returns (address well)
+    {
         for (uint i; i < tokens.length - 1; i++) {
-            require(
-                tokens[i] < tokens[i + 1],
-                "LibWell: Tokens not alphabetical"
-            );
+            require(tokens[i] < tokens[i + 1], "LibWell: Tokens not alphabetical");
         }
-        
+
         // Prepare
         IWellFunction wellFunction_ = IWellFunction(wellFunction.target);
-        
+
         // name is in format `<token0Symbol>:...:<tokenNSymbol> <wellFunctionName> Well`
         // symbol is in format `<token0Symbol>...<tokenNSymbol><wellFunctionSymbol>w`
         string memory name = address(tokens[0]).getSymbol();
@@ -65,19 +66,13 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         }
         name = string.concat(name, " ", wellFunction_.name(), " Well");
         symbol = string.concat(symbol, wellFunction_.symbol(), "w");
-        
+
         // Bore
         well = auger.bore(name, symbol, tokens, wellFunction, pumps);
 
         // Index
         _indexWell(well, tokens);
-        emit BoreWell(
-            well,
-            tokens,
-            wellFunction,
-            pumps,
-            address(auger)
-        );
+        emit BoreWell(well, tokens, wellFunction, pumps, address(auger));
     }
 
     /// @dev see {IAquifer.getWellByIndex}
@@ -114,8 +109,8 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         wellsByIndex[numberOfWells] = well;
         numberOfWells++;
 
-        for (uint i; i < tokens.length-1; ++i) {
-            for (uint j = i+1; j < tokens.length; ++j) {
+        for (uint i; i < tokens.length - 1; ++i) {
+            for (uint j = i + 1; j < tokens.length; ++j) {
                 wellsBy2Tokens[keccak256(abi.encode(tokens[i], tokens[j]))].push(well);
             }
         }
