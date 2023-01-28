@@ -153,6 +153,10 @@ abstract contract TestHelper is Test {
         );
     }
 
+    function increaseTime(uint256 _seconds) internal {
+        vm.warp(block.timestamp + _seconds);
+    }
+
     /// @dev impersonate `from`
     modifier prank(address from) {
         vm.startPrank(from);
