@@ -6,7 +6,7 @@ pragma solidity =0.8.17;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title Instantaneous Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
+ * @title Cumulative Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
  */
 interface ICumulativePump {
 
