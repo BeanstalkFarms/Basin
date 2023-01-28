@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IPump.sol";
+import "src/interfaces/pumps/IPump.sol";
 import "src/interfaces/pumps/IInstantaneousPump.sol";
 import "src/interfaces/pumps/ICumulativePump.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
@@ -15,7 +15,7 @@ import "oz/utils/math/SafeCast.sol";
 
 /**
  * @author Publius
- * @title Beanstalk Pump intended for use in Beanstalk.
+ * @title GeoEmaAndCumSmaPump stores a geometric EMA and cumulative geometric SMA for each reserve.
  * @dev
  * A Pump designed for use in Beanstalk with 2 tokens.
  * This Pump has 3 main features:
@@ -23,7 +23,7 @@ import "oz/utils/math/SafeCast.sol";
  * 2. MEV-resistant Geometric EMA intended for instantaneous reserve queries
  * 3. MEV-resistant Cumulative Geometric intended for SMA reserve queries
  **/
-contract BeanstalkPump is IPump, IInstantaneousPump, ICumulativePump {
+contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
     using LibLastReserveBytes for bytes32;
     using LibBytes for bytes32;

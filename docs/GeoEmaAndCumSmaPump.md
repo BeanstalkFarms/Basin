@@ -1,4 +1,4 @@
-# Multi-block MEV Resistant Pump
+# Multi-block MEV Resistant Geometric EMA and Geometric Cumulative SMA and Pump
 
 Given:
 - $\alpha$ a parameter $\alpha \in (0,1)$
@@ -6,9 +6,9 @@ Given:
 - $\beta$ the block time in the given EVM
 
 The pump tracks 3 different types of balances at the last updated timestamp $l$:
-- multi-block MEV resistant last balances: $[x^{MEV}_{0,l}, \cdots, x^{MEV}_{n,l}]$
-- multi-block MEV resistant Geometric EMA: $[x^{EMA}_{0,l}, \cdots, x^{EMA}_{n,l}]$
-- multi-block MEV-resistant Cumulative Geometric SMA: $[x^{SMA}_{0,l}, \cdots, x^{SMA}_{n,l}]$
+- multi-block MEV resistant last balances: $[ x_{0,l}^{MEV} , ..., x_{n,l}^{MEV}]$
+- multi-block MEV resistant Geometric EMA: $[x_{0,l}^{EMA}, ..., x_{n,l}^{EMA}]$
+- multi-block MEV-resistant Cumulative Geometric SMA: $[x_{0,l},^{SMA}, ..., x_{n,l}^{SMA}]$
 
 
 ## Update

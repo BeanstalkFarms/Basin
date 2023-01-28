@@ -4,18 +4,18 @@
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
-import "src/pumps/BeanstalkPump.sol";
+import "src/pumps/GeoEmaAndCumSmaPump.sol";
 
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
 contract PumpUpdateTest is TestHelper {
-    BeanstalkPump pump;
+    GeoEmaAndCumSmaPump pump;
     uint[] b = new uint[](2);
 
     function setUp() public {
         initUser();
-        pump = new BeanstalkPump(0.5e18, 12, 0.9e18);
+        pump = new GeoEmaAndCumSmaPump(0.5e18, 12, 0.9e18);
     }
 
     function testFuzz_update(

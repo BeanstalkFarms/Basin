@@ -4,14 +4,14 @@
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
-import "src/pumps/BeanstalkPump.sol";
+import "src/pumps/GeoEmaAndCumSmaPump.sol";
 
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
-contract CapBalanceTest is TestHelper, BeanstalkPump {
+contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
 
-    constructor() BeanstalkPump(0.5e18, 12, 0.9994445987e18) {}
+    constructor() GeoEmaAndCumSmaPump(0.5e18, 12, 0.9994445987e18) {}
 
     function test1BlockCapBalanceIncrease() public {
         uint balance = exp2FromUD60x18(capReserve(log2ToUD60x18(1e16), log2ToUD60x18(2e18), 1));
