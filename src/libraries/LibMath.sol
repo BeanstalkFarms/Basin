@@ -1,30 +1,27 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
 /**
  * @title Lib Math contains math operations
- **/
-import "oz/utils/math/SafeMath.sol";
+ */
+import {SafeMath} from "oz/utils/math/SafeMath.sol";
 
 library LibMath {
-
-    error PRBMath_MulDiv_Overflow(uint256 x, uint256 y, uint256 denominator);
+    error PRBMath_MulDiv_Overflow(uint x, uint y, uint denominator);
 
     /**
      * @param a numerator
      * @param b denominator
      * @dev Division, round to nearest integer (AKA round-half-up).
-     * 
+     *
      * Skip explicit checks for division by zero as Solidity will natively revert.
-     * 
-     * Implementation: 
+     *
+     * Implementation:
      * https://github.com/cryptoticket/openzeppelin-solidity/blob/04e62a7a1ece4832bee411ca5de024d2ce0b15e6/contracts/math/RoundedDivMath.sol#L31
      */
-    function roundedDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 halfB = (b % 2 == 0) ? (b / 2) : (b / 2 + 1);
+    function roundedDiv(uint a, uint b) internal pure returns (uint) {
+        uint halfB = (b % 2 == 0) ? (b / 2) : (b / 2 + 1);
         return (a % b >= halfB) ? (a / b + 1) : (a / b);
     }
 
@@ -36,15 +33,15 @@ library LibMath {
      * @dev TODO: more testing - https://ethereum.stackexchange.com/questions
      * /38468/calculate-the-nth-root-of-an-arbitrary-uint-using-solidity
      * https://en.wikipedia.org/wiki/Nth_root_algorithm
-     * This is used in {ConstantProduct.Sol}, where the number of tokens are 
+     * This is used in {ConstantProduct.Sol}, where the number of tokens are
      * restricted to 16. even roots are much cheaper to compute than uneven,
-     * thus we recursively call sqrt(). 
-     * 
+     * thus we recursively call sqrt().
+     *
      */
     function nthRoot(uint a, uint n) internal pure returns (uint root) {
-        assert (n > 1);
-        if(a == 0) return 0;
-        if(n % 2 == 0) {
+        assert(n > 1);
+        if (a == 0) return 0;
+        if (n % 2 == 0) {
             if (n == 2) return sqrt(a); // shortcut for square root
             if (n == 4) return sqrt(sqrt(a));
             if (n == 6) return sqrt(sqrt(sqrt(a)));
@@ -52,7 +49,9 @@ library LibMath {
             if (n == 10) return sqrt(sqrt(sqrt(sqrt(sqrt(a)))));
             if (n == 12) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))));
             if (n == 14) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a)))))));
-            if (n == 16) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+            if (n == 16) {
+                return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+            }
         }
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)
@@ -77,14 +76,14 @@ library LibMath {
      * @notice computes the square root of a given number
      * @param a The number to compute the square root of
      * @return z The square root of x
-     * @dev 
+     * @dev
      * This function is based on the Babylonian method of computing square roots
      * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
      * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
      * based on https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
      */
-    
-    function sqrt(uint256 a) internal pure returns (uint256 z) {
+
+    function sqrt(uint a) internal pure returns (uint z) {
         assembly {
             // This segment is to get a reasonable initial estimate for the Babylonian method.
             // If the initial estimate is bad, the number of correct bits increases ~linearly
@@ -140,9 +139,7 @@ library LibMath {
             // since this case is rare, we choose to save gas on the assignment and
             // repeat division in the rare case.
             // If you don't care whether floor or ceil is returned, you can skip this.
-            if lt(div(a, z), z) {
-                z := div(a, z)
-            }
+            if lt(div(a, z), z) { z := div(a, z) }
         }
     }
 }

@@ -1,14 +1,12 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWell.sol";
+import {IWell, IERC20, Call} from "src/interfaces/IWell.sol";
 
 /**
  * @title IAuger defines the interface for an Auger.
- * 
+ *
  * @dev
  * Augers bore Wells by deploying implementations of the IWell interface.
  * Augers provide an on-chain address reference for Well implementations.
@@ -16,7 +14,6 @@ import "src/interfaces/IWell.sol";
  * When interacing with a Well, always verify the Well was deployed by a valid Auger.
  */
 interface IAuger {
-    
     /**
      * @notice Bores a Well with the provided components.
      * @param name The name of the Well
