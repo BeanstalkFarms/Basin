@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWell.sol";
+import {IWell, IERC20, Call} from "src/interfaces/IWell.sol";
 
 /**
  * @title IAuger defines the interface for an Auger.
