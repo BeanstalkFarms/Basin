@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.8.17;
 pragma experimental ABIEncoderV2;
@@ -12,7 +10,6 @@ pragma experimental ABIEncoderV2;
  * When reading a Pump, always verify the Pump's functionality.
  */
 interface IPump {
-
     /**
      * @notice Attaches the Pump to a Well.
      * @param n The number of tokens in the Well
@@ -37,5 +34,5 @@ interface IPump {
      * @param readData The data to be read by the Pump
      * @return data The data read from the Pump
      */
-    function read(address well, bytes calldata readData) view external returns (bytes memory data);
-} 
+    function read(address well, bytes calldata readData) external view returns (bytes memory data);
+}

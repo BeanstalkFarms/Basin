@@ -1,10 +1,8 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
-import "src/functions/ConstantProduct.sol";
+import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 
 contract ConstantProductTest is WellFunctionHelper {
     function setUp() public {
@@ -24,7 +22,7 @@ contract ConstantProductTest is WellFunctionHelper {
         vm.assume(n < 16);
         vm.assume(n >= 2);
         uint[] memory reserves = new uint[](n);
-        for(uint i = 0; i < n; ++i) {
+        for (uint i = 0; i < n; ++i) {
             reserves[i] = 1;
         }
         assertEq(_function.calcLpTokenSupply(reserves, _data), 1 * n);

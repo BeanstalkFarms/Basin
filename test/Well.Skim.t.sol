@@ -1,23 +1,20 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {TestHelper} from "test/TestHelper.sol";
 
 contract WellSkimTest is TestHelper {
-
     function setUp() public {
         setupWell(2);
     }
 
     function test_initialized() public {
-        // Well should have liquidity 
+        // Well should have liquidity
         assertEq(tokens[0].balanceOf(address(well)), 1000e18);
         assertEq(tokens[1].balanceOf(address(well)), 1000e18);
     }
-    
-    function testFuzz_skim(uint[2] calldata amounts) prank(user) public {
+
+    function testFuzz_skim(uint[2] calldata amounts) public prank(user) {
         vm.assume(amounts[0] <= 800e18);
         vm.assume(amounts[1] <= 800e18);
 

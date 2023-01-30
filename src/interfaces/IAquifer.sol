@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
@@ -13,7 +11,6 @@ import {IAuger} from "src/interfaces/IAuger.sol";
  * @title Aquifer Inferface
  */
 interface IAquifer {
-
     /**
      * @notice Emitted when a Well is bored.
      * @param well The address of the new Well
@@ -22,13 +19,7 @@ interface IAquifer {
      * @param pumps The pumps to bore in the Well
      * @param auger The auger that bored the Well
      */
-    event BoreWell(
-        address well,
-        IERC20[] tokens,
-        Call wellFunction,
-        Call[] pumps,
-        address auger
-    );
+    event BoreWell(address well, IERC20[] tokens, Call wellFunction, Call[] pumps, address auger);
 
     /**
      * @notice bores a Well with given parameters
