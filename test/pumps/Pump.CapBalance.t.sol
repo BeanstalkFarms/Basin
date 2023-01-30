@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
@@ -10,7 +11,6 @@ import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
 contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
-
     constructor() GeoEmaAndCumSmaPump(0.5e18, 12, 0.9994445987e18) {}
 
     function test1BlockCapBalanceIncrease() public {
@@ -58,5 +58,4 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
     //         console.log(err * 1e19/x);
     //     }
     // }
-
 }

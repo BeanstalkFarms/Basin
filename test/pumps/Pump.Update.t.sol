@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
@@ -26,18 +27,18 @@ contract PumpUpdateTest is TestHelper {
         uint[] memory lastReserves = pump.readLastReserves(user);
         assertEq(lastReserves[0], 1e6);
         assertEq(lastReserves[1], 2e6);
-        console.log('a');
+        console.log("a");
         uint[] memory lastEmaReserves = pump.readInstantaneousReserves(user);
-        console.log('b');
+        console.log("b");
         assertEq(lastEmaReserves[0], 1e6);
         assertEq(lastEmaReserves[1], 2e6);
-        console.log('c');
+        console.log("c");
         uint[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(user);
-        console.log('d');
+        console.log("d");
         assertEq(lastCumulativeReserves[0], 0);
         assertEq(lastCumulativeReserves[1], 0);
     }
-    
+
     function testUpdate0Seconds() public prank(user) {
         b[0] = 2e6;
         b[1] = 1e6;
@@ -62,10 +63,10 @@ contract PumpUpdateTest is TestHelper {
         assertEq(lastReserves[0], 1.5e6);
         assertEq(lastReserves[1], 1e6);
         uint[] memory lastEmaReserves = pump.readInstantaneousReserves(user);
-        assertEq(lastEmaReserves[0], 1337698);
-        assertEq(lastEmaReserves[1], 1216242);
+        assertEq(lastEmaReserves[0], 1_337_698);
+        assertEq(lastEmaReserves[1], 1_216_242);
         uint[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(user);
-        assertEq(lastCumulativeReserves[0], 20516531070045330241 * 12);
-        assertEq(lastCumulativeReserves[1], 19931568569324174075 * 12);
+        assertEq(lastCumulativeReserves[0], 20_516_531_070_045_330_241 * 12);
+        assertEq(lastCumulativeReserves[1], 19_931_568_569_324_174_075 * 12);
     }
 }

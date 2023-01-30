@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
@@ -8,18 +9,13 @@ import "test/TestHelper.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 
 contract LibEmaBytesTest is TestHelper {
-
     using LibLastReserveBytes for bytes32;
 
-    uint256 constant NUM_RESERVES_MAX = 4;
+    uint constant NUM_RESERVES_MAX = 4;
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
     /// @dev Store fuzzed reserves, re-read and compare.
-    function testEmaFuzz_storeAndRead(
-        uint8 n,
-        uint40 lastTimestamp, 
-        uint104[8] memory _reserves
-    ) public {
+    function testEmaFuzz_storeAndRead(uint8 n, uint40 lastTimestamp, uint104[8] memory _reserves) public {
         vm.assume(n <= NUM_RESERVES_MAX);
         vm.assume(n > 1);
 

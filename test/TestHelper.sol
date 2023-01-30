@@ -146,7 +146,7 @@ abstract contract TestHelper is Test {
         balances = Balances(tokenBalances, well.balanceOf(account), well.totalSupply());
     }
 
-    function increaseTime(uint256 _seconds) internal {
+    function increaseTime(uint _seconds) internal {
         vm.warp(block.timestamp + _seconds);
     }
 

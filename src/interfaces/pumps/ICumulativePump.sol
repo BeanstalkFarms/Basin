@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity =0.8.17;
 pragma experimental ABIEncoderV2;
@@ -9,13 +10,12 @@ pragma experimental ABIEncoderV2;
  * @title Cumulative Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
  */
 interface ICumulativePump {
-
     /**
      * @notice Reads the current cumulative reserves from the Pump
      * @param well The address of the Well
      * @return cumulativeReserves The cumulative reserves from the Pump
      */
-    function readCumulativeReserves(address well) view external returns (uint[] memory cumulativeReserves);
+    function readCumulativeReserves(address well) external view returns (uint[] memory cumulativeReserves);
 
     /**
      * @notice Reads the current cumulative reserves from the Pump
@@ -29,5 +29,5 @@ interface ICumulativePump {
         address well,
         uint[] memory startCumulativeReserves,
         uint startTimestamp
-    ) view external returns (uint[] memory twaReserves, uint[] memory cumulativeReserves);
-} 
+    ) external view returns (uint[] memory twaReserves, uint[] memory cumulativeReserves);
+}
