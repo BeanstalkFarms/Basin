@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, ConstantProduct2, IERC20} from "test/TestHelper.sol";
+import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
 
 contract WellRemoveLiquidityOneTokenTest is TestHelper {
     ConstantProduct2 cp;
@@ -33,13 +33,16 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
         uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
-        assertEq(well.balanceOf(user), lpAmountIn, "Incorrect lpAmountIn");
+        Balances memory userBalance = getBalances(user, well);
+        Balances memory wellBalance = getBalances(address(well), well);
 
-        assertEq(tokens[0].balanceOf(user), amountOut, "Incorrect token0 user balance");
-        assertEq(tokens[1].balanceOf(user), 0, "Incorrect token1 user balance");
+        assertEq(userBalance.lp, lpAmountIn, "Incorrect lpAmountIn");
 
-        assertEq(tokens[0].balanceOf(address(well)), 1125 * 1e18, "Incorrect token0 well reserve");
-        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "Incorrect token1 well reserve");
+        assertEq(userBalance.tokens[0], amountOut, "Incorrect token0 user balance");
+        assertEq(userBalance.tokens[1], 0, "Incorrect token1 user balance");
+
+        assertEq(wellBalance.tokens[0], 1125 * 1e18, "Incorrect token0 well reserve");
+        assertEq(wellBalance.tokens[1], 2000 * 1e18, "Incorrect token1 well reserve");
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
@@ -79,11 +82,14 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0]);
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user); // no minimum out
 
-        assertEq(well.balanceOf(user), userLpBalance - lpAmountIn, "Incorrect lp output");
-        assertEq(tokens[0].balanceOf(user), amounts[0], "Incorrect token0 user balance");
-        assertEq(tokens[1].balanceOf(user), amounts[1], "Incorrect token1 user balance"); // should stay the same
-        assertEq(tokens[0].balanceOf(address(well)), 2000e18 - amounts[0], "Incorrect token0 well reserve");
-        assertEq(tokens[1].balanceOf(address(well)), 2000e18 - amounts[1], "Incorrect token1 well reserve"); // should stay the same
+        Balances memory userBalance = getBalances(user, well);
+        Balances memory wellBalance = getBalances(address(well), well);
+
+        assertEq(userBalance.lp, userLpBalance - lpAmountIn, "Incorrect lp output");
+        assertEq(userBalance.tokens[0], amounts[0], "Incorrect token0 user balance");
+        assertEq(userBalance.tokens[1], amounts[1], "Incorrect token1 user balance"); // should stay the same
+        assertEq(wellBalance.tokens[0], 2000e18 - amounts[0], "Incorrect token0 well reserve");
+        assertEq(wellBalance.tokens[1], 2000e18 - amounts[1], "Incorrect token1 well reserve"); // should stay the same
     }
 
     // TODO: fuzz test: imbalanced ratio of tokens

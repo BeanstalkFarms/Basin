@@ -129,8 +129,8 @@ contract WellSwapTest is TestHelper {
         uint maxAmountIn = 1000 * 1e18;
         amountOut = bound(amountOut, 0, 500 * 1e18);
 
-        Balances memory userBalancesBefore = getBalances(user);
-        Balances memory wellBalancesBefore = getBalances(address(well));
+        Balances memory userBalancesBefore = getBalances(user, well);
+        Balances memory wellBalancesBefore = getBalances(address(well), well);
 
         // Decrease reserve of token 1 by `amountOut` which is paid to user
         // FIXME: refactor for N tokens
@@ -151,8 +151,8 @@ contract WellSwapTest is TestHelper {
         emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut);
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
-        Balances memory userBalancesAfter = getBalances(user);
-        Balances memory wellBalancesAfter = getBalances(address(well));
+        Balances memory userBalancesAfter = getBalances(user, well);
+        Balances memory wellBalancesAfter = getBalances(address(well), well);
 
         assertEq(
             userBalancesBefore.tokens[0] - userBalancesAfter.tokens[0], calcAmountIn, "Incorrect token0 user balance"
@@ -183,11 +183,11 @@ contract WellSwapTest is TestHelper {
     }
 
     modifier check_noTokenBalanceChange() {
-        Balances memory userBefore = getBalances(address(user));
-        Balances memory wellBefore = getBalances(address(well));
+        Balances memory userBefore = getBalances(address(user), well);
+        Balances memory wellBefore = getBalances(address(well), well);
         _;
-        Balances memory userAfter = getBalances(address(user));
-        Balances memory wellAfter = getBalances(address(well));
+        Balances memory userAfter = getBalances(address(user), well);
+        Balances memory wellAfter = getBalances(address(well), well);
         // no change in token balances
         for (uint i = 0; i < tokens.length; ++i) {
             assertEq(userAfter.tokens[i], userBefore.tokens[i], "user token balance mismatch");
@@ -200,7 +200,7 @@ contract WellSwapTest is TestHelper {
     /// @dev
     function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint amountOut, uint i) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
-        Balances memory wellBalances = getBalances(address(well));
+        Balances memory wellBalances = getBalances(address(well), well);
         vm.assume(i < _tokens.length);
 
         // request more than the Well has. there is no input amount that could do this.
@@ -231,7 +231,7 @@ contract WellSwapTest is TestHelper {
         );
 
         // check assumption that reserves are empty
-        Balances memory wellBalances = getBalances(address(badWell));
+        Balances memory wellBalances = getBalances(address(badWell), badWell);
         assertEq(wellBalances.tokens[0], 0, "bad assumption: wellBalances.tokens[0] != 0");
         assertEq(wellBalances.tokens[1], 0, "bad assumption: wellBalances.tokens[1] != 0");
 
