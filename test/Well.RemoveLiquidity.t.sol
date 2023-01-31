@@ -6,6 +6,7 @@ import {TestHelper, ConstantProduct2, IERC20} from "test/TestHelper.sol";
 contract WellRemoveLiquidityTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
+    uint constant addedLiquidity = 1000e18;
 
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
@@ -14,7 +15,7 @@ contract WellRemoveLiquidityTest is TestHelper {
         setupWell(2);
 
         // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
-        addLiquidityEqualAmount(user, 1000 * 1e18);
+        addLiquidityEqualAmount(user, addedLiquidity);
     }
 
     /// @dev ensure that Well liq was initialized correctly in {setUp}
@@ -22,7 +23,7 @@ contract WellRemoveLiquidityTest is TestHelper {
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for (uint i = 0; i < tokens.length; i++) {
-            assertEq(tokens[i].balanceOf(address(well)), 2000 * 1e18, "incorrect token reserve");
+            assertEq(tokens[i].balanceOf(address(well)), initialLiquidity + addedLiquidity, "incorrect token reserve");
         }
         assertEq(well.totalSupply(), 4000 * 1e27, "incorrect totalSupply");
     }

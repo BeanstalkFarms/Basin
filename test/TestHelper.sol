@@ -39,6 +39,9 @@ abstract contract TestHelper is Test {
     Auger auger;
     Aquifer aquifer;
 
+    // initial liquidity amount given to users and wells
+    uint public constant initialLiquidity = 1000e18;
+
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
         setupWell(n, Call(address(new ConstantProduct2()), new bytes(0)), _pumps);
@@ -58,17 +61,17 @@ abstract contract TestHelper is Test {
         well = Well(auger.bore("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", tokens, _function, _pumps));
 
         // Mint mock tokens to user
-        mintTokens(user, 1000 * 1e18);
-        mintTokens(user2, 1000 * 1e18);
+        mintTokens(user, initialLiquidity);
+        mintTokens(user2, initialLiquidity);
         approveMaxTokens(user, address(well));
         approveMaxTokens(user2, address(well));
 
         // Mint mock tokens to TestHelper
-        mintTokens(address(this), 1000 * 1e18);
+        mintTokens(address(this), initialLiquidity);
         approveMaxTokens(address(this), address(well));
 
         // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(address(this), 1000 * 1e18);
+        addLiquidityEqualAmount(address(this), initialLiquidity);
     }
 
     function initUser() internal {
