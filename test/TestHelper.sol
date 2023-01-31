@@ -141,7 +141,7 @@ abstract contract TestHelper is Test {
     }
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
-    function getBalances(address account) internal view returns (Balances memory balances) {
+    function getBalances(address account, Well well) internal view returns (Balances memory balances) {
         uint[] memory tokenBalances = new uint[](tokens.length);
         for (uint i = 0; i < tokenBalances.length; ++i) {
             tokenBalances[i] = tokens[i].balanceOf(account);
