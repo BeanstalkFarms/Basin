@@ -40,7 +40,7 @@ abstract contract TestHelper is Test {
     Aquifer aquifer;
 
     // initial liquidity amount given to users and wells
-    uint public constant initialLiquidity = 1000e18;
+    uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
         Call[] memory _pumps = new Call[](0);
@@ -141,12 +141,12 @@ abstract contract TestHelper is Test {
     }
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
-    function getBalances(address account, Well well) internal view returns (Balances memory balances) {
+    function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
         uint[] memory tokenBalances = new uint[](tokens.length);
         for (uint i = 0; i < tokenBalances.length; ++i) {
             tokenBalances[i] = tokens[i].balanceOf(account);
         }
-        balances = Balances(tokenBalances, well.balanceOf(account), well.totalSupply());
+        balances = Balances(tokenBalances, _well.balanceOf(account), _well.totalSupply());
     }
 
     /// @dev impersonate `from`
