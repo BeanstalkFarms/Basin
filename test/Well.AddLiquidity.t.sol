@@ -18,7 +18,7 @@ contract WellAddLiquidityTest is TestHelper {
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for (uint i = 0; i < tokens.length; i++) {
-            assertEq(tokens[i].balanceOf(address(well)), 1000 * 1e18, "incorrect token reserve");
+            assertEq(tokens[i].balanceOf(address(well)), initialLiquidity, "incorrect token reserve");
         }
     }
 
@@ -49,14 +49,14 @@ contract WellAddLiquidityTest is TestHelper {
         assertEq(well.balanceOf(user), lpAmountOut);
 
         // Consumes all of user's tokens
-        // FIXME: 1000 * 1e18 is minted in TestHelper, make this a constant?
         assertEq(tokens[0].balanceOf(user), 0, "incorrect token0 user amt");
         assertEq(tokens[1].balanceOf(user), 0, "incorrect token1 user amt");
 
         // Adds to the Well's reserves
-        // FIXME: need to know that TestHelper adds an initial 1000 * 1e18
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
-        assertEq(tokens[1].balanceOf(address(well)), 2000 * 1e18, "incorrect token1 well amt");
+        // Users and wells are given same initialLiquidity in TestHelper
+        // so we know the final balance should be double that.
+        assertEq(tokens[0].balanceOf(address(well)), initialLiquidity * 2, "incorrect token0 well amt");
+        assertEq(tokens[1].balanceOf(address(well)), initialLiquidity * 2, "incorrect token1 well amt");
     }
 
     /// @dev getAddLiquidityOut: one-sided.
