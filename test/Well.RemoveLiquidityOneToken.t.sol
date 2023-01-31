@@ -41,7 +41,10 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(userBalance.tokens[0], amountOut, "Incorrect token0 user balance");
         assertEq(userBalance.tokens[1], 0, "Incorrect token1 user balance");
 
-        assertEq(wellBalance.tokens[0], 1125 * 1e18, "Incorrect token0 well reserve");
+        // Equal amount of liquidity of 1000e18 were added in the setup function hence the
+        // well's reserves here are 2000e18 minus the amounts removed, as the initial liquidity
+        // is 1000e18 of each token.
+        assertEq(wellBalance.tokens[0], (2000 - 875) * 1e18, "Incorrect token0 well reserve");
         assertEq(wellBalance.tokens[1], 2000 * 1e18, "Incorrect token1 well reserve");
     }
 
