@@ -8,6 +8,8 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     bytes constant data = "";
     uint[] tokenAmountsOut;
 
+    uint constant addedLiquidity = 1000 * 1e18;
+
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
     function setUp() public {
@@ -15,7 +17,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         setupWell(2);
 
         // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
-        addLiquidityEqualAmount(user, 1000 * 1e18);
+        addLiquidityEqualAmount(user, addedLiquidity);
 
         // Shared removal amounts
         tokenAmountsOut.push(500 * 1e18); // 500   token0
@@ -49,8 +51,8 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(userBalance.tokens[1], tokenAmountsOut[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
-        assertEq(tokens[0].balanceOf(address(well)), 1500 * 1e18, "Incorrect token0 well reserve");
-        assertEq(tokens[1].balanceOf(address(well)), 19_494 * 1e17, "Incorrect token1 well reserve");
+        assertEq(wellBalance.tokens[0], 1500 * 1e18, "Incorrect token0 well reserve");
+        assertEq(wellBalance.tokens[1], 19_494 * 1e17, "Incorrect token1 well reserve");
     }
 
     /// @dev not enough LP to receive `tokenAmountsOut`
@@ -103,8 +105,12 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Equal amount of liquidity of 1000e18 were added in the setup function hence the
         // well's reserves here are 2000e18 minus the amounts removed, as the initial liquidity
         // is 1000e18 of each token.
-        assertEq(wellBalance.tokens[0], 2000e18 - amounts[0], "Incorrect token0 well reserve");
-        assertEq(wellBalance.tokens[1], 2000e18 - amounts[1], "Incorrect token1 well reserve");
+        assertEq(
+            wellBalance.tokens[0], (initialLiquidity + addedLiquidity) - amounts[0], "Incorrect token0 well reserve"
+        );
+        assertEq(
+            wellBalance.tokens[1], (initialLiquidity + addedLiquidity) - amounts[1], "Incorrect token1 well reserve"
+        );
     }
 
     /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
