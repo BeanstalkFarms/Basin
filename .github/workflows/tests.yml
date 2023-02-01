@@ -23,7 +23,10 @@ jobs:
         run: forge build --sizes
 
       - name: Run tests
-        run: forge test --no-match-contract IntegrationTest
+        run: |
+          forge test --no-match-contract IntegrationTest
+          forge test --match-contract IntegrationTest --fork-url https://eth-mainnet.g.alchemy.com/v2/$ALCHEMY_API_KEY
+
         env:
           # Only fuzz intensely if we're running this action on a push to main or for a PR going into main:
           FOUNDRY_PROFILE: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && 'intense' }}

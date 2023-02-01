@@ -2,13 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console, stdError} from "forge-std/Test.sol";
-import {Strings} from "oz/utils/Strings.sol";
-
-import {MockToken} from "mocks/tokens/MockToken.sol";
-import {MockPump} from "mocks/pumps/MockPump.sol";
-
 import {Users} from "test/helpers/Users.sol";
-
 import {Well, Call, IERC20} from "src/Well.sol";
 import {Auger} from "src/Auger.sol";
 import {Aquifer} from "src/Aquifer.sol";
@@ -24,8 +18,9 @@ struct Balances {
 }
 
 abstract contract IntegrationTestHelper is Test {
-    using Strings for uint;
     using LibContractInfo for address;
+
+    uint public constant initialLiquidity = 1000 * 1e18;
 
     // Users
     Users users;
@@ -69,17 +64,17 @@ abstract contract IntegrationTestHelper is Test {
         well = Well(auger.bore(name, symbol, _tokens, _function, pumps));
 
         // Mint mock tokens to user
-        mintTokens(_tokens, user, 1000 * 1e18);
-        mintTokens(_tokens, user2, 1000 * 1e18);
+        mintTokens(_tokens, user, initialLiquidity);
+        mintTokens(_tokens, user2, initialLiquidity);
         approveMaxTokens(_tokens, user, address(well));
         approveMaxTokens(_tokens, user2, address(well));
 
         // Mint mock tokens to TestHelper
-        mintTokens(_tokens, address(this), 1000 * 1e18);
+        mintTokens(_tokens, address(this), initialLiquidity);
         approveMaxTokens(_tokens, address(this), address(well));
 
         // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(_tokens, address(this), 1000 * 1e18);
+        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity);
     }
 
     function initUser() internal {

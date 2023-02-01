@@ -8,11 +8,8 @@ contract IntegrationTestBeanWethInit is IntegrationTestHelper {
     IERC20 public bean = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
     IERC20[] tokens = [bean, weth];
 
-    event AddLiquidity(uint[] amounts);
-
     function setUp() public {
         setupWell(tokens);
-        bean.approve(address(well), type(uint).max);
     }
 
     //////////// Well Definition ////////////
