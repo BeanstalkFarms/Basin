@@ -13,6 +13,8 @@ import {Well, Call, IERC20} from "src/Well.sol";
 import {Auger} from "src/Auger.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
@@ -23,6 +25,7 @@ struct Balances {
 
 abstract contract IntegrationTestHelper is Test {
     using Strings for uint;
+    using LibContractInfo for address;
 
     // Users
     Users users;
@@ -51,9 +54,19 @@ abstract contract IntegrationTestHelper is Test {
 
         initUser();
 
-        // FIXME: manual name/symbol
+        // setup new well name with tokens and create well
+        IWellFunction wellFunction_ = IWellFunction(wellFunction.target);
+        string memory name = address(_tokens[0]).getSymbol();
+        string memory symbol = name;
+        for (uint i = 1; i < _tokens.length; ++i) {
+            name = string.concat(name, ":", address(_tokens[i]).getSymbol());
+            symbol = string.concat(symbol, address(_tokens[i]).getSymbol());
+        }
+        name = string.concat(name, " ", wellFunction_.name(), " Well");
+        symbol = string.concat(symbol, wellFunction_.symbol(), "w");
+
         auger = new Auger();
-        well = Well(auger.bore("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", _tokens, _function, _pumps));
+        well = Well(auger.bore(name, symbol, _tokens, _function, pumps));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, 1000 * 1e18);

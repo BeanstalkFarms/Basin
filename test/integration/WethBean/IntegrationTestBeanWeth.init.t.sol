@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IntegrationTestHelper, Well, IERC20, Call} from "test/integration/IntegrationTestHelper.sol";
-import {console} from "forge-std/console.sol";
+import {IntegrationTestHelper, IERC20, Well, Call} from "test/integration/IntegrationTestHelper.sol";
 
 contract IntegrationTestBeanWethInit is IntegrationTestHelper {
     IERC20 public weth = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
@@ -13,6 +12,7 @@ contract IntegrationTestBeanWethInit is IntegrationTestHelper {
 
     function setUp() public {
         setupWell(tokens);
+        bean.approve(address(well), type(uint).max);
     }
 
     //////////// Well Definition ////////////
@@ -25,7 +25,6 @@ contract IntegrationTestBeanWethInit is IntegrationTestHelper {
     function check_tokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
             assertEq(address(_wellTokens[i]), address(tokens[i]));
-            console.log(address(tokens[i]), address(_wellTokens[i]));
         }
     }
 
@@ -75,11 +74,11 @@ contract IntegrationTestBeanWethInit is IntegrationTestHelper {
     //////////// ERC20 LP Token ////////////
 
     function test_name() public {
-        assertEq(well.name(), "TOKEN0:TOKEN1 Constant Product Well");
+        assertEq(well.name(), "BEAN:WETH Constant Product Well");
     }
 
     function test_symbol() public {
-        assertEq(well.symbol(), "TOKEN0TOKEN1CPw");
+        assertEq(well.symbol(), "BEANWETHCPw");
     }
 
     function test_decimals() public {
