@@ -34,19 +34,21 @@ contract WellSwapTest is TestHelper {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
 
-        uint balanceBefore0 = tokens[0].balanceOf(user);
-        uint balanceBefore1 = tokens[1].balanceOf(user);
+        Balances memory userBalanceBefore = getBalances(user, well);
 
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], amountIn, minAmountOut);
 
         uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
-        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
-        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
+        Balances memory userBalanceAfter = getBalances(user, well);
+        Balances memory wellBalanceAfter = getBalances(address(well), well);
 
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
-        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token0 well amt");
+        assertEq(userBalanceBefore.tokens[0] - userBalanceAfter.tokens[0], amountIn, "incorrect token0 user amt");
+        assertEq(userBalanceAfter.tokens[1] - userBalanceBefore.tokens[1], amountOut, "incorrect token1 user amt");
+
+        assertEq(wellBalanceAfter.tokens[0], amountIn + initialLiquidity, "incorrect token0 well amt");
+        assertEq(wellBalanceAfter.tokens[1], initialLiquidity - amountOut, "incorrect token1 well amt");
     }
 
     // function testFuzz_swapFrom(uint amountIn) prank(user) public {
@@ -96,16 +98,18 @@ contract WellSwapTest is TestHelper {
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut);
 
-        uint balanceBefore0 = tokens[0].balanceOf(user);
-        uint balanceBefore1 = tokens[1].balanceOf(user);
+        Balances memory userBalanceBefore = getBalances(user, well);
 
         uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
-        assertEq(balanceBefore0 - tokens[0].balanceOf(user), amountIn, "incorrect token0 user amt");
-        assertEq(tokens[1].balanceOf(user) - balanceBefore1, amountOut, "incorrect token1 user amt");
+        Balances memory userBalanceAfter = getBalances(user, well);
+        Balances memory wellBalanceAfter = getBalances(address(well), well);
 
-        assertEq(tokens[0].balanceOf(address(well)), 2000 * 1e18, "incorrect token0 well amt");
-        assertEq(tokens[1].balanceOf(address(well)), 500 * 1e18, "incorrect token1 well amt");
+        assertEq(userBalanceBefore.tokens[0] - userBalanceAfter.tokens[0], amountIn, "incorrect token0 user amt");
+        assertEq(userBalanceAfter.tokens[1] - userBalanceBefore.tokens[1], amountOut, "incorrect token1 user amt");
+
+        assertEq(wellBalanceAfter.tokens[0], amountIn + initialLiquidity, "incorrect token0 well amt");
+        assertEq(wellBalanceAfter.tokens[1], initialLiquidity - amountOut, "incorrect token1 well amt");
     }
 
     function testFuzz_swapFrom_equalSwapFrom(uint token0AmtIn) public prank(user) {
@@ -129,8 +133,8 @@ contract WellSwapTest is TestHelper {
         uint maxAmountIn = 1000 * 1e18;
         amountOut = bound(amountOut, 0, 500 * 1e18);
 
-        Balances memory userBalancesBefore = getBalances(user);
-        Balances memory wellBalancesBefore = getBalances(address(well));
+        Balances memory userBalancesBefore = getBalances(user, well);
+        Balances memory wellBalancesBefore = getBalances(address(well), well);
 
         // Decrease reserve of token 1 by `amountOut` which is paid to user
         // FIXME: refactor for N tokens
@@ -151,8 +155,8 @@ contract WellSwapTest is TestHelper {
         emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut);
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
-        Balances memory userBalancesAfter = getBalances(user);
-        Balances memory wellBalancesAfter = getBalances(address(well));
+        Balances memory userBalancesAfter = getBalances(user, well);
+        Balances memory wellBalancesAfter = getBalances(address(well), well);
 
         assertEq(
             userBalancesBefore.tokens[0] - userBalancesAfter.tokens[0], calcAmountIn, "Incorrect token0 user balance"
@@ -183,11 +187,11 @@ contract WellSwapTest is TestHelper {
     }
 
     modifier check_noTokenBalanceChange() {
-        Balances memory userBefore = getBalances(address(user));
-        Balances memory wellBefore = getBalances(address(well));
+        Balances memory userBefore = getBalances(address(user), well);
+        Balances memory wellBefore = getBalances(address(well), well);
         _;
-        Balances memory userAfter = getBalances(address(user));
-        Balances memory wellAfter = getBalances(address(well));
+        Balances memory userAfter = getBalances(address(user), well);
+        Balances memory wellAfter = getBalances(address(well), well);
         // no change in token balances
         for (uint i = 0; i < tokens.length; ++i) {
             assertEq(userAfter.tokens[i], userBefore.tokens[i], "user token balance mismatch");
@@ -200,7 +204,7 @@ contract WellSwapTest is TestHelper {
     /// @dev
     function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint amountOut, uint i) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
-        Balances memory wellBalances = getBalances(address(well));
+        Balances memory wellBalances = getBalances(address(well), well);
         vm.assume(i < _tokens.length);
 
         // request more than the Well has. there is no input amount that could do this.
@@ -231,7 +235,7 @@ contract WellSwapTest is TestHelper {
         );
 
         // check assumption that reserves are empty
-        Balances memory wellBalances = getBalances(address(badWell));
+        Balances memory wellBalances = getBalances(address(badWell), badWell);
         assertEq(wellBalances.tokens[0], 0, "bad assumption: wellBalances.tokens[0] != 0");
         assertEq(wellBalances.tokens[1], 0, "bad assumption: wellBalances.tokens[1] != 0");
 
