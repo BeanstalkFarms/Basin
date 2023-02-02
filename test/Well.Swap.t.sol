@@ -175,16 +175,18 @@ contract WellSwapTest is TestHelper {
 
     /// @dev swapFrom: identical tokens results in no change in balances
     function testFuzz_swapFrom_sameToken(uint amountIn) public prank(user) check_noTokenBalanceChange {
+        Balances memory userBalance = getBalances(user, well);
         vm.assume(amountIn > 0);
-        vm.assume(amountIn <= tokens[0].balanceOf(user));
+        vm.assume(amountIn <= userBalance.tokens[0]);
         well.swapFrom(tokens[0], tokens[0], amountIn, 0, user);
         assertEq(well.getSwapOut(tokens[0], tokens[0], amountIn), amountIn, "getSwapOut mismatch");
     }
 
     /// @dev swapTo: identical tokens results in no change in balances
     function testFuzz_swapTo_sameToken(uint amountOut) public prank(user) check_noTokenBalanceChange {
+        Balances memory userBalance = getBalances(user, well);
         vm.assume(amountOut > 0);
-        vm.assume(amountOut <= tokens[0].balanceOf(user));
+        vm.assume(amountOut <= userBalance.tokens[0]);
         well.swapTo(tokens[0], tokens[0], 100e6, 0, user);
         assertEq(well.getSwapIn(tokens[0], tokens[0], amountOut), amountOut, "getSwapIn mismatch");
     }
