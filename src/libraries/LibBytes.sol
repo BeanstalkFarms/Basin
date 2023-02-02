@@ -30,12 +30,16 @@ library LibBytes {
     function storeUint128(bytes32 slot, uint[] memory reserves) internal {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
-            bytes16 temp;
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
             require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
-                temp := mload(add(reserves, 64))
-                sstore(slot, add(shl(128, mload(add(reserves, 32))), shr(128, shl(128, mload(add(reserves, 64))))))
+                sstore(
+                    slot,
+                    add(
+                        shl(128, mload(add(reserves, 32))),
+                        shr(128, shl(128, mload(add(reserves, 64))))
+                    )
+                )
             }
         } else {
             uint maxI = reserves.length / 2; // number of fully-packed slots
