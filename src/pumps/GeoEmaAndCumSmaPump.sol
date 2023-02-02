@@ -10,6 +10,8 @@ import "src/libraries/LibBytes16.sol";
 import "src/libraries/LibLastReserveBytes.sol";
 import "oz/utils/math/SafeCast.sol";
 
+
+// TODO: Remove this import
 import "forge-std/console.sol";
 /**
  * @author Publius
@@ -156,9 +158,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         (, , bytes16[] memory bytesReserves) = slot.readLastReserves();
         reserves = new uint[](bytesReserves.length);
         for (uint i = 0; i < reserves.length; i++) {
-            console.log('------------');
-            console.logInt(bytesReserves[i].to128x128());
-            console.logInt(bytesReserves[i].pow_2().to128x128());
             reserves[i] = bytesReserves[i].pow_2().toUInt();
         }
     }
@@ -215,33 +214,44 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function readCumulativeReserves(address well)
         public
         view
-        returns (uint[] memory cumulativeReserves)
+        returns (bytes memory cumulativeReserves)
     {
-        // bytes32 slot = fillLast12Bytes(well);
-        // (uint8 n, uint40 lastTimestamp, uint[] memory lastReserves) = slot.readLastReserves();
-        // uint offset = getSlotsOffset(n) * 2;
-        // assembly { slot := add(slot, offset) }
-        // cumulativeReserves = slot.readUint128(n);
-        // uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
-        // unchecked {
-        //     for (uint i = 0; i < cumulativeReserves.length; i++) {
-        //         cumulativeReserves[i] += lastReserves[i] * deltaTimestamp;
-        //     }
-        // }
+        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
+        cumulativeReserves = abi.encode(byteCumulativeReserves);
+    }
+
+    function _readCumulativeReserves(address well)
+        public
+        view
+        returns (bytes16[] memory cumulativeReserves)
+    {
+        bytes32 slot = fillLast12Bytes(well);
+        (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        uint offset = getSlotsOffset(n) * 2;
+        assembly { slot := add(slot, offset) }
+        cumulativeReserves = slot.readBytes16(n);
+        bytes16 deltaTimestamp = getDeltaTimestamp(lastTimestamp).fromUInt();
+        // TODO: Overflow desired ????
+        for (uint i = 0; i < cumulativeReserves.length; i++) {
+            cumulativeReserves[i] = cumulativeReserves[i].add(
+                lastReserves[i].mul(deltaTimestamp)
+            );
+            }
     }
 
     function readTwaReserves(
         address well,
-        uint[] memory startCumulativeReserves,
+        bytes calldata startCumulativeReserves,
         uint startTimestamp
-    ) public view returns (uint[] memory twaReserves, uint[] memory cumulativeReserves) {
-        // cumulativeReserves = readCumulativeReserves(well);
-        // twaReserves = new uint[](cumulativeReserves.length);
-        // for (uint i = 0; i < cumulativeReserves.length; i++) {
-        //     // TODO: Unchecked?
-        //     twaReserves[i] = (cumulativeReserves[i] - startCumulativeReserves[i]) / (block.timestamp - startTimestamp);
-        //     twaReserves[i] = exp2FromUD60x18(twaReserves[i]);
-        // }
+    ) public view returns (uint[] memory twaReserves, bytes memory cumulativeReserves) {
+        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
+        bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
+        twaReserves = new uint[](cumulativeReserves.length);
+        bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt(); // TODO: Verify no safe cast is desired
+        for (uint i = 0; i < cumulativeReserves.length; i++) {
+            // TODO: Unchecked?
+            twaReserves[i] = (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2().toUInt();
+        }
     }
 
     // TODO

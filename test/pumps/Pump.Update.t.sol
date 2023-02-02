@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
 import "src/pumps/GeoEmaAndCumSmaPump.sol";
-import {from18, to18} from "utils/PumpEncoder.sol";
+import {from18, to18} from "test/pumps/PumpHelpers.sol";
 
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
