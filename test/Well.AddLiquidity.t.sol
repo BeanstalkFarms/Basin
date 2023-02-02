@@ -17,8 +17,11 @@ contract WellAddLiquidityTest is TestHelper {
     /// this will ensure that subsequent tests run correctly.
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
+        Balances memory userBalance = getBalances(user, well);
+        Balances memory wellBalance = getBalances(address(well), well);
         for (uint i = 0; i < tokens.length; i++) {
-            assertEq(tokens[i].balanceOf(address(well)), initialLiquidity, "incorrect token reserve");
+            assertEq(userBalance.tokens[i], initialLiquidity, "incorrect user token reserve");
+            assertEq(wellBalance.tokens[i], initialLiquidity, "incorrect well token reserve");
         }
     }
 
@@ -169,9 +172,11 @@ contract WellAddLiquidityTest is TestHelper {
         amounts[1] = bound(y, 0, 1000e18);
 
         // expected new reserves after above amounts are added
+        Balances memory wellBalanceBeforeAddLiquidity = getBalances(address(well), well);
+
         uint[] memory reserves = new uint[](2);
-        reserves[0] = amounts[0] + tokens[0].balanceOf(address(well));
-        reserves[1] = amounts[1] + tokens[1].balanceOf(address(well));
+        reserves[0] = amounts[0] + wellBalanceBeforeAddLiquidity.tokens[0];
+        reserves[1] = amounts[1] + wellBalanceBeforeAddLiquidity.tokens[1];
 
         // calculate new LP tokens delivered to user
         Call memory _function = well.wellFunction();
@@ -183,13 +188,13 @@ contract WellAddLiquidityTest is TestHelper {
         emit AddLiquidity(amounts, lpAmountOut);
         well.addLiquidity(amounts, 0, user);
 
-        Balances memory userBalance = getBalances(user, well);
-        Balances memory wellBalance = getBalances(address(well), well);
+        Balances memory userBalanceAfterAddLiquidity = getBalances(user, well);
+        Balances memory wellBalanceAfterAddLiquidity = getBalances(address(well), well);
 
-        assertEq(userBalance.lp, lpAmountOut, "incorrect well user amt");
-        assertEq(userBalance.tokens[0], initialLiquidity - amounts[0], "incorrect token0 user amt");
-        assertEq(userBalance.tokens[1], initialLiquidity - amounts[1], "incorrect token1 user amt");
-        assertEq(wellBalance.tokens[0], initialLiquidity + amounts[0], "incorrect token0 well amt");
-        assertEq(wellBalance.tokens[1], initialLiquidity + amounts[1], "incorrect token1 well amt");
+        assertEq(userBalanceAfterAddLiquidity.lp, lpAmountOut, "incorrect well user amt");
+        assertEq(userBalanceAfterAddLiquidity.tokens[0], initialLiquidity - amounts[0], "incorrect token0 user amt");
+        assertEq(userBalanceAfterAddLiquidity.tokens[1], initialLiquidity - amounts[1], "incorrect token1 user amt");
+        assertEq(wellBalanceAfterAddLiquidity.tokens[0], initialLiquidity + amounts[0], "incorrect token0 well amt");
+        assertEq(wellBalanceAfterAddLiquidity.tokens[1], initialLiquidity + amounts[1], "incorrect token1 well amt");
     }
 }
