@@ -10,8 +10,9 @@ contract WellSkimTest is TestHelper {
 
     function test_initialized() public {
         // Well should have liquidity
-        assertEq(tokens[0].balanceOf(address(well)), 1000e18);
-        assertEq(tokens[1].balanceOf(address(well)), 1000e18);
+        Balances memory wellBalance = getBalances(address(well), well);
+        assertEq(wellBalance.tokens[0], 1000e18);
+        assertEq(wellBalance.tokens[1], 1000e18);
     }
 
     function testFuzz_skim(uint[2] calldata amounts) public prank(user) {

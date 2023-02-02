@@ -131,7 +131,9 @@ contract WellRemoveLiquidityTest is TestHelper {
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias`
     /// before liquidity is removed by `user`.
     function test_removeLiquidity_fuzzSwapBias(uint lpAmountBurned, uint imbalanceBias) public {
-        uint maxLpAmountIn = well.balanceOf(user);
+        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
+
+        uint maxLpAmountIn = userBalanceBeforeRemoveLiquidity.lp;
         lpAmountBurned = bound(lpAmountBurned, 100, maxLpAmountIn);
         imbalanceBias = bound(imbalanceBias, 0, 10e18);
 
@@ -146,10 +148,11 @@ contract WellRemoveLiquidityTest is TestHelper {
         uint[] memory tokenAmountsOut = new uint[](2);
         tokenAmountsOut = well.getRemoveLiquidityOut(lpAmountBurned);
 
+        Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
         // Calculate change in Well reserves after removing liquidity
         uint[] memory reserves = new uint[](2);
-        reserves[0] = tokens[0].balanceOf(address(well)) - tokenAmountsOut[0];
-        reserves[1] = tokens[1].balanceOf(address(well)) - tokenAmountsOut[1];
+        reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - tokenAmountsOut[0];
+        reserves[1] = wellBalanceBeforeRemoveLiquidity.tokens[1] - tokenAmountsOut[1];
 
         // Remove some of `user`'s liquidity and deliver them the tokens
         uint[] memory minAmountOut = new uint[](2);
@@ -157,19 +160,19 @@ contract WellRemoveLiquidityTest is TestHelper {
         emit RemoveLiquidity(lpAmountBurned, tokenAmountsOut);
         well.removeLiquidity(lpAmountBurned, minAmountOut, user);
 
-        Balances memory userBalance = getBalances(user, well);
-        Balances memory wellBalance = getBalances(address(well), well);
+        Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
+        Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
 
         // `user` balance of LP tokens decreases
-        assertEq(userBalance.lp, maxLpAmountIn - lpAmountBurned, "Incorrect lp output");
+        assertEq(userBalanceAfterRemoveLiquidity.lp, maxLpAmountIn - lpAmountBurned, "Incorrect lp output");
 
         // `user` balance of underlying tokens increases
         // NOTE: assumes the `user` starts with 0 balance
-        assertEq(userBalance.tokens[0], tokenAmountsOut[0], "Incorrect token0 user balance");
-        assertEq(userBalance.tokens[1], tokenAmountsOut[1], "Incorrect token1 user balance");
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[0], tokenAmountsOut[0], "Incorrect token0 user balance");
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[1], tokenAmountsOut[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
-        assertEq(wellBalance.tokens[0], reserves[0], "Incorrect token0 well reserve");
-        assertEq(wellBalance.tokens[1], reserves[1], "Incorrect token1 well reserve");
+        assertEq(wellBalanceAfterRemoveLiquidity.tokens[0], reserves[0], "Incorrect token0 well reserve");
+        assertEq(wellBalanceAfterRemoveLiquidity.tokens[1], reserves[1], "Incorrect token1 well reserve");
     }
 }
