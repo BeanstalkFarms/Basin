@@ -65,7 +65,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         Reserves memory b;
 
         // All reserves are stored starting at the msg.sender address
-        bytes32 slot = fillLast12Bytes(msg.sender);
+        bytes32 slot = getSlotForAddress(msg.sender);
 
         // Read: Last Timestamp & Last Reserves
         (, b.lastTimestamp, b.lastReserves) = slot.readLastReserves();
@@ -133,7 +133,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
-    function fillLast12Bytes(address addressValue) internal pure returns (bytes32) {
+    function getSlotForAddress(address addressValue) internal pure returns (bytes32) {
         return bytes32(bytes20(addressValue));
     }
 
@@ -169,7 +169,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     }
 
     function readLastReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = fillLast12Bytes(well);
+        bytes32 slot = getSlotForAddress(well);
         (, , bytes16[] memory bytesReserves) = slot.readLastReserves();
         reserves = new uint[](bytesReserves.length);
         for (uint i = 0; i < reserves.length; i++) {
@@ -182,7 +182,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      */
 
     function readLastInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = fillLast12Bytes(well);
+        bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
         uint offset = getSlotsOffset(n);
         assembly { slot := add(slot, offset) }
@@ -194,7 +194,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     }
 
     function readInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = fillLast12Bytes(well);
+        bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         uint offset = getSlotsOffset(n);
         assembly { slot := add(slot, offset) }
@@ -217,7 +217,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         view
         returns (bytes16[] memory reserves)
     {
-        bytes32 slot = fillLast12Bytes(well);
+        bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
         uint offset = getSlotsOffset(n) * 2;
         assembly {
@@ -240,7 +240,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         view
         returns (bytes16[] memory cumulativeReserves)
     {
-        bytes32 slot = fillLast12Bytes(well);
+        bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         uint offset = getSlotsOffset(n) * 2;
         assembly { slot := add(slot, offset) }
