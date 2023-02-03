@@ -71,13 +71,15 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         amounts[0] = bound(a0, 0, 750e18);
         amounts[1] = bound(a1, 0, 750e18);
 
+        Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
+        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
         // Calculate change in Well reserves after removing liquidity
         uint[] memory reserves = new uint[](2);
-        reserves[0] = tokens[0].balanceOf(address(well)) - amounts[0];
-        reserves[1] = tokens[1].balanceOf(address(well)) - amounts[1];
+        reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - amounts[0];
+        reserves[1] = wellBalanceBeforeRemoveLiquidity.tokens[1] - amounts[1];
 
         // lpAmountIn should be <= umaxLpAmountIn
-        uint maxLpAmountIn = well.balanceOf(user);
+        uint maxLpAmountIn = userBalanceBeforeRemoveLiquidity.lp;
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         // Calculate the new LP token supply after the Well's reserves are changed.
@@ -91,25 +93,29 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         emit RemoveLiquidity(lpAmountBurned, amounts);
         well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
 
-        Balances memory userBalance = getBalances(user, well);
-        Balances memory wellBalance = getBalances(address(well), well);
+        Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
+        Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
 
         // `user` balance of LP tokens decreases
-        assertEq(userBalance.lp, maxLpAmountIn - lpAmountIn, "Incorrect lp output");
+        assertEq(userBalanceAfterRemoveLiquidity.lp, maxLpAmountIn - lpAmountIn, "Incorrect lp output");
 
         // `user` balance of underlying tokens increases
-        assertEq(userBalance.tokens[0], amounts[0], "Incorrect token0 user balance");
-        assertEq(userBalance.tokens[1], amounts[1], "Incorrect token1 user balance");
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[0], amounts[0], "Incorrect token0 user balance");
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[1], amounts[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
         // Equal amount of liquidity of 1000e18 were added in the setup function hence the
         // well's reserves here are 2000e18 minus the amounts removed, as the initial liquidity
         // is 1000e18 of each token.
         assertEq(
-            wellBalance.tokens[0], (initialLiquidity + addedLiquidity) - amounts[0], "Incorrect token0 well reserve"
+            wellBalanceAfterRemoveLiquidity.tokens[0],
+            (initialLiquidity + addedLiquidity) - amounts[0],
+            "Incorrect token0 well reserve"
         );
         assertEq(
-            wellBalance.tokens[1], (initialLiquidity + addedLiquidity) - amounts[1], "Incorrect token1 well reserve"
+            wellBalanceAfterRemoveLiquidity.tokens[1],
+            (initialLiquidity + addedLiquidity) - amounts[1],
+            "Incorrect token1 well reserve"
         );
     }
 
@@ -151,7 +157,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove some of `user`'s liquidity and deliver them the tokens
-        uint maxLpAmountIn = well.balanceOf(user);
+        uint maxLpAmountIn = userBalanceBefore.lp;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts);
         well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
