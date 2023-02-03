@@ -2,9 +2,13 @@
 src = 'src'
 out = 'out'
 libs = ['lib', 'node_modules']
+fuzz = { runs = 256 }
 
 optimizer = true
 optimizer_runs = 800
+
+[profile.ci]
+fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',

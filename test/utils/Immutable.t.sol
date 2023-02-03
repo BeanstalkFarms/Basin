@@ -25,7 +25,7 @@ contract ImmutableTest is TestHelper {
             vm.assume(pumpBytes[i].length <= 4 * 32);
         }
         for (uint i = 0; i < pumpTargets.length; i++) {
-            vm.assume(pumpTargets[i] != address(0));
+            vm.assume(pumpTargets[i] > address(10));
         }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
