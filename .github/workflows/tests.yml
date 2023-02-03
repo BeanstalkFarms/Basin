@@ -26,5 +26,4 @@ jobs:
         run: forge build --sizes
 
       - name: Run tests
-        run: |
-          FOUNDRY_PROFILE=ci forge test -vvv
+        run: forge test -vvv
