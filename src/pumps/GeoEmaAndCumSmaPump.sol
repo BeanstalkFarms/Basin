@@ -10,19 +10,19 @@ import "src/libraries/LibBytes16.sol";
 import "src/libraries/LibLastReserveBytes.sol";
 import "oz/utils/math/SafeCast.sol";
 
-
 // TODO: Remove this import
 import "forge-std/console.sol";
+
 /**
+ * @title GeoEmaAndCumSmaPump
  * @author Publius
- * @title GeoEmaAndCumSmaPump stores a geometric EMA and cumulative geometric SMA for each reserve.
- * @dev
- * A Pump designed for use in Beanstalk with 2 tokens.
+ * @notice Stores a geometric EMA and cumulative geometric SMA for each reserve.
+ * @dev A Pump designed for use in Beanstalk with 2 tokens.
+ * 
  * This Pump has 3 main features:
- * 1. Multi-block MEV resistence reserves
- * 2. MEV-resistant Geometric EMA intended for instantaneous reserve queries
- * 3. MEV-resistant Cumulative Geometric intended for SMA reserve queries
- *
+ *  1. Multi-block MEV resistence reserves
+ *  2. MEV-resistant Geometric EMA intended for instantaneous reserve queries
+ *  3. MEV-resistant Cumulative Geometric intended for SMA reserve queries
  */
 contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
@@ -48,7 +48,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @param _blockTime The block time in the current EVM in seconds.
      * @param _A The geometric EMA constant. 0.9994445987e18 is a good value.
      */
-
     constructor(
         bytes16 _maxPercentChange,
         uint _blockTime,
@@ -64,15 +63,21 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     function update(uint[] calldata reserves, bytes calldata) external {
         Reserves memory b;
+
         // All reserves are stored starting at the msg.sender address
         bytes32 slot = fillLast12Bytes(msg.sender);
+
+        // Read: Last Timestamp & Last Reserves
         (, b.lastTimestamp, b.lastReserves) = slot.readLastReserves();
+
         // TODO: Finalize init condition. timestamp? lastReserve?
         if (b.lastTimestamp == 0) {
             initPump(slot, uint40(block.timestamp), reserves);
             return;
         }
 
+        // Read: Cumulative & EMA Reserves
+        // Start at the slot after `b.lastReserves`
         uint numSlots = getSlotsOffset(reserves.length);
         assembly { slot := add(slot, numSlots) }
         b.emaReserves = slot.readBytes16(reserves.length);
@@ -97,15 +102,15 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
         }
 
+        // Write: Cumulative & EMA Reserves
+        // Order matters: work backwards to avoid using a new memory var to count up
         slot.storeBytes16(b.cumulativeReserves);
         assembly { slot := sub(slot, numSlots) }
         slot.storeBytes16(b.emaReserves);
         assembly { slot := sub(slot, numSlots) }
-        slot.storeLastReserves(uint40(block.timestamp), b.lastReserves);
-    }
 
-    function fillLast12Bytes(address addressValue) internal pure returns (bytes32) {
-        return bytes32(bytes20(addressValue));
+        // Write: Last Timestamp & Last Reserves
+        slot.storeLastReserves(uint40(block.timestamp), b.lastReserves);
     }
 
     // General Helpers
@@ -125,6 +130,16 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         slot.storeBytes16(byteReserves); // EMA Reserves
     }
 
+    /**
+     * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
+     */
+    function fillLast12Bytes(address addressValue) internal pure returns (bytes32) {
+        return bytes32(bytes20(addressValue));
+    }
+
+    /**
+     * @dev Get the starting byte of the slot that contains the `n`th element of an array.
+     */
     function getSlotsOffset(uint n) internal pure returns (uint) {
         return ((n - 1) / 2 + 1) * 32;
     }
