@@ -8,8 +8,7 @@ optimizer = true
 optimizer_runs = 800
 
 [profile.ci]
-fuzz = { runs = 5_000 }
-max_test_rejects = 100000
+fuzz = { runs = 5_000, max_test_rejects = 100000 }
 
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
