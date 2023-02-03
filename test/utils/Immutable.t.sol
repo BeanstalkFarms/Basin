@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
@@ -23,10 +24,12 @@ contract ImmutableTest is TestHelper {
         uint8 nTokens
     ) public {
         vm.assume(numberOfPumps < 5);
-        for (uint i = 0; i < numberOfPumps; i++)
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpBytes[i].length <= 4 * 32);
-        for (uint i = 0; i < pumpTargets.length; i++)
-            vm.assume(pumpTargets[i] != address(0));
+        }
+        for (uint256 i = 0; i < pumpTargets.length; i++) {
+            vm.assume(pumpTargets[i] > address(10));
+        }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
 
@@ -36,7 +39,7 @@ contract ImmutableTest is TestHelper {
 
         // Etch mock pump at each target and build pumps array
         Call[] memory pumps = new Call[](numberOfPumps);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             pumps[i].target = pumpTargets[i];
             pumps[i].data = pumpBytes[i];
             vm.etch(pumpTargets[i], code);
@@ -53,7 +56,7 @@ contract ImmutableTest is TestHelper {
 
         // Check pumps
         Call[] memory _pumps = _well.pumps();
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i].target, pumps[i].target);
             assertEq(_pumps[i].data, pumps[i].data);
             assertEq(address(pumps[i].target).code, code, "Pump code should be etched");
@@ -64,9 +67,9 @@ contract ImmutableTest is TestHelper {
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
 
-        // Check token addresses; 
+        // Check token addresses;
         IERC20[] memory _tokens = _well.tokens();
-        for (uint i = 0; i < nTokens; i++) {
+        for (uint256 i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));
         }
     }

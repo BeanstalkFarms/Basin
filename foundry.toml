@@ -6,6 +6,11 @@ libs = ['lib', 'node_modules']
 optimizer = true
 optimizer_runs = 800
 
+[profile.ci]
+[fuzz]
+fuzz_runs = 5000
+max_test_rejects = 100000
+
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
 ]
