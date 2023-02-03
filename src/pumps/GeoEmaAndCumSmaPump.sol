@@ -229,7 +229,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     }
 
     function _readCumulativeReserves(address well)
-        public
+        internal
         view
         returns (bytes16[] memory cumulativeReserves)
     {
@@ -281,7 +281,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     /**
      * @dev Get the delta between the current and provided timestamp as a `uint256`.
      */
-    function getDeltaTimestamp(uint40 lastTimestamp) public view returns (uint) {
+    function getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint) {
         return uint(uint40(block.timestamp) - lastTimestamp);
     }
 }
