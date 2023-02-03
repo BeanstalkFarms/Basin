@@ -3,7 +3,11 @@
 pragma solidity ^0.8.17;
 
 /**
- * @title Lib Last Reserve Bytes
+ * @title LibLastReserveBytes
+ * @author Publius
+ * @notice  Contains byte operations used during storage reads & writes for Pumps.
+ * 
+ * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
  */
 library LibLastReserveBytes {
     function readN(bytes32 slot) internal view returns (uint8 n) {
