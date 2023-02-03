@@ -59,6 +59,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         A = _A;
     }
 
+    //////////////////////// PUMP ////////////////////////
+
     function attach(uint _n, bytes calldata pumpData) external {}
 
     function update(uint[] calldata reserves, bytes calldata) external {
@@ -72,7 +74,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
         // TODO: Finalize init condition. timestamp? lastReserve?
         if (b.lastTimestamp == 0) {
-            initPump(slot, uint40(block.timestamp), reserves);
+            _init(slot, uint40(block.timestamp), reserves);
             return;
         }
 
@@ -113,44 +115,36 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         slot.storeLastReserves(uint40(block.timestamp), b.lastReserves);
     }
 
-    // General Helpers
+    // TODO
+    function read(address well, bytes calldata readData) external view returns (bytes memory data) {}
 
-    function initPump(
+    /**
+     * @dev On first update for a particular Well, initialize oracle with
+     * reserves data.
+     */
+    function _init(
         bytes32 slot,
         uint40 lastTimestamp,
         uint[] memory reserves
     ) internal {
         bytes16[] memory byteReserves = new bytes16[](reserves.length);
+
+        // Skip {capReserve} since we have no prior reference
         for (uint i = 0; i < reserves.length; i++) {
             byteReserves[i] = reserves[i].fromUInt().log_2();
         }
+
+        // Write: Last Timestamp & Last Reserves
         slot.storeLastReserves(lastTimestamp, byteReserves);
+
+        // Write: EMA Reserves
+        // Start at the slot after `byteReserves`
         uint numSlots = getSlotsOffset(byteReserves.length);
         assembly { slot := add(slot, numSlots) }
         slot.storeBytes16(byteReserves); // EMA Reserves
     }
 
-    /**
-     * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
-     */
-    function getSlotForAddress(address addressValue) internal pure returns (bytes32) {
-        return bytes32(bytes20(addressValue));
-    }
-
-    /**
-     * @dev Get the starting byte of the slot that contains the `n`th element of an array.
-     */
-    function getSlotsOffset(uint n) internal pure returns (uint) {
-        return ((n - 1) / 2 + 1) * 32;
-    }
-
-    function getDeltaTimestamp(uint40 lastTimestamp) public view returns (uint) {
-        return uint(uint40(block.timestamp) - lastTimestamp);
-    }
-
-    /**
-     * Last Reserves
-     */
+    //////////////////////// LAST RESERVES ////////////////////////
 
     function capReserve(
         bytes16 lastReserve,
@@ -177,9 +171,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    /**
-     * EMA Reserves
-     */
+    //////////////////////// EMA RESERVES ////////////////////////
 
     function readLastInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
@@ -208,10 +200,11 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    /**
-     * Cumulative Reserves
-     */
+    //////////////////////// CUMULATIVE RESERVES ////////////////////////
 
+    /**
+     * @notice Read the latest cumulative reserves of `well`.
+     */
     function readLastCumulativeReserves(address well)
         public
         view
@@ -251,7 +244,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
             cumulativeReserves[i] = cumulativeReserves[i].add(
                 lastReserves[i].mul(deltaTimestamp)
             );
-            }
+        }
     }
 
     function readTwaReserves(
@@ -269,6 +262,26 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    // TODO
-    function read(address well, bytes calldata readData) external view returns (bytes memory data) {}
+    //////////////////////// HELPERS ////////////////////////
+
+    /**
+     * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
+     */
+    function getSlotForAddress(address addressValue) internal pure returns (bytes32) {
+        return bytes32(bytes20(addressValue));
+    }
+
+    /**
+     * @dev Get the starting byte of the slot that contains the `n`th element of an array.
+     */
+    function getSlotsOffset(uint n) internal pure returns (uint) {
+        return ((n - 1) / 2 + 1) * 32;
+    }
+
+    /**
+     * @dev Get the delta between the current and provided timestamp as a `uint256`.
+     */
+    function getDeltaTimestamp(uint40 lastTimestamp) public view returns (uint) {
+        return uint(uint40(block.timestamp) - lastTimestamp);
+    }
 }
