@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
@@ -8,7 +6,7 @@ pragma experimental ABIEncoderV2;
 /**
  * @title IWellFunction
  * @notice Defines a relationship between token reserves and LP token supply.
- * @dev Well Functions can contain arbitrary logic, but should be deterministic 
+ * @dev Well Functions can contain arbitrary logic, but should be deterministic
  * if expected to be used alongside a Pump. When interacing with a Well or
  * Well Function, always verify that the Well Function is valid.
  */
@@ -22,11 +20,11 @@ interface IWellFunction {
      * @return reserve The resulting reserve at the jth index
      */
     function calcReserve(
-        uint256[] memory reserves,
-        uint256 j,
-        uint256 lpTokenSupply,
+        uint[] memory reserves,
+        uint j,
+        uint lpTokenSupply,
         bytes calldata data
-    ) external view returns (uint256 reserve);
+    ) external view returns (uint reserve);
 
     /**
      * @notice Gets the LP token supply given a list of reserves.
@@ -35,9 +33,9 @@ interface IWellFunction {
      * @return lpTokenSupply The resulting supply of LP tokens
      */
     function calcLpTokenSupply(
-        uint256[] memory reserves,
+        uint[] memory reserves,
         bytes calldata data
-    ) external view returns (uint256 lpTokenSupply);
+    ) external view returns (uint lpTokenSupply);
 
     /**
      * @notice Returns the name of the Well function.
