@@ -63,6 +63,7 @@ contract ImmutableTest is TestHelper {
         // Check well function
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
+        assertEq(_well.wellFunctionAddress(), address(wellFunction));
 
         // Check token addresses;
         IERC20[] memory _tokens = _well.tokens();

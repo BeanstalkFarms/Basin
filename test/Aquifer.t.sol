@@ -87,4 +87,9 @@ contract AquiferTest is TestHelper {
         _wells = aquifer.getWellsByNTokens(getTokens(3));
         assertEq(_wells[0], wells[2]);
     }
+
+    function test_getWellByIndex() external {
+        address _well = aquifer.getWellByIndex(0);
+        assertEq(_well, wells[0]);
+    }
 }
