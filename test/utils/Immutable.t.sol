@@ -69,6 +69,7 @@ contract ImmutableTest is TestHelper {
         IERC20[] memory _tokens = _well.tokens();
         for (uint i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));
+            assertEq(address(_well.token(i)), address(tokens[i]));
         }
     }
 }
