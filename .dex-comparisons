@@ -1,0 +1,7 @@
+IntegrationTestGasComparisons:testFuzz_uniswapV2WethDaiAddLiquidity(uint256) (runs: 256, μ: 109626, ~: 109735)
+IntegrationTestGasComparisons:testFuzz_uniswapV2WethDaiSwap(uint256) (runs: 256, μ: 95555, ~: 95644)
+IntegrationTestGasComparisons:testFuzz_uniswapV3WethDaiSwap(uint256) (runs: 256, μ: 295406, ~: 373627)
+IntegrationTestGasComparisons:testFuzz_wellsWethDaiAddLiquidity(uint256,uint256) (runs: 256, μ: 97161, ~: 97159)
+IntegrationTestGasComparisons:testFuzz_wellsWethDaiRemoveLiquidity(uint256) (runs: 256, μ: 55288, ~: 55962)
+IntegrationTestGasComparisons:testFuzz_wellsWethDaiSwap(uint256) (runs: 256, μ: 74872, ~: 74981)
+IntegrationTestGasComparisons:test_uniswapV2WethDaiRemoveLiquidity(uint256) (runs: 256, μ: 46829, ~: 46900)

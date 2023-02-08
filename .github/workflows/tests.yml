@@ -27,3 +27,6 @@ jobs:
 
       - name: Run tests
         run: forge test -vvv
+
+      - name: Check gas snapshots
+        run: forge snapshot --match-path test/integration/IntegrationTestGasComparisons.sol --snap .dex-comparisons -vvv
