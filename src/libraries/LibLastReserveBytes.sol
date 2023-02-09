@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.17;
 
+//TODO: Remove import
+import {console} from "forge-std/console.sol";
+
 /**
  * @title Lib Last Reserve Bytes
  */
@@ -106,7 +109,7 @@ library LibLastReserveBytes {
                     assembly {
                         mstore(
                             add(reserves, mul(i, 32)),
-                            sload(add(slot, iByte))
+                            shl(128, sload(add(slot, iByte)))
                         )
                     }
                 }

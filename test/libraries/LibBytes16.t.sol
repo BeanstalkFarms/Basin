@@ -18,7 +18,6 @@ contract LibBytes16Test is TestHelper {
         bytes16[8] memory _reserves
     ) public {
         vm.assume(n <= NUM_RESERVES_MAX);
-        vm.assume(n == 2);
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         bytes16[] memory reserves = new bytes16[](n);
@@ -27,9 +26,21 @@ contract LibBytes16Test is TestHelper {
         }
         LibBytes16.storeBytes16(RESERVES_STORAGE_SLOT, reserves);
 
+        bytes32 slot = RESERVES_STORAGE_SLOT;
+        bytes32 test;
+        assembly {
+            test := sload(slot)
+        }
+        console.logBytes32(test);
+        assembly {
+            test := sload(add(slot, 32))
+        }
+        console.logBytes32(test);
+
         // Re-read reserves and compare
         bytes16[] memory reserves2 = LibBytes16.readBytes16(RESERVES_STORAGE_SLOT, n);
         for (uint i = 0; i < reserves2.length; i++) {
+            console.log(i);
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }
