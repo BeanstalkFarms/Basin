@@ -33,7 +33,9 @@ contract AquiferTest is TestHelper {
 
     //////////// DEPLOYMENT ////////////
 
-    /// @dev FIXME: unsure how this is passing when topic1 doesn't match
+    /// @dev events cannot be checked as the address is not known 
+    // prior to deployment
+    // FIXME: should we add a salt when deploying a well so that this can be tested?
     function test_boreEvent() external {
         IERC20[] memory _tokens = getTokens(2);
 
