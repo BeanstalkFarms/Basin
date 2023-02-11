@@ -33,7 +33,7 @@ contract AquiferTest is TestHelper {
 
     //////////// DEPLOYMENT ////////////
 
-    /// @dev events cannot be checked as the address is not known 
+    /// @dev events cannot be checked as the address is not known
     // prior to deployment
     // FIXME: should we add a salt when deploying a well so that this can be tested?
     function test_boreEvent() external {
