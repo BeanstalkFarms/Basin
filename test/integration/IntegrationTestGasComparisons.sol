@@ -39,11 +39,11 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         well.swapFrom(_tokens[1], _tokens[0], maxAmountIn, amountOut, address(this));
     }
 
-    function testFuzz_wells_WethDai_AddLiquidity(uint amountA, uint amountB) public {
+    function testFuzz_wells_WethDai_AddLiquidity(uint amount) public {
         vm.pauseGasMetering();
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(amountA, 1e18, 1000e18);
-        amounts[1] = bound(amountB, 1e18, 1000e18);
+        amounts[0] = bound(amount, 1e18, 1000e18);
+        amounts[1] = bound(amount, 1e18, 1000e18);
         vm.resumeGasMetering();
 
         well.addLiquidity(amounts, 0, address(this));
@@ -74,7 +74,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
     }
 
-    function test_uniswapV2_WethDai_RemoveLiquidity(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_RemoveLiquidity(uint amount) public {
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
 
