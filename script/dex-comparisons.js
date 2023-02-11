@@ -30,7 +30,7 @@ async function main() {
       dex + ',' + pair + ',' + testAction + ',' + testAverage + '\n';
   }
 
-  fs.writeFile('dexcomparison.csv', csvContent, function (err) {
+  fs.writeFile('./.dex-comparisons.csv', csvContent, function (err) {
     if (err) {
       console.error('Failed to write to file: ' + err);
     } else {

@@ -8,7 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "t": ". ./script/bin/env.sh; forge t -vvv"
+    "t": ". ./script/bin/env.sh; forge t -vvv",
+    "deploy:local": ". ./script/bin/env.sh; ./script/bin/deploy-local.sh",
+    "compare": "yarn t && node ./script/dex-comparisons.js"
   },
   "repository": {
     "type": "git",
