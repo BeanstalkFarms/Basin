@@ -42,7 +42,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         approveMaxTokens(_tokens, user2, address(well));
 
         // Mint mock tokens to TestHelper
-        mintTokens(_tokens, address(this), initialLiquidity * 10);
+        mintTokens(_tokens, address(this), initialLiquidity * 5);
         approveMaxTokens(_tokens, address(this), address(well));
 
         // Add initial liquidity from TestHelper

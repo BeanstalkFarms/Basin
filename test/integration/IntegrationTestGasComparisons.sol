@@ -29,26 +29,27 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         vm.rollFork(16_582_192);
 
         setupWell(_tokens);
+        _wellsInitializedHelper(); // do some swaps to make sure oracles initialized
     }
 
-    function testFuzz_wellsWethDaiSwap(uint amountOut) public {
+    function testFuzz_wells_WethDai_Swap(uint amountOut) public {
         uint maxAmountIn = 1000 * 1e18;
         amountOut = bound(amountOut, 1e18, 500 * 1e18);
 
-        well.swapFrom(_tokens[1], _tokens[0], maxAmountIn, amountOut, user);
+        well.swapFrom(_tokens[1], _tokens[0], maxAmountIn, amountOut, address(this));
     }
 
-    function testFuzz_wellsWethDaiAddLiquidity(uint amountA, uint amountB) public {
+    function testFuzz_wells_WethDai_AddLiquidity(uint amountA, uint amountB) public {
         vm.pauseGasMetering();
         uint[] memory amounts = new uint[](2);
         amounts[0] = bound(amountA, 1e18, 1000e18);
         amounts[1] = bound(amountB, 1e18, 1000e18);
         vm.resumeGasMetering();
 
-        well.addLiquidity(amounts, 0, user);
+        well.addLiquidity(amounts, 0, address(this));
     }
 
-    function testFuzz_wellsWethDaiRemoveLiquidity(uint amount) public {
+    function testFuzz_wells_WethDai_RemoveLiquidity(uint amount) public {
         vm.pauseGasMetering();
         uint[] memory amounts = new uint[](2);
         amounts[0] = bound(amount, 1e18, 1000e18);
@@ -63,17 +64,17 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uint[] memory minAmountsOut = new uint[](2);
         vm.resumeGasMetering();
 
-        well.removeLiquidity(lpAmountBurned, minAmountsOut, user);
+        well.removeLiquidity(lpAmountBurned, minAmountsOut, address(this));
     }
 
-    function testFuzz_uniswapV2WethDaiAddLiquidity(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_AddLiquidity(uint amount) public {
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
 
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
     }
 
-    function test_uniswapV2WethDaiRemoveLiquidity(uint amount) public {
+    function test_uniswapV2_WethDai_RemoveLiquidity(uint amount) public {
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
 
@@ -89,7 +90,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.removeLiquidity(address(WETH), address(DAI), liquidity, 1, 1, address(this), block.timestamp);
     }
 
-    function testFuzz_uniswapV2WethDaiSwap(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_Swap(uint amount) public {
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
@@ -102,7 +103,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
-    function testFuzz_uniswapV3WethDaiSwap(uint amount) public {
+    function testFuzz_uniswapV3_WethDai_Swap(uint amount) public {
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
 
@@ -126,6 +127,14 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         deal(address(DAI), address(this), amount * 2);
         WETH.approve(router, type(uint).max);
         DAI.approve(router, type(uint).max);
+        vm.resumeGasMetering();
+    }
+
+    function _wellsInitializedHelper() private {
+        vm.pauseGasMetering();
+        well.swapFrom(_tokens[0], _tokens[1], 1000 * 1e18, 500 * 1e18, address(this));
+        vm.warp(block.number + 1);
+        well.swapFrom(_tokens[1], _tokens[0], 500 * 1e18, 500 * 1e18, address(this));
         vm.resumeGasMetering();
     }
 }
