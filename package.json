@@ -24,6 +24,7 @@
   "devDependencies": {
     "husky": "8.0.3"
   },
+  "prepare": "husky install",
   "lint-staged": {
     "*.sol": "forge fmt"
   }
