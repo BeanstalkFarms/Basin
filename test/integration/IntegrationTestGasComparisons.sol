@@ -33,8 +33,10 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     }
 
     function testFuzz_wells_WethDai_Swap(uint amountOut) public {
+        vm.pauseGasMetering();
         uint maxAmountIn = 1000 * 1e18;
         amountOut = bound(amountOut, 1e18, 500 * 1e18);
+        vm.resumeGasMetering();
 
         well.swapFrom(_tokens[1], _tokens[0], maxAmountIn, amountOut, address(this));
     }
@@ -68,19 +70,20 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     }
 
     function testFuzz_uniswapV2_WethDai_AddLiquidity(uint amount) public {
+        vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
+        vm.resumeGasMetering();
 
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
     }
 
     function testFuzz_uniswapV2_WethDai_RemoveLiquidity(uint amount) public {
+        vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
 
-        vm.pauseGasMetering();
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
-
         address pair = uniV2Factory.getPair(address(WETH), address(DAI));
         uint liquidity = IERC20(pair).balanceOf(address(this));
         IERC20(pair).approve(address(uniV2Router), type(uint).max);
@@ -91,6 +94,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     }
 
     function testFuzz_uniswapV2_WethDai_Swap(uint amount) public {
+        vm.pauseGasMetering();
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
@@ -99,13 +103,16 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         path = new address[](2);
         path[0] = address(WETH);
         path[1] = address(DAI);
+        vm.resumeGasMetering();
 
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
     function testFuzz_uniswapV3_WethDai_Swap(uint amount) public {
+        vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
+        vm.resumeGasMetering();
 
         IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router.ExactInputSingleParams({
             tokenIn: address(WETH),
@@ -121,21 +128,21 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV3Router.exactInputSingle(params);
     }
 
+    /// @dev Approve the `router` to swap Test contract's tokens.
     function _uniSetupHelper(uint amount, address router) private {
-        vm.pauseGasMetering();
         deal(address(WETH), address(this), amount * 2);
         deal(address(DAI), address(this), amount * 2);
         WETH.approve(router, type(uint).max);
         DAI.approve(router, type(uint).max);
-        vm.resumeGasMetering();
     }
 
+    /// @dev Perform a few swaps on the provided Well to proper initialization.
     function _wellsInitializedHelper() private {
-        vm.pauseGasMetering();
         well.swapFrom(_tokens[0], _tokens[1], 1000 * 1e18, 500 * 1e18, address(this));
         vm.warp(block.number + 1);
         well.swapFrom(_tokens[1], _tokens[0], 500 * 1e18, 500 * 1e18, address(this));
-        vm.resumeGasMetering();
+        // vm.warp(block.number + 1);
+        // well.swapFrom(_tokens[1], _tokens[0], 250 * 1e18, 250 * 1e18, address(this));
     }
 }
 
