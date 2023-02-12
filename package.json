@@ -10,7 +10,9 @@
   "scripts": {
     "t": ". ./script/bin/env.sh; forge t -vvv",
     "deploy:local": ". ./script/bin/env.sh; ./script/bin/deploy-local.sh",
-    "compare": "yarn t && node ./script/dex-comparisons.js"
+    "compare": "forge snapshot --match-path test/integration/IntegrationTestGasComparisons.sol --snap .dex-comparisons",
+    "compare:check": "yarn compare --check",
+    "compare:csv": "node ./script/dex-comparisons.js"
   },
   "repository": {
     "type": "git",
