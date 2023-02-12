@@ -9,7 +9,7 @@ import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IPump} from "src/interfaces/IPump.sol";
 
-import {logger} from "script/helpers/Logger.sol";
+import {logger} from "script/deploy/helpers/Logger.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 

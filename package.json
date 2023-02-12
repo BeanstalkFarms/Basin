@@ -8,8 +8,12 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "t": ". ./script/bin/env.sh; forge t -vvv",
+    "deploy:local": ". ./script/bin/env.sh; ./script/bin/deploy-local.sh",
+    "compare": "forge snapshot --match-path test/integration/IntegrationTestGasComparisons.sol --snap .dex-comparisons",
+    "compare:check": "yarn compare --check",
+    "compare:csv": "node ./script/dex-comparisons.js"
   },
   "repository": {
     "type": "git",

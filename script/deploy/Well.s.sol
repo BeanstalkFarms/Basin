@@ -7,7 +7,7 @@ import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Script} from "forge-std/Script.sol";
 
-import {logger} from "script/helpers/Logger.sol";
+import {logger} from "script/deploy/helpers/Logger.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Well, Call, IWellFunction, IPump, IERC20} from "src/Well.sol";

@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 env:
   FOUNDRY_PROFILE: ci
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
 jobs:
   tests:
@@ -29,4 +30,4 @@ jobs:
         run: forge test -vvv
 
       - name: Check gas snapshots
-        run: forge snapshot --match-path test/integration/IntegrationTestGasComparisons.sol --snap .dex-comparisons --check --vvv
+        run: yarn compare
