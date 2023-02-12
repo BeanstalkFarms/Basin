@@ -86,27 +86,25 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
-     * @notice Returns the Auger that bored this Well.
-     * @dev Contains the address of the Auger contract.
-     *
-     * The Auger determines the Well's configurating. For example, one Auger might
-     * deploy Wells which support up to 8 tokens, while another might reduce the
-     * number of token slots to 2 to save bytecode size.
-     *
-     * Augers can be implemented to deploy Wells that optimize for particular
-     * use cases.
-     *
-     * Only Wells deployed by a verified Auger should be considered legitimate.
+     * @notice Returns the Aquifer that a Well was bored in.
+     * @dev Wells can be permissionlessly bored in an Aquifer.
+     * Aquifers stores the implementation that was used to bore the Well.
      */
-    function auger() external view returns (address);
+    function aquifer() external view returns (address);
 
     /**
-     * @notice Returns the tokens, Well function, and Pump associated with this Well.
+     * @notice Returns the Well data that the Well was bored with.
+     * @dev The existence and signature of Well data is determined by each individual implementation.
+     */
+    function wellData() external view returns (bytes memory);
+
+    /**
+     * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.
      */
     function well()
         external
         view
-        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, address _auger);
+        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, bytes memory _wellData, address aquifer);
 
     //////////// SWAP: FROM ////////////
 

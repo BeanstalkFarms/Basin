@@ -12,9 +12,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 import {LibBytes} from "src/libraries/LibBytes.sol";
 
-import {ImmutableTokens} from "src/utils/ImmutableTokens.sol";
-import {ImmutablePumps} from "src/utils/ImmutablePumps.sol";
-import {ImmutableWellFunction} from "src/utils/ImmutableWellFunction.sol";
+import {Clone} from "src/utils/Clone.sol";
 
 /**
  * @title Well
@@ -22,12 +20,12 @@ import {ImmutableWellFunction} from "src/utils/ImmutableWellFunction.sol";
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  */
-contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, ImmutablePumps, ReentrancyGuard {
+contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
     using SafeERC20 for IERC20;
 
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
-    address immutable __auger;
+    address immutable __aquifer;
 
     /**
      * @dev Construct a Well. Each Well is defined by its combination of
@@ -51,45 +49,47 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
     )
         ERC20(_name, _symbol)
         ERC20Permit(_name)
-        ImmutableTokens(_tokens)
-        ImmutableWellFunction(_function)
-        ImmutablePumps(_pumps)
         ReentrancyGuard()
     {
         for (uint i; i < _pumps.length; ++i) {
             IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
         }
-        __auger = msg.sender;
+        __aquifer = msg.sender;
     }
 
     //////////// WELL DEFINITION ////////////
 
     /**
      * @dev See {IWell.tokens}
+     * TODO - implement with Clone.sol
      */
-    function tokens() public view override(IWell, ImmutableTokens) returns (IERC20[] memory ts) {
-        ts = ImmutableTokens.tokens();
+    function tokens() public view returns (IERC20[] memory ts) {
     }
 
     /**
      * @dev See {IWell.wellFunction}
+     * TODO - implement with Clone.sol
      */
-    function wellFunction() public view override(IWell, ImmutableWellFunction) returns (Call memory) {
-        return ImmutableWellFunction.wellFunction();
+    function wellFunction() public view returns (Call memory) {
     }
 
     /**
      * @dev See {IWell.pumps}
+     * TODO - implement with Clone.sol
      */
-    function pumps() public view override(IWell, ImmutablePumps) returns (Call[] memory) {
-        return ImmutablePumps.pumps();
+    function pumps() public view returns (Call[] memory) {
     }
 
     /**
-     * @dev See {IWell.auger}
+     @dev See {IWell.wellData}
      */
-    function auger() external view override returns (address) {
-        return __auger;
+    function wellData() public view returns (bytes memory) {}
+
+    /**
+     * @dev See {IWell.aquifer}
+     */
+    function aquifer() public view override returns (address) {
+        return __aquifer;
     }
 
     /**
@@ -98,12 +98,38 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
     function well()
         external
         view
-        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, address _auger)
+        returns (
+            IERC20[] memory _tokens,
+            Call memory _wellFunction,
+            Call[] memory _pumps,
+            bytes memory _wellData,
+            address _aquifer
+    )
     {
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
-        _auger = __auger;
+        _aquifer = aquifer();
+    }
+
+    // TODO - implement with Clone.sol
+    function numberOfTokens() public view returns (uint) {
+        return 0;
+    }
+
+    // TODO - implement with Clone.sol
+    function numberOfPumps() public view returns (uint) {
+        return 0;
+    }
+
+    // TODO - implement with Clone.sol
+    function firstPumpTarget() public view returns (address) {
+        return address(0);
+    }
+
+    // TODO - implement with Clone.sol
+    function firstPumpBytes() public view returns (bytes memory) {
+        return new bytes(0);
     }
 
     //////////// SWAP: FROM ////////////

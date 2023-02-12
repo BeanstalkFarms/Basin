@@ -49,23 +49,33 @@ contract WellInitTest is TestHelper {
         }
     }
 
-    /// @dev auger
-    function test_auger() public {
-        check_auger(well.auger());
+    /// @dev aquifer
+    function test_aquifer() public {
+        check_aquifer(well.aquifer());
     }
 
-    function check_auger(address _auger) public {
-        assertEq(_auger, address(auger));
+    function check_aquifer(address _aquifer) public {
+        assertEq(_aquifer, address(aquifer));
+    }
+
+    //// @dev Well Data
+    function test_wellData() public {
+        check_wellData(well.wellData());
+    }
+
+    function check_wellData(bytes memory _wellData) public {
+        assertEq(_wellData, wellData);
     }
 
     /// @dev well
     function test_well() public {
-        (IERC20[] memory _wellTokens, Call memory _wellFunction, Call[] memory _wellPumps, address _auger) = well.well();
+        (IERC20[] memory _wellTokens, Call memory _wellFunction, Call[] memory _wellPumps, bytes memory _wellData, address _aquifer) = well.well();
 
         check_tokens(_wellTokens);
         check_wellFunction(_wellFunction);
         check_pumps(_wellPumps);
-        check_auger(_auger);
+        check_wellData(_wellData);
+        check_aquifer(_aquifer);
     }
 
     //////////// ERC20 LP Token ////////////

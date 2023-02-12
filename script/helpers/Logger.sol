@@ -12,8 +12,10 @@ library logger {
         console.log("\nWELL:", address(well));
         console.log("Name  \t", well.name());
         console.log("Symbol\t", well.symbol());
-        console.log("Auger \t", well.auger());
+        console.log("Aquifer \t", well.aquifer());
         console.log("tokens[0]\t", address(well.tokens()[0]));
         console.log("tokens[1]\t", address(well.tokens()[1]));
+        console.log("Data:");
+        console.logBytes(well.wellData());
     }
 }
