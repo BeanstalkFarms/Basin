@@ -1,6 +1,8 @@
 const fs = require('node:fs');
 const readline = require('node:readline');
 
+const FUZZ_RUNS = 5000;
+
 async function main() {
   const fileStream = fs.createReadStream('.dex-comparisons');
 
@@ -22,7 +24,7 @@ async function main() {
     const test = uniqueTest[2].split('(uint256)');
     const testAction = test[0].toUpperCase();
     const testAverage = test[1]
-      .split('(runs: 256, μ:')[1]
+      .split(`(runs: ${FUZZ_RUNS}, μ:`)[1]
       .split(', ~: ')[0]
       .trim();
 
