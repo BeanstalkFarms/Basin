@@ -4,4 +4,4 @@ IntegrationTestGasComparisons:testFuzz_uniswapV2_WethDai_Swap(uint256) (runs: 50
 IntegrationTestGasComparisons:testFuzz_uniswapV3_WethDai_Swap(uint256) (runs: 5000, μ: 297433, ~: 369109)
 IntegrationTestGasComparisons:testFuzz_wells_WethDai_AddLiquidity(uint256) (runs: 5000, μ: 77934, ~: 77928)
 IntegrationTestGasComparisons:testFuzz_wells_WethDai_RemoveLiquidity(uint256) (runs: 5000, μ: 53330, ~: 53878)
-IntegrationTestGasComparisons:testFuzz_wells_WethDai_Swap(uint256) (runs: 5000, μ: 71184, ~: 71184)
+IntegrationTestGasComparisons:testFuzz_wells_WethDai_Swap(uint256) (runs: 5000, μ: 62534, ~: 62739)
