@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {Test, console, stdError} from "forge-std/Test.sol";
 
 contract TestGasMetering is Test {
-
     //////////////////// GAS METERING ////////////////////
 
     /// @dev invariant test: pausing gas metering should always result
@@ -40,13 +39,13 @@ contract TestGasMetering is Test {
     }
 
     function test_gasleft_cost() public {
-        uint start = gasleft();  
-        uint hold = gasleft(); 
+        uint start = gasleft();
+        uint hold = gasleft();
         uint end = gasleft();
 
-        console.log("start - end", start, end, start-end);
-        console.log("start - hold", start, hold, start-hold);
-        console.log("hold - end", hold, end, hold-end);
+        console.log("start - end", start, end, start - end);
+        console.log("start - hold", start, hold, start - hold);
+        console.log("hold - end", hold, end, hold - end);
 
         assertTrue(true);
     }
@@ -57,7 +56,7 @@ contract TestGasMetering is Test {
         uint hold = gasleft();
         vm.resumeGasMetering();
         uint end = gasleft();
-        
+
         console.log("pauseGasMetering cost:", start - end);
         console.log("resumeGasMetering cost:", hold - end);
 

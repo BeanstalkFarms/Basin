@@ -165,7 +165,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     function _wellsInitializedHelper() private {
         // DAI -> WETH
         well.swapFrom(_tokens[0], _tokens[1], 1000 * 1e18, 500 * 1e18, address(this));
-        
+
         // WETH -> DAI
         vm.warp(block.number + 1);
         well.swapFrom(_tokens[1], _tokens[0], 500 * 1e18, 500 * 1e18, address(this));
