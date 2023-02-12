@@ -3,6 +3,13 @@ const readline = require('node:readline');
 
 const FUZZ_RUNS = 5000;
 
+const estimateGasUSD = (gasLimit) => {
+  const BASE_FEE = 30e-9; // 30 gwei
+  const PRIO_FEE = 1e-9; // 1 gwei
+  const ETH_PRICE_USD = 1500; // $1500
+  return gasLimit * (BASE_FEE + PRIO_FEE) * ETH_PRICE_USD;
+}
+
 async function main() {
   const fileStream = fs.createReadStream('.dex-comparisons');
 
@@ -11,7 +18,7 @@ async function main() {
     crlfDelay: Infinity,
   });
 
-  let csvContent = 'DEX,PAIR,ACTION,AVERAGE\n';
+  let csvContent = 'DEX,PAIR,ACTION,AVERAGE,"EST. COST"\n';
 
   for await (const line of rl) {
     const uniqueTest = line
@@ -29,7 +36,7 @@ async function main() {
       .trim();
 
     csvContent +=
-      dex + ',' + pair + ',' + testAction + ',' + testAverage + '\n';
+      dex + ',' + pair + ',' + testAction + ',' + testAverage + ',' + `$${estimateGasUSD(parseInt(testAverage)).toFixed(2)}` + '\n';
   }
 
   try {
