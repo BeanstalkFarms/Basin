@@ -14,50 +14,40 @@ interface IAquifer {
     /**
      * @notice Emitted when a Well is bored.
      * @param well The address of the new Well
+     * @param implementation The Well implementation
      * @param tokens The tokens in the Well
      * @param wellFunction The Well function
      * @param pumps The pumps to bore in the Well
-     * @param auger The auger that bored the Well
+     * @param wellData The Well data to implement into the Well
      */
-    event BoreWell(address well, IERC20[] tokens, Call wellFunction, Call[] pumps, address auger);
+    event BoreWell(
+        address well, 
+        address implementation, 
+        IERC20[] tokens, 
+        Call wellFunction, 
+        Call[] pumps, 
+        bytes wellData
+    );
 
     /**
      * @notice bores a Well with given parameters
-     * @param tokens The tokens in the Well
-     * @param wellFunction The Well function
-     * @param pumps The pumps in the Well
-     * @param auger The auger to bore the Well with
+     * @param implementation The Well implementation to clone
+     * @param constructorArgs The arguments to pass to the Well constructor (0x for none)
+     * @param initFunctionCall The function call to initialize the Well (0x for none)
+     * @param salt The salt to deploy the Well with (0x for none). See {LibClone}.
      * @return wellAddress The address of the Well
      */
     function boreWell(
-        IERC20[] calldata tokens,
-        Call calldata wellFunction,
-        Call[] calldata pumps,
-        IAuger auger
+        address implementation,
+        bytes calldata constructorArgs,
+        bytes calldata initFunctionCall,
+        bytes32 salt
     ) external returns (address wellAddress);
 
     /**
-     * @notice returns the Well at a given index.
-     */
-    function getWellByIndex(uint index) external view returns (address well);
-
-    /**
-     * @notice returns all wells with a given pair of tokens.
-     */
-    function getWellsBy2Tokens(IERC20 token0, IERC20 token1) external view returns (address[] memory wells);
-
-    /**
-     * @notice returns the ith well with a given pair of tokens.
-     */
-    function getWellBy2Tokens(IERC20 token0, IERC20 token1, uint i) external view returns (address well);
-
-    /**
-     * @notice returns all wells with a given list of tokens.
-     */
-    function getWellsByNTokens(IERC20[] calldata tokens) external view returns (address[] memory wells);
-
-    /**
-     * @notice returns the ith well with a given list of tokens.
-     */
-    function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well);
+    * @notice returns the implementation that a given Well was deployed with.
+    * @param well The Well to get the implementation of
+    * @return implementation The address of the implementation of a Well.
+    */
+    function wellImplementation(address well) external view returns (address implementation);
 }

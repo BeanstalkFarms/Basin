@@ -10,6 +10,7 @@ import {IAquifer} from "src/interfaces/IAquifer.sol";
 import {IAuger} from "src/interfaces/IAuger.sol";
 import {Well, IWell, Call, IERC20} from "src/Well.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
+import {LibClone} from "src/libraries/LibClone.sol";
 
 /**
  * @title Aquifer
@@ -19,12 +20,9 @@ import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 contract Aquifer is IAquifer, ReentrancyGuard {
     using LibContractInfo for address;
     using SafeCast for uint;
+    using LibClone for address;
 
-    uint public numberOfWells;
-
-    mapping(uint => address) wellsByIndex;
-    mapping(bytes32 => address[]) wellsBy2Tokens;
-    mapping(bytes32 => address[]) wellsByNTokens;
+    mapping(address => address) wellImplementations;
 
     constructor() ReentrancyGuard() {}
 
@@ -37,83 +35,43 @@ contract Aquifer is IAquifer, ReentrancyGuard {
      * the deployed Well.
      */
     function boreWell(
-        IERC20[] calldata tokens,
-        Call calldata wellFunction,
-        Call[] calldata pumps,
-        IAuger auger
+        address implementation,
+        bytes calldata constructorArgs,
+        bytes calldata initFunctionCall,
+        bytes32 salt
     ) external nonReentrant returns (address well) {
-        for (uint i; i < tokens.length - 1; i++) {
-            require(tokens[i] < tokens[i + 1], "LibWell: Tokens not alphabetical");
-        }
-
-        // Prepare
-        IWellFunction wellFunction_ = IWellFunction(wellFunction.target);
-
-        // name is in format `<token0Symbol>:...:<tokenNSymbol> <wellFunctionName> Well`
-        // symbol is in format `<token0Symbol>...<tokenNSymbol><wellFunctionSymbol>w`
-        string memory name = address(tokens[0]).getSymbol();
-        string memory symbol = name;
-        for (uint i = 1; i < tokens.length; ++i) {
-            name = string.concat(name, ":", address(tokens[i]).getSymbol());
-            symbol = string.concat(symbol, address(tokens[i]).getSymbol());
-        }
-        name = string.concat(name, " ", wellFunction_.name(), " Well");
-        symbol = string.concat(symbol, wellFunction_.symbol(), "w");
-
-        // Bore
-        well = auger.bore(name, symbol, tokens, wellFunction, pumps);
-
-        // Index
-        _indexWell(well, tokens);
-        emit BoreWell(well, tokens, wellFunction, pumps, address(auger));
-    }
-
-    /// @dev see {IAquifer.getWellByIndex}
-    function getWellByIndex(uint index) external view returns (address well) {
-        well = wellsByIndex[index];
-    }
-
-    /// @dev see {IAquifer.getWellsBy2Tokens}
-    function getWellsBy2Tokens(IERC20 token0, IERC20 token1) public view returns (address[] memory wells) {
-        wells = wellsBy2Tokens[keccak256(abi.encode(token0, token1))];
-    }
-
-    /// @dev see {IAquifer.getWellBy2Tokens}
-    function getWellBy2Tokens(IERC20 token0, IERC20 token1, uint i) public view returns (address well) {
-        well = getWellsBy2Tokens(token0, token1)[i];
-    }
-
-    /// @dev see {IAquifer.getWellsByNTokens}
-    function getWellsByNTokens(IERC20[] calldata tokens) public view returns (address[] memory wells) {
-        if (tokens.length == 2) wells = getWellsBy2Tokens(tokens[0], tokens[1]);
-        else wells = wellsByNTokens[keccak256(abi.encode(tokens))];
-    }
-
-    /// @dev see {IAquifer.getWellByNTokens}
-    function getWellByNTokens(IERC20[] calldata tokens, uint i) external view returns (address well) {
-        if (tokens.length == 2) {
-            well = getWellBy2Tokens(tokens[0], tokens[1], i);
+        if (constructorArgs.length > 0) {
+            if (salt.length > 0) {
+                well = implementation.cloneDeterministic(constructorArgs, salt);
+            } else {
+                well = implementation.clone(constructorArgs);
+            }
         } else {
-            well = getWellsByNTokens(tokens)[i];
-        }
-    }
-
-    /**
-     * @dev Indexes a Well by its tokens.
-     */
-    function _indexWell(address well, IERC20[] memory tokens) private {
-        wellsByIndex[numberOfWells] = well;
-        numberOfWells++;
-
-        for (uint i; i < tokens.length - 1; ++i) {
-            for (uint j = i + 1; j < tokens.length; ++j) {
-                wellsBy2Tokens[keccak256(abi.encode(tokens[i], tokens[j]))].push(well);
+            if (salt.length > 0) {
+                well = implementation.cloneDeterministic(salt);
+            } else {
+                well = implementation.clone();
             }
         }
 
-        // For gas efficiency reasons, if the number of tokens is 2, don't need to store it in both mappings.
-        if (tokens.length > 2) {
-            wellsByNTokens[keccak256(abi.encode(tokens))].push(well);
+        if (initFunctionCall.length > 0) {
+            (bool success, bytes memory returnData) = well.call(initFunctionCall);
+            require(success, string(returnData));
         }
+
+        wellImplementations[well] = implementation;
+
+        emit BoreWell(
+            well,
+            implementation,
+            IWell(well).tokens(),
+            IWell(well).wellFunction(),
+            IWell(well).pumps(),
+            IWell(well).wellData()
+        );
+    }
+
+    function wellImplementation(address well) external view returns (address implementation) {
+        return wellImplementations[well];
     }
 }

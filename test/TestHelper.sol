@@ -31,12 +31,13 @@ abstract contract TestHelper is Test {
 
     // Primary well
     Well well;
+    address wellImplementation;
     IERC20[] tokens; // Mock token addresses sorted lexicographically
     Call wellFunction; // Instantated during {deployWell}
     Call[] pumps; // Instantiated during upstream test
+    bytes wellData;
 
     // Factory / Registry
-    Auger auger;
     Aquifer aquifer;
 
     // initial liquidity amount given to users and wells
@@ -57,8 +58,8 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        auger = new Auger();
-        well = Well(auger.bore("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", tokens, _function, _pumps));
+        // FIXME: use aquifer
+        well = new Well("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", tokens, _function, _pumps);
 
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
@@ -114,6 +115,16 @@ abstract contract TestHelper is Test {
         for (uint i = 0; i < tokens.length; i++) {
             MockToken(address(tokens[i])).mint(recipient, amount);
         }
+    }
+
+    function deployWellImplementation() internal {
+        wellImplementation = address(new Well(
+            new string(0),
+            new string(0),
+            new IERC20[](0),
+            Call(address(0), new bytes(0)),
+            new Call[](0)
+        ));
     }
 
     /// @dev approve `spender` to use `owner` tokens
