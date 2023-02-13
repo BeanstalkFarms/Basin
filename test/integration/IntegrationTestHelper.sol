@@ -15,12 +15,17 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 abstract contract IntegrationTestHelper is TestHelper {
     using LibContractInfo for address;
 
-    function setupWell(IERC20[] memory _tokens, Well _well) internal {
+    function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](0);
-        setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
+        return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }
 
-    function setupWell(IERC20[] memory _tokens, Call memory _function, Call[] memory _pumps, Well _well) internal {
+    function setupWell(
+        IERC20[] memory _tokens,
+        Call memory _function,
+        Call[] memory _pumps,
+        Well _well
+    ) internal returns (Well) {
         wellFunction = _function;
         for (uint i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
@@ -45,7 +50,9 @@ abstract contract IntegrationTestHelper is TestHelper {
         approveMaxTokens(_tokens, address(this), address(_well));
 
         // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, _well);
+        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
+
+        return _well;
     }
 
     /// @dev mint mock tokens to each recipient
