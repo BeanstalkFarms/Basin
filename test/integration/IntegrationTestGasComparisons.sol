@@ -197,7 +197,6 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
-        vm.resumeGasMetering();
 
         IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router.ExactInputSingleParams({
             tokenIn: address(WETH),
@@ -209,7 +208,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
             amountOutMinimum: 0,
             sqrtPriceLimitX96: 0
         });
-
+        vm.resumeGasMetering();
         uniV3Router.exactInputSingle(params);
     }
 
