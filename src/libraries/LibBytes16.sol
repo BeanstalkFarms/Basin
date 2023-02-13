@@ -1,11 +1,14 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
 /**
- * @title LibBytes contains bytes operations used during storage reads & writes.
+ * @title LibBytes16
+ * @author Publius
+ * @notice Contains byte operations used during storage reads & writes for Pumps.
+ * 
+ * {LibBytes16} tightly packs an array of `bytes16` values into `n / 2` storage
+ * slots, where `n` is number of items to pack.
  */
 library LibBytes16 {
     bytes32 private constant ZERO_BYTES = bytes32(0);
