@@ -59,7 +59,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         A = _A;
     }
 
-    //////////////////////// PUMP ////////////////////////
+    //////////////////// PUMP ////////////////////
 
     // potentially check that the storage associated with the caller is empty
     function attach(uint _n, bytes calldata pumpData) external {}
@@ -145,7 +145,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         slot.storeBytes16(byteReserves); // EMA Reserves
     }
 
-    //////////////////////// LAST RESERVES ////////////////////////
+    //////////////////// LAST RESERVES ////////////////////
 
     function capReserve(
         bytes16 lastReserve,
@@ -173,7 +173,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    //////////////////////// EMA RESERVES ////////////////////////
+    //////////////////// EMA RESERVES ////////////////////
 
     function readLastInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
@@ -202,7 +202,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    //////////////////////// CUMULATIVE RESERVES ////////////////////////
+    //////////////////// CUMULATIVE RESERVES ////////////////////
 
     /**
      * @notice Read the latest cumulative reserves of `well`.
@@ -264,7 +264,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    //////////////////////// HELPERS ////////////////////////
+    //////////////////// HELPERS ////////////////////
 
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
