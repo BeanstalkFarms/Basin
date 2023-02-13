@@ -11,6 +11,7 @@ import {Well} from "src/Well.sol";
 contract IntegrationTestGasComparisons is IntegrationTestHelper {
     uint mainnetFork;
 
+    Well daiWethWell;
     ConstantProduct2 cp;
     bytes constant data = "";
 
@@ -33,7 +34,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         vm.rollFork(16_582_192);
 
         // Test contract has 5 * {TestHelper.initialLiquidity}
-        setupWell(_tokens);
+        setupWell(_tokens, daiWethWell);
         _wellsInitializedHelper();
     }
 
@@ -62,6 +63,8 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
         well.swapFrom(_tokens[1], _tokens[0], amountIn, 0, address(this));
     }
+
+    function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {}
 
     function testFuzz_wells_WethDai_AddLiquidity(uint amount) public {
         vm.pauseGasMetering();

@@ -15,12 +15,12 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 abstract contract IntegrationTestHelper is TestHelper {
     using LibContractInfo for address;
 
-    function setupWell(IERC20[] memory _tokens) internal {
+    function setupWell(IERC20[] memory _tokens, Well _well) internal {
         Call[] memory _pumps = new Call[](0);
-        setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps);
+        setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }
 
-    function setupWell(IERC20[] memory _tokens, Call memory _function, Call[] memory _pumps) internal {
+    function setupWell(IERC20[] memory _tokens, Call memory _function, Call[] memory _pumps, Well _well) internal {
         wellFunction = _function;
         for (uint i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
@@ -31,21 +31,21 @@ abstract contract IntegrationTestHelper is TestHelper {
         auger = new Auger();
         Aquifer aquifer = new Aquifer();
 
-        well = Well(aquifer.boreWell(_tokens, wellFunction, pumps, auger));
+        _well = Well(aquifer.boreWell(_tokens, wellFunction, pumps, auger));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, initialLiquidity);
         mintTokens(_tokens, user2, initialLiquidity);
 
-        approveMaxTokens(_tokens, user, address(well));
-        approveMaxTokens(_tokens, user2, address(well));
+        approveMaxTokens(_tokens, user, address(_well));
+        approveMaxTokens(_tokens, user2, address(_well));
 
         // Mint mock tokens to TestHelper
         mintTokens(_tokens, address(this), initialLiquidity * 5);
-        approveMaxTokens(_tokens, address(this), address(well));
+        approveMaxTokens(_tokens, address(this), address(_well));
 
         // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity);
+        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, _well);
     }
 
     /// @dev mint mock tokens to each recipient
@@ -63,11 +63,16 @@ abstract contract IntegrationTestHelper is TestHelper {
     }
 
     /// @dev add the same `amount` of liquidity for all underlying tokens
-    function addLiquidityEqualAmount(IERC20[] memory _tokens, address from, uint amount) internal prank(from) {
+    function addLiquidityEqualAmount(
+        IERC20[] memory _tokens,
+        address from,
+        uint amount,
+        Well _well
+    ) internal prank(from) {
         uint[] memory amounts = new uint[](_tokens.length);
         for (uint i = 0; i < _tokens.length; i++) {
             amounts[i] = amount;
         }
-        well.addLiquidity(amounts, 0, from);
+        _well.addLiquidity(amounts, 0, from);
     }
 }
