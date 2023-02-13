@@ -5,6 +5,8 @@ import {IntegrationTestHelper, IERC20, console, Balances} from "test/integration
 import {IUniswapV2Router, IUniswapV3Router, IUniswapV2Factory} from "test/integration/interfaces/IUniswap.sol";
 import {ConstantProduct2} from "test/TestHelper.sol";
 
+import {Well} from "src/Well.sol";
+
 /// @dev Tests gas usage of similar functions across Uniswap & Wells
 contract IntegrationTestGasComparisons is IntegrationTestHelper {
     uint mainnetFork;
@@ -18,6 +20,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     IWETH constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     IERC20 constant DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+    IERC20 constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
     IERC20[] _tokens = [DAI, IERC20(WETH)];
 
@@ -105,6 +108,22 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
+    function testFuzz_uniswapV2_WethDaiUsdc_Swap(uint amount) public {
+        vm.pauseGasMetering();
+        vm.assume(amount > 0);
+        amount = bound(amount, 1e18, 1000 * 1e18);
+        _uniSetupHelper(amount, address(uniV2Router));
+
+        address[] memory path;
+        path = new address[](3);
+        path[0] = address(WETH);
+        path[1] = address(DAI);
+        path[2] = address(USDC);
+
+        vm.resumeGasMetering();
+        uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
+    }
+
     function testFuzz_uniswapV2_WethDai_AddLiquidity(uint amount) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
@@ -149,6 +168,23 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         });
 
         uniV3Router.exactInputSingle(params);
+    }
+
+    function testFuzz_uniswapV3_WethDaiUsdc_Swap(uint amount) public {
+        vm.pauseGasMetering();
+        amount = bound(amount, 1e18, 1000 * 1e18);
+        _uniSetupHelper(amount, address(uniV3Router));
+
+        IUniswapV3Router.ExactInputParams memory params = IUniswapV3Router.ExactInputParams({
+            path: abi.encodePacked(address(WETH), uint24(3000), address(DAI), uint24(3000), address(USDC)),
+            recipient: msg.sender,
+            deadline: block.timestamp,
+            amountIn: amount,
+            amountOutMinimum: 0
+        });
+
+        vm.resumeGasMetering();
+        uniV3Router.exactInput(params);
     }
 
     //////////////////// SETUP HELPERS ////////////////////
