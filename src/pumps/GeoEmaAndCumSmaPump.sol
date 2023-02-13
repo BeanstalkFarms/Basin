@@ -44,9 +44,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     }
 
     /**
-     * @param _maxPercentChange The maximum percent change allowed in a single block. 18 decimal precision.
+     * @param _maxPercentChange The maximum percent change allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _blockTime The block time in the current EVM in seconds.
-     * @param _A The geometric EMA constant. 0.9994445987e18 is a good value.
+     * @param _A The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
     constructor(
         bytes16 _maxPercentChange,
@@ -61,12 +61,13 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     //////////////////////// PUMP ////////////////////////
 
+    // potentially check that the storage associated with the caller is empty
     function attach(uint _n, bytes calldata pumpData) external {}
 
     function update(uint[] calldata reserves, bytes calldata) external {
         Reserves memory b;
 
-        // All reserves are stored starting at the msg.sender address
+        // All reserves are stored starting at the msg.sender address slot in storage.
         bytes32 slot = getSlotForAddress(msg.sender);
 
         // Read: Last Timestamp & Last Reserves
@@ -151,6 +152,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
+        // TODO: What if reserve 0?
         if (reserve < lastReserve) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
             if (reserve < minReserve) reserve = minReserve;
@@ -268,14 +270,14 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
     function getSlotForAddress(address addressValue) internal pure returns (bytes32) {
-        return bytes32(bytes20(addressValue));
+        return bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
     }
 
     /**
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
     function getSlotsOffset(uint n) internal pure returns (uint) {
-        return ((n - 1) / 2 + 1) * 32;
+        return ((n - 1) / 2 + 1) * 32; // Maybe change to n * 32?
     }
 
     /**

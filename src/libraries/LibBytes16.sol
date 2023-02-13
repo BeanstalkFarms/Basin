@@ -51,7 +51,7 @@ library LibBytes16 {
                     sstore(
                         add(slot, mul(maxI, 32)),
                         add(
-                            shl(128, mload(add(reserves, add(iByte, 32)))),
+                            mload(add(reserves, add(iByte, 32))),
                             shr(128, sload(add(slot, maxI)))
                         )
                     )
