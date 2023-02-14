@@ -11,12 +11,16 @@ import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {from18, to18} from "test/pumps/PumpHelpers.sol";
 
 abstract contract IntegrationTestHelper is TestHelper {
     using LibContractInfo for address;
 
     function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
-        Call[] memory _pumps = new Call[](0);
+        Call[] memory _pumps = new Call[](1);
+        _pumps[0] = Call(address(new GeoEmaAndCumSmaPump(from18(0.5e18), 12, from18(0.9e18))), new bytes(0));
+
         return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }
 
@@ -27,16 +31,12 @@ abstract contract IntegrationTestHelper is TestHelper {
         Well _well
     ) internal returns (Well) {
         wellFunction = _function;
-        for (uint i = 0; i < _pumps.length; i++) {
-            pumps.push(_pumps[i]);
-        }
-
         initUser();
 
         auger = new Auger();
         Aquifer aquifer = new Aquifer();
 
-        _well = Well(aquifer.boreWell(_tokens, wellFunction, pumps, auger));
+        _well = Well(aquifer.boreWell(_tokens, wellFunction, _pumps, auger));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, initialLiquidity);

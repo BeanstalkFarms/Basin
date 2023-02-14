@@ -245,7 +245,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         daiWethWell.swapFrom(daiWethTokens[0], daiWethTokens[1], 1000 * 1e18, 500 * 1e18, address(this));
 
         // WETH -> DAI
-        vm.warp(block.number + 1);
+        vm.warp(block.timestamp + 1);
         daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this));
     }
 }
