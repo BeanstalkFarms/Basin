@@ -3,7 +3,14 @@
 pragma solidity ^0.8.17;
 
 /**
- * @title LibBytes contains bytes operations used during storage reads & writes.
+ * @title LibBytes
+ * @author Publius
+ * @notice Contains byte operations used during storage reads & writes.
+ *
+ * {LibBytes} tightly packs an array of `uint256` values into `n / 2` storage
+ * slots, where `n` is number of items to pack.
+ *
+ * Each value must be `<= type(uint128).max` in order pack properly.
  */
 library LibBytes {
     bytes32 private constant ZERO_BYTES = bytes32(0);
@@ -30,11 +37,9 @@ library LibBytes {
     function storeUint128(bytes32 slot, uint[] memory reserves) internal {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
-            bytes16 temp;
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
             require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
-                temp := mload(add(reserves, 64))
                 sstore(slot, add(shl(128, mload(add(reserves, 32))), shr(128, shl(128, mload(add(reserves, 64))))))
             }
         } else {
