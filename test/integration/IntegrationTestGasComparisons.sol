@@ -70,35 +70,44 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     }
 
     function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {
+        
         vm.pauseGasMetering();
         uint amountIn = bound(amountIn, 1e18, 1000e18);
 
         // approve WETH to send to pipeline
         WETH.approve(address(pipeline), type(uint).max);
+        
 
-        PipeCall[] memory _pipeCall = new PipeCall[](5);
+        // any user can approve pipeline for an arbritary set of assets. 
+        // this means that most users do not need to approve pipeline,
+        // unless this is the first instance of the token being used. 
+        // the increased risk in max approving all assets within pipeline is small,
+        // as any user can approve any contract to use the asset within pipeline. 
+        PipeCall[] memory _prePipeCall = new PipeCall[](2);
+         // Approve DAI:WETH Well to use pipeline's WETH
+        _prepipeCall[0].target = address(WETH);
+        _prepipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
+        // Approve DAI:USDC Well to use pipeline's DAI
+        _prepipeCall[1].target = address(DAI);
+        _prepipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
+        pipeline.multiPipe(_prepipeCall);
+
+        PipeCall[] memory _pipeCall = new PipeCall[](3);
         // Send WETH to pipeline
+
         _pipeCall[0].target = address(WETH);
         _pipeCall[0].data =
             abi.encodeWithSelector(WETH.transferFrom.selector, address(this), address(pipeline), amountIn);
 
-        // Approve DAI:WETH Well to use pipeline's WETH
-        _pipeCall[1].target = address(WETH);
-        _pipeCall[1].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
-
         // Swap WETH for DAI
-        _pipeCall[2].target = address(daiWethWell);
-        _pipeCall[2].data = abi.encodeWithSelector(
+        _pipeCall[1].target = address(daiWethWell);
+        _pipeCall[1].data = abi.encodeWithSelector(
             Well.swapFrom.selector, daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(pipeline)
         );
 
-        // Approve DAI:USDC Well to use pipeline's DAI
-        _pipeCall[3].target = address(DAI);
-        _pipeCall[3].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
-
         // Swap DAI for USDC
-        _pipeCall[4].target = address(daiUsdcWell);
-        _pipeCall[4].data = abi.encodeWithSelector(
+        _pipeCall[2].target = address(daiUsdcWell);
+        _pipeCall[2].data = abi.encodeWithSelector(
             Well.swapFrom.selector, daiUsdcTokens[0], daiUsdcTokens[1], amountIn / 2, 0, address(this)
         );
 
