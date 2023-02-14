@@ -4,7 +4,6 @@
 
 pragma solidity ^0.8.17;
 
-import "oz/token/ERC20/IERC20.sol";
 
 /**
  * @title LibContractInfo contains logic to call functions that return information about a given contract.
@@ -21,7 +20,11 @@ library LibContractInfo {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("symbol()"));
         symbol = new string(4);
         if (success) symbol = abi.decode(data, (string));
-        else assembly{ symbol := _contract }
+        else {
+            assembly {
+                mstore(add(symbol,0x20), shl(224, shr(128, _contract)))
+            }
+        }
     }
 
     /**
@@ -34,7 +37,7 @@ library LibContractInfo {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("name()"));
         name = new string(8);
         if (success) name = abi.decode(data, (string));
-        else assembly{ name := _contract }
+        else assembly{ name := mstore(add(symbol,0x20), shl(224, shr(128, _contract))) }
     }
 
     /**

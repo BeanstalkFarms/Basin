@@ -47,12 +47,8 @@ library LibMath {
         if(n % 2 == 0) {
             if (n == 2) return sqrt(a); // shortcut for square root
             if (n == 4) return sqrt(sqrt(a));
-            if (n == 6) return sqrt(sqrt(sqrt(a)));
-            if (n == 8) return sqrt(sqrt(sqrt(sqrt(a))));
-            if (n == 10) return sqrt(sqrt(sqrt(sqrt(sqrt(a)))));
-            if (n == 12) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))));
-            if (n == 14) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a)))))));
-            if (n == 16) return sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(sqrt(a))))))));
+            if (n == 8) return sqrt(sqrt(sqrt(a)));
+            if (n == 16) return sqrt(sqrt(sqrt(sqrt(a))));
         }
         // The scale factor is a crude way to turn everything into integer calcs.
         // Actually do ((10 ^ n) * x) ^ (1/n)
