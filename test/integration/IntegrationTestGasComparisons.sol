@@ -70,27 +70,25 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     }
 
     function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {
-        
         vm.pauseGasMetering();
         uint amountIn = bound(amountIn, 1e18, 1000e18);
 
         // approve WETH to send to pipeline
         WETH.approve(address(pipeline), type(uint).max);
-        
 
-        // any user can approve pipeline for an arbritary set of assets. 
+        // any user can approve pipeline for an arbritary set of assets.
         // this means that most users do not need to approve pipeline,
-        // unless this is the first instance of the token being used. 
+        // unless this is the first instance of the token being used.
         // the increased risk in max approving all assets within pipeline is small,
-        // as any user can approve any contract to use the asset within pipeline. 
+        // as any user can approve any contract to use the asset within pipeline.
         PipeCall[] memory _prePipeCall = new PipeCall[](2);
-         // Approve DAI:WETH Well to use pipeline's WETH
-        _prepipeCall[0].target = address(WETH);
-        _prepipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
+        // Approve DAI:WETH Well to use pipeline's WETH
+        _prePipeCall[0].target = address(WETH);
+        _prePipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
         // Approve DAI:USDC Well to use pipeline's DAI
-        _prepipeCall[1].target = address(DAI);
-        _prepipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
-        pipeline.multiPipe(_prepipeCall);
+        _prePipeCall[1].target = address(DAI);
+        _prePipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
+        pipeline.multiPipe(_prePipeCall);
 
         PipeCall[] memory _pipeCall = new PipeCall[](3);
         // Send WETH to pipeline
