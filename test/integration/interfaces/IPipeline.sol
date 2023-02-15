@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import {IERC20} from "test/integration/IntegrationTestHelper.sol";
+
 /**
  * @title IPipeline
  * @author Publius
@@ -36,4 +38,86 @@ interface IPipeline {
     function multiPipe(PipeCall[] calldata pipes) external payable returns (bytes[] memory results);
 
     function advancedPipe(AdvancedPipeCall[] calldata pipes) external payable returns (bytes[] memory results);
+}
+
+interface IDepot {
+    function advancedPipe(
+        AdvancedPipeCall[] calldata pipes,
+        uint value
+    ) external payable returns (bytes[] memory results);
+
+    function farm(bytes[] calldata data) external payable returns (bytes[] memory results);
+
+    function transferToken(IERC20 token, address recipient, uint amount, From fromMode, To toMode) external payable;
+}
+
+enum From {
+    EXTERNAL,
+    INTERNAL,
+    EXTERNAL_INTERNAL,
+    INTERNAL_TOLERANT
+}
+
+enum To {
+    EXTERNAL,
+    INTERNAL
+}
+
+interface IBeanstalk {
+    function transferInternalTokenFrom(
+        IERC20 token,
+        address sender,
+        address recipient,
+        uint amount,
+        To toMode
+    ) external payable;
+
+    function permitToken(
+        address owner,
+        address spender,
+        address token,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable;
+
+    function transferDeposit(
+        address sender,
+        address recipient,
+        address token,
+        uint32 season,
+        uint amount
+    ) external payable returns (uint bdv);
+
+    function transferDeposits(
+        address sender,
+        address recipient,
+        address token,
+        uint32[] calldata seasons,
+        uint[] calldata amounts
+    ) external payable returns (uint[] memory bdvs);
+
+    function permitDeposits(
+        address owner,
+        address spender,
+        address[] calldata tokens,
+        uint[] calldata values,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable;
+
+    function permitDeposit(
+        address owner,
+        address spender,
+        address token,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable;
 }

@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import {IntegrationTestHelper, IERC20, console, Balances} from "test/integration/IntegrationTestHelper.sol";
 import {IUniswapV2Router, IUniswapV3Router, IUniswapV2Factory} from "test/integration/interfaces/IUniswap.sol";
 import {ConstantProduct2} from "test/TestHelper.sol";
-import {IPipeline, PipeCall} from "test/integration/interfaces/IPipeline.sol";
+import {IPipeline, PipeCall, AdvancedPipeCall, IDepot, From, To} from "test/integration/interfaces/IPipeline.sol";
 import {Well} from "src/Well.sol";
 
 /// @dev Tests gas usage of similar functions across Uniswap & Wells
@@ -25,6 +25,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     IERC20 constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
     IPipeline pipeline = IPipeline(0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa);
+    IDepot depot = IDepot(0xDEb0f000082fD56C10f449d4f8497682494da84D);
 
     IERC20[] daiWethTokens = [DAI, IERC20(WETH)];
     IERC20[] daiUsdcTokens = [DAI, USDC];
@@ -73,8 +74,8 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         vm.pauseGasMetering();
         uint amountIn = bound(amountIn, 1e18, 1000e18);
 
-        // approve WETH to send to pipeline
-        WETH.approve(address(pipeline), type(uint).max);
+        WETH.approve(address(depot), type(uint).max);
+        deal(address(WETH), address(depot), amountIn * 5);
 
         // any user can approve pipeline for an arbritary set of assets.
         // this means that most users do not need to approve pipeline,
@@ -82,35 +83,42 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         // the increased risk in max approving all assets within pipeline is small,
         // as any user can approve any contract to use the asset within pipeline.
         PipeCall[] memory _prePipeCall = new PipeCall[](2);
+
+        // Approval transactions are done prior as pipeline is likley to have apporvals for popular
+        // tokens done already, and this will save gas. However, if the user has not approved pipeline
+        // they can check this off-chain, and decide to do the approval themselves.
+
         // Approve DAI:WETH Well to use pipeline's WETH
         _prePipeCall[0].target = address(WETH);
         _prePipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
+
         // Approve DAI:USDC Well to use pipeline's DAI
         _prePipeCall[1].target = address(DAI);
         _prePipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
+
         pipeline.multiPipe(_prePipeCall);
 
-        PipeCall[] memory _pipeCall = new PipeCall[](3);
-        // Send WETH to pipeline
-
-        _pipeCall[0].target = address(WETH);
-        _pipeCall[0].data =
-            abi.encodeWithSelector(WETH.transferFrom.selector, address(this), address(pipeline), amountIn);
-
+        AdvancedPipeCall[] memory _pipeCall = new AdvancedPipeCall[](2);
         // Swap WETH for DAI
-        _pipeCall[1].target = address(daiWethWell);
-        _pipeCall[1].data = abi.encodeWithSelector(
+        _pipeCall[0].target = address(daiWethWell);
+        _pipeCall[0].callData = abi.encodeWithSelector(
             Well.swapFrom.selector, daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(pipeline)
         );
-
+        _pipeCall[0].clipboard = abi.encodePacked(uint(0));
         // Swap DAI for USDC
-        _pipeCall[2].target = address(daiUsdcWell);
-        _pipeCall[2].data = abi.encodeWithSelector(
-            Well.swapFrom.selector, daiUsdcTokens[0], daiUsdcTokens[1], amountIn / 2, 0, address(this)
+        _pipeCall[1].target = address(daiUsdcWell);
+        _pipeCall[1].callData =
+            abi.encodeWithSelector(Well.swapFrom.selector, daiUsdcTokens[0], daiUsdcTokens[1], 0, 0, address(this));
+        _pipeCall[1].clipboard = clipboardHelper(false, 0, ClipboardType.singlePaste, 1, 0, 2);
+
+        bytes[] memory _farmCalls = new bytes[](2);
+        _farmCalls[0] = abi.encodeWithSelector(
+            depot.transferToken.selector, WETH, address(pipeline), amountIn, From.EXTERNAL, To.EXTERNAL
         );
+        _farmCalls[1] = abi.encodeWithSelector(depot.advancedPipe.selector, _pipeCall, 0);
 
         vm.resumeGasMetering();
-        pipeline.multiPipe(_pipeCall);
+        depot.farm(_farmCalls);
     }
 
     function testFuzz_wells_WethDai_AddLiquidity(uint amount) public {
@@ -254,6 +262,44 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         // WETH -> DAI
         vm.warp(block.timestamp + 1);
         daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this));
+    }
+
+    enum ClipboardType {
+        basic,
+        singlePaste,
+        MultiPaste
+    }
+
+    // clipboardHelper helps create the clipboard data for an AdvancePipeCall
+    /// @param useEther Whether or not the call uses ether
+    /// @param amount amount of ether to send
+    /// @param _type What type the advanceCall is.
+    /// @param returnDataIndex which previous advancedPipeCall
+    // to copy from, ordered by execution.
+    /// @param copyIndex what index to copy the data from.
+    // this will copy 32 bytes from the index.
+    /// @param pasteIndex what index to paste the copyData
+    // into calldata
+    function clipboardHelper(
+        bool useEther,
+        uint amount,
+        ClipboardType _type,
+        uint returnDataIndex,
+        uint copyIndex,
+        uint pasteIndex
+    ) public pure returns (bytes memory stuff) {
+        uint clipboardData;
+        clipboardData = clipboardData | uint(_type) << 248;
+
+        clipboardData = clipboardData | returnDataIndex << 160 | (copyIndex * 32) + 32 << 80 | (pasteIndex * 32) + 36;
+        if (useEther) {
+            // put 0x1 in second byte
+            // shift left 30 bytes
+            clipboardData = clipboardData | 1 << 240;
+            return abi.encodePacked(clipboardData, amount);
+        } else {
+            return abi.encodePacked(clipboardData);
+        }
     }
 }
 
