@@ -98,19 +98,67 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         );
         assertApproxEqAbs(balance, 0.25e16, 1);
     }
+    
+    ////////// Cap: Simulate
 
-    // function testPump2() public {
-    //     uint x;
-    //     uint y;
-    //     uint err;
-    //     for (uint i=1; i <= 128; ++i) {
-    //         x = 2**i;
-    //         y = i * 1e18-1;
-    //         err = x-unwrap(exp2(wrap(y)))/1e18;
-    //         console.log("i:", i);
-    //         console.log(err);
-    //         console.log(x);
-    //         console.log(err * 1e19/x);
-    //     }
-    // }
+    struct CapReservePoint {
+        uint256 j;
+        uint256 prev;
+        uint256 curr;
+        uint256 capped;
+    }
+
+    function testSim_capReserve_increase() public {
+        _simulate(1e16, 200e16, 16, "capReserve_increase");
+    }
+
+    function testSim_capReserve_decrease() public {
+        _simulate(1e16, 2e10, 32, "capReserve_decrease");
+    }
+    
+    function _simulate(
+        uint prev,
+        uint curr,
+        uint n,
+        string memory name
+    ) internal {
+        CapReservePoint[] memory pts = new CapReservePoint[](n);
+        uint capped = prev;
+        for (uint j = 1; j <= n; ++j) {
+            capped = ABDKMathQuad.toUInt(
+                _capReserve(
+                    ABDKMathQuad.fromUInt(prev).log_2(),
+                    ABDKMathQuad.fromUInt(curr).log_2(),
+                    ABDKMathQuad.fromUInt(j)
+                ).pow_2()
+            );
+            pts[j-1] = CapReservePoint(j, prev, curr, capped);
+        }
+        _save(name, abi.encode(pts));
+    }
+
+    function _save(
+        string memory f,
+        bytes memory s
+    ) internal {
+        string[] memory inputs = new string[](6);
+        inputs[0] = "python3";
+        inputs[1] = "test/pumps/simulate.py";
+        inputs[2] = "--data";
+        inputs[3] = _bytesToHexString(s);
+        inputs[4] = "--name";
+        inputs[5] = f;
+        vm.ffi(inputs);
+    }
+
+    function _bytesToHexString(bytes memory buffer) public pure returns (string memory) {
+        // Fixed buffer size for hexadecimal convertion
+        bytes memory converted = new bytes(buffer.length * 2);
+        bytes memory _base = "0123456789abcdef";
+        for (uint256 i = 0; i < buffer.length; i++) {
+            converted[i * 2] = _base[uint8(buffer[i]) / _base.length];
+            converted[i * 2 + 1] = _base[uint8(buffer[i]) % _base.length];
+        }
+        return string(abi.encodePacked("0x", converted));
+    }
 }
