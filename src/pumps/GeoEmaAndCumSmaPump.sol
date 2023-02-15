@@ -95,7 +95,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
 
         for (uint i = 0; i < reserves.length; i++) {
-            b.lastReserves[i] = capReserve(
+            b.lastReserves[i] = _capReserve(
                 b.lastReserves[i],
                 reserves[i].fromUInt().log_2(),
                 blocksPassed
@@ -130,7 +130,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     ) internal {
         bytes16[] memory byteReserves = new bytes16[](reserves.length);
 
-        // Skip {capReserve} since we have no prior reference
+        // Skip {_capReserve} since we have no prior reference
         for (uint i = 0; i < reserves.length; i++) {
             byteReserves[i] = reserves[i].fromUInt().log_2();
         }
@@ -147,7 +147,16 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     //////////////////// LAST RESERVES ////////////////////
 
-    function capReserve(
+    function readLastReserves(address well) public view returns (uint[] memory reserves) {
+        bytes32 slot = getSlotForAddress(well);
+        (, , bytes16[] memory bytesReserves) = slot.readLastReserves();
+        reserves = new uint[](bytesReserves.length);
+        for (uint i = 0; i < reserves.length; i++) {
+            reserves[i] = bytesReserves[i].pow_2().toUInt();
+        }
+    }
+
+    function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
         bytes16 blocksPassed
@@ -162,15 +171,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
             if (reserve > maxReserve) reserve = maxReserve;
         }
         cappedReserve = reserve;
-    }
-
-    function readLastReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = getSlotForAddress(well);
-        (, , bytes16[] memory bytesReserves) = slot.readLastReserves();
-        reserves = new uint[](bytesReserves.length);
-        for (uint i = 0; i < reserves.length; i++) {
-            reserves[i] = bytesReserves[i].pow_2().toUInt();
-        }
     }
 
     //////////////////// EMA RESERVES ////////////////////

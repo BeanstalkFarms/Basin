@@ -40,7 +40,6 @@ library ABDKMathQuad {
   /*
    * One.
    */
-   
   bytes16 internal constant ONE = 0x3fff0000000000000000000000000000;
 
   /**
@@ -1219,8 +1218,11 @@ library ABDKMathQuad {
     }
   }
 
-  // int constant uUint = 2 ** 128;
+  //////////////////// EXTENSIONS ////////////////////
 
+  /**
+   * @dev efficient calculation of x^y
+   */
   function powu(bytes16 x, uint256 y) internal pure returns (bytes16 result) {
       // Calculate the first iteration of the loop in advance.
       bytes16 uUint = fromUInt(1);
@@ -1237,6 +1239,6 @@ library ABDKMathQuad {
       }
   }
 
+  // int constant uUint = 2 ** 128;
   // int constant uUINT128 = 2 ** 128;
-
 }

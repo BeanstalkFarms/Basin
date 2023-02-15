@@ -12,7 +12,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
 
     constructor()
         GeoEmaAndCumSmaPump(
-            from18(0.5e18), // max percent change: 50%
+            from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // EVM block time
             from18(0.9994445987e18) // geometric EMA constant
         )
@@ -24,7 +24,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         uint256 balance = ABDKMathQuad.toUInt(
             // 1e16 -> 200e16 over 1 block is more than +/- 50%
             // First block:     1  * (1 + 50%) = 1.5     [e16]
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(200e16).log_2(),
                 ABDKMathQuad.fromUInt(1)
@@ -36,7 +36,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
     function test_capReserve_uncapped2BlockIncrease() public {
         uint256 balance = ABDKMathQuad.toUInt(
             // 1e16 -> 1.2e16 over 2 blocks is within +/- 50%
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(1.2e16).log_2(),
                 ABDKMathQuad.fromUInt(2)
@@ -50,7 +50,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
             // 1e16 -> 200e16 over 2 blocks is more than +/- 50%
             // First block:     1   * (1 + 50%) = 1.5    [e16]
             // Second block:    1.5 * (1 + 50%) = 2.25   [e16]
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(200e16).log_2(),
                 ABDKMathQuad.fromUInt(2)
@@ -64,7 +64,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
     function test_capReserve_capped1BlockDecrease() public {
         uint256 balance = ABDKMathQuad.toUInt(
             // 1e16 -> 0.000002e16 over 1 block is more than +/- 50%
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(2e10).log_2(),
                 ABDKMathQuad.fromUInt(1)
@@ -76,7 +76,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
     function test_capReserve_uncapped1BlockDecrease() public {
         uint256 balance = ABDKMathQuad.toUInt(
             // 1e16 -> 0.75e16 over 1 block is within +/- 50%
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(0.75e16).log_2(),
                 ABDKMathQuad.fromUInt(1)
@@ -90,7 +90,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
             // 1e16 -> 0.000002e16 over 2 blocks is more than +/- 50%
             // First block:     1   * (1 - 50%) = 0.5    [e16]
             // Second block:    0.5 * (1 - 50%) = 0.25   [e16]
-            capReserve(
+            _capReserve(
                 ABDKMathQuad.fromUInt(1e16).log_2(),
                 ABDKMathQuad.fromUInt(2e10).log_2(),
                 ABDKMathQuad.fromUInt(2)
