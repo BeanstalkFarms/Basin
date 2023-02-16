@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, Well, IERC20, Call} from "test/TestHelper.sol";
+import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 
 contract WellInitTest is TestHelper {
 
@@ -16,6 +16,14 @@ contract WellInitTest is TestHelper {
     /// @dev tokens
     function test_tokens() public {
         check_tokens(well.tokens());
+    }
+
+    function test_getReserves() public {
+        Balances memory wellBalance = getBalances(address(well), well);
+        uint[] memory reserves = well.getReserves();
+
+        assertEq(reserves[0], wellBalance.tokens[0]);
+        assertEq(reserves[1], wellBalance.tokens[1]);
     }
 
     function check_tokens(IERC20[] memory _wellTokens) private {
