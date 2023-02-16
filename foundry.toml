@@ -17,6 +17,7 @@ remappings = [
 ]
 
 [fmt]
+ignore = ["src/libraries/LibClone.sol", "src/utils/Clone.sol"]
 int_types = "short"
 line_length = 120
 multiline_func_header = "params_first"

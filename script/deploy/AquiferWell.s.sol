@@ -15,14 +15,15 @@ import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {Well} from "src/Well.sol";
-import {Auger} from "src/Auger.sol";
 import {Aquifer} from "src/Aquifer.sol";
+
+import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
 /**
  * @dev Script to deploy a BEAN-ETH {Well} with a ConstantProduct2 pricing function
  * and MockPump via an Aquifer.
  */
-contract DeployAquiferWell is Script {
+contract DeployAquiferWell is Script, WellDeployer {
     using SafeERC20 for IERC20;
 
     IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
@@ -37,9 +38,8 @@ contract DeployAquiferWell is Script {
         tokens[0] = BEAN;
         tokens[1] = WETH;
 
-        // Deploy Aquifer/Auger
-        Aquifer aquifer = new Aquifer();
-        Auger auger = new Auger();
+        // Deploy Aquifer
+        address aquifer = address(new Aquifer());
 
         // Well Function
         IWellFunction cp2 = new ConstantProduct2();
@@ -50,8 +50,11 @@ contract DeployAquiferWell is Script {
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call(address(mockPump), new bytes(0));
 
+        // Well implementation
+        address wellImplementation = address(new Well());
+
         //bore well
-        Well well = Well(aquifer.boreWell(tokens, wellFunction, pumps, auger));
+        Well well = boreWell(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
 
         console.log("Deployed CP2 at address: ", address(cp2));
         console.log("Deployed Pump at address: ", address(pumps[0].target));

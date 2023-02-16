@@ -2,16 +2,14 @@
 pragma solidity ^0.8.17;
 
 import {Test, console, stdError} from "forge-std/Test.sol";
-import {Users} from "test/helpers/Users.sol";
-import {TestHelper, Balances} from "test/TestHelper.sol";
-
 import {Well, Call, IERC20} from "src/Well.sol";
-import {Auger} from "src/Auger.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {LibContractInfo} from "script/helpers/LibContractInfo.sol";
+import {Users} from "test/helpers/Users.sol";
+import {TestHelper, Balances} from "test/TestHelper.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 
 abstract contract IntegrationTestHelper is TestHelper {
@@ -30,29 +28,26 @@ abstract contract IntegrationTestHelper is TestHelper {
         Call[] memory _pumps,
         Well _well
     ) internal returns (Well) {
-        wellFunction = _function;
-        initUser();
+        // wellFunction = _function;
+        // initUser();
 
-        auger = new Auger();
-        Aquifer aquifer = new Aquifer();
+        // _well = boreWell(_tokens, wellFunction, _pumps);
 
-        _well = Well(aquifer.boreWell(_tokens, wellFunction, _pumps, auger));
+        // // Mint mock tokens to user
+        // mintTokens(_tokens, user, initialLiquidity);
+        // mintTokens(_tokens, user2, initialLiquidity);
 
-        // Mint mock tokens to user
-        mintTokens(_tokens, user, initialLiquidity);
-        mintTokens(_tokens, user2, initialLiquidity);
+        // approveMaxTokens(_tokens, user, address(_well));
+        // approveMaxTokens(_tokens, user2, address(_well));
 
-        approveMaxTokens(_tokens, user, address(_well));
-        approveMaxTokens(_tokens, user2, address(_well));
+        // // Mint mock tokens to TestHelper
+        // mintTokens(_tokens, address(this), initialLiquidity * 5);
+        // approveMaxTokens(_tokens, address(this), address(_well));
 
-        // Mint mock tokens to TestHelper
-        mintTokens(_tokens, address(this), initialLiquidity * 5);
-        approveMaxTokens(_tokens, address(this), address(_well));
+        // // Add initial liquidity from TestHelper
+        // addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
 
-        // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
-
-        return _well;
+        // return _well;
     }
 
     /// @dev mint mock tokens to each recipient

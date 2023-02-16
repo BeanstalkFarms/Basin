@@ -10,9 +10,10 @@ import {MockPump} from "mocks/pumps/MockPump.sol";
 import {Users} from "test/helpers/Users.sol";
 
 import {Well, Call, IERC20} from "src/Well.sol";
-import {Auger} from "src/Auger.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+
+import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
@@ -21,7 +22,7 @@ struct Balances {
     uint lpSupply;
 }
 
-abstract contract TestHelper is Test {
+abstract contract TestHelper is Test, WellDeployer {
     using Strings for uint;
 
     // Users
@@ -31,12 +32,13 @@ abstract contract TestHelper is Test {
 
     // Primary well
     Well well;
+    address wellImplementation;
     IERC20[] tokens; // Mock token addresses sorted lexicographically
     Call wellFunction; // Instantated during {deployWell}
     Call[] pumps; // Instantiated during upstream test
+    bytes wellData;
 
     // Factory / Registry
-    Auger auger;
     Aquifer aquifer;
 
     // initial liquidity amount given to users and wells
@@ -57,9 +59,11 @@ abstract contract TestHelper is Test {
         deployMockTokens(n);
 
         // FIXME: manual name/symbol
-        auger = new Auger();
-        well = Well(auger.bore("TOKEN0:TOKEN1 Constant Product Well", "TOKEN0TOKEN1CPw", tokens, _function, _pumps));
-
+        // FIXME: use aquifer
+        deployWellImplementation();
+        aquifer = new Aquifer();
+        well = Well(boreWell(address(aquifer), wellImplementation, tokens, _function, _pumps, bytes32(0)));
+        
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
         mintTokens(user2, initialLiquidity);
@@ -84,7 +88,7 @@ abstract contract TestHelper is Test {
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokens(uint n) internal {
-        IERC20[] memory _tokens = new IERC20[](n);
+        // IERC20[] memory _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
             IERC20 temp = IERC20(
                 new MockToken(
@@ -93,19 +97,7 @@ abstract contract TestHelper is Test {
                     18 // decimals
                 )
             );
-            // Insertion sort
-            uint j;
-            if (i > 0) {
-                for (j = i; j >= 1 && temp < _tokens[j - 1]; j--) {
-                    _tokens[j] = _tokens[j - 1];
-                }
-                _tokens[j] = temp;
-            } else {
-                _tokens[0] = temp;
-            }
-        }
-        for (uint i = 0; i < n; i++) {
-            tokens.push(_tokens[i]);
+            tokens.push(temp);
         }
     }
 
@@ -114,6 +106,10 @@ abstract contract TestHelper is Test {
         for (uint i = 0; i < tokens.length; i++) {
             MockToken(address(tokens[i])).mint(recipient, amount);
         }
+    }
+
+    function deployWellImplementation() internal {
+        wellImplementation = address(new Well());
     }
 
     /// @dev approve `spender` to use `owner` tokens

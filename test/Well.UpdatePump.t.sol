@@ -2,13 +2,13 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, Call, MockPump} from "test/TestHelper.sol";
-import {MockFunctionNoName} from "mocks/functions/MockFunctionNoName.sol";
+import {MockEmptyFunction} from "mocks/functions/MockEmptyFunction.sol";
 
 contract WellUpdatePumpTest is TestHelper {
     Call _wellFunction;
 
     function setUp() public {
-        _wellFunction = Call(address(new MockFunctionNoName()), "");
+        _wellFunction = Call(address(new MockEmptyFunction()), "");
     }
 
     function test_updatePump(uint8 numPumps, bytes[4] memory pumpBytes) public {

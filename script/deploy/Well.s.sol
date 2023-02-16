@@ -7,16 +7,18 @@ import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Script} from "forge-std/Script.sol";
 
+import {WellDeployer} from "script/helpers/WellDeployer.sol";
 import {logger} from "script/deploy/helpers/Logger.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Well, Call, IWellFunction, IPump, IERC20} from "src/Well.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Aquifer} from "src/Aquifer.sol";
 
 /**
  * @dev Deploys a BEAN:WETH ConstantProduct2 Well. Intended for testing.
  */
-contract DeployWell is Script {
+contract DeployWell is Script, WellDeployer {
     IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
     IERC20 constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH9
 
@@ -38,14 +40,12 @@ contract DeployWell is Script {
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call(address(mockPump), new bytes(0));
 
+        address aquifer = address(new Aquifer());
+
+        address wellImplementation = address(new Well());
+
         // Well
-        Well well = new Well(
-            "BEAN:WETH Constant Product Well",
-            "BEAN:WETH",
-            tokens,
-            wellFunction,
-            pumps
-        );
+        Well well = boreWell(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
 
         console.log("Deployed CP2 at address: ", address(cp2));
         console.log("Deployed Pump at address: ", address(pumps[0].target));

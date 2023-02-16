@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, console} from "test/TestHelper.sol";
-import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
+import {LibContractInfo} from "script/helpers/LibContractInfo.sol";
 
 contract LibMathTest is TestHelper {
     using LibContractInfo for address;
@@ -12,14 +12,11 @@ contract LibMathTest is TestHelper {
     }
 
     function test_getSymbol() public {
-        assertEq(address(tokens[0]).getSymbol(), "TOKEN1");
+        assertEq(address(tokens[0]).getSymbol(), "TOKEN0");
     }
 
     function test_getName() public {
-        assertEq(address(tokens[0]).getName(), "Token 1");
+        assertEq(address(tokens[0]).getName(), "Token 0");
     }
 
-    function test_getDecimals() public {
-        assertEq(address(tokens[0]).getDecimals(), 18);
-    }
 }

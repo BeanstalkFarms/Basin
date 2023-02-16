@@ -2,19 +2,15 @@
 
 pragma solidity ^0.8.17;
 
-import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
-import {ERC20, ERC20Permit} from "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
+import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
+import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
-
+import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-
 import {LibBytes} from "src/libraries/LibBytes.sol";
-
-import {ImmutableTokens} from "src/utils/ImmutableTokens.sol";
-import {ImmutablePumps} from "src/utils/ImmutablePumps.sol";
-import {ImmutableWellFunction} from "src/utils/ImmutableWellFunction.sol";
+import {ClonePlus} from "src/utils/ClonePlus.sol";
 
 /**
  * @title Well
@@ -22,95 +18,98 @@ import {ImmutableWellFunction} from "src/utils/ImmutableWellFunction.sol";
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  */
-contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, ImmutablePumps, ReentrancyGuard {
+contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
+    using SafeCast for uint;
 
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
-    address immutable __auger;
+    function init(string memory name, string memory symbol) public initializer {
+        __ERC20Permit_init(name);
+        __ERC20_init(name, symbol);
 
-    /**
-     * @dev Construct a Well. Each Well is defined by its combination of
-     * ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`).
-     *
-     * For gas efficiency, these three components are placed in immutable
-     * storage during construction.
-     *
-     * {ImmutableTokens} stores up to 4 immutable token addresses.
-     * {ImmutableWellFunction} stores an immutable Well function {Call} struct.
-     * {ImmutablePump} stores up to 4 immutable Pump {Call[]} structs.
-     *
-     * Usage of Pumps is optional: set `_pumps.length` to 0 to disable.
-     */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        IERC20[] memory _tokens,
-        Call memory _function,
-        Call[] memory _pumps
-    )
-        ERC20(_name, _symbol)
-        ERC20Permit(_name)
-        ImmutableTokens(_tokens)
-        ImmutableWellFunction(_function)
-        ImmutablePumps(_pumps)
-        ReentrancyGuard()
-    {
-        for (uint i; i < _pumps.length; ++i) {
-            IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
+        Call[] memory _pumps = pumps();
+        for (uint i = 0; i < _pumps.length; i++) {
+            IPump(_pumps[i].target).attach(numberOfTokens(), new bytes(0));
         }
-        __auger = msg.sender;
     }
 
-    //////////// WELL DEFINITION ////////////
+    //////////////////// WELL DEFINITION ////////////////////
 
-    /**
-     * @dev See {IWell.tokens}
-     */
-    function tokens() public view override(IWell, ImmutableTokens) returns (IERC20[] memory ts) {
-        ts = ImmutableTokens.tokens();
+    function tokens() public pure returns (IERC20[] memory ts) {
+        ts = _getArgIERC20Array(136, numberOfTokens());
     }
 
-    /**
-     * @dev See {IWell.wellFunction}
-     */
-    function wellFunction() public view override(IWell, ImmutableWellFunction) returns (Call memory) {
-        return ImmutableWellFunction.wellFunction();
+    function wellFunction() public pure returns (Call memory _wellFunction) {
+        _wellFunction.target = wellFunctionAddress();
+        uint dataLoc = 136 + numberOfTokens() * 32;
+        _wellFunction.data = _getArgBytes(dataLoc, numberOfWellFunctionBytes());
     }
 
-    /**
-     * @dev See {IWell.pumps}
-     */
-    function pumps() public view override(IWell, ImmutablePumps) returns (Call[] memory) {
-        return ImmutablePumps.pumps();
+    function pumps() public pure returns (Call[] memory _pumps) {
+        if (numberOfPumps() == 0) return _pumps;
+        _pumps = new Call[](numberOfPumps());
+        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        uint numberOfPumpBytes;
+        for (uint i = 0; i < _pumps.length; i++) {
+            _pumps[i].target = _getArgAddress(dataLoc);
+            dataLoc += 20;
+            numberOfPumpBytes = _getArgUint256(dataLoc);
+            dataLoc += 32;
+            _pumps[i].data = _getArgBytes(dataLoc, numberOfPumpBytes);
+            dataLoc += numberOfPumpBytes;
+        }
     }
 
-    /**
-     * @dev See {IWell.auger}
-     */
-    function auger() external view override returns (address) {
-        return __auger;
+    function wellData() public pure returns (bytes memory) {}
+
+    function aquifer() public pure override returns (address) {
+        return _getArgAddress(0);
     }
 
-    /**
-     * @dev See {IWell.well}
-     */
     function well()
         external
-        view
-        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, address _auger)
+        pure
+        returns (
+            IERC20[] memory _tokens,
+            Call memory _wellFunction,
+            Call[] memory _pumps,
+            bytes memory _wellData,
+            address _aquifer
+        )
     {
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
-        _auger = __auger;
+        // _wellData = bytes(0); // FIXME
+        _aquifer = aquifer();
+    }
+    
+    function numberOfTokens() public pure returns (uint) {
+        return _getArgUint256(20);
     }
 
-    //////////// SWAP: FROM ////////////
+    function numberOfWellFunctionBytes() public pure returns (uint) {
+        return _getArgUint256(72);
+    }
 
-    /**
-     * @dev See {IWell.swapFrom}
-     */
+    function wellFunctionAddress() public pure returns (address) {
+        return _getArgAddress(52);
+    }
+
+    function numberOfPumps() public pure returns (uint) {
+        return _getArgUint256(104);
+    }
+
+    function firstPump() public pure returns (Call memory _pump) {
+        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        _pump.target = _getArgAddress(dataLoc);
+        uint numberOfPumpBytes = _getArgUint256(dataLoc + 20);
+        _pump.data = _getArgBytes(dataLoc + 52, numberOfPumpBytes);
+    }
+
+    //////////////////// SWAP: FROM ////////////////////
+
     function swapFrom(
         IERC20 fromToken,
         IERC20 toToken,
@@ -135,9 +134,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /**
-     * @dev See {IWell.getSwapOut}
-     */
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -149,11 +145,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
     }
 
-    //////////// SWAP: TO ////////////
+    //////////////////// SWAP: TO ////////////////////
 
-    /**
-     * @dev See {IWell.swapTo}
-     */
     function swapTo(
         IERC20 fromToken,
         IERC20 toToken,
@@ -178,9 +171,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /**
-     * @dev See {IWell.getSwapIn}
-     */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -191,10 +181,10 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         amountIn = _calcReserve(wellFunction(), reserves, i, totalSupply()) - reserves[i];
     }
 
-    //////////// SWAP: UTILITIES ////////////
+    //////////////////// SWAP: UTILITIES ////////////////////
 
     /**
-     * @dev executes token transfers and emits Swap event.
+     * @dev Executes token transfers and emits Swap event.
      */
     function _executeSwap(
         IERC20 fromToken,
@@ -208,11 +198,10 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
 
-    //////////// ADD LIQUIDITY ////////////
+    //////////////////// ADD LIQUIDITY ////////////////////
 
     /**
-     * @dev See {IWell.addLiquidity}.
-     * Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
+     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
      */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
@@ -235,9 +224,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
-    /**
-     * @dev See {IWell.getAddLiquidityOut}
-     */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -247,11 +233,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
     }
 
-    //////////// REMOVE LIQUIDITY: BALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
-    /**
-     * @dev See {IWell.removeLiquidity}
-     */
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
@@ -274,9 +257,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityOut}
-     */
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -288,11 +268,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         }
     }
 
-    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
+    //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
-    /**
-     * @dev See {IWell.removeLiquidityOneToken}
-     */
     function removeLiquidityOneToken(
         uint lpAmountIn,
         IERC20 tokenOut,
@@ -313,9 +290,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityOneTokenOut}
-     */
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,
         IERC20 tokenOut
@@ -345,9 +319,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
-    /**
-     * @dev See {IWell.removeLiquidityImbalanced}
-     */
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
@@ -368,9 +339,6 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityImbalancedIn}
-     */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -380,11 +348,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
     }
 
-    //////////// SKIM ////////////
+    //////////////////// SKIM ////////////////////
 
-    /**
-     * @dev See {IWell.skim}
-     */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -397,14 +362,14 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         }
     }
 
-    //////////// UPDATE PUMP ////////////
+    //////////////////// UPDATE PUMP ////////////////////
 
     /**
      * @dev Fetches the current token reserves of the Well and updates the Pumps.
      * Typically called before an operation that modifies the Well's reserves.
      */
-    function _updatePumps(uint numberOfTokens) internal returns (uint[] memory reserves) {
-        reserves = _getReserves(numberOfTokens);
+    function _updatePumps(uint _numberOfTokens) internal returns (uint[] memory reserves) {
+        reserves = _getReserves(_numberOfTokens);
 
         if (numberOfPumps() == 0) {
             return reserves;
@@ -412,7 +377,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
 
         // gas optimization: avoid looping if there is only one pump
         if (numberOfPumps() == 1) {
-            IPump(firstPumpTarget()).update(reserves, firstPumpBytes());
+            Call memory _pump = firstPump();
+            IPump(_pump.target).update(reserves, _pump.data);
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
@@ -421,11 +387,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         }
     }
 
-    //////////// GET & SET RESERVES ////////////
+    //////////////////// GET & SET RESERVES ////////////////////
 
-    /**
-     * @dev See {IWell.getReserves}
-     */
     function getReserves() external view returns (uint[] memory reserves) {
         reserves = _getReserves(numberOfTokens());
     }
@@ -433,8 +396,8 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
     /**
      * @dev Gets the Well's token reserves by reading from byte storage.
      */
-    function _getReserves(uint numberOfTokens) internal view returns (uint[] memory reserves) {
-        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, numberOfTokens);
+    function _getReserves(uint _numberOfTokens) internal view returns (uint[] memory reserves) {
+        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
     }
 
     /**
@@ -444,7 +407,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
 
-    //////////// WELL FUNCTION INTERACTION ////////////
+    //////////////////// WELL FUNCTION INTERACTION ////////////////////
 
     /**
      * @dev Calculates the LP token supply given a list of `reserves` from the provided
@@ -476,7 +439,7 @@ contract Well is ERC20Permit, IWell, ImmutableTokens, ImmutableWellFunction, Imm
         reserve = IWellFunction(_wellFunction.target).calcReserve(reserves, j, lpTokenSupply, _wellFunction.data);
     }
 
-    //////////// WELL TOKEN INDEXING ////////////
+    //////////////////// WELL TOKEN INDEXING ////////////////////
 
     /**
      * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.

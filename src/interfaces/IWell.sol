@@ -51,7 +51,7 @@ interface IWell {
      */
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut);
 
-    //////////// WELL DEFINITION ////////////
+    //////////////////// WELL DEFINITION ////////////////////
 
     /**
      * @notice Returns a list of ERC20 tokens supported by the Well.
@@ -86,29 +86,27 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
-     * @notice Returns the Auger that bored this Well.
-     * @dev Contains the address of the Auger contract.
-     *
-     * The Auger determines the Well's configurating. For example, one Auger might
-     * deploy Wells which support up to 8 tokens, while another might reduce the
-     * number of token slots to 2 to save bytecode size.
-     *
-     * Augers can be implemented to deploy Wells that optimize for particular
-     * use cases.
-     *
-     * Only Wells deployed by a verified Auger should be considered legitimate.
+     * @notice Returns the Aquifer that a Well was bored in.
+     * @dev Wells can be permissionlessly bored in an Aquifer.
+     * Aquifers stores the implementation that was used to bore the Well.
      */
-    function auger() external view returns (address);
+    function aquifer() external view returns (address);
 
     /**
-     * @notice Returns the tokens, Well function, and Pump associated with this Well.
+     * @notice Returns the Well data that the Well was bored with.
+     * @dev The existence and signature of Well data is determined by each individual implementation.
+     */
+    function wellData() external view returns (bytes memory);
+
+    /**
+     * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.
      */
     function well()
         external
         view
-        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, address _auger);
+        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, bytes memory _wellData, address aquifer);
 
-    //////////// SWAP: FROM ////////////
+    //////////////////// SWAP: FROM ////////////////////
 
     /**
      * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken`.
@@ -136,7 +134,7 @@ interface IWell {
      */
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut);
 
-    //////////// SWAP: TO ////////////
+    //////////////////// SWAP: TO ////////////////////
 
     /**
      * @notice Swaps from a maximum amount of `fromToken` to an exact amount of `toToken`.
@@ -164,7 +162,7 @@ interface IWell {
      */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn);
 
-    //////////// ADD LIQUIDITY ////////////
+    //////////////////// ADD LIQUIDITY ////////////////////
 
     /**
      * @notice Adds liquidity to the Well as multiple tokens in any ratio.
@@ -186,7 +184,7 @@ interface IWell {
      */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut);
 
-    //////////// REMOVE LIQUIDITY: BALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as all underlying tokens in a balanced ratio.
@@ -208,7 +206,7 @@ interface IWell {
      */
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut);
 
-    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
+    //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as a single underlying token.
@@ -238,7 +236,7 @@ interface IWell {
         IERC20 tokenOut
     ) external view returns (uint tokenAmountOut);
 
-    //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: IMBALANCED ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as multiple underlying tokens in any ratio.
@@ -260,14 +258,14 @@ interface IWell {
      */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn);
 
-    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
+    //////////////////// RESERVES////////////////////
 
     /**
      * @notice Gets the reserves of each token held by the Well.
      */
     function getReserves() external view returns (uint[] memory reserves);
 
-    //////////// SKIM ////////////
+    //////////////////// SKIM ////////////////////
 
     /**
      * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`.

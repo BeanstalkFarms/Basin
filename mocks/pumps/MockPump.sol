@@ -14,7 +14,7 @@ import "src/interfaces/pumps/IPump.sol";
 contract MockPump is IPump {
     bytes public lastData;
 
-    function attach(uint _n, bytes calldata data) external {
+    function attach(uint, bytes calldata) external {
         lastData = "0xATTACHED";
     }
 
@@ -22,7 +22,11 @@ contract MockPump is IPump {
         lastData = data;
     }
 
-    function read(address well, bytes calldata readData) external view returns (bytes memory data) {
+    function read(address, bytes calldata)
+        external
+        view
+        returns (bytes memory data)
+    {
         return lastData;
     }
 }
