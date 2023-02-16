@@ -28,8 +28,6 @@ contract Aquifer is IAquifer, ReentrancyGuard {
     /**
      * @dev see {IAquifer.boreWell}
      *
-     * Tokens in Well info struct must be alphabetically sorted.
-     *
      * The Aquifer takes an opinionated stance on the `name` and `symbol` of
      * the deployed Well.
      */
@@ -40,13 +38,13 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         bytes32 salt
     ) external nonReentrant returns (address well) {
         if (immutableData.length > 0) {
-            if (salt.length > 0) {
+            if (salt != bytes32(0)) {
                 well = implementation.cloneDeterministic(immutableData, salt);
             } else {
                 well = implementation.clone(immutableData);
             }
         } else {
-            if (salt.length > 0) {
+            if (salt != bytes32(0)) {
                 well = implementation.cloneDeterministic(salt);
             } else {
                 well = implementation.clone();
