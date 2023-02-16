@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity =0.8.17;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 /**
  * @title Cumulative Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
