@@ -144,6 +144,10 @@ abstract contract TestHelper is Test, WellDeployer {
         balances = Balances(tokenBalances, _well.balanceOf(account), _well.totalSupply());
     }
 
+    function increaseTime(uint _seconds) internal {
+        vm.warp(block.timestamp + _seconds);
+    }
+
     /// @dev impersonate `from`
     modifier prank(address from) {
         vm.startPrank(from);
