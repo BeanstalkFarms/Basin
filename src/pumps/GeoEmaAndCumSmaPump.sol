@@ -156,12 +156,27 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
+    /**
+     * @dev Adds a cap to the reserve value to prevent extreme changes.
+     * 
+     *  Linear space:
+     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ blocks)
+     *
+     *  Log space:
+     *     log2(max reserve) = log2(last reserve) + blocks*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
+     *
+     *     `bytes16 lastReserve`      <- log2(last reserve)
+     *     `bytes16 blocksPassed`     <- log2(blocks)
+     *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
+     *
+     *     ∴ `maxReserve = lastReserve + blocks*LOG_MAX_INCREASE`
+     */
     function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
-        // TODO: What if reserve 0?
+        // TODO: What if reserve 0? 
         if (reserve < lastReserve) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
             if (reserve < minReserve) reserve = minReserve;

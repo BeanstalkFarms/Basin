@@ -16,9 +16,7 @@ contract PumpUpdateTest is TestHelper {
 
     uint256 constant BLOCK_TIME = 12;
 
-    /**
-     * @dev for this test, `user` = a Well that's calling the Pump
-     */
+    /// @dev for this test, `user` = a Well that's calling the Pump
     function setUp() public {
         initUser();
         pump = new GeoEmaAndCumSmaPump(
@@ -35,24 +33,28 @@ contract PumpUpdateTest is TestHelper {
     }
 
     function test_initialized() public prank(user) {
+        // Last reserves are initialized with initial liquidity
         uint[] memory lastReserves = pump.readLastReserves(user);
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
 
+        // EMA reserves are initialized with initial liquidity
         uint[] memory lastEmaReserves = pump.readInstantaneousReserves(user);
         assertApproxEqAbs(lastEmaReserves[0], 1e6, 1);
         assertApproxEqAbs(lastEmaReserves[1], 2e6, 1);
 
+        // Cumulative reserves are initialized to zero
         bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(user);
         assertEq(lastCumulativeReserves[0], bytes16(0));
         assertEq(lastCumulativeReserves[1], bytes16(0));
     }
 
+    /// @dev no time has elapsed since prev update = no change
     function test_update_0Seconds() public prank(user) {
         b[0] = 2e6;
         b[1] = 1e6;
         pump.update(b, new bytes(0));
-
+        
         uint[] memory lastReserves = pump.readLastReserves(user);
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);

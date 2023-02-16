@@ -20,6 +20,28 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
 
     ////////// Cap: Increase
 
+    function testFuzz_capReserve_capped0BlockIncrease(uint256 last, uint256 curr) public {
+        // ensure that curr is greater than 2*last to simulate >= 100% increase
+        last = bound(last, 0, type(uint256).max / 2);
+        curr = bound(curr, last * 2, type(uint256).max);
+
+        console.log("last", last);
+        console.log("curr", curr);
+
+        uint256 balance = ABDKMathQuad.toUInt(
+            _capReserve(
+                ABDKMathQuad.fromUInt(last).log_2(),
+                ABDKMathQuad.fromUInt(curr).log_2(),
+                ABDKMathQuad.fromUInt(0)
+            ).pow_2()
+        );
+
+        // 0 block delta = no change
+        // FIXME: the fuzzer was able to find a case where some sort of double rounding error
+        // occurred which caused a delta of 2
+        assertApproxEqAbs(balance, last, 4);
+    }
+
     function test_capReserve_capped1BlockIncrease() public {
         uint256 balance = ABDKMathQuad.toUInt(
             // 1e16 -> 200e16 over 1 block is more than +/- 50%
