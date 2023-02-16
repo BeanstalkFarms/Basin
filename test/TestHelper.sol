@@ -96,23 +96,8 @@ abstract contract TestHelper is Test, WellDeployer {
                     18 // decimals
                 )
             );
-            //TODO: Decide if alphabetic is a requirement
             tokens.push(temp);
         }
-        //     // Insertion sort
-        //     uint j;
-        //     if (i > 0) {
-        //         for (j = i; j >= 1 && temp < _tokens[j - 1]; j--) {
-        //             _tokens[j] = _tokens[j - 1];
-        //         }
-        //         _tokens[j] = temp;
-        //     } else {
-        //         _tokens[0] = temp;
-        //     }
-        // }
-        // for (uint i = 0; i < n; i++) {
-        //     tokens.push(_tokens[i]);
-        // }
     }
 
     /// @dev mint mock tokens to each recipient

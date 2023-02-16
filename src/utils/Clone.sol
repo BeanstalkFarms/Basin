@@ -42,7 +42,7 @@ contract Clone {
     /// @param argOffset The offset of the arg in the packed data
     /// @param arrLen Number of elements in the array
     /// @return arr The array
-    function _getArgUint256Array(uint256 argOffset, uint64 arrLen)
+    function _getArgUint256Array(uint256 argOffset, uint256 arrLen)
         internal
         pure
       returns (uint256[] memory arr)

@@ -14,6 +14,8 @@ import {LibBytes} from "src/libraries/LibBytes.sol";
 
 import {ClonePlus} from "src/utils/ClonePlus.sol";
 
+import "oz/utils/math/SafeCast.sol";
+
 /**
  * @title Well
  * @author Publius, Silo Chad, Brean
@@ -22,6 +24,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  */
 contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
+    using SafeCast for uint;
 
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
@@ -40,18 +43,16 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      * @dev See {IWell.tokens}
      */
     function tokens() public pure returns (IERC20[] memory ts) {
-        // TODO: Safe cast or make numberOfWellFunctionBytes return uint64 or edit function signature..
-        ts = _getArgIERC20Array(136, uint64(numberOfTokens()));
+        ts = _getArgIERC20Array(136, numberOfTokens());
     }
 
     /**
      * @dev See {IWell.wellFunction}
      */
     function wellFunction() public pure returns (Call memory _wellFunction) {
-        _wellFunction.target = _getArgAddress(52);
+        _wellFunction.target = wellFunctionAddress();
         uint dataLoc = 136 + numberOfTokens() * 32;
-        // TODO: Safe cast or make numberOfWellFunctionBytes return uint64 or edit function signature..
-        _wellFunction.data = _getArgBytes(dataLoc, uint64(numberOfWellFunctionBytes()));
+        _wellFunction.data = _getArgBytes(dataLoc, numberOfWellFunctionBytes());
     }
 
     /**
@@ -67,7 +68,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             dataLoc += 20;
             numberOfPumpBytes = _getArgUint256(dataLoc);
             dataLoc += 32;
-            _pumps[i].data = _getArgBytes(dataLoc, uint64(numberOfPumpBytes));
+            _pumps[i].data = _getArgBytes(dataLoc, numberOfPumpBytes);
             dataLoc += numberOfPumpBytes;
         }
     }
@@ -112,6 +113,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         return _getArgUint256(72);
     }
 
+    function wellFunctionAddress() public pure returns (address) {
+        return _getArgAddress(52);
+    }
+
     function numberOfPumps() public pure returns (uint) {
         return _getArgUint256(104);
     }
@@ -120,7 +125,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
         _pump.target = _getArgAddress(dataLoc);
         uint numberOfPumpBytes = _getArgUint256(dataLoc + 20);
-        _pump.data = _getArgBytes(dataLoc + 52, uint64(numberOfPumpBytes));
+        _pump.data = _getArgBytes(dataLoc + 52, numberOfPumpBytes);
     }
 
     //////////// SWAP: FROM ////////////
