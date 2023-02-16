@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
@@ -60,11 +61,7 @@ contract PumpFuzzTest is TestHelper {
 
         // TODO: remove time increase
         if (timeIncrease > 0) {
-            (uint[] memory twaReserves,) = pump.readTwaReserves(
-                user,
-                startCumulativeReserves,
-                startTimestamp
-            );
+            (uint[] memory twaReserves,) = pump.readTwaReserves(user, startCumulativeReserves, startTimestamp);
             for (uint i = 0; i < n; i++) {
                 if (reserves[i] > 1e20) {
                     assertApproxEqRel(twaReserves[i], reserves[i], 1);

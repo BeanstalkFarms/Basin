@@ -18,7 +18,7 @@ import "forge-std/console.sol";
  * @author Publius
  * @notice Stores a geometric EMA and cumulative geometric SMA for each reserve.
  * @dev A Pump designed for use in Beanstalk with 2 tokens.
- * 
+ *
  * This Pump has 3 main features:
  *  1. Multi-block MEV resistence reserves
  *  2. MEV-resistant Geometric EMA intended for instantaneous reserve queries
@@ -48,11 +48,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @param _blockTime The block time in the current EVM in seconds.
      * @param _A The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
-    constructor(
-        bytes16 _maxPercentChange,
-        uint _blockTime,
-        bytes16 _A
-    ) {
+    constructor(bytes16 _maxPercentChange, uint _blockTime, bytes16 _A) {
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentChange).log_2();
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentChange).log_2();
         BLOCK_TIME = _blockTime;
@@ -82,9 +78,13 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Read: Cumulative & EMA Reserves
         // Start at the slot after `b.lastReserves`
         uint numSlots = getSlotsOffset(reserves.length);
-        assembly { slot := add(slot, numSlots) }
+        assembly {
+            slot := add(slot, numSlots)
+        }
         b.emaReserves = slot.readBytes16(reserves.length);
-        assembly { slot := add(slot, numSlots) }
+        assembly {
+            slot := add(slot, numSlots)
+        }
         b.cumulativeReserves = slot.readBytes16(reserves.length);
 
         uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
@@ -108,9 +108,13 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Write: Cumulative & EMA Reserves
         // Order matters: work backwards to avoid using a new memory var to count up
         slot.storeBytes16(b.cumulativeReserves);
-        assembly { slot := sub(slot, numSlots) }
+        assembly {
+            slot := sub(slot, numSlots)
+        }
         slot.storeBytes16(b.emaReserves);
-        assembly { slot := sub(slot, numSlots) }
+        assembly {
+            slot := sub(slot, numSlots)
+        }
 
         // Write: Last Timestamp & Last Reserves
         slot.storeLastReserves(uint40(block.timestamp), b.lastReserves);
@@ -123,11 +127,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @dev On first update for a particular Well, initialize oracle with
      * reserves data.
      */
-    function _init(
-        bytes32 slot,
-        uint40 lastTimestamp,
-        uint[] memory reserves
-    ) internal {
+    function _init(bytes32 slot, uint40 lastTimestamp, uint[] memory reserves) internal {
         bytes16[] memory byteReserves = new bytes16[](reserves.length);
 
         // Skip {_capReserve} since we have no prior reference
@@ -141,7 +141,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Write: EMA Reserves
         // Start at the slot after `byteReserves`
         uint numSlots = getSlotsOffset(byteReserves.length);
-        assembly { slot := add(slot, numSlots) }
+        assembly {
+            slot := add(slot, numSlots)
+        }
         slot.storeBytes16(byteReserves); // EMA Reserves
     }
 
@@ -194,7 +196,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
         uint offset = getSlotsOffset(n);
-        assembly { slot := add(slot, offset) }
+        assembly {
+            slot := add(slot, offset)
+        }
         bytes16[] memory byteReserves = slot.readBytes16(n);
         reserves = new uint[](n);
         for (uint i = 0; i < reserves.length; i++) {
@@ -206,13 +210,15 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         uint offset = getSlotsOffset(n);
-        assembly { slot := add(slot, offset) }
+        assembly {
+            slot := add(slot, offset)
+        }
         bytes16[] memory lastEmaReserves = slot.readBytes16(n);
         uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
         bytes16 aN = A.powu(deltaTimestamp);
         reserves = new uint[](n);
         for (uint i = 0; i < reserves.length; i++) {
-            reserves[i] = 
+            reserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(lastEmaReserves[i].mul(aN)).pow_2().toUInt();
         }
     }
@@ -222,11 +228,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     /**
      * @notice Read the latest cumulative reserves of `well`.
      */
-    function readLastCumulativeReserves(address well)
-        public
-        view
-        returns (bytes16[] memory reserves)
-    {
+    function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
         uint offset = getSlotsOffset(n) * 2;
@@ -236,31 +238,23 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         reserves = slot.readBytes16(n);
     }
 
-    function readCumulativeReserves(address well)
-        public
-        view
-        returns (bytes memory cumulativeReserves)
-    {
+    function readCumulativeReserves(address well) public view returns (bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
         cumulativeReserves = abi.encode(byteCumulativeReserves);
     }
 
-    function _readCumulativeReserves(address well)
-        internal
-        view
-        returns (bytes16[] memory cumulativeReserves)
-    {
+    function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         uint offset = getSlotsOffset(n) * 2;
-        assembly { slot := add(slot, offset) }
+        assembly {
+            slot := add(slot, offset)
+        }
         cumulativeReserves = slot.readBytes16(n);
         bytes16 deltaTimestamp = getDeltaTimestamp(lastTimestamp).fromUInt();
         // TODO: Overflow desired ????
         for (uint i = 0; i < cumulativeReserves.length; i++) {
-            cumulativeReserves[i] = cumulativeReserves[i].add(
-                lastReserves[i].mul(deltaTimestamp)
-            );
+            cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestamp));
         }
     }
 
@@ -275,7 +269,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt(); // TODO: Verify no safe cast is desired
         for (uint i = 0; i < cumulativeReserves.length; i++) {
             // TODO: Unchecked?
-            twaReserves[i] = (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2().toUInt();
+            twaReserves[i] =
+                (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2().toUInt();
         }
     }
 

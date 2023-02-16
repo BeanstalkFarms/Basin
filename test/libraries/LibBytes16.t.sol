@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 pragma solidity ^0.8.17;
 
 import "test/TestHelper.sol";
@@ -8,15 +9,11 @@ import "test/TestHelper.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 
 contract LibBytes16Test is TestHelper {
-
-    uint256 constant NUM_RESERVES_MAX = 8;
+    uint constant NUM_RESERVES_MAX = 8;
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
     /// @dev Store fuzzed reserves, re-read and compare.
-    function testFuzz_storeAndReadBytes16(
-        uint n,
-        bytes16[8] memory _reserves
-    ) public {
+    function testFuzz_storeAndReadBytes16(uint n, bytes16[8] memory _reserves) public {
         vm.assume(n <= NUM_RESERVES_MAX);
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256

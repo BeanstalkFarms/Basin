@@ -3,7 +3,6 @@ import "src/libraries/ABDKMathQuad.sol";
 import "oz/utils/Strings.sol";
 
 contract ABDKTest is TestHelper {
-
     using ABDKMathQuad for uint;
     using ABDKMathQuad for bytes16;
     using Strings for uint;
@@ -28,9 +27,8 @@ contract ABDKTest is TestHelper {
     //////////////////// EXTENSIONS ////////////////////
 
     function test_powu1() public {
-        bytes16 pu = powuFraction(11661, 64, 9654);
-        assertEq(pu, ABDKMathQuad.from128x128(57627117634665864530030077974524244518281427));
-
+        bytes16 pu = powuFraction(11_661, 64, 9654);
+        assertEq(pu, ABDKMathQuad.from128x128(57_627_117_634_665_864_530_030_077_974_524_244_518_281_427));
     }
 
     function testFuzz_powu(uint16 num, uint16 denom, uint16 exp) public {
@@ -50,7 +48,7 @@ contract ABDKTest is TestHelper {
         bytes memory result = vm.ffi(inputs);
         
         bytes16 pu = powuFraction(num, denom, exp);
-        bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int256)));
+        bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int)));
         assertEq(pu >> 1, pypu >> 1);
     }
     

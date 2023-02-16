@@ -9,7 +9,7 @@ import {console} from "forge-std/console.sol";
  * @title LibLastReserveBytes
  * @author Publius
  * @notice  Contains byte operations used during storage reads & writes for Pumps.
- * 
+ *
  * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
  */
 library LibLastReserveBytes {
@@ -25,23 +25,18 @@ library LibLastReserveBytes {
         uint8 n = uint8(reserves.length);
         if (n == 1) {
             assembly {
-                sstore(slot, 
-                or(
-                    or(shl(208, lastTimestamp), shl(248, n)),
-                    shl(104, shr(152, mload(add(reserves, 32))))
-                ))
+                sstore(slot, or(or(shl(208, lastTimestamp), shl(248, n)), shl(104, shr(152, mload(add(reserves, 32))))))
             }
             return;
         }
         assembly {
-            sstore(slot, 
-            or(
-                or(shl(208, lastTimestamp), shl(248, n)),
+            sstore(
+                slot,
                 or(
-                    shl(104, shr(152, mload(add(reserves, 32)))), 
-                    shr(152, mload(add(reserves, 64)))
+                    or(shl(208, lastTimestamp), shl(248, n)),
+                    or(shl(104, shr(152, mload(add(reserves, 32)))), shr(152, mload(add(reserves, 64))))
                 )
-            ))
+            )
             // slot := add(slot, 32)
         }
         if (n > 2) {
@@ -52,10 +47,7 @@ library LibLastReserveBytes {
                 assembly {
                     sstore(
                         add(slot, mul(i, 32)),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shr(128, mload(add(reserves, add(iByte, 64))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
@@ -66,10 +58,7 @@ library LibLastReserveBytes {
                 assembly {
                     sstore(
                         add(slot, mul(maxI, 32)),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shr(128, shl(128, sload(add(slot, maxI))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, shl(128, sload(add(slot, maxI)))))
                     )
                 }
             }
@@ -79,7 +68,11 @@ library LibLastReserveBytes {
     /**
      * @dev Read `n` packed bytes16 reserves at storage position `slot`.
      */
-    function readLastReserves(bytes32 slot) internal view returns (uint8 n, uint40 lastTimestamp, bytes16[] memory reserves) {
+    function readLastReserves(bytes32 slot)
+        internal
+        view
+        returns (uint8 n, uint40 lastTimestamp, bytes16[] memory reserves)
+    {
         // Shortcut: two reserves can be quickly unpacked from one slot
         bytes32 temp;
         assembly {
@@ -90,9 +83,13 @@ library LibLastReserveBytes {
         if (n == 0) return (n, lastTimestamp, reserves);
         // Initialize array with length `n`, fill it in via assembly
         reserves = new bytes16[](n);
-        assembly { mstore(add(reserves, 32), shl(152, shr(104, temp))) }
+        assembly {
+            mstore(add(reserves, 32), shl(152, shr(104, temp)))
+        }
         if (n == 1) return (n, lastTimestamp, reserves);
-        assembly { mstore(add(reserves, 64), shl(152, temp)) }
+        assembly {
+            mstore(add(reserves, 64), shl(152, temp))
+        }
 
         if (n > 2) {
             uint iByte;
@@ -111,10 +108,7 @@ library LibLastReserveBytes {
                     }
                 } else {
                     assembly {
-                        mstore(
-                            add(reserves, mul(i, 32)),
-                            shl(128, sload(add(slot, iByte)))
-                        )
+                        mstore(add(reserves, mul(i, 32)), shl(128, sload(add(slot, iByte))))
                     }
                 }
             }

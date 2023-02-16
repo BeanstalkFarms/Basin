@@ -82,8 +82,8 @@ contract PumpUpdateTest is TestHelper {
 
         // 
         uint[] memory lastEmaReserves = pump.readInstantaneousReserves(user);
-        assertEq(lastEmaReserves[0], 1337697); // 1.33e6
-        assertEq(lastEmaReserves[1], 1216241); // 1.21e6
+        assertEq(lastEmaReserves[0], 1_337_697);
+        assertEq(lastEmaReserves[1], 1_216_241);
 
         // 
         bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(user);

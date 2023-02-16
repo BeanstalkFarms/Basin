@@ -25,7 +25,7 @@ contract ImmutableTest is TestHelper {
             vm.assume(pumpBytes[i].length <= 4 * 32);
         }
         for (uint i = 0; i < pumpTargets.length; i++) {
-            vm.assume(pumpTargets[i] != address(0));
+            vm.assume(pumpTargets[i] > address(10));
         }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
@@ -63,11 +63,13 @@ contract ImmutableTest is TestHelper {
         // Check well function
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
+        assertEq(_well.wellFunctionAddress(), address(wellFunction));
 
         // Check token addresses;
         IERC20[] memory _tokens = _well.tokens();
         for (uint i = 0; i < nTokens; i++) {
             assertEq(address(_tokens[i]), address(tokens[i]));
+            assertEq(address(_well.token(i)), address(tokens[i]));
         }
     }
 }

@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
  * @title LibBytes16
  * @author Publius
  * @notice Contains byte operations used during storage reads & writes for Pumps.
- * 
+ *
  * {LibBytes16} tightly packs an array of `bytes16` values into `n / 2` storage
  * slots, where `n` is number of items to pack.
  */
@@ -20,26 +20,17 @@ library LibBytes16 {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
             assembly {
-                sstore(
-                    slot,
-                    add(
-                        mload(add(reserves, 32)),
-                        shr(128, mload(add(reserves, 64)))
-                    )
-                )
+                sstore(slot, add(mload(add(reserves, 32)), shr(128, mload(add(reserves, 64)))))
             }
         } else {
-            uint256 maxI = reserves.length / 2; // number of fully-packed slots
-            uint256 iByte; // byte offset of the current reserve
+            uint maxI = reserves.length / 2; // number of fully-packed slots
+            uint iByte; // byte offset of the current reserve
             for (uint i; i < maxI; ++i) {
                 iByte = i * 64;
                 assembly {
                     sstore(
                         add(slot, mul(i, 32)),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shr(128, mload(add(reserves, add(iByte, 64))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
@@ -50,10 +41,7 @@ library LibBytes16 {
                 assembly {
                     sstore(
                         add(slot, mul(maxI, 32)),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shr(128, sload(add(slot, maxI)))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, sload(add(slot, maxI))))
                     )
                 }
             }
@@ -63,7 +51,7 @@ library LibBytes16 {
     /**
      * @dev Read `n` packed uint128 reserves at storage position `slot`.
      */
-    function readBytes16(bytes32 slot, uint256 n) internal view returns (bytes16[] memory reserves) {
+    function readBytes16(bytes32 slot, uint n) internal view returns (bytes16[] memory reserves) {
         // Initialize array with length `n`, fill it in via assembly
         reserves = new bytes16[](n);
 
@@ -76,14 +64,14 @@ library LibBytes16 {
             return reserves;
         }
 
-        uint256 iByte;
-        for (uint256 i = 1; i <= n; ++i) {
+        uint iByte;
+        for (uint i = 1; i <= n; ++i) {
             // `iByte` is the byte position for the current slot:
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
-            iByte = (i-1)/2 * 32;
+            iByte = (i - 1) / 2 * 32;
             if (i % 2 == 1) {
-                assembly { 
+                assembly {
                     mstore(
                         // store at index i * 32; i = 0 is skipped by loop
                         add(reserves, mul(i, 32)),
@@ -92,10 +80,7 @@ library LibBytes16 {
                 }
             } else {
                 assembly {
-                    mstore(
-                        add(reserves, mul(i, 32)),
-                        shl(128, sload(add(slot, iByte)))
-                    )
+                    mstore(add(reserves, mul(i, 32)), shl(128, sload(add(slot, iByte))))
                 }
             }
         }

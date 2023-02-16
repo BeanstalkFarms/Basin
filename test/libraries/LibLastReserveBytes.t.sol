@@ -11,11 +11,10 @@ contract LibEmaBytesTest is TestHelper {
     uint constant NUM_RESERVES_MAX = 8;
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
-
     /// @dev Store fuzzed reserves, re-read and compare.
     function testEmaFuzz_storeAndRead(
         uint8 n,
-        uint40 lastTimestamp, 
+        uint40 lastTimestamp,
         bytes13[NUM_RESERVES_MAX] memory _reserves
     ) public {
         vm.assume(n <= NUM_RESERVES_MAX);
