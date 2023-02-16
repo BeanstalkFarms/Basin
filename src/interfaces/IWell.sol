@@ -51,7 +51,7 @@ interface IWell {
      */
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut);
 
-    //////////// WELL DEFINITION ////////////
+    //////////////////// WELL DEFINITION ////////////////////
 
     /**
      * @notice Returns a list of ERC20 tokens supported by the Well.
@@ -106,7 +106,7 @@ interface IWell {
         view
         returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, bytes memory _wellData, address aquifer);
 
-    //////////// SWAP: FROM ////////////
+    //////////////////// SWAP: FROM ////////////////////
 
     /**
      * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken`.
@@ -134,7 +134,7 @@ interface IWell {
      */
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut);
 
-    //////////// SWAP: TO ////////////
+    //////////////////// SWAP: TO ////////////////////
 
     /**
      * @notice Swaps from a maximum amount of `fromToken` to an exact amount of `toToken`.
@@ -162,7 +162,7 @@ interface IWell {
      */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn);
 
-    //////////// ADD LIQUIDITY ////////////
+    //////////////////// ADD LIQUIDITY ////////////////////
 
     /**
      * @notice Adds liquidity to the Well as multiple tokens in any ratio.
@@ -184,7 +184,7 @@ interface IWell {
      */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut);
 
-    //////////// REMOVE LIQUIDITY: BALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as all underlying tokens in a balanced ratio.
@@ -206,7 +206,7 @@ interface IWell {
      */
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut);
 
-    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
+    //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as a single underlying token.
@@ -236,7 +236,7 @@ interface IWell {
         IERC20 tokenOut
     ) external view returns (uint tokenAmountOut);
 
-    //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: IMBALANCED ////////////////////
 
     /**
      * @notice Removes liquidity from the Well as multiple underlying tokens in any ratio.
@@ -258,14 +258,14 @@ interface IWell {
      */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn);
 
-    //////////// BALANCE OF WELL TOKENS & LP TOKEN ////////////
+    //////////////////// RESERVES////////////////////
 
     /**
      * @notice Gets the reserves of each token held by the Well.
      */
     function getReserves() external view returns (uint[] memory reserves);
 
-    //////////// SKIM ////////////
+    //////////////////// SKIM ////////////////////
 
     /**
      * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`.

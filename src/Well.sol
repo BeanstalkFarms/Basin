@@ -5,16 +5,12 @@ pragma solidity ^0.8.17;
 import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
 import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
-
+import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IPump} from "src/interfaces/IPump.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-
 import {LibBytes} from "src/libraries/LibBytes.sol";
-
 import {ClonePlus} from "src/utils/ClonePlus.sol";
-
-import "oz/utils/math/SafeCast.sol";
 
 /**
  * @title Well
@@ -37,27 +33,19 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             IPump(_pumps[i].target).attach(numberOfTokens(), new bytes(0));
         }
     }
-    //////////// WELL DEFINITION ////////////
 
-    /**
-     * @dev See {IWell.tokens}
-     */
+    //////////////////// WELL DEFINITION ////////////////////
+
     function tokens() public pure returns (IERC20[] memory ts) {
         ts = _getArgIERC20Array(136, numberOfTokens());
     }
 
-    /**
-     * @dev See {IWell.wellFunction}
-     */
     function wellFunction() public pure returns (Call memory _wellFunction) {
         _wellFunction.target = wellFunctionAddress();
         uint dataLoc = 136 + numberOfTokens() * 32;
         _wellFunction.data = _getArgBytes(dataLoc, numberOfWellFunctionBytes());
     }
 
-    /**
-     * @dev See {IWell.pumps}
-     */
     function pumps() public pure returns (Call[] memory _pumps) {
         if (numberOfPumps() == 0) return _pumps;
         _pumps = new Call[](numberOfPumps());
@@ -73,21 +61,12 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    /**
-     @dev See {IWell.wellData}
-     */
     function wellData() public pure returns (bytes memory) {}
 
-    /**
-     * @dev See {IWell.aquifer}
-     */
     function aquifer() public pure override returns (address) {
         return _getArgAddress(0);
     }
 
-    /**
-     * @dev See {IWell.well}
-     */
     function well()
         external
         pure
@@ -97,14 +76,15 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             Call[] memory _pumps,
             bytes memory _wellData,
             address _aquifer
-    )
+        )
     {
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
+        // _wellData = bytes(0); // FIXME
         _aquifer = aquifer();
     }
-
+    
     function numberOfTokens() public pure returns (uint) {
         return _getArgUint256(20);
     }
@@ -128,11 +108,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _pump.data = _getArgBytes(dataLoc + 52, numberOfPumpBytes);
     }
 
-    //////////// SWAP: FROM ////////////
+    //////////////////// SWAP: FROM ////////////////////
 
-    /**
-     * @dev See {IWell.swapFrom}
-     */
     function swapFrom(
         IERC20 fromToken,
         IERC20 toToken,
@@ -157,9 +134,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /**
-     * @dev See {IWell.getSwapOut}
-     */
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -171,11 +145,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
     }
 
-    //////////// SWAP: TO ////////////
+    //////////////////// SWAP: TO ////////////////////
 
-    /**
-     * @dev See {IWell.swapTo}
-     */
     function swapTo(
         IERC20 fromToken,
         IERC20 toToken,
@@ -200,9 +171,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    /**
-     * @dev See {IWell.getSwapIn}
-     */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -213,10 +181,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountIn = _calcReserve(wellFunction(), reserves, i, totalSupply()) - reserves[i];
     }
 
-    //////////// SWAP: UTILITIES ////////////
+    //////////////////// SWAP: UTILITIES ////////////////////
 
     /**
-     * @dev executes token transfers and emits Swap event.
+     * @dev Executes token transfers and emits Swap event.
      */
     function _executeSwap(
         IERC20 fromToken,
@@ -230,11 +198,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit Swap(fromToken, toToken, amountIn, amountOut);
     }
 
-    //////////// ADD LIQUIDITY ////////////
+    //////////////////// ADD LIQUIDITY ////////////////////
 
     /**
-     * @dev See {IWell.addLiquidity}.
-     * Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
+     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
      */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
@@ -257,9 +224,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit AddLiquidity(tokenAmountsIn, lpAmountOut);
     }
 
-    /**
-     * @dev See {IWell.getAddLiquidityOut}
-     */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -269,11 +233,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
     }
 
-    //////////// REMOVE LIQUIDITY: BALANCED ////////////
+    //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
-    /**
-     * @dev See {IWell.removeLiquidity}
-     */
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
@@ -296,9 +257,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityOut}
-     */
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -310,11 +268,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    //////////// REMOVE LIQUIDITY: ONE TOKEN ////////////
+    //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
-    /**
-     * @dev See {IWell.removeLiquidityOneToken}
-     */
     function removeLiquidityOneToken(
         uint lpAmountIn,
         IERC20 tokenOut,
@@ -335,9 +290,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityOneTokenOut}
-     */
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,
         IERC20 tokenOut
@@ -367,9 +319,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////// REMOVE LIQUIDITY: IMBALANCED ////////////
 
-    /**
-     * @dev See {IWell.removeLiquidityImbalanced}
-     */
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
@@ -390,9 +339,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
     }
 
-    /**
-     * @dev See {IWell.getRemoveLiquidityImbalancedIn}
-     */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -402,11 +348,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
     }
 
-    //////////// SKIM ////////////
+    //////////////////// SKIM ////////////////////
 
-    /**
-     * @dev See {IWell.skim}
-     */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -419,7 +362,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    //////////// UPDATE PUMP ////////////
+    //////////////////// UPDATE PUMP ////////////////////
 
     /**
      * @dev Fetches the current token reserves of the Well and updates the Pumps.
@@ -444,11 +387,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    //////////// GET & SET RESERVES ////////////
+    //////////////////// GET & SET RESERVES ////////////////////
 
-    /**
-     * @dev See {IWell.getReserves}
-     */
     function getReserves() external view returns (uint[] memory reserves) {
         reserves = _getReserves(numberOfTokens());
     }
@@ -467,7 +407,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
 
-    //////////// WELL FUNCTION INTERACTION ////////////
+    //////////////////// WELL FUNCTION INTERACTION ////////////////////
 
     /**
      * @dev Calculates the LP token supply given a list of `reserves` from the provided
@@ -499,7 +439,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         reserve = IWellFunction(_wellFunction.target).calcReserve(reserves, j, lpTokenSupply, _wellFunction.data);
     }
 
-    //////////// WELL TOKEN INDEXING ////////////
+    //////////////////// WELL TOKEN INDEXING ////////////////////
 
     /**
      * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
