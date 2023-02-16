@@ -5,16 +5,20 @@ libs = ['lib', 'node_modules']
 fuzz = { runs = 256 }
 optimizer = true
 optimizer_runs = 800
+remappings = [
+  '@openzeppelin/=node_modules/@openzeppelin/',
+]
 
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 
 [profile.ci]
+no_match_test = "testSim"
 fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
-remappings = [
-  '@openzeppelin/=node_modules/@openzeppelin/',
-]
+[profile.sim]
+match_test = "testSim"
+fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
 [fmt]
 int_types = "short"

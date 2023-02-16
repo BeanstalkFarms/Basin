@@ -1549,9 +1549,14 @@ library ABDKMathQuad {
         }
     }
 
-  //////////////////// EXTENSIONS ////////////////////
-    // int constant uUint = 2 ** 128;
+    //////////////////// EXTENSIONS ////////////////////
 
+    /**
+     * Raises x (ABDK quadruple precision number) to the power of y (basic unsigned integer)
+     * using the famous algorithm "exponentiation by squaring".
+     *
+     * @dev See https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+     */
     function powu(bytes16 x, uint y) internal pure returns (bytes16 result) {
         // Calculate the first iteration of the loop in advance.
         bytes16 uUint = fromUInt(1);
@@ -1567,6 +1572,4 @@ library ABDKMathQuad {
             }
         }
     }
-
-    // int constant uUINT128 = 2 ** 128;
 }

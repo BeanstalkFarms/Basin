@@ -52,9 +52,7 @@ contract ABDKTest is TestHelper {
         assertEq(pu >> 1, pypu >> 1);
     }
     
-    /**
-     * @dev calculate (a/b)^c
-     */
+    /// @dev calculate (a/b)^c
     function powuFraction(uint256 a, uint256 b, uint256 c) public pure returns (bytes16) {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
