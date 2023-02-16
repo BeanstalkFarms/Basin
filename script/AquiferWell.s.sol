@@ -1,62 +1,65 @@
-// // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
-// pragma solidity ^0.8.13;
+pragma solidity ^0.8.13;
 
-// import {Script, console} from "forge-std/Script.sol";
-// import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
+import {Script, console} from "forge-std/Script.sol";
+import {SafeERC20, IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 
-// import {IWell, Call} from "src/interfaces/IWell.sol";
-// import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-// import {IPump} from "src/interfaces/IPump.sol";
+import {IWell, Call} from "src/interfaces/IWell.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IPump} from "src/interfaces/pumps/IPump.sol";
 
-// import {logger} from "script/helpers/Logger.sol";
-// import {MockToken} from "mocks/tokens/MockToken.sol";
-// import {MockPump} from "mocks/pumps/MockPump.sol";
+import {logger} from "script/helpers/Logger.sol";
+import {MockToken} from "mocks/tokens/MockToken.sol";
+import {MockPump} from "mocks/pumps/MockPump.sol";
 
-// import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-// import {Well} from "src/Well.sol";
-// import {Auger} from "src/Auger.sol";
-// import {Aquifer} from "src/Aquifer.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Well} from "src/Well.sol";
+import {Aquifer} from "src/Aquifer.sol";
 
-// /**
-//  * @dev Script to deploy a BEAN-ETH {Well} with a ConstantProduct2 pricing function
-//  * and MockPump via an Aquifer.
-//  */
-// contract DeployAquiferWell is Script {
-//     using SafeERC20 for IERC20;
+import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
-//     IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
-//     IERC20 constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH9
+/**
+ * @dev Script to deploy a BEAN-ETH {Well} with a ConstantProduct2 pricing function
+ * and MockPump via an Aquifer.
+ */
+contract DeployAquiferWell is Script, WellDeployer {
+    using SafeERC20 for IERC20;
 
-//     function run() external {
-//         uint deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-//         vm.startBroadcast(deployerPrivateKey);
+    IERC20 constant BEAN = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+    IERC20 constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH9
 
-//         // Tokens
-//         IERC20[] memory tokens = new IERC20[](2);
-//         tokens[0] = BEAN;
-//         tokens[1] = WETH;
+    function run() external {
+        uint deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
 
-//         // Deploy Aquifer/Auger
-//         Aquifer aquifer = new Aquifer();
-//         Auger auger = new Auger();
+        // Tokens
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = BEAN;
+        tokens[1] = WETH;
 
-//         // Well Function
-//         IWellFunction cp2 = new ConstantProduct2();
-//         Call memory wellFunction = Call(address(cp2), new bytes(0));
+        // Deploy Aquifer
+        address aquifer = address(new Aquifer());
 
-//         // Pump
-//         IPump mockPump = new MockPump();
-//         Call[] memory pumps = new Call[](1);
-//         pumps[0] = Call(address(mockPump), new bytes(0));
+        // Well Function
+        IWellFunction cp2 = new ConstantProduct2();
+        Call memory wellFunction = Call(address(cp2), new bytes(0));
 
-//         //bore well
-//         Well well = Well(aquifer.boreWell(tokens, wellFunction, pumps, auger));
+        // Pump
+        IPump mockPump = new MockPump();
+        Call[] memory pumps = new Call[](1);
+        pumps[0] = Call(address(mockPump), new bytes(0));
 
-//         console.log("Deployed CP2 at address: ", address(cp2));
-//         console.log("Deployed Pump at address: ", address(pumps[0].target));
-//         logger.logWell(well);
+        // Well implementation
+        address wellImplementation = address(new Well());
 
-//         vm.stopBroadcast();
-//     }
-// }
+        //bore well
+        Well well = boreWell(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
+
+        console.log("Deployed CP2 at address: ", address(cp2));
+        console.log("Deployed Pump at address: ", address(pumps[0].target));
+        logger.logWell(well);
+
+        vm.stopBroadcast();
+    }
+}
