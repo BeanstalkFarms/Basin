@@ -37,14 +37,9 @@ library ABDKMathQuad {
     */
     bytes16 private constant NaN = 0x7FFF8000000000000000000000000000;
 
-  /*
-   * One.
-   */
-  bytes16 internal constant ONE = 0x3fff0000000000000000000000000000;
     /*
     * One.
     */
-
     bytes16 internal constant ONE = 0x3fff0000000000000000000000000000;
 
     /**
