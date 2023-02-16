@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 env:
   FOUNDRY_PROFILE: ci
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
 jobs:
   tests:
@@ -27,3 +28,6 @@ jobs:
 
       - name: Run tests
         run: forge test -vvv
+
+      - name: Check gas snapshots
+        run: yarn compare

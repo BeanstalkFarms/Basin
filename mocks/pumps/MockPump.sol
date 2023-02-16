@@ -1,17 +1,17 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IPump.sol";
+import "src/interfaces/pumps/IPump.sol";
 
 /**
  * @author Publius
  * @title Mock Pump
  */
 contract MockPump is IPump {
-
     bytes public lastData;
 
     function attach(uint _n, bytes calldata data) external {
@@ -22,11 +22,7 @@ contract MockPump is IPump {
         lastData = data;
     }
 
-    function read(address well, bytes calldata readData)
-        external
-        view
-        returns (bytes memory data)
-    {
+    function read(address well, bytes calldata readData) external view returns (bytes memory data) {
         return lastData;
     }
 }

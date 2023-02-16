@@ -7,7 +7,7 @@ import {ERC20, ERC20Permit} from "oz/token/ERC20/extensions/draft-ERC20Permit.so
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 
 import {IWell, Call} from "src/interfaces/IWell.sol";
-import {IPump} from "src/interfaces/IPump.sol";
+import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 import {LibBytes} from "src/libraries/LibBytes.sol";
