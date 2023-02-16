@@ -14,22 +14,24 @@ import {console} from "forge-std/Test.sol";
 
 /**
  * @title Aquifer
- * @author Publius
- * @notice Aquifer is a permissionless Well registry.
+ * @author Publius, Silo Chad, Brean
+ * @notice Aquifer is a permissionless Well registry and factory.
+ * @dev Aquifer deploys Wells by cloning any pre-deployed Well implementations.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
     using SafeCast for uint;
     using LibClone for address;
 
+    // A mapping of Well address to the Well implementation addresses
+    // Mapping gets set on Well deployment
     mapping(address => address) wellImplementations;
 
     constructor() ReentrancyGuard() {}
 
     /**
      * @dev see {IAquifer.boreWell}
-     *
-     * The Aquifer takes an opinionated stance on the `name` and `symbol` of
-     * the deployed Well.
+     * Use `salt == 0` to deploy a new Well with `create`
+     * Use `salt > 0` to deploy a new Well with `create2`
      */
     function boreWell(
         address implementation,
@@ -68,6 +70,9 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         );
     }
 
+    /**
+     * @dev see {IAquifer.wellImplementation}
+     */
     function wellImplementation(address well) external view returns (address implementation) {
         return wellImplementations[well];
     }

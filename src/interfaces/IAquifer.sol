@@ -33,7 +33,7 @@ interface IAquifer {
      * @param implementation The Well implementation to clone
      * @param immutableData The data to append to the bytecode of the contract
      * @param initFunctionCall The function call to initialize the Well (0x for none)
-     * @param salt The salt to deploy the Well with (0x for none). See {LibClone}.
+     * @param salt The salt to deploy the Well with (`bytes32(0)` for none). See {LibClone}.
      * @return wellAddress The address of the Well
      */
     function boreWell(
@@ -47,6 +47,8 @@ interface IAquifer {
     * @notice returns the implementation that a given Well was deployed with.
     * @param well The Well to get the implementation of
     * @return implementation The address of the implementation of a Well.
+    * @dev Always verify that a Well was deployed by a trusted Aquifer using a trusted implementation before using.
+    * If `wellImplementation == address(0)`, then the Aquifer did not deploy the Well.
     */
     function wellImplementation(address well) external view returns (address implementation);
 }
