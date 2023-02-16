@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
-import {IAuger} from "src/interfaces/IAuger.sol";
 
 /**
  * @author Publius
@@ -32,14 +31,14 @@ interface IAquifer {
     /**
      * @notice bores a Well with given parameters
      * @param implementation The Well implementation to clone
-     * @param constructorArgs The arguments to pass to the Well constructor (0x for none)
+     * @param immutableData The data to append to the bytecode of the contract
      * @param initFunctionCall The function call to initialize the Well (0x for none)
      * @param salt The salt to deploy the Well with (0x for none). See {LibClone}.
      * @return wellAddress The address of the Well
      */
     function boreWell(
         address implementation,
-        bytes calldata constructorArgs,
+        bytes calldata immutableData,
         bytes calldata initFunctionCall,
         bytes32 salt
     ) external returns (address wellAddress);
