@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, Call} from "test/TestHelper.sol";
 
 contract WellInitTest is TestHelper {
-    Well noNameWell;
 
     event AddLiquidity(uint[] amounts);
 

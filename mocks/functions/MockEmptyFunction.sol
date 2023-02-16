@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
-contract MockFunctionNoName is IWellFunction {
+contract MockEmptyFunction is IWellFunction {
 
     function calcReserve(
         uint256[] memory reserves,
@@ -20,11 +20,7 @@ contract MockFunctionNoName is IWellFunction {
         bytes calldata data
     ) external pure returns (uint xj) {}
 
-    function name() external override pure returns (string memory) {
-        revert();
-    }
+    function name() external override pure returns (string memory) {}
 
-    function symbol() external override pure returns (string memory) {
-        revert();
-    }
+    function symbol() external override pure returns (string memory) {}
 }

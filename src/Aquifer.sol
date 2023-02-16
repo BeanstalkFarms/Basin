@@ -7,10 +7,10 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IAquifer} from "src/interfaces/IAquifer.sol";
-import {IAuger} from "src/interfaces/IAuger.sol";
 import {Well, IWell, Call, IERC20} from "src/Well.sol";
-import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
+
+import {console} from "forge-std/Test.sol";
 
 /**
  * @title Aquifer
@@ -18,7 +18,6 @@ import {LibClone} from "src/libraries/LibClone.sol";
  * @notice Aquifer is a permissionless Well registry.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
-    using LibContractInfo for address;
     using SafeCast for uint;
     using LibClone for address;
 
@@ -36,15 +35,15 @@ contract Aquifer is IAquifer, ReentrancyGuard {
      */
     function boreWell(
         address implementation,
-        bytes calldata constructorArgs,
+        bytes calldata immutableData,
         bytes calldata initFunctionCall,
         bytes32 salt
     ) external nonReentrant returns (address well) {
-        if (constructorArgs.length > 0) {
+        if (immutableData.length > 0) {
             if (salt.length > 0) {
-                well = implementation.cloneDeterministic(constructorArgs, salt);
+                well = implementation.cloneDeterministic(immutableData, salt);
             } else {
-                well = implementation.clone(constructorArgs);
+                well = implementation.clone(immutableData);
             }
         } else {
             if (salt.length > 0) {

@@ -33,11 +33,7 @@ contract MockFunctionBad is IWellFunction {
         return 1000;
     }
 
-    function name() external override pure returns (string memory) {
-        revert();
-    }
+    function name() external override pure returns (string memory) {}
 
-    function symbol() external override pure returns (string memory) {
-        revert();
-    }
+    function symbol() external override pure returns (string memory) {}
 }

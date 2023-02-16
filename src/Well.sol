@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.17;
 
-import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
-import {ERC20, ERC20Permit} from "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
+import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
+import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 
 import {IWell, Call} from "src/interfaces/IWell.sol";
@@ -12,7 +12,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 import {LibBytes} from "src/libraries/LibBytes.sol";
 
-import {Clone} from "src/utils/Clone.sol";
+import {ClonePlus} from "src/utils/ClonePlus.sol";
 
 /**
  * @title Well
@@ -20,76 +20,68 @@ import {Clone} from "src/utils/Clone.sol";
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  */
-contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
+contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
 
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
-    address immutable __aquifer;
+    function init(string memory name, string memory symbol) public initializer {
+        __ERC20Permit_init(name);
+        __ERC20_init(name, symbol);
 
-    /**
-     * @dev Construct a Well. Each Well is defined by its combination of
-     * ERC20 tokens (`_tokens`), Well function (`_function`), and Pump (`_pump`).
-     *
-     * For gas efficiency, these three components are placed in immutable
-     * storage during construction.
-     *
-     * {ImmutableTokens} stores up to 4 immutable token addresses.
-     * {ImmutableWellFunction} stores an immutable Well function {Call} struct.
-     * {ImmutablePump} stores up to 4 immutable Pump {Call[]} structs.
-     *
-     * Usage of Pumps is optional: set `_pumps.length` to 0 to disable.
-     */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        IERC20[] memory _tokens,
-        Call memory _function,
-        Call[] memory _pumps
-    )
-        ERC20(_name, _symbol)
-        ERC20Permit(_name)
-        ReentrancyGuard()
-    {
-        for (uint i; i < _pumps.length; ++i) {
-            IPump(_pumps[i].target).attach(_tokens.length, _pumps[i].data);
+        Call[] memory _pumps = pumps();
+        for (uint i = 0; i < _pumps.length; i++) {
+            IPump(_pumps[i].target).attach(numberOfTokens(), new bytes(0));
         }
-        __aquifer = msg.sender;
     }
-
     //////////// WELL DEFINITION ////////////
 
     /**
      * @dev See {IWell.tokens}
-     * TODO - implement with Clone.sol
      */
-    function tokens() public view returns (IERC20[] memory ts) {
+    function tokens() public pure returns (IERC20[] memory ts) {
+        // TODO: Safe cast or make numberOfWellFunctionBytes return uint64 or edit function signature..
+        ts = _getArgIERC20Array(136, uint64(numberOfTokens()));
     }
 
     /**
      * @dev See {IWell.wellFunction}
-     * TODO - implement with Clone.sol
      */
-    function wellFunction() public view returns (Call memory) {
+    function wellFunction() public pure returns (Call memory _wellFunction) {
+        _wellFunction.target = _getArgAddress(52);
+        uint dataLoc = 136 + numberOfTokens() * 32;
+        // TODO: Safe cast or make numberOfWellFunctionBytes return uint64 or edit function signature..
+        _wellFunction.data = _getArgBytes(dataLoc, uint64(numberOfWellFunctionBytes()));
     }
 
     /**
      * @dev See {IWell.pumps}
-     * TODO - implement with Clone.sol
      */
-    function pumps() public view returns (Call[] memory) {
+    function pumps() public pure returns (Call[] memory _pumps) {
+        if (numberOfPumps() == 0) return _pumps;
+        _pumps = new Call[](numberOfPumps());
+        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        uint numberOfPumpBytes;
+        for (uint i = 0; i < _pumps.length; i++) {
+            _pumps[i].target = _getArgAddress(dataLoc);
+            dataLoc += 20;
+            numberOfPumpBytes = _getArgUint256(dataLoc);
+            dataLoc += 32;
+            _pumps[i].data = _getArgBytes(dataLoc, uint64(numberOfPumpBytes));
+            dataLoc += numberOfPumpBytes;
+        }
     }
 
     /**
      @dev See {IWell.wellData}
      */
-    function wellData() public view returns (bytes memory) {}
+    function wellData() public pure returns (bytes memory) {}
 
     /**
      * @dev See {IWell.aquifer}
      */
-    function aquifer() public view override returns (address) {
-        return __aquifer;
+    function aquifer() public pure override returns (address) {
+        return _getArgAddress(0);
     }
 
     /**
@@ -97,7 +89,7 @@ contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
      */
     function well()
         external
-        view
+        pure
         returns (
             IERC20[] memory _tokens,
             Call memory _wellFunction,
@@ -112,24 +104,23 @@ contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
         _aquifer = aquifer();
     }
 
-    // TODO - implement with Clone.sol
-    function numberOfTokens() public view returns (uint) {
-        return 0;
+    function numberOfTokens() public pure returns (uint) {
+        return _getArgUint256(20);
     }
 
-    // TODO - implement with Clone.sol
-    function numberOfPumps() public view returns (uint) {
-        return 0;
+    function numberOfWellFunctionBytes() public pure returns (uint) {
+        return _getArgUint256(72);
     }
 
-    // TODO - implement with Clone.sol
-    function firstPumpTarget() public view returns (address) {
-        return address(0);
+    function numberOfPumps() public pure returns (uint) {
+        return _getArgUint256(104);
     }
 
-    // TODO - implement with Clone.sol
-    function firstPumpBytes() public view returns (bytes memory) {
-        return new bytes(0);
+    function firstPump() public pure returns (Call memory _pump) {
+        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        _pump.target = _getArgAddress(dataLoc);
+        uint numberOfPumpBytes = _getArgUint256(dataLoc + 20);
+        _pump.data = _getArgBytes(dataLoc + 52, uint64(numberOfPumpBytes));
     }
 
     //////////// SWAP: FROM ////////////
@@ -429,8 +420,8 @@ contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
      * @dev Fetches the current token reserves of the Well and updates the Pumps.
      * Typically called before an operation that modifies the Well's reserves.
      */
-    function _updatePumps(uint numberOfTokens) internal returns (uint[] memory reserves) {
-        reserves = _getReserves(numberOfTokens);
+    function _updatePumps(uint _numberOfTokens) internal returns (uint[] memory reserves) {
+        reserves = _getReserves(_numberOfTokens);
 
         if (numberOfPumps() == 0) {
             return reserves;
@@ -438,7 +429,8 @@ contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
 
         // gas optimization: avoid looping if there is only one pump
         if (numberOfPumps() == 1) {
-            IPump(firstPumpTarget()).update(reserves, firstPumpBytes());
+            Call memory _pump = firstPump();
+            IPump(_pump.target).update(reserves, _pump.data);
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
@@ -459,8 +451,8 @@ contract Well is ERC20Permit, IWell, ReentrancyGuard, Clone {
     /**
      * @dev Gets the Well's token reserves by reading from byte storage.
      */
-    function _getReserves(uint numberOfTokens) internal view returns (uint[] memory reserves) {
-        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, numberOfTokens);
+    function _getReserves(uint _numberOfTokens) internal view returns (uint[] memory reserves) {
+        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
     }
 
     /**
