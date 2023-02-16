@@ -3,13 +3,15 @@ cache/
 out/
 
 # Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+/broadcast
 
 # Dotenv file
 .env
 
+# Ignore generated CSV with DEX gas comparisons
+.dex-comparisons.csv
+
+# Other
 node_modules
 stash
 lcov.info

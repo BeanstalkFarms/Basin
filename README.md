@@ -7,7 +7,7 @@ Each Well is defined by its Tokens, Well function, and Pump.
 - The **Well function** defines an invariant relationship between the Well's reserves and the supply of LP tokens. See [{IWellFunction}](/src//interfaces/IWellFunction.sol).
 - **Pumps** are an on-chain oracles that are updated upon each interaction with the Well. See [{IPump}](/src/interfaces/IPump.sol).
 
-A Well's tokens, Well function, and Pump are stored as immutable variables during Well construction to prevent unnessary SLOAD calls during operation.
+A Well's tokens, Well function, and Pump are stored as immutable variables during Well construction to prevent unnecessary SLOAD calls during operation.
 
 Wells support swapping, adding liquidity, and removing liquidity in balanced or imbalanced proportions.
 

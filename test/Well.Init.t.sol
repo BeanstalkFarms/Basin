@@ -1,13 +1,9 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 
 contract WellInitTest is TestHelper {
-
-    Well noNameWell;
 
     event AddLiquidity(uint[] amounts);
 
@@ -16,21 +12,31 @@ contract WellInitTest is TestHelper {
     }
 
     //////////// Well Definition ////////////
-    
+
     /// @dev tokens
     function test_tokens() public {
         check_tokens(well.tokens());
     }
+
+    function test_getReserves() public {
+        Balances memory wellBalance = getBalances(address(well), well);
+        uint[] memory reserves = well.getReserves();
+
+        assertEq(reserves[0], wellBalance.tokens[0]);
+        assertEq(reserves[1], wellBalance.tokens[1]);
+    }
+
     function check_tokens(IERC20[] memory _wellTokens) private {
         for (uint i = 0; i < tokens.length; i++) {
             assertEq(address(_wellTokens[i]), address(tokens[i]));
         }
     }
- 
+
     /// @dev well function
     function test_wellFunction() public {
         check_wellFunction(well.wellFunction());
     }
+
     function check_wellFunction(Call memory _wellFunction) private {
         assertEq(_wellFunction.target, wellFunction.target);
         assertEq(_wellFunction.data, wellFunction.data);
@@ -41,6 +47,7 @@ contract WellInitTest is TestHelper {
         Call[] memory _wellPumps = well.pumps();
         check_pumps(_wellPumps);
     }
+
     function check_pumps(Call[] memory _wellPumps) private {
         assertEq(_wellPumps.length, pumps.length);
         for (uint i = 0; i < pumps.length; i++) {
@@ -49,27 +56,33 @@ contract WellInitTest is TestHelper {
         }
     }
 
-    /// @dev auger
-    function test_auger() public {
-        check_auger(well.auger());
+    /// @dev aquifer
+    function test_aquifer() public {
+        check_aquifer(well.aquifer());
     }
-    function check_auger(address _auger) public {
-        assertEq(_auger, address(auger));
+
+    function check_aquifer(address _aquifer) public {
+        assertEq(_aquifer, address(aquifer));
+    }
+
+    //// @dev Well Data
+    function test_wellData() public {
+        check_wellData(well.wellData());
+    }
+
+    function check_wellData(bytes memory _wellData) public {
+        assertEq(_wellData, wellData);
     }
 
     /// @dev well
     function test_well() public {
-        (
-            IERC20[] memory _wellTokens,
-            Call memory _wellFunction,
-            Call[] memory _wellPumps,
-            address _auger
-        ) = well.well();
-        
+        (IERC20[] memory _wellTokens, Call memory _wellFunction, Call[] memory _wellPumps, bytes memory _wellData, address _aquifer) = well.well();
+
         check_tokens(_wellTokens);
         check_wellFunction(_wellFunction);
         check_pumps(_wellPumps);
-        check_auger(_auger);
+        check_wellData(_wellData);
+        check_aquifer(_aquifer);
     }
 
     //////////// ERC20 LP Token ////////////

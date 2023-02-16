@@ -1,17 +1,17 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
 import "forge-std/console2.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-import {Well, Call, TestHelper, IERC20, MockPump} from "test/TestHelper.sol";
-import {RandomBytes} from "utils/RandomBytes.sol";
+import {Aquifer, Well, Call, TestHelper, IERC20, MockPump, console} from "test/TestHelper.sol";
+import {RandomBytes} from "test/helpers/RandomBytes.sol";
 
 contract ImmutableTest is TestHelper {
     function setUp() public {
         deployMockTokens(16);
+        deployWellImplementation();
+        aquifer = new Aquifer();
     }
 
     /// @dev immutable storage should work when any number of its slots are filled
@@ -23,10 +23,12 @@ contract ImmutableTest is TestHelper {
         uint8 nTokens
     ) public {
         vm.assume(numberOfPumps < 5);
-        for (uint i = 0; i < numberOfPumps; i++)
+        for (uint i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpBytes[i].length <= 4 * 32);
-        for (uint i = 0; i < pumpTargets.length; i++)
-            vm.assume(pumpTargets[i] != address(0));
+        }
+        for (uint i = 0; i < pumpTargets.length; i++) {
+            vm.assume(pumpTargets[i] > address(10));
+        }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
         vm.assume(nTokens < 4 && nTokens > 1);
 
@@ -42,17 +44,28 @@ contract ImmutableTest is TestHelper {
             vm.etch(pumpTargets[i], code);
         }
 
+        IERC20[] memory wellTokens = getTokens(nTokens);
+
         address wellFunction = address(new ConstantProduct2());
-        Well _well = new Well(
-            "",
-            "",
-            getTokens(nTokens), 
-            Call(wellFunction, wellFunctionBytes), 
-            pumps
+        Well _well = boreWell(
+            address(aquifer),
+            wellImplementation,
+            wellTokens,
+            Call(wellFunction, wellFunctionBytes),
+            pumps,
+            bytes32(0)
         );
 
         // Check pumps
+        assertEq(_well.numberOfPumps(), numberOfPumps, "Number of pumps should match");
         Call[] memory _pumps = _well.pumps();
+
+        if (numberOfPumps > 0) {
+            Call memory firstPump = _well.firstPump();
+            assertEq(firstPump.target, pumps[0].target);
+            assertEq(firstPump.data, pumps[0].data);
+        }
+
         for (uint i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i].target, pumps[i].target);
             assertEq(_pumps[i].data, pumps[i].data);
@@ -63,11 +76,12 @@ contract ImmutableTest is TestHelper {
         // Check well function
         assertEq(_well.wellFunction().target, wellFunction);
         assertEq(_well.wellFunction().data, wellFunctionBytes);
+        assertEq(_well.wellFunctionAddress(), address(wellFunction));
 
-        // Check token addresses; 
+        // Check token addresses;
         IERC20[] memory _tokens = _well.tokens();
         for (uint i = 0; i < nTokens; i++) {
-            assertEq(address(_tokens[i]), address(tokens[i]));
+            assertEq(address(_tokens[i]), address(wellTokens[i]));
         }
     }
 }

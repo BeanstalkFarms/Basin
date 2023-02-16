@@ -1,19 +1,17 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/IWellFunction.sol";
-import "src/libraries/LibMath.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
  * @author Publius
  * @title Constant Product pricing function for Wells with 2 tokens
- * 
+ *
  * Constant Product Wells use the formula:
  *  `π(b_i) = (s / n)^n`
- * 
+ *
  * Where:
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
@@ -26,8 +24,8 @@ contract ConstantProduct is IWellFunction {
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
-    ) external override pure returns (uint lpTokenSupply) {
-        lpTokenSupply = prodX(reserves).nthRoot(reserves.length) * reserves.length;
+    ) external pure override returns (uint lpTokenSupply) {
+        lpTokenSupply = _prodX(reserves).nthRoot(reserves.length) * reserves.length;
     }
 
     /// @dev `b_j = (s / n)^n / π_{i!=j}(b_i)`
@@ -36,25 +34,27 @@ contract ConstantProduct is IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external override pure returns (uint reserve) {
+    ) external pure override returns (uint reserve) {
         uint n = reserves.length;
         reserve = uint((lpTokenSupply / n) ** n);
-        for (uint i; i < n; ++i)
+        for (uint i; i < n; ++i) {
             if (i != j) reserve = reserve / reserves[i];
+        }
     }
 
-    /// @dev calculate the mathematical product of an array of uint[]
-    function prodX(uint[] memory xs) private pure returns (uint pX) {
-        pX = xs[0];
-        for (uint i = 1; i < xs.length; ++i)
-            pX = pX * xs[i];
-    }
-
-    function name() external override pure returns (string memory) {
+    function name() external pure override returns (string memory) {
         return "Constant Product";
     }
 
-    function symbol() external override pure returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return "CP";
+    }
+
+    /// @dev calculate the mathematical product of an array of uint[]
+    function _prodX(uint[] memory xs) private pure returns (uint pX) {
+        pX = xs[0];
+        for (uint i = 1; i < xs.length; ++i) {
+            pX = pX * xs[i];
+        }
     }
 }

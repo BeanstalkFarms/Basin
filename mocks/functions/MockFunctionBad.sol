@@ -18,26 +18,22 @@ contract MockFunctionBad is IWellFunction {
 
     function calcLpTokenSupply(
         uint256[] memory reserves,
-        bytes calldata data
+        bytes calldata
     ) external pure returns (uint lpTokenSupply) {
         return reserves[0] + reserves[1];
     }
 
     /// @dev returns non-zero regardless of reserves & lp token supply. WRONG!
     function calcReserve(
-        uint256[] memory reserves,
-        uint256 j,
-        uint256 lpTokenSupply,
-        bytes calldata data
+        uint256[] memory,
+        uint256,
+        uint256,
+        bytes calldata
     ) external pure returns (uint reserve) {
         return 1000;
     }
 
-    function name() external override pure returns (string memory) {
-        revert();
-    }
+    function name() external override pure returns (string memory) {}
 
-    function symbol() external override pure returns (string memory) {
-        revert();
-    }
+    function symbol() external override pure returns (string memory) {}
 }

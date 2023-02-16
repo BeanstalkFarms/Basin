@@ -1,13 +1,11 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.17;
 
-
 /**
- * @title LibContractInfo contains logic to call functions that return information about a given contract.
- **/
+ * @title LibContractInfo
+ * @notice Contains logic to call functions that return information about a given contract.
+ */
 library LibContractInfo {
 
     /**
@@ -36,8 +34,13 @@ library LibContractInfo {
     function getName(address _contract) internal view returns (string memory name) {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("name()"));
         name = new string(8);
-        if (success) name = abi.decode(data, (string));
-        else assembly{ name := mstore(add(symbol,0x20), shl(224, shr(128, _contract))) }
+        if (success) {
+            name = abi.decode(data, (string));
+        } else {
+            assembly { 
+                mstore(add(name, 0x20), shl(224, shr(128, _contract))) 
+            }
+        }
     }
 
     /**
