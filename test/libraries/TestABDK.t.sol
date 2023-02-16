@@ -9,14 +9,14 @@ contract ABDKTest is TestHelper {
 
     int constant uUINT128 = 2 ** 128;
 
-    function check(uint a) public view returns (uint b) {
-        b = a.fromUInt().log_2().pow_2().toUInt();
-    }
+    //////////////////// CORE ////////////////////
 
-    function test_fuzzLog2Pow2(uint a) public {
+    /**
+     * @dev no hysteresis: 2^(log2(a)) == a +/- 1 (due to library rounding)
+     */
+    function testFuzz_log2Pow2(uint256 a) public {
         vm.assume(a > 0);
-        uint b = check(a);
-        //160755502
+        uint b = (a.fromUInt().log_2()).pow_2().toUInt();
         if (a <= 1e18) {
             assertApproxEqAbs(a, b, 1);
         } else {
@@ -24,16 +24,14 @@ contract ABDKTest is TestHelper {
         }
     }
 
-    function powuFraction(uint a, uint b, uint c) public pure returns (bytes16) {
-        return a.fromUInt().div(b.fromUInt()).powu(c);
-    }
+    //////////////////// EXTENSIONS ////////////////////
 
-    function testPowu1() public {
+    function test_powu1() public {
         bytes16 pu = powuFraction(11_661, 64, 9654);
         assertEq(pu, ABDKMathQuad.from128x128(57_627_117_634_665_864_530_030_077_974_524_244_518_281_427));
     }
 
-    function test_fuzzPowu(uint16 num, uint16 denom, uint16 exp) public {
+    function testFuzz_powu(uint16 num, uint16 denom, uint16 exp) public {
         vm.assume(num < denom);
         vm.assume(denom > 0);
         vm.assume(num > 0);
@@ -42,15 +40,20 @@ contract ABDKTest is TestHelper {
         inputs[0] = "python";
         inputs[1] = "test/differential/powu.py";
         inputs[2] = "--numerator";
-        inputs[4] = "--denominator";
-        inputs[6] = "--exponent";
-
         inputs[3] = uint(num).toString();
+        inputs[4] = "--denominator";
         inputs[5] = uint(denom).toString();
+        inputs[6] = "--exponent";
         inputs[7] = uint(exp).toString();
         bytes memory result = vm.ffi(inputs);
+        
         bytes16 pu = powuFraction(num, denom, exp);
         bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int)));
         assertEq(pu >> 1, pypu >> 1);
+    }
+    
+    /// @dev calculate (a/b)^c
+    function powuFraction(uint256 a, uint256 b, uint256 c) public pure returns (bytes16) {
+        return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 }

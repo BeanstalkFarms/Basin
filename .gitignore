@@ -16,3 +16,4 @@ node_modules
 stash
 lcov.info
 .DS_Store
+test/output/
