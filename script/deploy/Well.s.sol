@@ -8,12 +8,11 @@ import {Test} from "forge-std/Test.sol";
 import {Script} from "forge-std/Script.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
-import {logger} from "script/helpers/Logger.sol";
+import {logger} from "script/deploy/helpers/Logger.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Well, Call, IWellFunction, IPump, IERC20} from "src/Well.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-
 import {Aquifer} from "src/Aquifer.sol";
 
 /**

@@ -15,7 +15,14 @@ abstract contract WellDeployer {
         bytes32 _salt
     ) internal returns (Well _well) {
         (bytes memory immutableData, bytes memory initData) = encodeWellDeploymentData(_aquifer, _tokens, _wellFunction, _pumps);
-        _well = Well(Aquifer(_aquifer).boreWell(_wellImplementation, immutableData, initData, _salt));
+        _well = Well(
+            Aquifer(_aquifer).boreWell(
+                _wellImplementation,
+                immutableData,
+                initData,
+                _salt
+            )
+        );
     }
 
     function encodeWellDeploymentData(

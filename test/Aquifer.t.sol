@@ -3,9 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
-
 import {IWell, Call} from "src/interfaces/IWell.sol";
-
 import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {Aquifer} from "src/Aquifer.sol";
 
@@ -18,13 +16,22 @@ contract AquiferTest is TestHelper {
         initUser();
         deployMockTokens(10);
 
+        //    
         deployWellImplementation();
+        aquifer = new Aquifer();
+
         // Prep Wells
         wellFunction = Call(address(new ConstantProduct()), new bytes(0));
 
-        aquifer = new Aquifer();
-
-        well = boreWell(address(aquifer), wellImplementation, getTokens(2), wellFunction, pumps, bytes32(0));
+        // See {WellDeployer}
+        well = boreWell(
+            address(aquifer),
+            wellImplementation,
+            getTokens(2),
+            wellFunction,
+            pumps,
+            bytes32(0) // salt
+        );
     }
 
     /// @dev well function
@@ -36,7 +43,6 @@ contract AquiferTest is TestHelper {
         assertEq(_wellFunction.target, wellFunction.target);
         assertEq(_wellFunction.data, wellFunction.data);
     }
-
 
     //////////// DEPLOYMENT ////////////
 
