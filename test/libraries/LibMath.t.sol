@@ -34,14 +34,13 @@ contract LibMathTest is TestHelper {
 
     /// @dev for all even roots, nthRoot exactly matches `n` sqrt iterations
     function testFuzz_nthRoot_sqrtMatchAll(uint a) public {
-        // every even nth root: 2 4 6 8 10 12 14 16
-        for (uint i = 2; i < MAX_NTH_ROOT; i += 2) {
+        // every even nth root: 2 4 8 16
+        for (uint i = 1; i <= 4; ++i) {
             uint v = a;
-            // run sqrt up to i/2 times
-            for (uint j = 0; j < i / 2; ++j) {
+            for (uint j = 0; j < i; ++j) {
                 v = LibMath.sqrt(v);
             }
-            assertEq(LibMath.nthRoot(a, i), v, "nthRoot != nth sqrt");
+            assertEq(LibMath.nthRoot(a, 2**i), v, "nthRoot != nth sqrt");
         }
     }
 
