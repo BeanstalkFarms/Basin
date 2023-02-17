@@ -18,4 +18,4 @@ multiline_func_header = 'attributes_first'
 quote_style = 'double'
 number_underscore = 'preserve'
 single_line_statement_blocks = 'preserve'
-ignore = ["src/console.sol", "src/console2.sol"]
+ignore = ["src/console.sol", "src/console2.sol", "src/libraries/ABDKMathQuad.sol"]
