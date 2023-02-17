@@ -91,7 +91,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // _wellData = bytes(0); // FIXME
         _aquifer = aquifer();
     }
-    
+
     function numberOfTokens() public pure returns (uint) {
         return _getArgUint256(NUMBER_OF_TOKENS_LOC);
     }
@@ -461,8 +461,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             if (iToken == _tokens[k]) {
                 i = k;
                 foundI = true;
-            }
-            else if (jToken == _tokens[k]) {
+            } else if (jToken == _tokens[k]) {
                 j = k;
                 foundJ = true;
             }

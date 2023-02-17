@@ -7,7 +7,6 @@ pragma solidity ^0.8.17;
  * @notice Contains logic to call functions that return information about a given contract.
  */
 library LibContractInfo {
-
     /**
      * @notice gets the symbol of a given contract
      * @param _contract The contract to get the symbol of
@@ -17,10 +16,11 @@ library LibContractInfo {
     function getSymbol(address _contract) internal view returns (string memory symbol) {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("symbol()"));
         symbol = new string(4);
-        if (success) symbol = abi.decode(data, (string));
-        else {
+        if (success) {
+            symbol = abi.decode(data, (string));
+        } else {
             assembly {
-                mstore(add(symbol,0x20), shl(224, shr(128, _contract)))
+                mstore(add(symbol, 0x20), shl(224, shr(128, _contract)))
             }
         }
     }
@@ -37,8 +37,8 @@ library LibContractInfo {
         if (success) {
             name = abi.decode(data, (string));
         } else {
-            assembly { 
-                mstore(add(name, 0x20), shl(224, shr(128, _contract))) 
+            assembly {
+                mstore(add(name, 0x20), shl(224, shr(128, _contract)))
             }
         }
     }
@@ -53,5 +53,4 @@ library LibContractInfo {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("decimals()"));
         decimals = success ? abi.decode(data, (uint8)) : 18; // default to 18 decimals
     }
-
 }

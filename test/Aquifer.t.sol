@@ -12,19 +12,14 @@ contract AquiferTest is TestHelper {
     address[] wells;
 
     event BoreWell(
-        address well,
-        address implementation,
-        IERC20[] tokens,
-        Call wellFunction,
-        Call[] pumps,
-        bytes wellData
+        address well, address implementation, IERC20[] tokens, Call wellFunction, Call[] pumps, bytes wellData
     );
 
     function setUp() public {
         initUser();
         deployMockTokens(10);
 
-        //    
+        //
         deployWellImplementation();
         aquifer = new Aquifer();
 
@@ -78,14 +73,7 @@ contract AquiferTest is TestHelper {
             new bytes(0) // well data
         );
 
-        well = boreWell(
-            address(aquifer),
-            wellImplementation,
-            _tokens,
-            wellFunction,
-            pumps,
-            salt
-        );
+        well = boreWell(address(aquifer), wellImplementation, _tokens, wellFunction, pumps, salt);
 
         console.log("Well address", address(well));
     }

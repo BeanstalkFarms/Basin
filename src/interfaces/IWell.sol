@@ -104,7 +104,13 @@ interface IWell {
     function well()
         external
         view
-        returns (IERC20[] memory _tokens, Call memory _wellFunction, Call[] memory _pumps, bytes memory _wellData, address aquifer);
+        returns (
+            IERC20[] memory _tokens,
+            Call memory _wellFunction,
+            Call[] memory _pumps,
+            bytes memory _wellData,
+            address aquifer
+        );
 
     //////////////////// SWAP: FROM ////////////////////
 

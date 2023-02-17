@@ -63,7 +63,7 @@ abstract contract TestHelper is Test, WellDeployer {
         deployWellImplementation();
         aquifer = new Aquifer();
         well = Well(boreWell(address(aquifer), wellImplementation, tokens, _function, _pumps, bytes32(0)));
-        
+
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
         mintTokens(user2, initialLiquidity);

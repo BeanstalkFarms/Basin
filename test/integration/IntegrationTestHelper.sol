@@ -28,26 +28,29 @@ abstract contract IntegrationTestHelper is TestHelper {
         Call[] memory _pumps,
         Well _well
     ) internal returns (Well) {
-        // wellFunction = _function;
-        // initUser();
+        wellFunction = _function;
+        initUser();
 
-        // _well = boreWell(_tokens, wellFunction, _pumps);
+        deployWellImplementation();
+        aquifer = new Aquifer();
 
-        // // Mint mock tokens to user
-        // mintTokens(_tokens, user, initialLiquidity);
-        // mintTokens(_tokens, user2, initialLiquidity);
+        _well = Well(boreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0)));
 
-        // approveMaxTokens(_tokens, user, address(_well));
-        // approveMaxTokens(_tokens, user2, address(_well));
+        // Mint mock tokens to user
+        mintTokens(_tokens, user, initialLiquidity);
+        mintTokens(_tokens, user2, initialLiquidity);
 
-        // // Mint mock tokens to TestHelper
-        // mintTokens(_tokens, address(this), initialLiquidity * 5);
-        // approveMaxTokens(_tokens, address(this), address(_well));
+        approveMaxTokens(_tokens, user, address(_well));
+        approveMaxTokens(_tokens, user2, address(_well));
 
-        // // Add initial liquidity from TestHelper
-        // addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
+        // Mint mock tokens to TestHelper
+        mintTokens(_tokens, address(this), initialLiquidity * 5);
+        approveMaxTokens(_tokens, address(this), address(_well));
 
-        // return _well;
+        // Add initial liquidity from TestHelper
+        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
+
+        return _well;
     }
 
     /// @dev mint mock tokens to each recipient

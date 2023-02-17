@@ -14,15 +14,9 @@ abstract contract WellDeployer {
         Call[] memory _pumps,
         bytes32 _salt
     ) internal returns (Well _well) {
-        (bytes memory immutableData, bytes memory initData) = encodeWellDeploymentData(_aquifer, _tokens, _wellFunction, _pumps);
-        _well = Well(
-            Aquifer(_aquifer).boreWell(
-                _wellImplementation,
-                immutableData,
-                initData,
-                _salt
-            )
-        );
+        (bytes memory immutableData, bytes memory initData) =
+            encodeWellDeploymentData(_aquifer, _tokens, _wellFunction, _pumps);
+        _well = Well(Aquifer(_aquifer).boreWell(_wellImplementation, immutableData, initData, _salt));
     }
 
     function encodeWellDeploymentData(
@@ -43,12 +37,7 @@ abstract contract WellDeployer {
     ) internal pure returns (bytes memory immutableData) {
         bytes memory packedPumps;
         for (uint i; i < _pumps.length; ++i) {
-            packedPumps = abi.encodePacked(
-                packedPumps,
-                _pumps[i].target,
-                _pumps[i].data.length,
-                _pumps[i].data
-            );
+            packedPumps = abi.encodePacked(packedPumps, _pumps[i].target, _pumps[i].data.length, _pumps[i].data);
         }
         immutableData = abi.encodePacked(
             _aquifer, // aquifer address
@@ -74,10 +63,6 @@ abstract contract WellDeployer {
         }
         name = string.concat(name, " ", LibContractInfo.getName(_wellFunction.target), " Well");
         symbol = string.concat(symbol, LibContractInfo.getSymbol(_wellFunction.target), "w");
-        initFunctionCall = abi.encodeWithSignature(
-            "init(string,string)",
-            name,
-            symbol
-        );
+        initFunctionCall = abi.encodeWithSignature("init(string,string)", name, symbol);
     }
 }

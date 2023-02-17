@@ -14,7 +14,7 @@ contract PumpUpdateTest is TestHelper {
     GeoEmaAndCumSmaPump pump;
     uint[] b = new uint[](2);
 
-    uint256 constant BLOCK_TIME = 12;
+    uint constant BLOCK_TIME = 12;
 
     /// @dev for this test, `user` = a Well that's calling the Pump
     function setUp() public {
@@ -54,7 +54,7 @@ contract PumpUpdateTest is TestHelper {
         b[0] = 2e6;
         b[1] = 1e6;
         pump.update(b, new bytes(0));
-        
+
         uint[] memory lastReserves = pump.readLastReserves(user);
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
@@ -75,17 +75,17 @@ contract PumpUpdateTest is TestHelper {
         b[1] = 1e6; // 2e6 -> 1e6 = - 50%
         pump.update(b, new bytes(0));
 
-        // 
+        //
         uint[] memory lastReserves = pump.readLastReserves(user);
-        assertApproxEqAbs(lastReserves[0], 1.5e6, 1);   // capped
-        assertApproxEqAbs(lastReserves[1], 1e6, 1);     // uncapped
+        assertApproxEqAbs(lastReserves[0], 1.5e6, 1); // capped
+        assertApproxEqAbs(lastReserves[1], 1e6, 1); // uncapped
 
-        // 
+        //
         uint[] memory lastEmaReserves = pump.readInstantaneousReserves(user);
         assertEq(lastEmaReserves[0], 1_337_697);
         assertEq(lastEmaReserves[1], 1_216_241);
 
-        // 
+        //
         bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(user);
         assertApproxEqAbs(lastCumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(lastCumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
