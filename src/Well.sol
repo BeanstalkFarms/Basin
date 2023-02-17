@@ -173,6 +173,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage from imprecision goes to the Well or to the User.
         amountIn = reserves[i] - reserveIBefore;
 
+        // slippage check needs to move to the actual amount out
+        // need to take delta across _executeSwap
         require(amountIn <= maxAmountIn, "Well: slippage");
         _setReserves(reserves);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
@@ -221,7 +223,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
-            reserves[i] = reserves[i] + tokenAmountsIn[i];
+            reserves[i] = reserves[i] + tokenAmountsIn[i]; //
         }
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
 
@@ -449,19 +451,35 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     //////////////////// WELL TOKEN INDEXING ////////////////////
 
     /**
-     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
+     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`. Reverts if either token is not in `_tokens`.
      */
     function _getIJ(IERC20[] memory _tokens, IERC20 iToken, IERC20 jToken) internal pure returns (uint i, uint j) {
+        bool foundI = false;
+        bool foundJ = false;
+
         for (uint k; k < _tokens.length; ++k) {
-            if (iToken == _tokens[k]) i = k;
-            else if (jToken == _tokens[k]) j = k;
+            if (iToken == _tokens[k]) {
+                i = k;
+                foundI = true;
+            }
+            else if (jToken == _tokens[k]) {
+                j = k;
+                foundJ = true;
+            }
         }
+
+        require(foundI && foundJ, "Well: Invalid tokens");
     }
 
     /**
-     * @dev Returns the index of `jToken` in `_tokens`.
+     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is not in `_tokens`.
      */
     function _getJ(IERC20[] memory _tokens, IERC20 jToken) internal pure returns (uint j) {
-        for (j; jToken != _tokens[j]; ++j) {}
+        for (j; j < _tokens.length; ++j) {
+            if (jToken == _tokens[j]) {
+                return j;
+            }
+        }
+        revert("Well: Invalid tokens");
     }
 }
