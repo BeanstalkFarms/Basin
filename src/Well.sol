@@ -36,20 +36,27 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// WELL DEFINITION ////////////////////
 
+    uint constant AQUIFER_LOC = 0;
+    uint constant NUMBER_OF_TOKENS_LOC = AQUIFER_LOC + 20;
+    uint constant WELL_FUNCTION_ADDRESS_LOC = NUMBER_OF_TOKENS_LOC + 32;
+    uint constant NUMBER_OF_WELL_FUNCTION_BYTES_LOC = WELL_FUNCTION_ADDRESS_LOC + 20;
+    uint constant NUMBER_OF_PUMPS_LOC = NUMBER_OF_WELL_FUNCTION_BYTES_LOC + 32;
+    uint constant VARIABLE_LOC = NUMBER_OF_PUMPS_LOC + 32;
+
     function tokens() public pure returns (IERC20[] memory ts) {
-        ts = _getArgIERC20Array(136, numberOfTokens());
+        ts = _getArgIERC20Array(VARIABLE_LOC, numberOfTokens());
     }
 
     function wellFunction() public pure returns (Call memory _wellFunction) {
         _wellFunction.target = wellFunctionAddress();
-        uint dataLoc = 136 + numberOfTokens() * 32;
+        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32;
         _wellFunction.data = _getArgBytes(dataLoc, numberOfWellFunctionBytes());
     }
 
     function pumps() public pure returns (Call[] memory _pumps) {
         if (numberOfPumps() == 0) return _pumps;
         _pumps = new Call[](numberOfPumps());
-        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32 + numberOfWellFunctionBytes();
         uint numberOfPumpBytes;
         for (uint i = 0; i < _pumps.length; i++) {
             _pumps[i].target = _getArgAddress(dataLoc);
@@ -64,7 +71,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function wellData() public pure returns (bytes memory) {}
 
     function aquifer() public pure override returns (address) {
-        return _getArgAddress(0);
+        return _getArgAddress(AQUIFER_LOC);
     }
 
     function well()
@@ -86,23 +93,23 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
     
     function numberOfTokens() public pure returns (uint) {
-        return _getArgUint256(20);
+        return _getArgUint256(NUMBER_OF_TOKENS_LOC);
     }
 
     function numberOfWellFunctionBytes() public pure returns (uint) {
-        return _getArgUint256(72);
+        return _getArgUint256(NUMBER_OF_WELL_FUNCTION_BYTES_LOC);
     }
 
     function wellFunctionAddress() public pure returns (address) {
-        return _getArgAddress(52);
+        return _getArgAddress(WELL_FUNCTION_ADDRESS_LOC);
     }
 
     function numberOfPumps() public pure returns (uint) {
-        return _getArgUint256(104);
+        return _getArgUint256(NUMBER_OF_PUMPS_LOC);
     }
 
     function firstPump() public pure returns (Call memory _pump) {
-        uint dataLoc = 136 + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32 + numberOfWellFunctionBytes();
         _pump.target = _getArgAddress(dataLoc);
         uint numberOfPumpBytes = _getArgUint256(dataLoc + 20);
         _pump.data = _getArgBytes(dataLoc + 52, numberOfPumpBytes);
