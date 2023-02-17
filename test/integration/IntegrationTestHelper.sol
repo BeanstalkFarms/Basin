@@ -7,7 +7,7 @@ import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
-import {LibContractInfo} from "script/helpers/LibContractInfo.sol";
+import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Users} from "test/helpers/Users.sol";
 import {TestHelper, Balances} from "test/TestHelper.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";

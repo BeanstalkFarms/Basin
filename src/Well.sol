@@ -40,7 +40,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     /// This Well uses a dynamic immutable storage layout. Immutable storage is
     /// used for gas-efficient reads during Well operation. The Well must be
     /// created by cloning with a pre-encoded byte string containing immutable
-    /// data. 
+    /// data.
     ///
     /// Let n = number of tokens
     ///     m = length of well function data (bytes)

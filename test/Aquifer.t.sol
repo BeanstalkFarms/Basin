@@ -6,6 +6,7 @@ import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
+import {LibWellConstructor} from "src/libraries/LibWellConstructor.sol";
 import {Aquifer} from "src/Aquifer.sol";
 
 contract AquiferTest is TestHelper {
@@ -58,7 +59,7 @@ contract AquiferTest is TestHelper {
 
         address a = LibClone.predictDeterministicAddress(
             address(wellImplementation),
-            encodeWellImmutableData(address(aquifer), _tokens, wellFunction, pumps),
+            LibWellConstructor.encodeWellImmutableData(address(aquifer), _tokens, wellFunction, pumps),
             salt,
             address(aquifer)
         );

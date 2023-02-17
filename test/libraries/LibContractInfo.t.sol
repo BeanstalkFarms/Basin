@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, console} from "test/TestHelper.sol";
-import {LibContractInfo} from "script/helpers/LibContractInfo.sol";
+import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 
 contract LibMathTest is TestHelper {
     using LibContractInfo for address;
