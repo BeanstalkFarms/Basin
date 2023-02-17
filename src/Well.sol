@@ -17,6 +17,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * @author Publius, Silo Chad, Brean
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
+ *
  */
 contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
@@ -36,43 +37,75 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// WELL DEFINITION ////////////////////
 
-    uint constant AQUIFER_LOC = 0;
-    uint constant NUMBER_OF_TOKENS_LOC = AQUIFER_LOC + 20;
-    uint constant WELL_FUNCTION_ADDRESS_LOC = NUMBER_OF_TOKENS_LOC + 32;
-    uint constant NUMBER_OF_WELL_FUNCTION_BYTES_LOC = WELL_FUNCTION_ADDRESS_LOC + 20;
-    uint constant NUMBER_OF_PUMPS_LOC = NUMBER_OF_WELL_FUNCTION_BYTES_LOC + 32;
-    uint constant VARIABLE_LOC = NUMBER_OF_PUMPS_LOC + 32;
+    /// This Well uses a dynamic immutable storage layout. Immutable storage is
+    /// used for gas-efficient reads during Well operation. The Well must be
+    /// created by cloning with a pre-encoded byte string containing immutable
+    /// data. 
+    ///
+    /// Let n = number of tokens
+    ///     m = length of well function data (bytes)
+    ///
+    /// TYPE        NAME                       LOCATION (CONSTANT)
+    /// ==============================================================
+    /// address     aquifer()                  0        (LOC_AQUIFER_ADDR)
+    /// uint256     numberOfTokens()           20       (LOC_TOKENS_COUNT)
+    /// address     wellFunctionAddress()      52       (LOC_WELL_FUNCTION_ADDR)
+    /// uint256     wellFunctionDataLength()   72       (LOC_WELL_FUNCTION_DATA_LENGTH)
+    /// uint256     numberOfPumps()            104      (LOC_PUMPS_COUNT)
+    /// --------------------------------------------------------------
+    /// address     token0                     136      (LOC_VARIABLE)
+    /// ...
+    /// address     tokenN                     136 + (n-1) * 32
+    /// --------------------------------------------------------------
+    /// byte        wellFunctionData0          136 + n * 32
+    /// ...
+    /// byte        wellFunctionDataM          136 + n * 32 + m
+    /// --------------------------------------------------------------
+    /// address     pump1Address               136 + n * 32 + m
+    /// uint256     pump1DataLength            136 + n * 32 + m + 20
+    /// byte        pump1Data                  136 + n * 32 + m + 52
+    /// ...
+    /// ==============================================================
+
+    uint constant LOC_AQUIFER_ADDR = 0;
+    uint constant LOC_TOKENS_COUNT = LOC_AQUIFER_ADDR + 20;
+    uint constant LOC_WELL_FUNCTION_ADDR = LOC_TOKENS_COUNT + 32;
+    uint constant LOC_WELL_FUNCTION_DATA_LENGTH = LOC_WELL_FUNCTION_ADDR + 20;
+    uint constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + 32;
+    uint constant LOC_VARIABLE = LOC_PUMPS_COUNT + 32;
 
     function tokens() public pure returns (IERC20[] memory ts) {
-        ts = _getArgIERC20Array(VARIABLE_LOC, numberOfTokens());
+        ts = _getArgIERC20Array(LOC_VARIABLE, numberOfTokens());
     }
 
     function wellFunction() public pure returns (Call memory _wellFunction) {
         _wellFunction.target = wellFunctionAddress();
-        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32;
-        _wellFunction.data = _getArgBytes(dataLoc, numberOfWellFunctionBytes());
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32;
+        _wellFunction.data = _getArgBytes(dataLoc, wellFunctionDataLength());
     }
 
     function pumps() public pure returns (Call[] memory _pumps) {
         if (numberOfPumps() == 0) return _pumps;
+
         _pumps = new Call[](numberOfPumps());
-        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32 + numberOfWellFunctionBytes();
-        uint numberOfPumpBytes;
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32 + wellFunctionDataLength();
+
+        uint pumpDataLength;
         for (uint i = 0; i < _pumps.length; i++) {
             _pumps[i].target = _getArgAddress(dataLoc);
             dataLoc += 20;
-            numberOfPumpBytes = _getArgUint256(dataLoc);
+            pumpDataLength = _getArgUint256(dataLoc);
             dataLoc += 32;
-            _pumps[i].data = _getArgBytes(dataLoc, numberOfPumpBytes);
-            dataLoc += numberOfPumpBytes;
+            _pumps[i].data = _getArgBytes(dataLoc, pumpDataLength);
+            dataLoc += pumpDataLength;
         }
     }
 
-    function wellData() public pure returns (bytes memory) {}
-
     function aquifer() public pure override returns (address) {
-        return _getArgAddress(AQUIFER_LOC);
+        return _getArgAddress(LOC_AQUIFER_ADDR);
     }
+
+    function wellData() public pure returns (bytes memory) {}
 
     function well()
         external
@@ -92,27 +125,46 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _aquifer = aquifer();
     }
 
+    //////////////////// WELL DEFINITION: HELPERS ////////////////////
+
+    /**
+     * @notice Returns the number of tokens that are tradable in this Well.
+     * @dev Length of the `tokens()` array.
+     */
     function numberOfTokens() public pure returns (uint) {
-        return _getArgUint256(NUMBER_OF_TOKENS_LOC);
+        return _getArgUint256(LOC_TOKENS_COUNT);
     }
 
-    function numberOfWellFunctionBytes() public pure returns (uint) {
-        return _getArgUint256(NUMBER_OF_WELL_FUNCTION_BYTES_LOC);
-    }
-
+    /**
+     * @notice Returns the address of the Well Function.
+     */
     function wellFunctionAddress() public pure returns (address) {
-        return _getArgAddress(WELL_FUNCTION_ADDRESS_LOC);
+        return _getArgAddress(LOC_WELL_FUNCTION_ADDR);
     }
 
+    /**
+     * @notice Returns the length of the configurable `data` parameter passed during calls to the Well Function.
+     */
+    function wellFunctionDataLength() public pure returns (uint) {
+        return _getArgUint256(LOC_WELL_FUNCTION_DATA_LENGTH);
+    }
+
+    /**
+     * @notice Returns the number of Pumps which this Well was initialized with.
+     */
     function numberOfPumps() public pure returns (uint) {
-        return _getArgUint256(NUMBER_OF_PUMPS_LOC);
+        return _getArgUint256(LOC_PUMPS_COUNT);
     }
 
+    /**
+     * @notice Returns address & data used to call the first Pump.
+     * @dev Provided as an optimization in the case where {numberOfPumps} returns 1.
+     */
     function firstPump() public pure returns (Call memory _pump) {
-        uint dataLoc = VARIABLE_LOC + numberOfTokens() * 32 + numberOfWellFunctionBytes();
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32 + wellFunctionDataLength();
         _pump.target = _getArgAddress(dataLoc);
-        uint numberOfPumpBytes = _getArgUint256(dataLoc + 20);
-        _pump.data = _getArgBytes(dataLoc + 52, numberOfPumpBytes);
+        uint pumpDataLength = _getArgUint256(dataLoc + 20);
+        _pump.data = _getArgBytes(dataLoc + 52, pumpDataLength);
     }
 
     //////////////////// SWAP: FROM ////////////////////
