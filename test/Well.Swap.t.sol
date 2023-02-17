@@ -6,7 +6,6 @@ import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 contract WellSwapTest is TestHelper {
-
     Well badWell;
 
     event AddLiquidity(uint[] amounts);
@@ -234,14 +233,8 @@ contract WellSwapTest is TestHelper {
         // Its `getBalance` function can return an amount greater than
         // the Well holds.
         IWellFunction badFunction = new MockFunctionBad();
-        badWell = boreWell(
-            address(aquifer),
-            wellImplementation,
-            tokens,
-            Call(address(badFunction), ""),
-            pumps,
-            bytes32(0)
-        );
+        badWell =
+            boreWell(address(aquifer), wellImplementation, tokens, Call(address(badFunction), ""), pumps, bytes32(0));
 
         // check assumption that reserves are empty
         Balances memory wellBalances = getBalances(address(badWell), badWell);

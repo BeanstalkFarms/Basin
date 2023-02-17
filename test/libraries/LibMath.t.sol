@@ -40,7 +40,7 @@ contract LibMathTest is TestHelper {
             for (uint j = 0; j < i; ++j) {
                 v = LibMath.sqrt(v);
             }
-            assertEq(LibMath.nthRoot(a, 2**i), v, "nthRoot != nth sqrt");
+            assertEq(LibMath.nthRoot(a, 2 ** i), v, "nthRoot != nth sqrt");
         }
     }
 

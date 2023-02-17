@@ -48,12 +48,7 @@ contract ImmutableTest is TestHelper {
 
         address wellFunction = address(new ConstantProduct2());
         Well _well = boreWell(
-            address(aquifer),
-            wellImplementation,
-            wellTokens,
-            Call(wellFunction, wellFunctionBytes),
-            pumps,
-            bytes32(0)
+            address(aquifer), wellImplementation, wellTokens, Call(wellFunction, wellFunctionBytes), pumps, bytes32(0)
         );
 
         // Check pumps

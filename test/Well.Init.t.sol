@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 
 contract WellInitTest is TestHelper {
-
     event AddLiquidity(uint[] amounts);
 
     function setUp() public {
@@ -76,7 +75,13 @@ contract WellInitTest is TestHelper {
 
     /// @dev well
     function test_well() public {
-        (IERC20[] memory _wellTokens, Call memory _wellFunction, Call[] memory _wellPumps, bytes memory _wellData, address _aquifer) = well.well();
+        (
+            IERC20[] memory _wellTokens,
+            Call memory _wellFunction,
+            Call[] memory _wellPumps,
+            bytes memory _wellData,
+            address _aquifer
+        ) = well.well();
 
         check_tokens(_wellTokens);
         check_wellFunction(_wellFunction);

@@ -95,13 +95,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
 
         for (uint i = 0; i < reserves.length; i++) {
-            b.lastReserves[i] = _capReserve(
-                b.lastReserves[i],
-                reserves[i].fromUInt().log_2(),
-                blocksPassed
-            );
-            b.emaReserves[i] = 
-                b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
+            b.lastReserves[i] = _capReserve(b.lastReserves[i], reserves[i].fromUInt().log_2(), blocksPassed);
+            b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
         }
 
@@ -151,7 +146,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     function readLastReserves(address well) public view returns (uint[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
-        (, , bytes16[] memory bytesReserves) = slot.readLastReserves();
+        (,, bytes16[] memory bytesReserves) = slot.readLastReserves();
         reserves = new uint[](bytesReserves.length);
         for (uint i = 0; i < reserves.length; i++) {
             reserves[i] = bytesReserves[i].pow_2().toUInt();
@@ -160,7 +155,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     /**
      * @dev Adds a cap to the reserve value to prevent extreme changes.
-     * 
+     *
      *  Linear space:
      *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ blocks)
      *
@@ -178,7 +173,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
-        // TODO: What if reserve 0? 
+        // TODO: What if reserve 0?
         if (reserve < lastReserve) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
             if (reserve < minReserve) reserve = minReserve;

@@ -6,7 +6,6 @@ import {Test, console} from "forge-std/Test.sol";
 import {Well, IERC20} from "test/TestHelper.sol";
 
 contract WellInternalTest is Well, Test {
-
     IERC20[] _tokens;
     IERC20 token0;
     IERC20 token1;
@@ -28,7 +27,7 @@ contract WellInternalTest is Well, Test {
         (uint i, uint j) = _getIJ(_tokens, token0, token1);
         assertEq(i, 0);
         assertEq(j, 1);
-        
+
         (i, j) = _getIJ(_tokens, token1, token0);
         assertEq(i, 1);
         assertEq(j, 0);
@@ -36,10 +35,10 @@ contract WellInternalTest is Well, Test {
 
     function testFuzz_getIJ(uint n) public {
         n = bound(n, 2, 16);
-        
+
         _tokens = new IERC20[](n);
         for (uint i = 1; i <= n; ++i) {
-            _tokens[i-1] = IERC20(address(uint160(i)));
+            _tokens[i - 1] = IERC20(address(uint160(i)));
         }
 
         // Check all combinations of tokens

@@ -14,7 +14,7 @@ contract ABDKTest is TestHelper {
     /**
      * @dev no hysteresis: 2^(log2(a)) == a +/- 1 (due to library rounding)
      */
-    function testFuzz_log2Pow2(uint256 a) public {
+    function testFuzz_log2Pow2(uint a) public {
         vm.assume(a > 0);
         uint b = (a.fromUInt().log_2()).pow_2().toUInt();
         if (a <= 1e18) {
@@ -46,14 +46,14 @@ contract ABDKTest is TestHelper {
         inputs[6] = "--exponent";
         inputs[7] = uint(exp).toString();
         bytes memory result = vm.ffi(inputs);
-        
+
         bytes16 pu = powuFraction(num, denom, exp);
         bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int)));
         assertEq(pu >> 1, pypu >> 1);
     }
-    
+
     /// @dev calculate (a/b)^c
-    function powuFraction(uint256 a, uint256 b, uint256 c) public pure returns (bytes16) {
+    function powuFraction(uint a, uint b, uint c) public pure returns (bytes16) {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 }

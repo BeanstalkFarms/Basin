@@ -18,5 +18,4 @@ contract LibMathTest is TestHelper {
     function test_getName() public {
         assertEq(address(tokens[0]).getName(), "Token 0");
     }
-
 }

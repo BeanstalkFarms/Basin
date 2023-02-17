@@ -20,12 +20,7 @@ interface IAquifer {
      * @param wellData The Well data to implement into the Well
      */
     event BoreWell(
-        address well, 
-        address implementation, 
-        IERC20[] tokens, 
-        Call wellFunction, 
-        Call[] pumps, 
-        bytes wellData
+        address well, address implementation, IERC20[] tokens, Call wellFunction, Call[] pumps, bytes wellData
     );
 
     /**
@@ -44,11 +39,11 @@ interface IAquifer {
     ) external returns (address wellAddress);
 
     /**
-    * @notice returns the implementation that a given Well was deployed with.
-    * @param well The Well to get the implementation of
-    * @return implementation The address of the implementation of a Well.
-    * @dev Always verify that a Well was deployed by a trusted Aquifer using a trusted implementation before using.
-    * If `wellImplementation == address(0)`, then the Aquifer did not deploy the Well.
-    */
+     * @notice returns the implementation that a given Well was deployed with.
+     * @param well The Well to get the implementation of
+     * @return implementation The address of the implementation of a Well.
+     * @dev Always verify that a Well was deployed by a trusted Aquifer using a trusted implementation before using.
+     * If `wellImplementation == address(0)`, then the Aquifer did not deploy the Well.
+     */
     function wellImplementation(address well) external view returns (address implementation);
 }

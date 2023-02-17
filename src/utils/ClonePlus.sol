@@ -7,28 +7,19 @@ import {IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 /// @title ClonePlus
 /// @notice Extends Clone with additional helper functions
 contract ClonePlus is Clone {
-
-    uint256 private constant ONE_WORD = 0x20;
+    uint private constant ONE_WORD = 0x20;
 
     /// @notice Reads a IERC20 array stored in the immutable args.
     /// @param argOffset The offset of the arg in the packed data
     /// @param arrLen Number of elements in the array
     /// @return arr The array
-    function _getArgIERC20Array(uint256 argOffset, uint256 arrLen)
-        internal
-        pure
-      returns (IERC20[] memory arr)
-    {
-        uint256 offset = _getImmutableArgsOffset() + argOffset;
+    function _getArgIERC20Array(uint argOffset, uint arrLen) internal pure returns (IERC20[] memory arr) {
+        uint offset = _getImmutableArgsOffset() + argOffset;
         arr = new IERC20[](arrLen);
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            calldatacopy(
-                add(arr, ONE_WORD),
-                offset,
-                shl(5, arrLen)
-            )
+            calldatacopy(add(arr, ONE_WORD), offset, shl(5, arrLen))
         }
     }
 
@@ -36,22 +27,14 @@ contract ClonePlus is Clone {
     /// @param argOffset The offset of the arg in the packed data
     /// @param bytesLen Number of bytes in the data
     /// @return data the bytes data
-    function _getArgBytes(uint256 argOffset, uint256 bytesLen)
-        internal
-        pure
-      returns (bytes memory data)
-    {
+    function _getArgBytes(uint argOffset, uint bytesLen) internal pure returns (bytes memory data) {
         if (bytesLen == 0) return data;
-        uint256 offset = _getImmutableArgsOffset() + argOffset;
+        uint offset = _getImmutableArgsOffset() + argOffset;
         data = new bytes(bytesLen);
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            calldatacopy(
-                add(data, ONE_WORD),
-                offset,
-                shl(5, bytesLen)
-            )
+            calldatacopy(add(data, ONE_WORD), offset, shl(5, bytesLen))
         }
     }
 }
