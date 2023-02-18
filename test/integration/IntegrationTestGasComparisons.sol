@@ -64,7 +64,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     function testFuzz_wells_WethDai_Swap(uint amountIn) public {
         vm.pauseGasMetering();
-        uint amountIn = bound(amountIn, 1e18, daiWethTokens[1].balanceOf(address(this)));
+        amountIn = bound(amountIn, 1e18, daiWethTokens[1].balanceOf(address(this)));
         vm.resumeGasMetering();
 
         daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this));
@@ -72,7 +72,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {
         vm.pauseGasMetering();
-        uint amountIn = bound(amountIn, 1e18, 1000e18);
+        amountIn = bound(amountIn, 1e18, 1000e18);
 
         WETH.approve(address(depot), type(uint).max);
 
@@ -113,6 +113,44 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         bytes[] memory _farmCalls = new bytes[](2);
         _farmCalls[0] = abi.encodeWithSelector(
             depot.transferToken.selector, WETH, address(pipeline), amountIn, From.EXTERNAL, To.EXTERNAL
+        );
+        _farmCalls[1] = abi.encodeWithSelector(depot.advancedPipe.selector, _pipeCall, 0);
+
+        vm.resumeGasMetering();
+        depot.farm(_farmCalls);
+    }
+
+    function testFuzz_wells_WethDaiUsdc_Shift(uint amountIn) public {
+        vm.pauseGasMetering();
+        amountIn = bound(amountIn, 1e18, 1000e18);
+
+        WETH.approve(address(depot), type(uint).max);
+
+        // unlike swap test (previous test), no tokens are sent back to pipeline.
+        // this means that pipeline does not prior approvals. 
+
+        AdvancedPipeCall[] memory _pipeCall = new AdvancedPipeCall[](2);
+        // shift, get DAI
+        _pipeCall[0].target = address(daiWethWell);
+        _pipeCall[0].callData = abi.encodeWithSelector(
+            Well.shift.selector, 
+            address(daiUsdcWell), // recipient
+            daiWethTokens[0], // output Token
+            0 // minAmountOut
+        );
+        _pipeCall[0].clipboard = abi.encodePacked(uint(0));
+        // shift, get USDC
+        _pipeCall[1].target = address(daiUsdcWell);
+        _pipeCall[1].callData = abi.encodeWithSelector(
+            Well.shift.selector, 
+            address(this), // recipient
+            daiUsdcTokens[1], // output Token
+            0 // minAmountOut
+        );
+        _pipeCall[1].clipboard = abi.encodePacked(uint(0));
+        bytes[] memory _farmCalls = new bytes[](2);
+        _farmCalls[0] = abi.encodeWithSelector(
+            depot.transferToken.selector, WETH, address(daiWethWell), amountIn, From.EXTERNAL, To.EXTERNAL
         );
         _farmCalls[1] = abi.encodeWithSelector(depot.advancedPipe.selector, _pipeCall, 0);
 
