@@ -279,4 +279,12 @@ interface IWell {
      * @return skimAmounts The amount of each token skimmed
      */
     function skim(address recipient) external returns (uint[] memory skimAmounts);
+
+    /**
+     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`
+     *  after recalibrating the Well's internal accounting.
+     * @param recipient The address to send the tokens
+     * @return shiftAmounts The amount of each token that's shifted
+     */
+    function shift(address recipient) external returns (uint[] memory shiftAmounts);
 }

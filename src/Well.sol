@@ -423,6 +423,27 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
+    //////////////////// SHIFT ////////////////////
+
+    function shift(address recipient) external nonReentrant returns (uint[] memory shiftAmounts) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = _getReserves(_tokens.length);
+
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+
+        shiftAmounts = new uint[](_tokens.length);
+
+        for (uint i; i < _tokens.length; ++i) {
+            uint newReserve = _calcReserve(wellFunction(), reserves, i, totalSupply());
+            shiftAmounts[i] = reserves[i] - newReserve;
+            if (shiftAmounts[i] > 0) {
+                _tokens[i].safeTransfer(recipient, shiftAmounts[i]);
+            }
+        }
+    }
+
     //////////////////// UPDATE PUMP ////////////////////
 
     /**
