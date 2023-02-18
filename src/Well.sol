@@ -12,6 +12,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {LibBytes} from "src/libraries/LibBytes.sol";
 import {ClonePlus} from "src/utils/ClonePlus.sol";
 
+
 /**
  * @title Well
  * @author Publius, Silo Chad, Brean
@@ -193,7 +194,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
+    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) public view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -425,22 +426,45 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// SHIFT ////////////////////
 
-    function shift(address recipient) external nonReentrant returns (uint[] memory shiftAmounts) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory reserves = _getReserves(_tokens.length);
+    // TODO questions: 
+    // do we need to check whether the token is in the pool?
+    // currently we loop over the tokens in the pool, and check whether the balance is greater than the reserve
+    // may be inefficent as we may not need to check the balance of for every pool 
+    // will it revert? 
+    function shift(
+        address recipient, 
+        IERC20 tokenOut, 
+        uint256 minAmountOut
+    ) external nonReentrant returns (uint256 amtOut) {
+        IERC20[] memory _tokens = tokens(); // gets the token addresses of the well
+        uint[] memory reserves = _getReserves(_tokens.length); // gets the reserves of the token of the well given length
+        uint tokenOutIndex = _getJ(_tokens, tokenOut); // get the index of the tokenOut
+        uint tokenBalance;
+        uint reserveBalance;
+        for(uint i; i < _tokens.length; ++i) {
+            // we can skip the check for the tokenOut: 
+            // This ignores the case where there is excess tokenOut, for gas efficency 
+            if(_tokens[i] == tokenOut) continue;
 
-        for (uint i; i < _tokens.length; ++i) {
-            reserves[i] = _tokens[i].balanceOf(address(this));
-        }
-
-        shiftAmounts = new uint[](_tokens.length);
-
-        for (uint i; i < _tokens.length; ++i) {
-            uint newReserve = _calcReserve(wellFunction(), reserves, i, totalSupply());
-            shiftAmounts[i] = reserves[i] - newReserve;
-            if (shiftAmounts[i] > 0) {
-                _tokens[i].safeTransfer(recipient, shiftAmounts[i]);
+            // check whether the balance of the token is greater than the reserve
+            // TODO: is gas saved by assigning rather then calling? 
+            // tokenBalance is used 3 times,
+            // reserveBalance is called reserveBalance
+            tokenBalance = _tokens[i].balanceOf(address(this));
+            reserveBalance = reserves[i];
+            if (tokenBalance > reserveBalance) {
+                // if so, calculate the swap out, and update the reserves
+                amtOut += getSwapOut(_tokens[i], tokenOut, tokenBalance - reserveBalance); // calc swap out
+                reserves[i] = tokenBalance; // update reserves to balances
             }
+        }
+        // transfer amt to recipient, update reserve for tokenOut
+        if(amtOut >= minAmountOut) {
+            tokenOut.safeTransfer(recipient, amtOut);
+            reserves[tokenOutIndex] -= amtOut;
+            _setReserves(reserves);
+        } else {
+            revert("Well: slippage");
         }
     }
 
