@@ -226,7 +226,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
-        uint offset = getSlotsOffset(n) * 2;
+        uint offset = getSlotsOffset(n) << 2;
         assembly {
             slot := add(slot, offset)
         }
@@ -241,7 +241,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
-        uint offset = getSlotsOffset(n) * 2;
+        uint offset = getSlotsOffset(n) << 2;
         assembly {
             slot := add(slot, offset)
         }
@@ -282,7 +282,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
     function getSlotsOffset(uint n) internal pure returns (uint) {
-        return ((n - 1) / 2 + 1) * 32; // Maybe change to n * 32?
+        return ((n - 1) / 2 + 1) << 32; // Maybe change to n * 32?
     }
 
     /**
