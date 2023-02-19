@@ -123,10 +123,10 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * reserves data.
      */
     function _init(bytes32 slot, uint40 lastTimestamp, uint[] memory reserves) internal {
-        bytes16[] memory byteReserves = new bytes16[](reserves.length);
+        uint length = reserves.length;
+        bytes16[] memory byteReserves = new bytes16[](length);
 
         // Skip {_capReserve} since we have no prior reference
-        uint length = reserves.length;
         for (uint i = 0; i < length; i++) {
             byteReserves[i] = reserves[i].fromUInt().log_2();
         }
