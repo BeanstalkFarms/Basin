@@ -2,16 +2,13 @@
 
 pragma solidity ^0.8.17;
 
-import "src/interfaces/pumps/IPump.sol";
-import "src/interfaces/pumps/IInstantaneousPump.sol";
-import "src/interfaces/pumps/ICumulativePump.sol";
-import "src/libraries/ABDKMathQuad.sol";
-import "src/libraries/LibBytes16.sol";
-import "src/libraries/LibLastReserveBytes.sol";
-import "oz/utils/math/SafeCast.sol";
-
-// TODO: Remove this import
-import "forge-std/console.sol";
+import {IPump} from "src/interfaces/pumps/IPump.sol";
+import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
+import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
+import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
+import {LibBytes16} from "src/libraries/LibBytes16.sol";
+import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
+import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 /**
  * @title GeoEmaAndCumSmaPump
@@ -49,12 +46,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @param _blockTime The block time in the current EVM in seconds.
      * @param _A The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
-    constructor(
-        bytes16 _maxPercentIncrease,
-        bytes16 _maxPercentDecrease,
-        uint _blockTime,
-        bytes16 _A
-    ) {
+    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint _blockTime, bytes16 _A) {
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
         require(_maxPercentDecrease < ABDKMathQuad.ONE);
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
