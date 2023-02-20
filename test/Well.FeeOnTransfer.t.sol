@@ -41,6 +41,5 @@ contract WellFeeOnTransferTest is TestHelper {
 
         vm.expectRevert("Well: Invalid reserve");
         well.addLiquidity(amounts, lpAmountOut, user);
-
     }
 }
