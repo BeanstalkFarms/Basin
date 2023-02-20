@@ -126,7 +126,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16[] memory byteReserves = new bytes16[](reserves.length);
 
         // Skip {_capReserve} since we have no prior reference
-        for (uint i = 0; i < reserves.length; i++) {
+        for (uint i = 0; i < reserves.length; ++i) {
             byteReserves[i] = reserves[i].fromUInt().log_2();
         }
 
@@ -148,7 +148,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes32 slot = getSlotForAddress(well);
         (,, bytes16[] memory bytesReserves) = slot.readLastReserves();
         reserves = new uint[](bytesReserves.length);
-        for (uint i = 0; i < reserves.length; i++) {
+        for (uint i = 0; i < reserves.length; ++i) {
             reserves[i] = bytesReserves[i].pow_2().toUInt();
         }
     }
@@ -196,7 +196,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
         bytes16[] memory byteReserves = slot.readBytes16(n);
         reserves = new uint[](n);
-        for (uint i = 0; i < reserves.length; i++) {
+        for (uint i = 0; i < reserves.length; ++i) {
             reserves[i] = byteReserves[i].pow_2().toUInt();
         }
     }
@@ -212,7 +212,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
         bytes16 aN = A.powu(deltaTimestamp);
         reserves = new uint[](n);
-        for (uint i = 0; i < reserves.length; i++) {
+        for (uint i = 0; i < reserves.length; ++i) {
             reserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(lastEmaReserves[i].mul(aN)).pow_2().toUInt();
         }
@@ -248,7 +248,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         cumulativeReserves = slot.readBytes16(n);
         bytes16 deltaTimestamp = getDeltaTimestamp(lastTimestamp).fromUInt();
         // TODO: Overflow desired ????
-        for (uint i = 0; i < cumulativeReserves.length; i++) {
+        for (uint i = 0; i < cumulativeReserves.length; ++i) {
             cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestamp));
         }
     }
@@ -262,7 +262,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
         twaReserves = new uint[](cumulativeReserves.length);
         bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt(); // TODO: Verify no safe cast is desired
-        for (uint i = 0; i < cumulativeReserves.length; i++) {
+        for (uint i = 0; i < cumulativeReserves.length; ++i) {
             // TODO: Unchecked?
             twaReserves[i] =
                 (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2().toUInt();
