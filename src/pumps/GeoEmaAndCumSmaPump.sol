@@ -286,7 +286,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
     function getSlotsOffset(uint n) internal pure returns (uint) {
-        return ((n - 1) / 2 + 1) << 32; // Maybe change to n * 32?
+        return ((n - 1) / 2 + 1) << 5; // Maybe change to n * 32?
     }
 
     /**
