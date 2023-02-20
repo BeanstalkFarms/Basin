@@ -94,7 +94,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // TODO: Always require > 1 ???? Round up ????? `Look into timestamp manipulation
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
 
-        for (uint i = 0; i < reserves.length; i++) {
+        for (uint i = 0; i < reserves.length; ++i) {
             b.lastReserves[i] = _capReserve(b.lastReserves[i], reserves[i].fromUInt().log_2(), blocksPassed);
             b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
