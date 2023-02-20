@@ -20,7 +20,8 @@ contract PumpUpdateTest is TestHelper {
     function setUp() public {
         initUser();
         pump = new GeoEmaAndCumSmaPump(
-            from18(0.5e18), // max % change in reserves per block is 50%
+            from18(0.5e18), // max % increase in reserves per block is 50%
+            from18(0.5e18), // max % decrease in reserves per block is 33.33% (1 - 1 / (1 + 0.5))
             12, // block time
             from18(0.9e18) // ema alpha
         );

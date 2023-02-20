@@ -44,13 +44,20 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     }
 
     /**
-     * @param _maxPercentChange The maximum percent change allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
+     * @param _maxPercentIncrease The maximum percent increase allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
+     * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _blockTime The block time in the current EVM in seconds.
      * @param _A The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
-    constructor(bytes16 _maxPercentChange, uint _blockTime, bytes16 _A) {
-        LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentChange).log_2();
-        LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentChange).log_2();
+    constructor(
+        bytes16 _maxPercentIncrease,
+        bytes16 _maxPercentDecrease,
+        uint _blockTime,
+        bytes16 _A
+    ) {
+        LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
+        require(_maxPercentDecrease < ABDKMathQuad.ONE);
+        LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         BLOCK_TIME = _blockTime;
         A = _A;
     }

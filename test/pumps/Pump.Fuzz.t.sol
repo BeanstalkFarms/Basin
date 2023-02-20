@@ -17,7 +17,7 @@ contract PumpFuzzTest is TestHelper {
 
     function setUp() public {
         initUser();
-        pump = new GeoEmaAndCumSmaPump(from18(0.5e18), 12, from18(0.9e18));
+        pump = new GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18));
     }
 
     function testFuzz_update(
