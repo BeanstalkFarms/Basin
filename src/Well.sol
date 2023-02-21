@@ -176,6 +176,41 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
+        amountOut = _swapFrom(
+            fromToken,
+            toToken,
+            amountIn,
+            minAmountOut,
+            recipient
+        );
+    }
+
+    function swapFromFeeOnTransfer(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn,
+        uint minAmountOut,
+        address recipient
+    ) external nonReentrant returns (uint amountOut) {
+        uint balanceBefore = fromToken.balanceOf(recipient);
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
+        amountIn = fromToken.balanceOf(address(this)) - balanceBefore;
+        amountOut = _swapFrom(
+            fromToken,
+            toToken,
+            amountIn,
+            minAmountOut,
+            recipient
+        );
+    }
+
+    function _swapFrom(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn,
+        uint minAmountOut,
+        address recipient
+    ) internal returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -189,7 +224,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = reserveJBefore - reserves[j];
 
         require(amountOut >= minAmountOut, "Well: slippage");
-        _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
+        toToken.safeTransfer(recipient, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut);
         _setReserves(_tokens, reserves);
     }
 
