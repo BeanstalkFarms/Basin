@@ -12,7 +12,6 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {LibBytes} from "src/libraries/LibBytes.sol";
 import {ClonePlus} from "src/utils/ClonePlus.sol";
 
-
 /**
  * @title Well
  * @author Publius, Silo Chad, Brean
@@ -432,36 +431,23 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     // may be inefficent as we may not need to check the balance of for every pool 
     // will it revert? 
     function shift(
-        address recipient, 
-        IERC20 tokenOut, 
-        uint256 minAmountOut
-    ) external nonReentrant returns (uint256 amtOut) {
+        IERC20 tokenOut,
+        uint256 minAmountOut,
+        address recipient
+    ) external nonReentrant returns (uint256 amountOut) {
         IERC20[] memory _tokens = tokens(); // gets the token addresses of the well
-        uint[] memory reserves = _getReserves(_tokens.length); // gets the reserves of the token of the well given length
-        uint tokenOutIndex = _getJ(_tokens, tokenOut); // get the index of the tokenOut
-        uint tokenBalance;
-        uint reserveBalance;
-        for(uint i; i < _tokens.length; ++i) {
-            // we can skip the check for the tokenOut: 
-            // This ignores the case where there is excess tokenOut, for gas efficency 
-            if(_tokens[i] == tokenOut) continue;
-
-            // check whether the balance of the token is greater than the reserve
-            // TODO: is gas saved by assigning rather then calling? 
-            // tokenBalance is used 3 times,
-            // reserveBalance is called reserveBalance
-            tokenBalance = _tokens[i].balanceOf(address(this));
-            reserveBalance = reserves[i];
-            if (tokenBalance > reserveBalance) {
-                // if so, calculate the swap out, and update the reserves
-                amtOut += getSwapOut(_tokens[i], tokenOut, tokenBalance - reserveBalance); // calc swap out
-                reserves[i] = tokenBalance; // update reserves to balances
-            }
+        uint[] memory reserves = new uint[](_tokens.length);
+        // Use the balances of the pool instead of the reserves.
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
         }
-        // transfer amt to recipient, update reserve for tokenOut
-        if(amtOut >= minAmountOut) {
-            tokenOut.safeTransfer(recipient, amtOut);
-            reserves[tokenOutIndex] -= amtOut;
+        uint j = _getJ(_tokens, tokenOut); // get the index of the tokenOut
+        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
+
+        // transfer amount to recipient, update reserve for tokenOut
+        if(amountOut >= minAmountOut) {
+            tokenOut.safeTransfer(recipient, amountOut);
+            reserves[j] -= amountOut;
             _setReserves(reserves);
         } else {
             revert("Well: slippage");

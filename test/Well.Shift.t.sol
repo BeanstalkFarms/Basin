@@ -20,7 +20,13 @@ contract WellShiftTest is TestHelper {
         Balances memory wellBalanceBeforeShift = getBalances(address(well), well);
         // Verify that the Well has received the tokens
         console.log("amounts:", amounts);
-        
+
+        console.log("balance 0:", wellBalanceBeforeShift.tokens[0]);
+        console.log("balance 1:", wellBalanceBeforeShift.tokens[1]);
+
+        uint[] memory __reserves = well.getReserves();
+        console.log("reserves 0:", __reserves[0]);
+        console.log("reserves 1:", __reserves[1]);
 
         assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amounts, "Well should have received tokens");
 
@@ -35,9 +41,9 @@ contract WellShiftTest is TestHelper {
         Balances memory userBalanceBeforeShift = getBalances(_user, well);
 
         uint amtOut = well.shift(
-            _user,
             tokens[1],
-            0
+            0,
+            _user
         );
 
         reserves = well.getReserves();

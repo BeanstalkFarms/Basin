@@ -286,7 +286,7 @@ interface IWell {
      * @param recipient The address to receive the token
      * @param tokenOut The token to shift
      * @param minAmountOut The minimum amount of `tokenOut` to receive
-     * @return amtOut The amount of `tokenOut` received
+     * @return amountOut The amount of `tokenOut` received
      */
-    function shift(address recipient, IERC20 tokenOut, uint256 minAmountOut) external returns (uint256 amtOut);
+    function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
 }
