@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
-import "src/libraries/ABDKMathQuad.sol";
+import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 
 uint constant MAX_128 = 2 ** 128;
 uint constant MAX_E18 = 1e18;
