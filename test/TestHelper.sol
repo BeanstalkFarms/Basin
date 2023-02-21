@@ -5,6 +5,7 @@ import {Test, console, stdError} from "forge-std/Test.sol";
 import {Strings} from "oz/utils/Strings.sol";
 
 import {MockToken} from "mocks/tokens/MockToken.sol";
+import {MockTokenFeeOnTransfer} from "mocks/tokens/MockTokenFeeOnTransfer.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Users} from "test/helpers/Users.sol";
@@ -58,8 +59,6 @@ abstract contract TestHelper is Test, WellDeployer {
         initUser();
         deployMockTokens(n);
 
-        // FIXME: manual name/symbol
-        // FIXME: use aquifer
         deployWellImplementation();
         aquifer = new Aquifer();
         well = Well(boreWell(address(aquifer), wellImplementation, tokens, _function, _pumps, bytes32(0)));
@@ -92,6 +91,21 @@ abstract contract TestHelper is Test, WellDeployer {
         for (uint i = 0; i < n; i++) {
             IERC20 temp = IERC20(
                 new MockToken(
+                    string.concat("Token ", i.toString()), // name
+                    string.concat("TOKEN", i.toString()), // symbol
+                    18 // decimals
+                )
+            );
+            tokens.push(temp);
+        }
+    }
+
+    /// @dev deploy `n` mock ERC20 tokens and sort by address
+    function deployMockTokensFeeOnTransfer(uint n) internal {
+        // IERC20[] memory _tokens = new IERC20[](n);
+        for (uint i = 0; i < n; i++) {
+            IERC20 temp = IERC20(
+                new MockTokenFeeOnTransfer(
                     string.concat("Token ", i.toString()), // name
                     string.concat("TOKEN", i.toString()), // symbol
                     18 // decimals
