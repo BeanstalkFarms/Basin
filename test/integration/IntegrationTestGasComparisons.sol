@@ -134,18 +134,18 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         _pipeCall[0].target = address(daiWethWell);
         _pipeCall[0].callData = abi.encodeWithSelector(
             Well.shift.selector, 
-            address(daiUsdcWell), // recipient
             daiWethTokens[0], // output Token
-            0 // minAmountOut
+            0, // minAmountOut
+            address(daiUsdcWell) // recipient
         );
         _pipeCall[0].clipboard = abi.encodePacked(uint(0));
         // shift, get USDC
         _pipeCall[1].target = address(daiUsdcWell);
         _pipeCall[1].callData = abi.encodeWithSelector(
             Well.shift.selector, 
-            address(this), // recipient
             daiUsdcTokens[1], // output Token
-            0 // minAmountOut
+            0, // minAmountOut
+            address(this) // recipient
         );
         _pipeCall[1].clipboard = abi.encodePacked(uint(0));
         bytes[] memory _farmCalls = new bytes[](2);
