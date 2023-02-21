@@ -56,4 +56,10 @@ contract ABDKTest is TestHelper {
     function powuFraction(uint a, uint b, uint c) public pure returns (bytes16) {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
+
+    function testFromUIntToLog2() public {
+        // test the fromUintToLog2 function
+        assertEq(ABDKMathQuad.fromUIntToLog2(1), 0);
+
+    }
 }
