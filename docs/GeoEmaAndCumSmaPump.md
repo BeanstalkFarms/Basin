@@ -2,7 +2,8 @@
 
 Given:
 - $\alpha$ a parameter $\alpha \in (0,1)$
-- $\gamma$ the maximum change permitted in each balance per block
+- $\gamma_{+}$ the maximum percent increase permitted in each balance per block
+- $\gamma_{-}$ the maximum percent decrease permitted in each balance per block (It's recommended to use $\gamma_{-} = \frac{1}{1+\gamma_{+}}$)
 - $\beta$ the block time in the given EVM
 
 The pump tracks 3 different types of balances at the last updated timestamp $l$:
@@ -20,8 +21,8 @@ The Pump is updated at timestamp $t$ with balances $[x_{0,t}, \cdots, x_{n,t}]$
 $$
 x^{MEV}_{i,t} = 
 \begin{cases}
-min\left(log_2(x_{i,l}), x^{MEV}_{i,t-l} + log_2(1+\gamma) \frac{t-l}{\beta}\right) & log_2(x_{i,l}) > x^{MEV}_{i,t} \\
-max\left(log_2(x_{i,l}), x^{MEV}_{i,t-l} + log_2(1-\gamma) \frac{t-l}{\beta}\right) & \text{otherwise} \\
+min\left(log_2(x_{i,l}), x^{MEV}_{i,t-l} + log_2(1+\gamma_{+}) \frac{t-l}{\beta}\right) & log_2(x_{i,l}) > x^{MEV}_{i,t} \\
+max\left(log_2(x_{i,l}), x^{MEV}_{i,t-l} + log_2(1-\gamma_{-}) \frac{t-l}{\beta}\right) & \text{otherwise} \\
 \end{cases}
 $$
 

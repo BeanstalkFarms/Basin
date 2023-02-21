@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
-import "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {TestHelper, console} from "test/TestHelper.sol";
+import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
@@ -12,6 +12,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
 
     constructor()
         GeoEmaAndCumSmaPump(
+            from18(0.5e18), // cap reserves if changed +/- 50% per block
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // EVM block time
             from18(0.9994445987e18) // geometric EMA constant
@@ -37,7 +38,11 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         // 0 block delta = no change
         // FIXME: the fuzzer was able to find a case where some sort of double rounding error
         // occurred which caused a delta of 2
-        assertApproxEqAbs(balance, last, 4);
+        if (last < 1e24) {
+            assertApproxEqAbs(balance, last, 1);
+        } else {
+            assertApproxEqRel(balance, last, 1);
+        }
     }
 
     function test_capReserve_capped1BlockIncrease() public {
