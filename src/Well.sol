@@ -424,17 +424,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     //////////////////// SHIFT ////////////////////
-
-    // TODO questions: 
-    // do we need to check whether the token is in the pool?
-    // currently we loop over the tokens in the pool, and check whether the balance is greater than the reserve
-    // may be inefficent as we may not need to check the balance of for every pool 
-    // will it revert? 
     function shift(
         IERC20 tokenOut,
-        uint256 minAmountOut,
+        uint minAmountOut,
         address recipient
-    ) external nonReentrant returns (uint256 amountOut) {
+    ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens(); // gets the token addresses of the well
         uint[] memory reserves = new uint[](_tokens.length);
         // Use the balances of the pool instead of the reserves.
@@ -445,7 +439,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
 
         // transfer amount to recipient, update reserve for tokenOut
-        if(amountOut >= minAmountOut) {
+        if (amountOut >= minAmountOut) {
             tokenOut.safeTransfer(recipient, amountOut);
             reserves[j] -= amountOut;
             _setReserves(reserves);

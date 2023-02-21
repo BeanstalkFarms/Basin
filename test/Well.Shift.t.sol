@@ -46,13 +46,6 @@ contract WellShiftTest is TestHelper {
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
-        // TODO: should we make sure that the well has the actual, or correct reserves?
-        // uint calcToken0ReservesAfter = cp.calcReserve(reserves, 0, wellBalanceBeforeShift.lpSupply, data);
-        // uint calcToken1ReservesAfter = cp.calcReserve(reserves, 1, wellBalanceBeforeShift.lpSupply, data);
-
-        // assertEq(reserves[0], calcToken0ReservesAfter, "updated reserve does not match calculated reserve");
-        // assertEq(reserves[1], calcToken1ReservesAfter, "updated reserve does not match calculated reserve");
-
         assertEq(userBalanceAfterShift.tokens[1], amtOut, "User should have gained token 1");
         assertEq(userBalanceAfterShift.tokens[0], 0, "User should have not gained token 2");
 
