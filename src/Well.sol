@@ -411,6 +411,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// SKIM ////////////////////
 
+    /**
+     * @dev Transfer excess tokens held by the Well to `recipient`.
+     */
     function skim(address recipient) external nonReentrant returns (uint[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -424,13 +427,48 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     //////////////////// SHIFT ////////////////////
+
+    /**
+     * @dev When using Wells for a multi-step swap, gas costs can be reduced by
+     * "shifting" tokens from one Well to another rather than returning them to
+     * a router (like Pipeline).
+     *
+     * Example multi-hop swap: WETH -> DAI -> USDC
+     * -------------------------------------------------------------------------
+     * 
+     * Using a router without {shift}:
+     * 
+     *  WETH.transfer(sender=0xUSER, recipient=0xROUTER)                     [1]
+     *  Call the router, which performs:
+     *      Well1.swapFrom(fromToken=WETH, toToken=DAI, recipient=0xROUTER)
+     *          WETH.transfer(sender=0xROUTER, recipient=Well1)              [2]
+     *          DAI.transfer(sender=Well1, recipient=0xROUTER)               [3]
+     *      Well2.swapFrom(fromToken=DAI, toToken=USDC, recipient=0xROUTER)
+     *          DAI.transfer(sender=0xROUTER, recipient=Well2)               [4]
+     *          USDC.transfer(sender=Well2, recipient=0xROUTER)              [5]
+     *  USDC.transfer(sender=0xROUTER, recipient=0xUSER)                     [6]
+     *  Note: this could be optimized by configuring the router to deliver tokens
+     *  from the last swap directly to the user. 
+     *  
+     * Using a router with {shift}:
+     *
+     *  WETH.transfer(sender=0xUSER, recipient=Well1)                        [1]
+     *  Call the router, which performs:
+     *      Well1.shift(tokenOut=DAI, recipient=Well2)                       
+     *          DAI.transfer(sender=Well1, recipient=Well2)                  [2]
+     *      Well2.shift(tokenOut=USDC, recipient=0xUSER)                     
+     *          USDC.transfer(sender=Well2, recipient=0xUSER)                [3]
+     *
+     * -------------------------------------------------------------------------
+     */
     function shift(
         IERC20 tokenOut,
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
-        IERC20[] memory _tokens = tokens(); // gets the token addresses of the well
+        IERC20[] memory _tokens = tokens();
         uint[] memory reserves = new uint[](_tokens.length);
+        
         // Use the balances of the pool instead of the reserves.
         for (uint i; i < _tokens.length; ++i) {
             reserves[i] = _tokens[i].balanceOf(address(this));

@@ -264,13 +264,6 @@ interface IWell {
      */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn);
 
-    //////////////////// RESERVES////////////////////
-
-    /**
-     * @notice Gets the reserves of each token held by the Well.
-     */
-    function getReserves() external view returns (uint[] memory reserves);
-
     //////////////////// SKIM ////////////////////
 
     /**
@@ -281,12 +274,20 @@ interface IWell {
     function skim(address recipient) external returns (uint[] memory skimAmounts);
 
     //////////////////// SHIFT ////////////////////
+
     /**
      * @notice Shifts the balance of a token from the Well to the `recipient`.
-     * @param recipient The address to receive the token
      * @param tokenOut The token to shift
-     * @param minAmountOut The minimum amount of `tokenOut` to receive
+     * @param minAmountOut The minimum amount of `tokenOut` to shift
+     * @param recipient The address to receive the token
      * @return amountOut The amount of `tokenOut` received
      */
     function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
+
+    //////////////////// RESERVES ////////////////////
+
+    /**
+     * @notice Gets the reserves of each token held by the Well.
+     */
+    function getReserves() external view returns (uint[] memory reserves);
 }
