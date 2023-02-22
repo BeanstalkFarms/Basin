@@ -435,9 +435,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      *
      * Example multi-hop swap: WETH -> DAI -> USDC
      * -------------------------------------------------------------------------
-     *
-     * Using a router without {shift}:
-     *
+     * 
+     * 1. Using a router without {shift}:
+     * 
      *  WETH.transfer(sender=0xUSER, recipient=0xROUTER)                     [1]
      *  Call the router, which performs:
      *      Well1.swapFrom(fromToken=WETH, toToken=DAI, recipient=0xROUTER)
@@ -447,10 +447,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      *          DAI.transfer(sender=0xROUTER, recipient=Well2)               [4]
      *          USDC.transfer(sender=Well2, recipient=0xROUTER)              [5]
      *  USDC.transfer(sender=0xROUTER, recipient=0xUSER)                     [6]
-     *  Note: this could be optimized by configuring the router to deliver tokens
-     *  from the last swap directly to the user.
      *
-     * Using a router with {shift}:
+     *  Note: this could be optimized by configuring the router to deliver
+     *  tokens from the last swap directly to the user. 
+     *  
+     * 2. Using a router with {shift}:
      *
      *  WETH.transfer(sender=0xUSER, recipient=Well1)                        [1]
      *  Call the router, which performs:
@@ -469,14 +470,15 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = new uint[](_tokens.length);
 
-        // Use the balances of the pool instead of the reserves.
+        // Use the balances of the pool instead of the stored reserves.
+        // If there is a change in token balances relative to the currently
+        // stored reserves, the extra tokens can be shifted into `tokenOut`.
         for (uint i; i < _tokens.length; ++i) {
             reserves[i] = _tokens[i].balanceOf(address(this));
         }
-        uint j = _getJ(_tokens, tokenOut); // get the index of the tokenOut
+        uint j = _getJ(_tokens, tokenOut);
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
 
-        // transfer amount to recipient, update reserve for tokenOut
         if (amountOut >= minAmountOut) {
             tokenOut.safeTransfer(recipient, amountOut);
             reserves[j] -= amountOut;
