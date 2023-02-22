@@ -247,7 +247,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = getSlotForAddress(well);
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
-        uint offset = getSlotsOffset(n) << 2;
+        uint offset = getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
         }
