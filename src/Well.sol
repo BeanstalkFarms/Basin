@@ -193,9 +193,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
-        uint balanceBefore = fromToken.balanceOf(recipient);
-        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
-        amountIn = fromToken.balanceOf(address(this)) - balanceBefore;
+        amountIn = transferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
         amountOut = _swapFrom(
             fromToken,
             toToken,
@@ -312,10 +310,30 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         for (uint i; i < _tokens.length; ++i) {
             if (tokenAmountsIn[i] == 0) continue;
             _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
-            reserves[i] = reserves[i] + tokenAmountsIn[i]; //
+            reserves[i] = reserves[i] + tokenAmountsIn[i];
         }
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
 
+        require(lpAmountOut >= minLpAmountOut, "Well: slippage");
+        _mint(recipient, lpAmountOut);
+        _setReserves(_tokens, reserves);
+        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
+    }
+
+    function addLiquidityFeeOnTransfer(
+        uint[] memory tokenAmountsIn,
+        uint minLpAmountOut,
+        address recipient
+    ) external nonReentrant returns (uint lpAmountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = _updatePumps(_tokens.length);
+
+        for (uint i; i < _tokens.length; ++i) {
+            if (tokenAmountsIn[i] == 0) continue;
+            tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+            reserves[i] = reserves[i] + tokenAmountsIn[i];
+        }
+        lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
         _setReserves(_tokens, reserves);
@@ -572,5 +590,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
         revert("Well: Invalid tokens");
+    }
+
+    function transferFromFeeOnTransfer(IERC20 token, address sender, uint256 amount) internal returns (uint amountTransferred) {
+        uint balanceBefore = token.balanceOf(address(this));
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        amountTransferred = token.balanceOf(address(this)) - balanceBefore;
     }
 }
