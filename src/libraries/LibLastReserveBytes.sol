@@ -2,9 +2,6 @@
 
 pragma solidity ^0.8.17;
 
-//TODO: Remove import
-import {console} from "forge-std/console.sol";
-
 /**
  * @title LibLastReserveBytes
  * @author Publius

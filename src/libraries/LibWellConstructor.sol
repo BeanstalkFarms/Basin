@@ -83,7 +83,7 @@ library LibWellConstructor {
     /**
      * @notice Encode a Call struct representing an arbitrary call to `target` with additional data `data`.
      */
-    function encodeCall(address target, bytes memory data) public view returns (Call memory) {
+    function encodeCall(address target, bytes memory data) public pure returns (Call memory) {
         return Call(target, data);
     }
 }
