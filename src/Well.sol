@@ -435,9 +435,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      *
      * Example multi-hop swap: WETH -> DAI -> USDC
      * -------------------------------------------------------------------------
-     * 
+     *
      * Using a router without {shift}:
-     * 
+     *
      *  WETH.transfer(sender=0xUSER, recipient=0xROUTER)                     [1]
      *  Call the router, which performs:
      *      Well1.swapFrom(fromToken=WETH, toToken=DAI, recipient=0xROUTER)
@@ -448,15 +448,15 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      *          USDC.transfer(sender=Well2, recipient=0xROUTER)              [5]
      *  USDC.transfer(sender=0xROUTER, recipient=0xUSER)                     [6]
      *  Note: this could be optimized by configuring the router to deliver tokens
-     *  from the last swap directly to the user. 
-     *  
+     *  from the last swap directly to the user.
+     *
      * Using a router with {shift}:
      *
      *  WETH.transfer(sender=0xUSER, recipient=Well1)                        [1]
      *  Call the router, which performs:
-     *      Well1.shift(tokenOut=DAI, recipient=Well2)                       
+     *      Well1.shift(tokenOut=DAI, recipient=Well2)
      *          DAI.transfer(sender=Well1, recipient=Well2)                  [2]
-     *      Well2.shift(tokenOut=USDC, recipient=0xUSER)                     
+     *      Well2.shift(tokenOut=USDC, recipient=0xUSER)
      *          USDC.transfer(sender=Well2, recipient=0xUSER)                [3]
      *
      * -------------------------------------------------------------------------
@@ -468,7 +468,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     ) external nonReentrant returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = new uint[](_tokens.length);
-        
+
         // Use the balances of the pool instead of the reserves.
         for (uint i; i < _tokens.length; ++i) {
             reserves[i] = _tokens[i].balanceOf(address(this));
@@ -481,6 +481,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             tokenOut.safeTransfer(recipient, amountOut);
             reserves[j] -= amountOut;
             _setReserves(reserves);
+            emit Shift(reserves, tokenOut, amountOut, recipient);
         } else {
             revert("Well: slippage");
         }

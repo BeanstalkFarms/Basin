@@ -51,6 +51,15 @@ interface IWell {
      */
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut);
 
+    /**
+     * @notice Emitted when a Shift occurs.
+     * @param reserves The ending reserves after a shift
+     * @param toToken The token swapped to
+     * @param minAmountOut The minimum amount of `toToken` transferred out of the Well
+     * @param recipient The address to receive `toToken`
+     */
+    event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
+
     //////////////////// WELL DEFINITION ////////////////////
 
     /**
@@ -282,7 +291,7 @@ interface IWell {
      * @param recipient The address to receive the token
      * @return amountOut The amount of `tokenOut` received
      */
-    function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
+    function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
 
     //////////////////// RESERVES ////////////////////
 
