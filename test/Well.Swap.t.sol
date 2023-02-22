@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, IERC20, Balances, Call, Well, console} from "test/TestHelper.sol";
+import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -176,7 +176,8 @@ contract WellSwapTest is TestHelper {
     //////////// EDGE CASE: IDENTICAL TOKENS ////////////
 
     /// @dev swapFrom: identical tokens results in no change in balances
-    function testFuzz_swapFrom_sameToken(uint amountIn) public prank(user) {
+    function testFuzz_swapFrom_sameToken(uint248 amountIn) public prank(user) {
+        MockToken(address(tokens[0])).mint(user, amountIn);
         vm.expectRevert("Well: Invalid tokens");
         well.swapFrom(tokens[0], tokens[0], amountIn, 0, user);
     }

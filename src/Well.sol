@@ -176,6 +176,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         amountOut = _swapFrom(
             fromToken,
             toToken,
@@ -224,7 +225,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = reserveJBefore - reserves[j];
 
         require(amountOut >= minAmountOut, "Well: slippage");
-        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         toToken.safeTransfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut);
         _setReserves(_tokens, reserves);
