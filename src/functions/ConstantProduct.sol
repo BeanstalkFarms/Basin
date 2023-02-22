@@ -53,7 +53,8 @@ contract ConstantProduct is IWellFunction {
     /// @dev calculate the mathematical product of an array of uint[]
     function _prodX(uint[] memory xs) private pure returns (uint pX) {
         pX = xs[0];
-        for (uint i = 1; i < xs.length; ++i) {
+        uint256 length = xs.length;
+        for (uint i = 1; i < length; ++i) {
             pX = pX * xs[i];
         }
     }
