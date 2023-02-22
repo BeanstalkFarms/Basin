@@ -304,7 +304,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
-        _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
+        lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
     }
 
     function addLiquidityFeeOnTransfer(
@@ -312,7 +312,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
-        _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
+        lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
     }
 
     function _addLiquidity(
@@ -595,9 +595,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         revert("Well: Invalid tokens");
     }
 
-    function transferFromFeeOnTransfer(IERC20 token, address sender, uint256 amount) internal returns (uint amountTransferred) {
+    function transferFromFeeOnTransfer(IERC20 token, address from, uint256 amount) internal returns (uint amountTransferred) {
         uint balanceBefore = token.balanceOf(address(this));
-        token.safeTransferFrom(msg.sender, address(this), amount);
+        token.safeTransferFrom(from, address(this), amount);
         amountTransferred = token.balanceOf(address(this)) - balanceBefore;
     }
 }
