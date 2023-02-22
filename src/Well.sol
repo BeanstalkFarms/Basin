@@ -304,20 +304,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory reserves = _updatePumps(_tokens.length);
-
-        for (uint i; i < _tokens.length; ++i) {
-            if (tokenAmountsIn[i] == 0) continue;
-            _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
-            reserves[i] = reserves[i] + tokenAmountsIn[i];
-        }
-        lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
-
-        require(lpAmountOut >= minLpAmountOut, "Well: slippage");
-        _mint(recipient, lpAmountOut);
-        _setReserves(_tokens, reserves);
-        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
+        _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
     }
 
     function addLiquidityFeeOnTransfer(
@@ -325,13 +312,29 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
+        _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
+    }
+
+    function _addLiquidity(
+        uint[] memory tokenAmountsIn,
+        uint minLpAmountOut,
+        address recipient,
+        bool feeOnTransfer
+    ) internal returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
-
-        for (uint i; i < _tokens.length; ++i) {
-            if (tokenAmountsIn[i] == 0) continue;
-            tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
-            reserves[i] = reserves[i] + tokenAmountsIn[i];
+        if (feeOnTransfer) {
+            for (uint i; i < _tokens.length; ++i) {
+                if (tokenAmountsIn[i] == 0) continue;
+                tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+                reserves[i] = reserves[i] + tokenAmountsIn[i];
+            }
+        } else {
+            for (uint i; i < _tokens.length; ++i) {
+                if (tokenAmountsIn[i] == 0) continue;
+                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
+                reserves[i] = reserves[i] + tokenAmountsIn[i];
+            }
         }
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
