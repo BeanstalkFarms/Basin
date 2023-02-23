@@ -55,9 +55,7 @@ contract ConstantProduct is IWellFunction {
         pX = xs[0];
         uint length = xs.length;
         for (uint i = 1; i < length; ++i) {
-            assembly {
-                pX := mul(pX, mload(add(xs, add(mul(i, 0x20), 0x20))))
-            }
+            pX = pX * xs[i];
         }
     }
 }
