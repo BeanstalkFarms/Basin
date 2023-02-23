@@ -54,7 +54,9 @@ contract ConstantProduct is IWellFunction {
     function _prodX(uint[] memory xs) private pure returns (uint pX) {
         pX = xs[0];
         for (uint i = 1; i < xs.length; ++i) {
-            pX = pX * xs[i];
+            assembly {
+                pX := mul(pX, mload(add(xs, add(mul(i, 0x20), 0x20))))
+            }
         }
     }
 }
