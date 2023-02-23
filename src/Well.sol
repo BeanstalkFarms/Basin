@@ -522,7 +522,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
 
-        require(foundI && foundJ, "Well: Invalid tokens");
+        require(foundI, "Well: Invalid tokens");
+        require(foundJ, "Well: Invalid tokens");
     }
 
     /**
