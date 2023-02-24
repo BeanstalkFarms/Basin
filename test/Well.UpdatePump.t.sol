@@ -32,8 +32,8 @@ contract WellUpdatePumpTest is TestHelper {
         vm.prank(user);
         well.swapFrom(tokens[0], tokens[1], 1e18, 1, user);
 
-        // During update(), MockPump sets a public storage var `lastData` equal 
-        // to Call.data. 
+        // During update(), MockPump sets a public storage var `lastData` equal
+        // to Call.data.
         for (uint i = 0; i < numPumps; i++) {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }

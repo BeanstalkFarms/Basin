@@ -62,18 +62,11 @@ abstract contract TestHelper is Test, WellDeployer {
         }
 
         initUser();
-        
+
         tokens = deployMockTokens(n);
         wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
-        well = encodeAndBoreWell(
-            address(aquifer),
-            wellImplementation,
-            tokens,
-            _wellFunction,
-            _pumps,
-            bytes32(0)
-        );
+        well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
@@ -177,7 +170,6 @@ abstract contract TestHelper is Test, WellDeployer {
         balances = Balances(tokenBalances, _well.balanceOf(account), _well.totalSupply());
     }
 
-
     ////////// EVM Helpers
 
     function increaseTime(uint _seconds) internal {
@@ -191,12 +183,12 @@ abstract contract TestHelper is Test, WellDeployer {
         vm.stopPrank();
     }
 
-    
     ////////// Assertions
 
     function assertEq(IERC20 a, IERC20 b) internal {
         assertEq(a, b, "Address mismatch");
     }
+
     function assertEq(IERC20 a, IERC20 b, string memory err) internal {
         assertEq(address(a), address(b), err);
     }
@@ -204,6 +196,7 @@ abstract contract TestHelper is Test, WellDeployer {
     function assertEq(IERC20[] memory a, IERC20[] memory b) internal {
         assertEq(a, b, "IERC20[] mismatch");
     }
+
     function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
         for (uint i = 0; i < a.length; i++) {
@@ -214,6 +207,7 @@ abstract contract TestHelper is Test, WellDeployer {
     function assertEq(Call memory a, Call memory b) internal {
         assertEq(a, b, "Call mismatch");
     }
+
     function assertEq(Call memory a, Call memory b, string memory err) internal {
         assertEq(a.target, b.target, err);
         assertEq(a.data, b.data, err);
@@ -222,6 +216,7 @@ abstract contract TestHelper is Test, WellDeployer {
     function assertEq(Call[] memory a, Call[] memory b) internal {
         assertEq(a, b, "Call[] mismatch");
     }
+
     function assertEq(Call[] memory a, Call[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
         for (uint i = 0; i < a.length; i++) {

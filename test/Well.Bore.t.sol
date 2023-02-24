@@ -101,7 +101,8 @@ contract WellBoreTest is TestHelper {
         }
 
         // Deploy the Well
-        Well _well = encodeAndBoreWell(address(aquifer), wellImplementation, wellTokens, wellFunction, pumps, bytes32(0));
+        Well _well =
+            encodeAndBoreWell(address(aquifer), wellImplementation, wellTokens, wellFunction, pumps, bytes32(0));
 
         // Check Pumps
         assertEq(_well.numberOfPumps(), numberOfPumps, "number of pumps mismatch");

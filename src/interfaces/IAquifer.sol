@@ -26,7 +26,7 @@ interface IAquifer {
 
     /**
      * @notice Deploys a Well.
-     * @param implementation The Well implementation to clone. 
+     * @param implementation The Well implementation to clone.
      * @param immutableData The data to append to the bytecode of the contract.
      * @param initFunctionCall The function call to initialize the Well. Set to empty bytes for no call.
      * @param salt The salt to deploy the Well with (`bytes32(0)` for none). See {LibClone}.
