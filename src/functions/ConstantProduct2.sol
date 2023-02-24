@@ -37,12 +37,8 @@ contract ConstantProduct2 is IWellFunction {
         uint lpTokenSupply,
         bytes calldata
     ) external pure override returns (uint reserve) {
-        assembly {
-            let halfLpTokenSupply := div(lpTokenSupply, 2)
-            let square := mul(halfLpTokenSupply, halfLpTokenSupply)
-            let quotient := div(square, EXP_PRECISION)
-            reserve := div(quotient, 1)
-        }       
+        // Note: potential optimization is to use unchecked math here
+        reserve = uint((lpTokenSupply / 2) ** 2) / EXP_PRECISION;
         reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
     }
 
