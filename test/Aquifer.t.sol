@@ -12,8 +12,10 @@ import {LibClone} from "src/libraries/LibClone.sol";
 import {LibWellConstructor} from "src/libraries/LibWellConstructor.sol";
 import {Aquifer} from "src/Aquifer.sol";
 
-/// @dev Test the Aquifer's functionality in isolation, avoiding dependence on a
-/// particular Well implementation.
+/// @dev Test the Aquifer's functionality in isolation. To avoid dependence on a
+/// particular Well implementation, this test uses MockStaticWell which stores
+/// Well components in immutable storage on construction rather than upon cloning.
+/// Immutable data applied during cloning is verified separately.
 contract AquiferTest is TestHelper {
     MockStaticWell mockWell;
 
@@ -26,7 +28,7 @@ contract AquiferTest is TestHelper {
     );
 
     function setUp() public {
-        deployMockTokens(2);
+        tokens = deployMockTokens(2);
         aquifer = new Aquifer();
         
         // Setup static Well components
@@ -122,11 +124,11 @@ contract AquiferTest is TestHelper {
         IERC20[] memory _tokens = _well.tokens();
         Call[] memory _pumps = _well.pumps();
     
-        assertEq(_tokens, tokens, "tokens mismatch");
-        assertEq(_pumps, pumps, "pumps mismatch");
-        assertEq(_well.wellFunction(), wellFunction, "wellFunction mismatch");
-        assertEq(_well.aquifer(), address(aquifer), "aquifer mismatch");
-        assertEq(_well.wellData(), wellData, "wellData mismatch");
+        assertEq(_tokens, tokens);
+        assertEq(_pumps, pumps);
+        assertEq(_well.wellFunction(), wellFunction);
+        assertEq(_well.aquifer(), address(aquifer));
+        assertEq(_well.wellData(), wellData);
         
         if (isInitialized) {
             assertEq(_well.name(), "MockWell", "name mismatch");

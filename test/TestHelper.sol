@@ -34,9 +34,9 @@ abstract contract TestHelper is Test, WellDeployer {
     // Primary well
     Well well;
     address wellImplementation;
-    IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call wellFunction; // Instantated during {deployWell}
-    Call[] pumps; // Instantiated during upstream test
+    IERC20[] tokens;
+    Call wellFunction;
+    Call[] pumps;
     bytes wellData;
 
     // Factory / Registry
@@ -62,9 +62,9 @@ abstract contract TestHelper is Test, WellDeployer {
         }
 
         initUser();
-        deployMockTokens(n);
-
-        deployWellImplementation();
+        
+        tokens = deployMockTokens(n);
+        wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
         well = encodeAndBoreWell(
             address(aquifer),
@@ -100,17 +100,18 @@ abstract contract TestHelper is Test, WellDeployer {
     ////////// Test Tokens
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokens(uint n) internal {
+    function deployMockTokens(uint n) internal returns (IERC20[] memory) {
+        IERC20[] memory _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
-            IERC20 temp = IERC20(
+            _tokens[i] = IERC20(
                 new MockToken(
                     string.concat("Token ", i.toString()), // name
                     string.concat("TOKEN", i.toString()), // symbol
                     18 // decimals
                 )
             );
-            tokens.push(temp);
         }
+        return _tokens;
     }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
@@ -152,8 +153,8 @@ abstract contract TestHelper is Test, WellDeployer {
     ////////// Well Setup
 
     /// @dev deploy the Well contract
-    function deployWellImplementation() internal {
-        wellImplementation = address(new Well());
+    function deployWellImplementation() internal returns (address) {
+        return address(new Well());
     }
 
     /// @dev add the same `amount` of liquidity for all underlying tokens
@@ -193,10 +194,16 @@ abstract contract TestHelper is Test, WellDeployer {
     
     ////////// Assertions
 
+    function assertEq(IERC20 a, IERC20 b) internal {
+        assertEq(a, b, "Address mismatch");
+    }
     function assertEq(IERC20 a, IERC20 b, string memory err) internal {
         assertEq(address(a), address(b), err);
     }
 
+    function assertEq(IERC20[] memory a, IERC20[] memory b) internal {
+        assertEq(a, b, "IERC20[] mismatch");
+    }
     function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
         for (uint i = 0; i < a.length; i++) {
@@ -204,11 +211,17 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
+    function assertEq(Call memory a, Call memory b) internal {
+        assertEq(a, b, "Call mismatch");
+    }
     function assertEq(Call memory a, Call memory b, string memory err) internal {
         assertEq(a.target, b.target, err);
         assertEq(a.data, b.data, err);
     }
 
+    function assertEq(Call[] memory a, Call[] memory b) internal {
+        assertEq(a, b, "Call[] mismatch");
+    }
     function assertEq(Call[] memory a, Call[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
         for (uint i = 0; i < a.length; i++) {

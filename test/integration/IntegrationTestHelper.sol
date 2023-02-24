@@ -34,9 +34,10 @@ abstract contract IntegrationTestHelper is TestHelper {
         wellFunction = _function;
         initUser();
 
-        deployWellImplementation();
+        wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
 
+        // FIXME
         _well = encodeAndBoreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
