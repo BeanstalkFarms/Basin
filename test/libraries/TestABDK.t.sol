@@ -1,3 +1,4 @@
+pragma solidity ^0.8.17;
 import "test/TestHelper.sol";
 import "src/libraries/ABDKMathQuad.sol";
 import "oz/utils/Strings.sol";
@@ -59,21 +60,17 @@ contract ABDKTest is TestHelper {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 
-    function testFromUIntToLog2() public {
-        // test the fromUintToLog2 function
+    function testFuzz_FromUIntToLog2(uint x) public {
+        vm.assume(x > 0); // log2(0) is undefined.
+        assertEq(ABDKMathQuad.fromUInt(x).log_2(),ABDKMathQuad.fromUIntToLog2(x));
+    }
 
-        bytes16 result;
+    function testFuzz_pow_2ToUInt(uint x) public {
+        vm.assume(x < 256); // the max value of an uint is 2^256 - 1.
 
-        result = ABDKMathQuad.fromUIntToLog2(0);
-        assertEq(result, bytes16(0), "fromUIntToLog2(0) should return 0");
-
-        result = ABDKMathQuad.fromUIntToLog2(1);
-        assertEq(result, bytes16(0x3FFE0000000000000000000000000000), "fromUIntToLog2(1) should return 0x3FFE0000000000000000000000000000");
-
-        result = ABDKMathQuad.fromUIntToLog2(2);
-        assertEq(result, bytes16(0x3FFF0000000000000000000000000000), "fromUIntToLog2(2) should return 0x3FFF0000000000000000000000000000");
-
-        // assertEq(ABDKMathQuad.fromUIntToLog2(1), 0);
-
+        // test the pow_2ToUInt function
+        bytes16 _x = x.fromUInt();
+        assertEq(ABDKMathQuad.pow_2(_x).toUInt(), ABDKMathQuad.pow_2ToUInt(_x));
+       
     }
 }
