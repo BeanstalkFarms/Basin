@@ -3,19 +3,27 @@ pragma solidity ^0.8.17;
 
 import {MockToken, TestHelper, Balances} from "test/TestHelper.sol";
 
-contract WellSkimTest is TestHelper {
+contract WellSyncTest is TestHelper {
 
     event Sync(uint[] reserves);
 
     function setUp() public {
         setupWell(2);
+
+        // Let `user` burn 
         vm.startPrank(address(well));
         MockToken(address(tokens[0])).approve(address(user), type(uint).max);
         MockToken(address(tokens[1])).approve(address(user), type(uint).max);
         vm.stopPrank();
     }
 
-    function testSyncDown() public prank(user) {
+    function test_initialized() public {
+        Balances memory wellBalance = getBalances(address(well), well);
+        assertEq(wellBalance.tokens[0], 1000 * 1e18);
+        assertEq(wellBalance.tokens[1], 1000 * 1e18);
+    }
+
+    function test_syncDown() public prank(user) {
         MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
 
@@ -33,7 +41,7 @@ contract WellSkimTest is TestHelper {
         assertEq(reserves[1], expectedReserves[1], "Reserve 1 should be 1e18");
     }
 
-    function testSyncUp() public prank(user) {
+    function test_syncUp() public prank(user) {
         MockToken(address(tokens[0])).mint(address(well), 1e18);
         MockToken(address(tokens[1])).mint(address(well), 1e18);
 
