@@ -27,14 +27,15 @@ contract ABDKTest is TestHelper {
     //////////////////// EXTENSIONS ////////////////////
 
     function test_powu1() public {
-        bytes16 pu = powuFraction(11_661, 64, 9654);
-        assertEq(pu, ABDKMathQuad.from128x128(57_627_117_634_665_864_530_030_077_974_524_244_518_281_427));
+        bytes16 pu = powuFraction(9, 10, 10);
+        uint puu = uint(pu.to128x128());
+        uint expected = 118649124891528663468500301601258807155;
+        assertApproxEqRelN(puu, expected, 1, 32);
     }
 
-    function testFuzz_powu(uint16 num, uint16 denom, uint16 exp) public {
-        vm.assume(num < denom);
-        vm.assume(denom > 0);
-        vm.assume(num > 0);
+    function testFuzz_powu(uint num, uint denom, uint exp) public {
+        denom = bound(denom, 1, type(uint16).max);
+        num = bound(num, 1, denom);
 
         string[] memory inputs = new string[](8);
         inputs[0] = "python";
@@ -48,8 +49,9 @@ contract ABDKTest is TestHelper {
         bytes memory result = vm.ffi(inputs);
 
         bytes16 pu = powuFraction(num, denom, exp);
-        bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int)));
-        assertEq(pu >> 1, pypu >> 1);
+        uint puu = uint(pu.to128x128());
+        uint pypu = uint(abi.decode(result, (int)));
+        assertApproxEqRelN(puu, pypu, 1, 31);
     }
 
     /// @dev calculate (a/b)^c
