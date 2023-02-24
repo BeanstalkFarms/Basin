@@ -489,6 +489,23 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
+
+    //////////////////// SYNC ////////////////////
+
+    /**
+     * @dev Sync the reserves of the Well with balances of the underlying tokens.
+     */
+
+    function sync() external nonReentrant {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = new uint[](_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+        _setReserves(reserves);
+        emit Sync(reserves);
+    }
+
     //////////////////// UPDATE PUMP ////////////////////
 
     /**

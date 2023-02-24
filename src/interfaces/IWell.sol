@@ -60,6 +60,12 @@ interface IWell {
      */
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
 
+    /**
+     * @notice Emitted when a Sync occurs.
+     * @param reserves The ending reserves after a sync
+     */
+    event Sync(uint[] reserves);
+
     //////////////////// WELL DEFINITION ////////////////////
 
     /**
@@ -292,6 +298,14 @@ interface IWell {
      * @return amountOut The amount of `tokenOut` received
      */
     function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
+
+    //////////////////// SYNC ////////////////////
+
+    /**
+     * @notice Syncs the reserves of the Well with Well's balances of the underlying tokens.
+     */
+
+    function sync() external;
 
     //////////////////// RESERVES ////////////////////
 
