@@ -193,7 +193,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
-    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) public view returns (uint amountOut) {
+    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
