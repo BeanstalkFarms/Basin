@@ -409,7 +409,20 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
     }
 
-    //////////////////// SKIM ////////////////////
+    //////////////////// RESERVES ////////////////////
+
+    /**
+     * @dev Sync the reserves of the Well with its current balance of underlying tokens.
+     */
+    function sync() external nonReentrant {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = new uint[](_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+        _setReserves(reserves);
+        emit Sync(reserves);
+    }
 
     /**
      * @dev Transfer excess tokens held by the Well to `recipient`.
@@ -425,8 +438,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
     }
-
-    //////////////////// SHIFT ////////////////////
 
     /**
      * @dev When using Wells for a multi-step swap, gas costs can be reduced by
@@ -488,8 +499,26 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             revert("Well: slippage");
         }
     }
+    
+    function getReserves() external view returns (uint[] memory reserves) {
+        reserves = _getReserves(numberOfTokens());
+    }
 
-    //////////////////// UPDATE PUMP ////////////////////
+    /**
+     * @dev Gets the Well's token reserves by reading from byte storage.
+     */
+    function _getReserves(uint _numberOfTokens) internal view returns (uint[] memory reserves) {
+        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
+    }
+
+    /**
+     * @dev Sets the Well's reserves of each token by writing to byte storage.
+     */
+    function _setReserves(uint[] memory reserves) internal {
+        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
+    }
+
+    //////////////////// INTERNAL: UPDATE PUMPS ////////////////////
 
     /**
      * @dev Fetches the current token reserves of the Well and updates the Pumps.
@@ -514,31 +543,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    //////////////////// GET & SET RESERVES ////////////////////
-
-    function getReserves() external view returns (uint[] memory reserves) {
-        reserves = _getReserves(numberOfTokens());
-    }
+    //////////////////// INTERNAL: WELL FUNCTION INTERACTION ////////////////////
 
     /**
-     * @dev Gets the Well's token reserves by reading from byte storage.
-     */
-    function _getReserves(uint _numberOfTokens) internal view returns (uint[] memory reserves) {
-        reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
-    }
-
-    /**
-     * @dev Sets the Well's reserves of each token by writing to byte storage.
-     */
-    function _setReserves(uint[] memory reserves) internal {
-        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
-    }
-
-    //////////////////// WELL FUNCTION INTERACTION ////////////////////
-
-    /**
-     * @dev Calculates the LP token supply given a list of `reserves` from the provided
-     * `_wellFunction`. Wraps {IWellFunction.calcLpTokenSupply}.
+     * @dev Calculates the LP token supply given a list of `reserves` using the 
+     * provided `_wellFunction`. Wraps {IWellFunction.calcLpTokenSupply}.
      *
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
@@ -552,7 +561,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     /**
      * @dev Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`
-     * from the provided `_wellFunction`. Wraps {IWellFunction.calcReserve}.
+     * using the provided `_wellFunction`. Wraps {IWellFunction.calcReserve}.
      *
      * The Well function is passed as a parameter to minimize gas in instances
      * where it is called multiple times in one transaction.
@@ -566,7 +575,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         reserve = IWellFunction(_wellFunction.target).calcReserve(reserves, j, lpTokenSupply, _wellFunction.data);
     }
 
-    //////////////////// WELL TOKEN INDEXING ////////////////////
+    //////////////////// INTERNAL: WELL TOKEN INDEXING ////////////////////
 
     /**
      * @dev Returns the indices of `iToken` and `jToken` in `_tokens`. Reverts if either token is not in `_tokens`.
