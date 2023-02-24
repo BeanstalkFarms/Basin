@@ -6,8 +6,8 @@ import {console, TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} fro
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
 contract WellFeeOnTransferTest is TestHelper {
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
+    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
+    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     function setUp() public {
         deployMockTokensFeeOnTransfer(2);

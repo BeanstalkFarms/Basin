@@ -256,7 +256,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     ) internal {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         toToken.safeTransfer(recipient, amountOut);
-        emit Swap(fromToken, toToken, amountIn, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
     //////////////////// ADD LIQUIDITY ////////////////////
@@ -282,7 +282,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
         _setReserves(_tokens, reserves);
-        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
+        emit AddLiquidity(tokenAmountsIn, lpAmountOut, recipient);
     }
 
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut) {
@@ -315,7 +315,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
 
         _setReserves(_tokens, reserves);
-        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
+        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut, recipient);
     }
 
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut) {
@@ -348,7 +348,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
         reserves[j] = reserves[j] - tokenAmountOut;
         _setReserves(_tokens, reserves);
-        emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
+        emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut, recipient);
     }
 
     function getRemoveLiquidityOneTokenOut(
@@ -397,7 +397,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _burn(msg.sender, lpAmountIn);
 
         _setReserves(_tokens, reserves);
-        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
+        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut, recipient);
     }
 
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn) {
