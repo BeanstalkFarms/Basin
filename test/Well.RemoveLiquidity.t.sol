@@ -8,7 +8,7 @@ contract WellRemoveLiquidityTest is TestHelper {
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
 
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
+    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -45,7 +45,7 @@ contract WellRemoveLiquidityTest is TestHelper {
         amountsOut[1] = 1000 * 1e18;
 
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(lpAmountIn, amountsOut);
+        emit RemoveLiquidity(lpAmountIn, amountsOut, user);
         well.removeLiquidity(lpAmountIn, amountsOut, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -105,7 +105,7 @@ contract WellRemoveLiquidityTest is TestHelper {
         // Remove some of `user`'s liquidity and deliver them the tokens
         uint[] memory minAmountsOut = new uint[](2);
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(lpAmountBurned, amounts);
+        emit RemoveLiquidity(lpAmountBurned, amounts, user);
         well.removeLiquidity(lpAmountBurned, minAmountsOut, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -157,7 +157,7 @@ contract WellRemoveLiquidityTest is TestHelper {
         // Remove some of `user`'s liquidity and deliver them the tokens
         uint[] memory minAmountOut = new uint[](2);
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(lpAmountBurned, tokenAmountsOut);
+        emit RemoveLiquidity(lpAmountBurned, tokenAmountsOut, user);
         well.removeLiquidity(lpAmountBurned, minAmountOut, user);
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);

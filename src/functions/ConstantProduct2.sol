@@ -27,7 +27,7 @@ contract ConstantProduct2 is IWellFunction {
         uint[] calldata reserves,
         bytes calldata
     ) external pure override returns (uint lpTokenSupply) {
-        lpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt() * 2;
+        lpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt() << 1;
     }
 
     /// @dev `b_j = (s / 2)^2 / b_{i | i != j}`

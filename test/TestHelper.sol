@@ -16,6 +16,8 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
+import {stdMath} from "forge-std/StdMath.sol";
+
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
     uint[] tokens;
@@ -168,5 +170,32 @@ abstract contract TestHelper is Test, WellDeployer {
         vm.startPrank(from);
         _;
         vm.stopPrank();
+    }
+
+    function assertApproxEqRelN(
+        uint256 a,
+        uint256 b,
+        uint256 maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
+        uint256 precision
+    ) internal virtual {
+        if (b == 0) return assertEq(a, b); // If the expected is 0, actual must be too.
+
+        uint256 percentDelta = percentDeltaN(a, b, precision);
+
+        if (percentDelta > maxPercentDelta) {
+            emit log("Error: a ~= b not satisfied [uint]");
+            emit log_named_uint("    Expected", b);
+            emit log_named_uint("      Actual", a);
+            emit log_named_decimal_uint(" Max % Delta", maxPercentDelta, precision);
+            emit log_named_decimal_uint("     % Delta", percentDelta, precision);
+            fail();
+        }
+    }
+
+
+    function percentDeltaN(uint256 a, uint256 b, uint precision) internal pure returns (uint256) {
+        uint256 absDelta = stdMath.delta(a, b);
+
+        return absDelta * (10 ** precision) / b;
     }
 }
