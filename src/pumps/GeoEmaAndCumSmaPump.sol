@@ -181,13 +181,19 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
         // TODO: What if reserve 0?
-        if (reserve < lastReserve) {
+
+        // Reserve decreasing (lastReserve > reserve)
+        if (lastReserve.cmp(reserve) == 1) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
-            if (reserve < minReserve) reserve = minReserve;
-        } else {
+            // if reserve < minimum reserve, set reserve to minimum reserve
+            if (minReserve.cmp(reserve) == 1) reserve = minReserve;
+        }
+        // Rerserve Increasing or staying the same.
+        else {
             bytes16 maxReserve = blocksPassed.mul(LOG_MAX_INCREASE);
             maxReserve = lastReserve.add(maxReserve);
-            if (reserve > maxReserve) reserve = maxReserve;
+            // If reserve > maximum reserve, set reserve to maximum reserve
+            if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
         }
         cappedReserve = reserve;
     }
