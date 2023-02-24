@@ -8,9 +8,9 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 contract WellSwapTest is TestHelper {
     Well badWell;
 
-    event AddLiquidity(uint[] amounts);
+    event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
 
-    event Swap(IERC20 fromToken, IERC20 toToken, uint fromAmount, uint toAmount);
+    event Swap(IERC20 fromToken, IERC20 toToken, uint fromAmount, uint toAmount, address recipient);
 
     function setUp() public {
         setupWell(2);
@@ -39,7 +39,7 @@ contract WellSwapTest is TestHelper {
         Balances memory userBalanceBefore = getBalances(user, well);
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], amountIn, minAmountOut);
+        emit Swap(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
         uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
@@ -61,7 +61,7 @@ contract WellSwapTest is TestHelper {
         uint calcAmountOut = uint(well.getSwapOut(tokens[0], tokens[1], amountIn));
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut);
+        emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut, user);
 
         uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
 
@@ -101,7 +101,7 @@ contract WellSwapTest is TestHelper {
         uint maxAmountIn = 1000 * 1e18;
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut);
+        emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
         Balances memory userBalanceBefore = getBalances(user, well);
 
@@ -157,7 +157,7 @@ contract WellSwapTest is TestHelper {
         ) - wellBalancesBefore.tokens[0];
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut);
+        emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut, user);
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
 
         Balances memory userBalancesAfter = getBalances(user, well);
