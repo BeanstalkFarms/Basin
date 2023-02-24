@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {IPump} from "src/interfaces/pumps/IPump.sol";
 
 /**
- * @title Mock Well that allows setting of reserves.
+ * @notice Mock Well that allows setting of reserves.
  */
 contract MockReserveWell {
 

@@ -37,7 +37,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         deployWellImplementation();
         aquifer = new Aquifer();
 
-        _well = Well(boreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0)));
+        _well = encodeAndBoreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, initialLiquidity);

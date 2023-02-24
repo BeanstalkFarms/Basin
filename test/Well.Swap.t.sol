@@ -228,7 +228,7 @@ contract WellSwapTest is TestHelper {
         // the Well holds.
         IWellFunction badFunction = new MockFunctionBad();
         badWell =
-            boreWell(address(aquifer), wellImplementation, tokens, Call(address(badFunction), ""), pumps, bytes32(0));
+            encodeAndBoreWell(address(aquifer), wellImplementation, tokens, Call(address(badFunction), ""), pumps, bytes32(0));
 
         // check assumption that reserves are empty
         Balances memory wellBalances = getBalances(address(badWell), badWell);

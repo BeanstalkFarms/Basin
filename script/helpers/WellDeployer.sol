@@ -7,7 +7,7 @@ import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 
 abstract contract WellDeployer {
-    function boreWell(
+    function encodeAndBoreWell(
         address _aquifer,
         address _wellImplementation,
         IERC20[] memory _tokens,

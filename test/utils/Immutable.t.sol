@@ -47,7 +47,7 @@ contract ImmutableTest is TestHelper {
         IERC20[] memory wellTokens = getTokens(nTokens);
 
         address wellFunction = address(new ConstantProduct2());
-        Well _well = boreWell(
+        Well _well = encodeAndBoreWell(
             address(aquifer), wellImplementation, wellTokens, Call(wellFunction, wellFunctionBytes), pumps, bytes32(0)
         );
 
