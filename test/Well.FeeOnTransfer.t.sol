@@ -5,6 +5,10 @@ pragma solidity ^0.8.17;
 import {console, TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
+/**
+ * @dev Functions that increase the Well's reserves without accounting for fees
+ * (swapFrom, swapTo, addLiquidity) should revert if there actually are fees.
+ */
 contract WellFeeOnTransferTest is TestHelper {
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);

@@ -9,7 +9,8 @@ import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 /**
- * @notice
+ * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur 
+ * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function setUp() public {
@@ -20,10 +21,11 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
     }
 
-    //////////// SWAP FROM FEE ON TRANSFER (KNOWN AMOUNT IN -> UNKNOWN AMOUNT OUT) ////////////
-
-    /// @dev swapFromFeeOnTransfer: slippage revert if minAmountOut is too high
-    /// since a fee is charged on amountIn, this should revert
+    /**
+     * @dev swapFromFeeOnTransfer: slippage revert if minAmountOut is too high.
+     * Since a fee is charged on `amountIn`, `amountOut` falls below the slippage
+     * threshold.
+     */
     function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
@@ -36,13 +38,10 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      *
      * Swapping from tokens[0] -> tokens[1]
      *
-     * Resulting balance changes:
-     *   User:
-     *      token0: Transfer (amountIn) to Well
-     *      token1: Receive (amountOut) from Well
-     *   Well:
-     *      token0: Receive (amountIn - fee) from User
-     *      token1: Transfer (amountOut) to User
+     * User spends:     amountIn            token0
+     * Well receives:   amountIn - fee      token0
+     * Well sends:      amountOut           token1
+     * User receives:   amountOut           token1
      */
     function testFuzz_swapFromFeeOnTransfer_fromToken(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(address(user)));
@@ -72,13 +71,10 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      *
      * Swapping from tokens[1] -> tokens[0]
      *
-     * Resulting balance changes:
-     *   User:
-     *      token0: Transfer (amountIn) to Well
-     *      token1: Receive (amountOut - fee) from Well
-     *   Well:
-     *      token0: Receive (amountIn) from User
-     *      token1: Transfer (amountOut) to User
+     * User spends:     amountIn            token0
+     * Well receives:   amountIn            token0
+     * Well sends:      amountOut           token1
+     * User receives:   amountOut - fee     token1
      *
      * NOTE: Since the fee is incurred after `amountOut` is calculated in the Well,
      * the Swap event contains the amount sent by the Well, which will be larger

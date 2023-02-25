@@ -18,10 +18,13 @@ import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
 import {stdMath} from "forge-std/StdMath.sol";
 
-/// @dev helper struct for quickly loading user / well token balances
+/// @dev Helper struct for quickly loading user / well token balances
 struct Balances {
-    uint[] tokens;
+    /// Address balance of each token in the Well
+    uint[] tokens; 
+    /// Address balance of LP tokens
     uint lp;
+    /// Total LP token supply for the relevant Well
     uint lpSupply;
 }
 

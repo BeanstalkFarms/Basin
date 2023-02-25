@@ -33,6 +33,11 @@ struct SwapSnapshot {
     Balances well;
 }
 
+/**
+ * @dev Provides common assertions when testing Swaps.
+ * 
+ * NOTE: Uses globals inherited from TestHelper.
+ */
 contract SwapHelper is TestHelper {
     event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
     event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
@@ -40,6 +45,7 @@ contract SwapHelper is TestHelper {
     /// @dev Default Swap behavior assuming zero fee on transfer
     function beforeSwapFrom(uint i, uint j, uint amountIn) internal returns (SwapSnapshot memory, SwapAction memory) {
         SwapAction memory act;
+
         act.i = i;
         act.j = j;
         act.userSpends = amountIn;
@@ -64,10 +70,24 @@ contract SwapHelper is TestHelper {
         uint i = act.i;
         uint j = act.j;
 
-        assertEq(bef.user.tokens[i] - aft.user.tokens[i], act.userSpends, "Incorrect token[i] user balance");
-        assertEq(aft.well.tokens[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] well reserve");
-        assertEq(aft.well.tokens[j], bef.well.tokens[j] - act.wellSends, "Incorrect token[j] well reserve");
-        assertEq(aft.user.tokens[j] - bef.user.tokens[j], act.userReceives, "Incorrect token[j] user balance");
+        // Check balances accounting
+        assertEq(bef.user.tokens[i] - aft.user.tokens[i], act.userSpends, "Incorrect token[i] User balance");
+        assertEq(aft.well.tokens[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] Well balance");
+        assertEq(aft.well.tokens[j], bef.well.tokens[j] - act.wellSends, "Incorrect token[j] Well balance");
+        assertEq(aft.user.tokens[j] - bef.user.tokens[j], act.userReceives, "Incorrect token[j] User balance");
+        
+        // Check that reserves were updated
+        // FIXME(test): this will fail if balances != reserves, replace bef.well.tokens with reserves snapshot
+        uint[] memory reserves = well.getReserves();
+        assertEq(reserves[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] Well reserve");
+        assertEq(reserves[j], bef.well.tokens[i] - act.wellSends, "Incorrect token[i] Well reserve");
+
+        // Check that no other reserves were updated
+        for (uint k = 0; k < reserves.length; ++k) {
+            if (k == i || k == j) continue;
+            assertEq(bef.well.tokens[k], aft.well.tokens[k], "token[k] Well balance changed unexpectedly");
+            // FIXME(test): add zero reserve change assertion
+        }
     }
 
     function _newSnapshot() internal view returns (SwapSnapshot memory ss) {

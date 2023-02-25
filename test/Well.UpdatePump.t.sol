@@ -38,4 +38,7 @@ contract WellUpdatePumpTest is TestHelper {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }
     }
+
+    /// FIXME(test): verify that transferring a token to the well -> calling setReserves
+    /// doesn't take into account the extra tokens. must call sync / etc.
 }

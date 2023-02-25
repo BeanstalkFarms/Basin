@@ -6,16 +6,16 @@ import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
+/**
+ * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap DO NOT
+ * incur a fee on transfer. 
+ */
 contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
-    Well badWell;
-
     function setUp() public {
         setupWell(2);
     }
 
-    //////////// SWAP FROM FEE ON TRANSFER (KNOWN AMOUNT IN -> UNKNOWN AMOUNT OUT) ////////////
-
-    /// @dev swapFromFeeOnTransfer: slippage revert if minAmountOut is too high
+    /// @dev Slippage revert if minAmountOut is too high.
     function test_swapFromFeeOnTransfer_noFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
@@ -24,6 +24,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
+    /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function testFuzz_swapFromFeeOnTransfer_noFee_revertIf_sameToken(uint128 amountIn) public prank(user) {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
@@ -31,6 +32,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user);
     }
 
+    /// @dev With no fees, behavior is identical to {swapFrom}.
     function testFuzz_swapFromFeeOnTransfer_noFee(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
