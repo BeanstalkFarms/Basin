@@ -9,8 +9,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is TestHelper {
     Well badWell;
 
     event AddLiquidity(uint[] amounts);
-
-    event Swap(IERC20 fromToken, IERC20 toToken, uint fromAmount, uint toAmount);
+    event Swap(IERC20 fromToken, IERC20 toToken, uint fromAmount, uint toAmount, address recipient);
 
     function setUp() public {
         setupWell(2);
@@ -33,7 +32,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is TestHelper {
         Balances memory userBalanceBefore = getBalances(user, well);
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], amountIn, minAmountOut);
+        emit Swap(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
         uint amountOut = well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
 
@@ -49,13 +48,14 @@ contract WellSwapFromFeeOnTransferNoFeeTest is TestHelper {
 
     function testFuzz_swapFromFeeOnTransfer_noFee(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, 1000 * 1e18);
+
         Balances memory userBalanceBefore = getBalances(user, well);
         Balances memory wellBalanceBefore = getBalances(address(well), well);
 
         uint calcAmountOut = uint(well.getSwapOut(tokens[0], tokens[1], amountIn));
 
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut);
+        emit Swap(tokens[0], tokens[1], amountIn, calcAmountOut, user);
 
         uint amountOut = well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, 0, user);
 
