@@ -53,7 +53,14 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
         if (initFunctionCall.length > 0) {
             (bool success, bytes memory returnData) = well.call(initFunctionCall);
-            require(success, returnData.length > 0 ? string(returnData) : "Aquifer: well init");
+            if (!success) {
+                // Next 5 lines are based on https://ethereum.stackexchange.com/a/83577
+                if (returnData.length < 68) revert("Aquifer: well init");
+                assembly {
+                    returnData := add(returnData, 0x04)
+                }
+                revert(string.concat("Aquifer: Well Init (", abi.decode(returnData, (string)), ")"));
+            }
         }
 
         wellImplementations[well] = implementation;
