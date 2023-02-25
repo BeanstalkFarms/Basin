@@ -23,6 +23,7 @@ contract WellSwapFromFeeOnTransferFeeTest is TestHelper {
     //////////// SWAP FROM FEE ON TRANSFER (KNOWN AMOUNT IN -> UNKNOWN AMOUNT OUT) ////////////
 
     /// @dev swapFromFeeOnTransfer: slippage revert if minAmountOut is too high
+    /// since a fee is charged on amountIn, this should revert
     function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
