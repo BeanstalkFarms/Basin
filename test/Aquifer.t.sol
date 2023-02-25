@@ -11,6 +11,7 @@ import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
 import {LibWellConstructor} from "src/libraries/LibWellConstructor.sol";
 import {Aquifer} from "src/Aquifer.sol";
+import {MockInitFailWell} from "mocks/wells/MockInitFailWell.sol";
 
 /// @dev Test the Aquifer's functionality in isolation. To avoid dependence on a
 /// particular Well implementation, this test uses MockStaticWell which stores
@@ -18,6 +19,7 @@ import {Aquifer} from "src/Aquifer.sol";
 /// Immutable data applied during cloning is verified separately.
 contract AquiferTest is TestHelper {
     MockStaticWell mockWell;
+    address initFailImplementation;
 
     bytes32 salt;
     bytes immutableData;
@@ -38,6 +40,7 @@ contract AquiferTest is TestHelper {
         
         // Deploy implementation. This contract will get cloned during {boreWell}.
         wellImplementation = address(new MockStaticWell(tokens, wellFunction, pumps, address(aquifer), wellData));
+        initFailImplementation = address(new MockInitFailWell());
 
         // Shared clone data
         salt             = bytes32("Wells");
@@ -135,5 +138,29 @@ contract AquiferTest is TestHelper {
             assertEq(_well.symbol(), "mWELL", "symbol mismatch");
             assertEq(aquifer.wellImplementation(address(_well)), wellImplementation, "implementation mismatch");
         }
+    }
+
+    function test_bore_fail_message() public {
+        initFunctionCall = abi.encodeWithSignature("initMessage()");
+
+        vm.expectRevert("Aquifer: Well Init (Well: fail message)");
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            initFunctionCall,
+            bytes32(0)
+        );
+    }
+
+    function test_bore_fail_no_message() public {
+        initFunctionCall = abi.encodeWithSignature("initNoMessage()");
+
+        vm.expectRevert("Aquifer: well init");
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            initFunctionCall,
+            bytes32(0)
+        );
     }
 }
