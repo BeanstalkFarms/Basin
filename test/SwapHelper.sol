@@ -31,6 +31,7 @@ struct SwapAction {
 struct SwapSnapshot {
     Balances user;
     Balances well;
+    uint[] reserves;
 }
 
 /**
@@ -77,21 +78,21 @@ contract SwapHelper is TestHelper {
         assertEq(aft.user.tokens[j] - bef.user.tokens[j], act.userReceives, "Incorrect token[j] User balance");
         
         // Check that reserves were updated
-        // FIXME(test): this will fail if balances != reserves, replace bef.well.tokens with reserves snapshot
         uint[] memory reserves = well.getReserves();
-        assertEq(reserves[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] Well reserve");
-        assertEq(reserves[j], bef.well.tokens[i] - act.wellSends, "Incorrect token[i] Well reserve");
+        assertEq(aft.reserves[i], bef.reserves[i] + act.wellReceives, "Incorrect token[i] Well reserve");
+        assertEq(aft.reserves[j], bef.reserves[i] - act.wellSends, "Incorrect token[i] Well reserve");
 
-        // Check that no other reserves were updated
+        // Check that no other balances or reserves were changed
         for (uint k = 0; k < reserves.length; ++k) {
             if (k == i || k == j) continue;
-            assertEq(bef.well.tokens[k], aft.well.tokens[k], "token[k] Well balance changed unexpectedly");
-            // FIXME(test): add zero reserve change assertion
+            assertEq(aft.well.tokens[k], bef.well.tokens[k], "token[k] Well balance changed unexpectedly");
+            assertEq(aft.reserves[k], bef.reserves[k], "token[k] Well reserve changed unexpectedly");
         }
     }
 
     function _newSnapshot() internal view returns (SwapSnapshot memory ss) {
         ss.user = getBalances(user, well);
         ss.well = getBalances(address(well), well);
+        ss.reserves = well.getReserves();
     }
 }

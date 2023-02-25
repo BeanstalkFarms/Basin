@@ -195,12 +195,15 @@ abstract contract TestHelper is Test, WellDeployer {
     ////////// Balance Helpers
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
+    /// FIXME: uses global tokens but not global well
     function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
         uint[] memory tokenBalances = new uint[](tokens.length);
         for (uint i = 0; i < tokenBalances.length; ++i) {
             tokenBalances[i] = tokens[i].balanceOf(account);
         }
-        balances = Balances(tokenBalances, _well.balanceOf(account), _well.totalSupply());
+        balances.tokens = tokenBalances;
+        balances.lp = _well.balanceOf(account);
+        balances.lpSupply = _well.totalSupply();
     }
 
     ////////// EVM Helpers
