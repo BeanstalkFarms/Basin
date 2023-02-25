@@ -18,8 +18,13 @@ contract WellSwapTest is SwapHelper {
     function test_getSwapOut() public {
         uint amountIn = 1000 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn);
-        
+
         assertEq(amountOut, 500 * 1e18);
+    }
+
+    function test_swapFrom_revertIf_sameToken() public prank(user) {
+        vm.expectRevert("Well: Invalid tokens");
+        well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user);
     }
 
     /// @dev swapFrom: slippage revert if minAmountOut is too high
@@ -48,12 +53,26 @@ contract WellSwapTest is SwapHelper {
         _after_swapFrom(0, 1, amountOut, b);
     }
 
+    /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
+    function testFuzz_swapFrom_equalSwap(uint token0AmtIn) public prank(user) {
+        vm.assume(token0AmtIn < tokens[0].balanceOf(user));
+        uint token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user);
+        uint token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user);
+        assertEq(token0Out, token0AmtIn);
+    }
+
     //////////// SWAP TO (UNKNOWN AMOUNT IN -> KNOWN AMOUNT OUT) ////////////
 
     function test_getSwapIn() public {
         uint amountOut = 500 * 1e18;
         uint amountIn = well.getSwapIn(tokens[0], tokens[1], amountOut);
         assertEq(amountIn, 1000 * 1e18);
+    }
+
+    /// @dev swapTo: identical tokens results in no change in balances
+    function test_swapTo_revertIf_sameToken() public prank(user) {
+        vm.expectRevert("Well: Invalid tokens");
+        well.swapTo(tokens[0], tokens[0], 100 * 1e18, 0, user);
     }
 
     /// @dev swapTo: slippage revert occurs if maxAmountIn is too low
@@ -83,13 +102,6 @@ contract WellSwapTest is SwapHelper {
 
         assertEq(wellBalanceAfter.tokens[0], amountIn + initialLiquidity, "incorrect token0 well amt");
         assertEq(wellBalanceAfter.tokens[1], initialLiquidity - amountOut, "incorrect token1 well amt");
-    }
-
-    function testFuzz_swapFrom_equalSwapFrom(uint token0AmtIn) public prank(user) {
-        vm.assume(token0AmtIn < 1000e18);
-        uint token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user);
-        uint token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user);
-        assertEq(token0Out, token0AmtIn);
     }
 
     function testFuzz_swapTo_equalSwap(uint token0AmtOut) public prank(user) {
@@ -141,60 +153,28 @@ contract WellSwapTest is SwapHelper {
         assertEq(wellBalancesAfter.tokens[1], wellBalancesBefore.tokens[1] - amountOut, "Incorrect token1 well reserve");
     }
 
-    //////////// EDGE CASE: IDENTICAL TOKENS ////////////
-
-    /// @dev swapFrom: identical tokens results in no change in balances
-    function testFuzz_swapFrom_sameToken(uint248 amountIn) public prank(user) {
-        MockToken(address(tokens[0])).mint(user, amountIn);
-        vm.expectRevert("Well: Invalid tokens");
-        well.swapFrom(tokens[0], tokens[0], amountIn, 0, user);
-    }
-
-    /// @dev swapTo: identical tokens results in no change in balances
-    function testFuzz_swapTo_sameToken(uint amountOut) public prank(user) {
-        vm.expectRevert("Well: Invalid tokens");
-        well.swapTo(tokens[0], tokens[0], amountOut, 0, user);
-    }
-
-    modifier check_noTokenBalanceChange() {
-        Balances memory userBefore = getBalances(address(user), well);
-        Balances memory wellBefore = getBalances(address(well), well);
-        _;
-        Balances memory userAfter = getBalances(address(user), well);
-        Balances memory wellAfter = getBalances(address(well), well);
-        // no change in token balances
-        for (uint i = 0; i < tokens.length; ++i) {
-            assertEq(userAfter.tokens[i], userBefore.tokens[i], "user token balance mismatch");
-            assertEq(wellAfter.tokens[i], wellBefore.tokens[i], "well token reserve mismatch");
-        }
-    }
-
     //////////// EDGE CASE: SWAP AMOUNT BIGGER THAN BALANCE ////////////
 
-    /// @dev
     function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint amountOut, uint i) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
         Balances memory wellBalances = getBalances(address(well), well);
         vm.assume(i < _tokens.length);
 
         // request more than the Well has. there is no input amount that could do this.
-        vm.assume(amountOut > wellBalances.tokens[i]);
-        vm.assume(amountOut <= uint128(type(int128).max));
+        amountOut = bound(amountOut, wellBalances.tokens[i] + 1, type(uint128).max);
 
         // swap token `i` -> all other tokens
         for (uint j = 0; j < _tokens.length; ++j) {
             if (j != i) {
                 vm.expectRevert(); // underflow
-                well.getSwapIn(tokens[i], tokens[j], amountOut);
+                well.getSwapIn(_tokens[i], _tokens[j], amountOut);
             }
         }
     }
 
-    /// @dev
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint amountIn, uint i) public prank(user) {
         // Deploy a new Well with a poorly engineered pricing function.
-        // Its `getBalance` function can return an amount greater than
-        // the Well holds.
+        // Its `getBalance` function can return an amount greater than the Well holds.
         IWellFunction badFunction = new MockFunctionBad();
         badWell = encodeAndBoreWell(
             address(aquifer), wellImplementation, tokens, Call(address(badFunction), ""), pumps, bytes32(0)
