@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import {console} from "test/TestHelper.sol";
 import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
-import {IPump} from "src/interfaces/PUMPS/IPump.sol";
+import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
 import {ClonePlus} from "src/utils/ClonePlus.sol";
 import {Call, IERC20} from "src/Well.sol";
