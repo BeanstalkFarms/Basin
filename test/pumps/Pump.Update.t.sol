@@ -133,10 +133,8 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
 
-        (
-            uint[] memory twaReserves,
-            bytes memory twaCumulativeReservesBytes
-        ) = pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
+        (uint[] memory twaReserves, bytes memory twaCumulativeReservesBytes) =
+            pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
 
         assertApproxEqAbs(twaReserves[0], 1.5e6, 1);
         assertApproxEqAbs(twaReserves[1], 1e6, 1);
@@ -164,10 +162,8 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
 
-        (
-            uint[] memory twaReserves,
-            bytes memory twaCumulativeReservesBytes
-        ) = pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
+        (uint[] memory twaReserves, bytes memory twaCumulativeReservesBytes) =
+            pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
 
         assertApproxEqAbs(twaReserves[0], 1.5e6, 1);
         assertApproxEqAbs(twaReserves[1], 1e6, 1);
@@ -215,36 +211,31 @@ contract PumpUpdateTest is TestHelper {
 
         //
         bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(address(mWell));
-        assertApproxEqAbs(lastCumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
-        assertApproxEqAbs(lastCumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
+        assertApproxEqAbs(lastCumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
+        assertApproxEqAbs(lastCumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
         bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell)), (bytes16[]));
-        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
-        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
+        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
+        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
-        (
-            uint[] memory twaReserves,
-            bytes memory twaCumulativeReservesBytes
-        ) = pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
+        (uint[] memory twaReserves, bytes memory twaCumulativeReservesBytes) =
+            pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp);
 
-        assertApproxEqAbs(twaReserves[0], 1224744, 1);
-        assertApproxEqAbs(twaReserves[1], 1224744, 1);
+        assertApproxEqAbs(twaReserves[0], 1_224_744, 1);
+        assertApproxEqAbs(twaReserves[1], 1_224_744, 1);
 
         cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
-        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
-        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
+        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
+        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
-
-        (
-            twaReserves,
-            twaCumulativeReservesBytes
-        ) = pump.readTwaReserves(address(mWell), startCumulativeReserves2, lastTimestamp2);
+        (twaReserves, twaCumulativeReservesBytes) =
+            pump.readTwaReserves(address(mWell), startCumulativeReserves2, lastTimestamp2);
 
         assertApproxEqAbs(twaReserves[0], 1e6, 1);
         assertApproxEqAbs(twaReserves[1], 1.5e6, 1);
 
         cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
-        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
-        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1224744, 1);
+        assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
+        assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
     }
 }

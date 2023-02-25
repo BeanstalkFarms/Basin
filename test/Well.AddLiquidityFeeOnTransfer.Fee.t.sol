@@ -21,7 +21,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint[] memory feeAmounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
-            feeAmounts[i] = amounts[i] * (1e18-1e16) / 1e18;
+            feeAmounts[i] = amounts[i] * (1e18 - 1e16) / 1e18;
         }
         uint lpAmountOut = 1980 * 1e27;
 
@@ -49,7 +49,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
         uint[] memory feeAmounts = new uint[](2);
-        feeAmounts[0] = amounts[0] * (1e18-1e16) / 1e18;
+        feeAmounts[0] = amounts[0] * (1e18 - 1e16) / 1e18;
         feeAmounts[1] = 0;
 
         uint amountOut = 9_875_618_042_071_776_602_404_150_766;

@@ -118,7 +118,7 @@ abstract contract TestHelper is Test, WellDeployer {
                 18 // decimals
             )
         );
-    }  
+    }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokensFeeOnTransfer(uint n) internal returns (IERC20[] memory _tokens) {
@@ -161,7 +161,7 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     ////////// Well Setup
-    
+
     function deployWellFunction() internal returns (Call memory _wellFunction) {
         _wellFunction.target = address(new ConstantProduct2());
         _wellFunction.data = new bytes(0);
@@ -253,16 +253,16 @@ abstract contract TestHelper is Test, WellDeployer {
             assertEq(a[i], b[i], err); // uses the prev overload
         }
     }
-    
+
     function assertApproxEqRelN(
-        uint256 a,
-        uint256 b,
-        uint256 maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
-        uint256 precision
+        uint a,
+        uint b,
+        uint maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
+        uint precision
     ) internal virtual {
         if (b == 0) return assertEq(a, b); // If the expected is 0, actual must be too.
 
-        uint256 percentDelta = percentDeltaN(a, b, precision);
+        uint percentDelta = percentDeltaN(a, b, precision);
 
         if (percentDelta > maxPercentDelta) {
             emit log("Error: a ~= b not satisfied [uint]");
@@ -274,8 +274,8 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function percentDeltaN(uint256 a, uint256 b, uint precision) internal pure returns (uint256) {
-        uint256 absDelta = stdMath.delta(a, b);
+    function percentDeltaN(uint a, uint b, uint precision) internal pure returns (uint) {
+        uint absDelta = stdMath.delta(a, b);
 
         return absDelta * (10 ** precision) / b;
     }

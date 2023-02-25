@@ -90,7 +90,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
         b.cumulativeReserves = slot.readBytes16(length);
 
-
         uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
         bytes16 aN = A.powu(deltaTimestamp);
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();

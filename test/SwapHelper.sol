@@ -5,13 +5,13 @@ import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
-/** 
+/**
  * @dev Stores the expected change in balance for User & Well throughout a Swap.
- * 
+ *
  * Gives upstream tests a way to specify expected changes based on the presence
- * of transfer fees. When a token involved in a swap incurs a fee on transfer, 
+ * of transfer fees. When a token involved in a swap incurs a fee on transfer,
  * one or both of the following is true:
- * 
+ *
  *  `wellReceives` < `userSpends`
  *  `userReceives` < `wellSends`
  */
@@ -38,11 +38,7 @@ contract SwapHelper is TestHelper {
     event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
 
     /// @dev Default Swap behavior assuming zero fee on transfer
-    function beforeSwapFrom(
-        uint i,
-        uint j,
-        uint amountIn
-    ) internal returns (SwapSnapshot memory, SwapAction memory) {
+    function beforeSwapFrom(uint i, uint j, uint amountIn) internal returns (SwapSnapshot memory, SwapAction memory) {
         SwapAction memory act;
         act.i = i;
         act.j = j;
@@ -50,13 +46,11 @@ contract SwapHelper is TestHelper {
         act.wellReceives = amountIn;
         act.wellSends = well.getSwapOut(tokens[i], tokens[j], amountIn);
         act.userReceives = act.wellSends;
-    
+
         return beforeSwapFrom(act);
     }
 
-    function beforeSwapFrom(
-        SwapAction memory act
-    ) internal returns (SwapSnapshot memory, SwapAction memory) {
+    function beforeSwapFrom(SwapAction memory act) internal returns (SwapSnapshot memory, SwapAction memory) {
         SwapSnapshot memory bef = _newSnapshot();
 
         vm.expectEmit(true, true, true, true, address(well));
@@ -65,14 +59,11 @@ contract SwapHelper is TestHelper {
         return (bef, act);
     }
 
-    function afterSwapFrom(
-        SwapSnapshot memory bef,
-        SwapAction memory act
-    ) public {
+    function afterSwapFrom(SwapSnapshot memory bef, SwapAction memory act) public {
         SwapSnapshot memory aft = _newSnapshot();
         uint i = act.i;
         uint j = act.j;
-    
+
         assertEq(bef.user.tokens[i] - aft.user.tokens[i], act.userSpends, "Incorrect token[i] user balance");
         assertEq(aft.well.tokens[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] well reserve");
         assertEq(aft.well.tokens[j], bef.well.tokens[j] - act.wellSends, "Incorrect token[j] well reserve");

@@ -1,4 +1,5 @@
 pragma solidity ^0.8.17;
+
 import "test/TestHelper.sol";
 import "src/libraries/ABDKMathQuad.sol";
 import "oz/utils/Strings.sol";
@@ -30,7 +31,7 @@ contract ABDKTest is TestHelper {
     function test_powu1() public {
         bytes16 pu = powuFraction(9, 10, 10);
         uint puu = uint(pu.to128x128());
-        uint expected = 118649124891528663468500301601258807155;
+        uint expected = 118_649_124_891_528_663_468_500_301_601_258_807_155;
         assertApproxEqRelN(puu, expected, 1, 32);
     }
 
@@ -62,7 +63,7 @@ contract ABDKTest is TestHelper {
 
     function testFuzz_FromUIntToLog2(uint x) public {
         vm.assume(x > 0); // log2(0) is undefined.
-        assertEq(ABDKMathQuad.fromUInt(x).log_2(),ABDKMathQuad.fromUIntToLog2(x));
+        assertEq(ABDKMathQuad.fromUInt(x).log_2(), ABDKMathQuad.fromUIntToLog2(x));
     }
 
     function testFuzz_pow_2ToUInt(uint x) public {
@@ -71,6 +72,5 @@ contract ABDKTest is TestHelper {
         // test the pow_2ToUInt function
         bytes16 _x = x.fromUInt();
         assertEq(ABDKMathQuad.pow_2(_x).toUInt(), ABDKMathQuad.pow_2ToUInt(_x));
-       
     }
 }

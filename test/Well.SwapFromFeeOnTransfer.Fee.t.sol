@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {
+    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well, console
+} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 /**
- * @notice  
+ * @notice
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function setUp() public {
         tokens = new IERC20[](2);
         tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
         tokens[1] = deployMockToken(1); // token[1] has no fee
-        setupWell(deployWellFunction(), deployPumps(2), tokens); 
+        setupWell(deployWellFunction(), deployPumps(2), tokens);
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
     }
 
@@ -31,11 +33,11 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
 
     /**
      * @dev tokens[0]: 1% fee / tokens[1]: No fee
-     * 
+     *
      * Swapping from tokens[0] -> tokens[1]
-     * 
+     *
      * Resulting balance changes:
-     *   User: 
+     *   User:
      *      token0: Transfer (amountIn) to Well
      *      token1: Receive (amountOut) from Well
      *   Well:
@@ -67,17 +69,17 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
 
     /**
      * @dev tokens[0]: 1% fee / tokens[1]: No fee
-     * 
+     *
      * Swapping from tokens[1] -> tokens[0]
-     * 
+     *
      * Resulting balance changes:
-     *   User: 
+     *   User:
      *      token0: Transfer (amountIn) to Well
      *      token1: Receive (amountOut - fee) from Well
      *   Well:
      *      token0: Receive (amountIn) from User
      *      token1: Transfer (amountOut) to User
-     * 
+     *
      * NOTE: Since the fee is incurred after `amountOut` is calculated in the Well,
      * the Swap event contains the amount sent by the Well, which will be larger
      * than the amount received by the User.
@@ -86,7 +88,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         amountIn = bound(amountIn, 0, tokens[1].balanceOf(address(well)));
         SwapSnapshot memory bef;
         SwapAction memory act;
-        
+
         // Setup delta
         act.i = 1;
         act.j = 0;

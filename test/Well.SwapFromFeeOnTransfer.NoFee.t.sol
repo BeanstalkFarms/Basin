@@ -19,7 +19,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function test_swapFromFeeOnTransfer_noFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
-        
+
         vm.expectRevert("Well: slippage");
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
@@ -33,7 +33,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
 
     function testFuzz_swapFromFeeOnTransfer_noFee(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
-        
+
         (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, act.userReceives, user);
         afterSwapFrom(bef, act);
