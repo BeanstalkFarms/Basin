@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
-import {SwapHelper, BeforeSwap} from "test/SwapHelper.sol";
+import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -24,21 +24,12 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
-    function test_swapFromFeeOnTransfer_noFee() public prank(user) {
-        uint amountIn = 1000 * 1e18;
-        uint minAmountOut = 500 * 1e18;
-
-        BeforeSwap memory b = _before_swapFrom(0, 1, amountIn, user);
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
-        _after_swapFrom(0, 1, amountOut, b);
-    }
-
     function testFuzz_swapFromFeeOnTransfer_noFee(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         
-        BeforeSwap memory b = _before_swapFrom(0, 1, amountIn, user);
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, b.calcAmountOut, user);
-        _after_swapFrom(0, 1, amountOut, b);
+        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
+        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, act.userReceives, user);
+        afterSwapFrom(0, 1, bef, act);
     }
 
     //////////// EDGE CASE: IDENTICAL TOKENS ////////////

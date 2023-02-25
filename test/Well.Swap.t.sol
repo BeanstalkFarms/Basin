@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
-import {SwapHelper, BeforeSwap} from "test/SwapHelper.sol";
+import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -36,21 +36,22 @@ contract WellSwapTest is SwapHelper {
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
+    /// FIXME: remove in favor of fuzz
     function test_swapFrom() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
 
-        BeforeSwap memory b = _before_swapFrom(0, 1, amountIn, user);
-        uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
-        _after_swapFrom(0, 1, amountOut, b);
+        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
+        act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        afterSwapFrom(0, 1, bef, act);
     }
 
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         
-        BeforeSwap memory b = _before_swapFrom(0, 1, amountIn, user);
-        uint amountOut = well.swapFrom(tokens[0], tokens[1], amountIn, b.calcAmountOut, user);
-        _after_swapFrom(0, 1, amountOut, b);
+        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
+        act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
+        afterSwapFrom(0, 1, bef, act);
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
@@ -83,6 +84,7 @@ contract WellSwapTest is SwapHelper {
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
     }
 
+    /// FIXME: remove in favor of fuzz
     function test_swapTo() public prank(user) {
         uint amountOut = 500 * 1e18;
         uint maxAmountIn = 1000 * 1e18;
@@ -173,6 +175,13 @@ contract WellSwapTest is SwapHelper {
     }
 
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint amountIn, uint i) public prank(user) {
+        // swap token `i` -> all other tokens
+        vm.assume(i < tokens.length);
+
+        // find an input amount that produces an output amount higher than what the Well has.
+        // When the Well is deployed it has zero reserves, so any nonzero value should revert.
+        amountIn = bound(amountIn, 1, type(uint128).max);
+
         // Deploy a new Well with a poorly engineered pricing function.
         // Its `getBalance` function can return an amount greater than the Well holds.
         IWellFunction badFunction = new MockFunctionBad();
@@ -185,16 +194,7 @@ contract WellSwapTest is SwapHelper {
         assertEq(wellBalances.tokens[0], 0, "bad assumption: wellBalances.tokens[0] != 0");
         assertEq(wellBalances.tokens[1], 0, "bad assumption: wellBalances.tokens[1] != 0");
 
-        IERC20[] memory _tokens = badWell.tokens();
-        vm.assume(i < _tokens.length); // swap token `i` -> all other tokens
-
-        // find an input amount that produces an output amount higher than what the Well has.
-        // When the Well is deployed it has zero reserves, so any nonzero value should revert.
-        vm.assume(amountIn > 0);
-        vm.assume(amountIn <= uint128(type(int128).max));
-
-        // swap token `i` -> all other tokens
-        for (uint j = 0; j < _tokens.length; ++j) {
+        for (uint j = 0; j < tokens.length; ++j) {
             if (j != i) {
                 vm.expectRevert();
                 badWell.getSwapOut(tokens[i], tokens[j], amountIn);

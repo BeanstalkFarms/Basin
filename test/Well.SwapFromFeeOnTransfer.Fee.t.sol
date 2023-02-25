@@ -2,21 +2,19 @@
 pragma solidity ^0.8.17;
 
 import {MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
-contract WellSwapFromFeeOnTransferFeeTest is TestHelper {
-    Well badWell;
-
-    event AddLiquidity(uint[] amounts);
-
-    event Swap(IERC20 fromToken, IERC20 toToken, uint fromAmount, uint toAmount);
-
-
-    /// @dev tokens[0] has a fee, tokens[1] does not.
+/**
+ * @notice  
+ */
+contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function setUp() public {
-        deployMockTokensFeeOnTransfer(1);
-        setupWell(1);
+        tokens = new IERC20[](2);
+        tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
+        tokens[1] = deployMockToken(1); // token[1] has no fee
+        setupWell(2, deployWellFunction(), deployPumps(2), tokens); 
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
     }
 
@@ -68,7 +66,7 @@ contract WellSwapFromFeeOnTransferFeeTest is TestHelper {
         
         // Perform swap
         vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], amountInWithFee, calcAmountOut);
+        emit Swap(tokens[0], tokens[1], amountInWithFee, calcAmountOut, user);
         uint amountOut = well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, calcAmountOut, user);
 
         Balances memory userBalanceAfter = getBalances(user, well);
@@ -92,15 +90,6 @@ contract WellSwapFromFeeOnTransferFeeTest is TestHelper {
 
     ////////// Fee on `toToken` only
 
-    function test_swapFromFeeOnTransfer_toToken() public prank(user) {
-        uint amountIn0 = 1000 * 1e18;
-        _swapFrom_feeOnToToken(amountIn0);
-    }
-    function testFuzz_swapFromFeeOnTransfer_toToken(uint amountIn0) public prank(user) {
-        amountIn0 = bound(amountIn0, 0, tokens[0].balanceOf(address(well)));
-        _swapFrom_feeOnToToken(amountIn0);
-    }
-
     /**
      * @dev tokens[0]: 1% fee / tokens[1]: No fee
      * 
@@ -118,38 +107,24 @@ contract WellSwapFromFeeOnTransferFeeTest is TestHelper {
      * the Swap event contains the amount deducted from the Well, not the amount
      * given to the User.
      */
-    function _swapFrom_feeOnToToken(uint amountIn) internal {
-        Balances memory userBalanceBefore = getBalances(user, well);
-        Balances memory wellBalanceBefore = getBalances(address(well), well);
-
-        // Fee on input
-        uint calcAmountOut = well.getSwapOut(tokens[1], tokens[0], amountIn);
-        uint _fee = calcAmountOut * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
-
-        // Reduce the amountIn by fee to get expected amount out
-        uint calcAmountOutWithFee = calcAmountOut - _fee;
+    function testFuzz_swapFromFeeOnTransfer_toToken(uint amountIn) public prank(user) {
+        amountIn = bound(amountIn, 0, tokens[1].balanceOf(address(well)));
+        SwapSnapshot memory bef;
+        SwapAction memory act;
         
-        // Perform swap
-        vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[1], tokens[0], amountIn, calcAmountOut);
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[1], tokens[0], amountIn, calcAmountOutWithFee, user);
+        // Setup delta
+        act.userSpends = amountIn;
+        act.wellReceives = amountIn;
+        act.wellSends = well.getSwapOut(tokens[1], tokens[0], amountIn);
+        uint _fee = act.wellSends * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
+        act.userReceives = act.wellSends - _fee;
 
-        Balances memory userBalanceAfter = getBalances(user, well);
-        Balances memory wellBalanceAfter = getBalances(address(well), well);
-        
-        // Fee is applied after `amountOut` is calculated, so this is the amount that the Well sent
-        assertEq(amountOut, calcAmountOut, "amountOut different than calculated");
+        (bef, act) = beforeSwapFrom(1, 0, user, act);
 
-        // No fee taken on tokens[1]
-        assertEq(userBalanceBefore.tokens[1] - userBalanceAfter.tokens[1], amountIn, "Incorrect token0 user balance");
-        assertEq(wellBalanceAfter.tokens[1], wellBalanceBefore.tokens[1] + amountIn, "Incorrect token0 well reserve");
+        // Perform swap; returns the amount that the Well sent NOT including the transfer fee
+        uint amountOut = well.swapFromFeeOnTransfer(tokens[1], tokens[0], amountIn, act.userReceives, user);
 
-        // Fee taken on tokens[0]
-        assertEq(
-            userBalanceAfter.tokens[0] - userBalanceBefore.tokens[0], calcAmountOutWithFee, "Incorrect token1 user balance"
-        );
-        assertEq(
-            wellBalanceAfter.tokens[0], wellBalanceBefore.tokens[0] - calcAmountOut, "Incorrect token1 well reserve"
-        );
+        assertEq(amountOut, act.wellSends, "amountOut different than calculated");
+        afterSwapFrom(1, 0, bef, act);
     }
 }
