@@ -56,6 +56,11 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
+        setupWell(n, _wellFunction, _pumps, deployMockTokens(n));
+    }
+
+    function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps, IERC20[] memory _tokens) internal {
+        tokens = _tokens;
         wellFunction = _wellFunction;
         for (uint i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
@@ -63,7 +68,6 @@ abstract contract TestHelper is Test, WellDeployer {
 
         initUser();
 
-        tokens = deployMockTokens(n);
         wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
         well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
@@ -82,6 +86,16 @@ abstract contract TestHelper is Test, WellDeployer {
         addLiquidityEqualAmount(address(this), initialLiquidity);
     }
 
+    function setupWellWithFeeOnTransfer(uint n) internal {
+        Call memory _wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
+        Call[] memory _pumps = new Call[](2);
+        _pumps[0].target = address(new MockPump());
+        _pumps[0].data = new bytes(1);
+        _pumps[1].target = address(new MockPump());
+        _pumps[1].data = new bytes(1);
+        setupWell(n, _wellFunction, _pumps, deployMockTokensFeeOnTransfer(n));
+    }
+
     function initUser() internal {
         users = new Users();
         address[] memory _user = new address[](2);
@@ -93,8 +107,8 @@ abstract contract TestHelper is Test, WellDeployer {
     ////////// Test Tokens
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokens(uint n) internal returns (IERC20[] memory) {
-        IERC20[] memory _tokens = new IERC20[](n);
+    function deployMockTokens(uint n) internal returns (IERC20[] memory _tokens) {
+        _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
             _tokens[i] = IERC20(
                 new MockToken(
@@ -104,20 +118,19 @@ abstract contract TestHelper is Test, WellDeployer {
                 )
             );
         }
-        return _tokens;
     }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokensFeeOnTransfer(uint n) internal {
+    function deployMockTokensFeeOnTransfer(uint n) internal returns (IERC20[] memory _tokens) {
+        _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
-            IERC20 temp = IERC20(
+            _tokens[i] = IERC20(
                 new MockTokenFeeOnTransfer(
                     string.concat("Token ", i.toString()), // name
                     string.concat("TOKEN", i.toString()), // symbol
                     18 // decimals
                 )
             );
-            tokens.push(temp);
         }
     }
 
