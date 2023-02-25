@@ -1576,13 +1576,13 @@ library ABDKMathQuad {
             bool xNegative = uint128(x) > 0x80000000000000000000000000000000;
             uint xExponent = uint128(x) >> 112 & 0x7FFF;
             uint xSignifier = uint128(x) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-
+            uint128 y;
             if (xExponent == 0x7FFF && xSignifier != 0) {
-                return uint128(NaN);
+                return toUInt(NaN);
             } else if (xExponent > 16_397) {
-                return xNegative ? uint128(POSITIVE_ZERO) : uint128(POSITIVE_INFINITY);
+                return xNegative ? toUInt(POSITIVE_ZERO) : toUInt(POSITIVE_INFINITY);
             } else if (xExponent < 16_255) {
-                return 0x3FFF0000000000000000000000000000;
+                return toUInt(0x3FFF0000000000000000000000000000);
             } else {
                 if (xExponent == 0) xExponent = 1;
                 else xSignifier |= 0x10000000000000000000000000000;
@@ -1594,11 +1594,11 @@ library ABDKMathQuad {
                 }
 
                 if (xNegative && xSignifier > 0x406E00000000000000000000000000000000) {
-                    return uint128(POSITIVE_ZERO);
+                    return toUInt(POSITIVE_ZERO);
                 }
 
                 if (!xNegative && xSignifier > 0x3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) {
-                    return uint128(POSITIVE_INFINITY);
+                    return toUInt(POSITIVE_INFINITY);
                 }
 
                 uint resultExponent = xSignifier >> 128;
@@ -1999,22 +1999,23 @@ library ABDKMathQuad {
                     resultExponent = 0;
                 }
 
-                uint128 y = uint128(resultExponent << 112 | resultSignifier);
-            
-                uint exponent = uint128(y) >> 112 & 0x7FFF;
+                y = uint128(resultExponent << 112 | resultSignifier); 
+
+                uint exponent = y >> 112 & 0x7FFF;
 
                 if (exponent < 16_383) return 0; // Underflow
 
-                require(uint128(y) < 0x80000000000000000000000000000000); // Negative
+                require(y < 0x80000000000000000000000000000000); // Negative
 
                 require(exponent <= 16_638); // Overflow
-                uint result = uint(uint128(y)) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF | 0x10000000000000000000000000000;
+                uint result = uint(y) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF | 0x10000000000000000000000000000;
 
                 if (exponent < 16_495) result >>= 16_495 - exponent;
                 else if (exponent > 16_495) result <<= exponent - 16_495;
 
                 return result;
             }
+           
         }
     }
 
