@@ -10,8 +10,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
     function setUp() public {
-        deployMockTokensFeeOnTransfer(2);
-        setupWell(0);
+        setupWell(deployWellFunction(), deployPumps(2), deployMockTokensFeeOnTransfer(2));
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
         MockTokenFeeOnTransfer(address(tokens[1])).setFee(1e16);
     }
@@ -52,7 +51,6 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint[] memory feeAmounts = new uint[](2);
         feeAmounts[0] = amounts[0] * (1e18-1e16) / 1e18;
         feeAmounts[1] = 0;
-
 
         uint amountOut = 9_875_618_042_071_776_602_404_150_766;
 

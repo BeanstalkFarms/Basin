@@ -14,7 +14,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         tokens = new IERC20[](2);
         tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
         tokens[1] = deployMockToken(1); // token[1] has no fee
-        setupWell(2, deployWellFunction(), deployPumps(2), tokens); 
+        setupWell(deployWellFunction(), deployPumps(2), tokens); 
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
     }
 

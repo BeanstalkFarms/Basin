@@ -52,10 +52,10 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
-        setupWell(n, _wellFunction, _pumps, deployMockTokens(n));
+        setupWell(_wellFunction, _pumps, deployMockTokens(n));
     }
 
-    function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps, IERC20[] memory _tokens) internal {
+    function setupWell(Call memory _wellFunction, Call[] memory _pumps, IERC20[] memory _tokens) internal {
         tokens = _tokens;
         wellFunction = _wellFunction;
         for (uint i = 0; i < _pumps.length; i++) {
@@ -89,7 +89,7 @@ abstract contract TestHelper is Test, WellDeployer {
         _pumps[0].data = new bytes(1);
         _pumps[1].target = address(new MockPump());
         _pumps[1].data = new bytes(1);
-        setupWell(n, _wellFunction, _pumps, deployMockTokensFeeOnTransfer(n));
+        setupWell(_wellFunction, _pumps, deployMockTokensFeeOnTransfer(n));
     }
 
     function initUser() internal {
