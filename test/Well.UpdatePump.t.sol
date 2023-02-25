@@ -5,18 +5,14 @@ import {TestHelper, Call, MockPump} from "test/TestHelper.sol";
 import {MockEmptyFunction} from "mocks/functions/MockEmptyFunction.sol";
 
 contract WellUpdatePumpTest is TestHelper {
-    Call _wellFunction;
-
     function setUp() public {
-        _wellFunction = Call(address(new MockEmptyFunction()), "");
+        wellFunction = Call(address(new MockEmptyFunction()), "");
     }
 
-    function test_updatePump(uint8 numPumps, bytes[4] memory pumpBytes) public {
-        // The base Well supports 4 pumps with up to
-        // 4 * 32 bytes of extra data each
-        vm.assume(numPumps <= 4);
+    function test_updatePump(uint8 numPumps, bytes[8] memory pumpBytes) public {
+        vm.assume(numPumps <= 8);
         for (uint i = 0; i < numPumps; i++) {
-            vm.assume(pumpBytes[i].length <= 4 * 32);
+            vm.assume(pumpBytes[i].length <= 8 * 32);
         }
 
         // Create `numPumps` Call structs
@@ -30,10 +26,14 @@ contract WellUpdatePumpTest is TestHelper {
         // FIXME: this works because liquidity is deployed which switches
         // lastData from "0xATTACHED" to the `data` param which is passed during
         // the `update()` call. If liquidity is not added, this will fail.
-        setupWell(2, _wellFunction, pumps);
+        setupWell(2, wellFunction, pumps);
+
+        // Perform an action on the Well to initialize pumps
         vm.prank(user);
-        // call {swapFrom} for test coverage in updating pumps.
         well.swapFrom(tokens[0], tokens[1], 1e18, 1, user);
+
+        // During update(), MockPump sets a public storage var `lastData` equal
+        // to Call.data.
         for (uint i = 0; i < numPumps; i++) {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }
