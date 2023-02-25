@@ -11,8 +11,6 @@ import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
-import {console} from "forge-std/Console.sol";
-
 /**
  * @title GeoEmaAndCumSmaPump
  * @author Publius
