@@ -27,9 +27,9 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function testFuzz_swapFromFeeOnTransfer_noFee(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         
-        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
+        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, act.userReceives, user);
-        afterSwapFrom(0, 1, bef, act);
+        afterSwapFrom(bef, act);
     }
 
     //////////// EDGE CASE: IDENTICAL TOKENS ////////////

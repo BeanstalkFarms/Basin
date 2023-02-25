@@ -16,6 +16,8 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  *  `userReceives` < `wellSends`
  */
 struct SwapAction {
+    uint i; // input token index
+    uint j; // output token index
     uint userSpends;
     uint wellReceives;
     uint wellSends;
@@ -35,46 +37,41 @@ contract SwapHelper is TestHelper {
     event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
     event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
 
+    /// @dev Default Swap behavior assuming zero fee on transfer
     function beforeSwapFrom(
         uint i,
         uint j,
-        uint amountIn,
-        address user
+        uint amountIn
     ) internal returns (SwapSnapshot memory, SwapAction memory) {
-        uint calcAmountOut = uint(well.getSwapOut(tokens[i], tokens[j], amountIn));
-
-        // Setup default values assuming zero fee on transfer
         SwapAction memory act;
+        act.i = i;
+        act.j = j;
         act.userSpends = amountIn;
         act.wellReceives = amountIn;
-        act.wellSends = calcAmountOut;
-        act.userReceives = calcAmountOut;
+        act.wellSends = well.getSwapOut(tokens[i], tokens[j], amountIn);
+        act.userReceives = act.wellSends;
     
-        return beforeSwapFrom(i, j, user, act);
+        return beforeSwapFrom(act);
     }
 
     function beforeSwapFrom(
-        uint i,
-        uint j,
-        address user,
         SwapAction memory act
     ) internal returns (SwapSnapshot memory, SwapAction memory) {
         SwapSnapshot memory bef = _newSnapshot();
 
-        // This can be emitted any time during top-level test
         vm.expectEmit(true, true, true, true, address(well));
-        emit Swap(tokens[i], tokens[j], act.wellReceives, act.wellSends, user);
+        emit Swap(tokens[act.i], tokens[act.j], act.wellReceives, act.wellSends, user);
 
         return (bef, act);
     }
 
     function afterSwapFrom(
-        uint i,
-        uint j,
         SwapSnapshot memory bef,
         SwapAction memory act
     ) public {
         SwapSnapshot memory aft = _newSnapshot();
+        uint i = act.i;
+        uint j = act.j;
     
         assertEq(bef.user.tokens[i] - aft.user.tokens[i], act.userSpends, "Incorrect token[i] user balance");
         assertEq(aft.well.tokens[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] well reserve");

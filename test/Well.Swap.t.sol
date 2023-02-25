@@ -67,9 +67,9 @@ contract WellSwapTest is SwapHelper {
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         
-        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
+        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
         act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
-        afterSwapFrom(0, 1, bef, act);
+        afterSwapFrom(bef, act);
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
