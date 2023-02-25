@@ -16,19 +16,13 @@ contract WellFeeOnTransferFailTest is TestHelper {
     }
 
     function test_swapTo_feeOnTransfer() public prank(user) {
-        uint amountOut = 500 * 1e18;
-        uint maxAmountIn = 1000 * 1e18;
-
         vm.expectRevert("Well: Invalid reserve");
-        uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        well.swapTo(tokens[0], tokens[1], 1000 * 1e18, 500 * 1e18, user);
     }
 
     function test_swapFrom_feeOnTransfer() public prank(user) {
-        uint amountOut = 500 * 1e18;
-        uint maxAmountIn = 1000 * 1e18;
-
         vm.expectRevert("Well: Invalid reserve");
-        uint amountIn = well.swapFrom(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        well.swapFrom(tokens[0], tokens[1], 1000 * 1e18, 500 * 1e18, user);
     }
 
     function test_addLiquidity_feeOnTransfer() public prank(user) {

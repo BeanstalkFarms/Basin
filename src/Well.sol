@@ -296,9 +296,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// ADD LIQUIDITY ////////////////////
 
-    /**
-     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
-     */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
@@ -315,6 +312,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
     }
 
+    /**
+     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
+     */
     function _addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
