@@ -16,6 +16,8 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
+import {stdMath} from "forge-std/StdMath.sol";
+
 /// @dev helper struct for quickly loading user / well token balances
 struct Balances {
     uint[] tokens;
@@ -34,9 +36,9 @@ abstract contract TestHelper is Test, WellDeployer {
     // Primary well
     Well well;
     address wellImplementation;
-    IERC20[] tokens; // Mock token addresses sorted lexicographically
-    Call wellFunction; // Instantated during {deployWell}
-    Call[] pumps; // Instantiated during upstream test
+    IERC20[] tokens;
+    Call wellFunction;
+    Call[] pumps;
     bytes wellData;
 
     // Factory / Registry
@@ -46,22 +48,31 @@ abstract contract TestHelper is Test, WellDeployer {
     uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
-        Call[] memory _pumps = new Call[](0);
-        setupWell(n, Call(address(new ConstantProduct2()), new bytes(0)), _pumps);
+        Call memory _wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
+        Call[] memory _pumps = new Call[](2);
+        _pumps[0].target = address(new MockPump());
+        _pumps[0].data = new bytes(1);
+        _pumps[1].target = address(new MockPump());
+        _pumps[1].data = new bytes(1);
+        setupWell(n, _wellFunction, _pumps);
     }
 
-    function setupWell(uint n, Call memory _function, Call[] memory _pumps) internal {
-        wellFunction = _function;
+    function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
+        setupWell(n, _wellFunction, _pumps, deployMockTokens(n));
+    }
+
+    function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps, IERC20[] memory _tokens) internal {
+        tokens = _tokens;
+        wellFunction = _wellFunction;
         for (uint i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
         }
 
         initUser();
-        deployMockTokens(n);
 
-        deployWellImplementation();
+        wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
-        well = Well(boreWell(address(aquifer), wellImplementation, tokens, _function, _pumps, bytes32(0)));
+        well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
@@ -77,6 +88,16 @@ abstract contract TestHelper is Test, WellDeployer {
         addLiquidityEqualAmount(address(this), initialLiquidity);
     }
 
+    function setupWellWithFeeOnTransfer(uint n) internal {
+        Call memory _wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
+        Call[] memory _pumps = new Call[](2);
+        _pumps[0].target = address(new MockPump());
+        _pumps[0].data = new bytes(1);
+        _pumps[1].target = address(new MockPump());
+        _pumps[1].data = new bytes(1);
+        setupWell(n, _wellFunction, _pumps, deployMockTokensFeeOnTransfer(n));
+    }
+
     function initUser() internal {
         users = new Users();
         address[] memory _user = new address[](2);
@@ -85,33 +106,33 @@ abstract contract TestHelper is Test, WellDeployer {
         user2 = _user[1];
     }
 
+    ////////// Test Tokens
+
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokens(uint n) internal {
-        // IERC20[] memory _tokens = new IERC20[](n);
+    function deployMockTokens(uint n) internal returns (IERC20[] memory _tokens) {
+        _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
-            IERC20 temp = IERC20(
+            _tokens[i] = IERC20(
                 new MockToken(
                     string.concat("Token ", i.toString()), // name
                     string.concat("TOKEN", i.toString()), // symbol
                     18 // decimals
                 )
             );
-            tokens.push(temp);
         }
     }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokensFeeOnTransfer(uint n) internal {
-        // IERC20[] memory _tokens = new IERC20[](n);
+    function deployMockTokensFeeOnTransfer(uint n) internal returns (IERC20[] memory _tokens) {
+        _tokens = new IERC20[](n);
         for (uint i = 0; i < n; i++) {
-            IERC20 temp = IERC20(
+            _tokens[i] = IERC20(
                 new MockTokenFeeOnTransfer(
                     string.concat("Token ", i.toString()), // name
                     string.concat("TOKEN", i.toString()), // symbol
                     18 // decimals
                 )
             );
-            tokens.push(temp);
         }
     }
 
@@ -122,15 +143,26 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function deployWellImplementation() internal {
-        wellImplementation = address(new Well());
-    }
-
     /// @dev approve `spender` to use `owner` tokens
     function approveMaxTokens(address owner, address spender) internal prank(owner) {
         for (uint i = 0; i < tokens.length; i++) {
             tokens[i].approve(spender, type(uint).max);
         }
+    }
+
+    /// @dev gets the first `n` mock tokens
+    function getTokens(uint n) internal view returns (IERC20[] memory _tokens) {
+        _tokens = new IERC20[](n);
+        for (uint i; i < n; ++i) {
+            _tokens[i] = tokens[i];
+        }
+    }
+
+    ////////// Well Setup
+
+    /// @dev deploy the Well contract
+    function deployWellImplementation() internal returns (address) {
+        return address(new Well());
     }
 
     /// @dev add the same `amount` of liquidity for all underlying tokens
@@ -142,13 +174,7 @@ abstract contract TestHelper is Test, WellDeployer {
         well.addLiquidity(amounts, 0, from);
     }
 
-    /// @dev gets the first `n` mock tokens
-    function getTokens(uint n) internal view returns (IERC20[] memory _tokens) {
-        _tokens = new IERC20[](n);
-        for (uint i; i < n; ++i) {
-            _tokens[i] = tokens[i];
-        }
-    }
+    ////////// Balance Helpers
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
     function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
@@ -159,6 +185,8 @@ abstract contract TestHelper is Test, WellDeployer {
         balances = Balances(tokenBalances, _well.balanceOf(account), _well.totalSupply());
     }
 
+    ////////// EVM Helpers
+
     function increaseTime(uint _seconds) internal {
         vm.warp(block.timestamp + _seconds);
     }
@@ -168,5 +196,72 @@ abstract contract TestHelper is Test, WellDeployer {
         vm.startPrank(from);
         _;
         vm.stopPrank();
+    }
+
+    ////////// Assertions
+
+    function assertEq(IERC20 a, IERC20 b) internal {
+        assertEq(a, b, "Address mismatch");
+    }
+
+    function assertEq(IERC20 a, IERC20 b, string memory err) internal {
+        assertEq(address(a), address(b), err);
+    }
+
+    function assertEq(IERC20[] memory a, IERC20[] memory b) internal {
+        assertEq(a, b, "IERC20[] mismatch");
+    }
+
+    function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
+        assertEq(a.length, b.length, err);
+        for (uint i = 0; i < a.length; i++) {
+            assertEq(a[i], b[i], err); // uses the prev overload
+        }
+    }
+
+    function assertEq(Call memory a, Call memory b) internal {
+        assertEq(a, b, "Call mismatch");
+    }
+
+    function assertEq(Call memory a, Call memory b, string memory err) internal {
+        assertEq(a.target, b.target, err);
+        assertEq(a.data, b.data, err);
+    }
+
+    function assertEq(Call[] memory a, Call[] memory b) internal {
+        assertEq(a, b, "Call[] mismatch");
+    }
+
+    function assertEq(Call[] memory a, Call[] memory b, string memory err) internal {
+        assertEq(a.length, b.length, err);
+        for (uint i = 0; i < a.length; i++) {
+            assertEq(a[i], b[i], err); // uses the prev overload
+        }
+    }
+    
+    function assertApproxEqRelN(
+        uint256 a,
+        uint256 b,
+        uint256 maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
+        uint256 precision
+    ) internal virtual {
+        if (b == 0) return assertEq(a, b); // If the expected is 0, actual must be too.
+
+        uint256 percentDelta = percentDeltaN(a, b, precision);
+
+        if (percentDelta > maxPercentDelta) {
+            emit log("Error: a ~= b not satisfied [uint]");
+            emit log_named_uint("    Expected", b);
+            emit log_named_uint("      Actual", a);
+            emit log_named_decimal_uint(" Max % Delta", maxPercentDelta, precision);
+            emit log_named_decimal_uint("     % Delta", percentDelta, precision);
+            fail();
+        }
+    }
+
+    function percentDeltaN(uint256 a, uint256 b, uint precision) internal pure returns (uint256) {
+        uint256 absDelta = stdMath.delta(a, b);
+
+        return absDelta * (10 ** precision) / b;
     }
 }

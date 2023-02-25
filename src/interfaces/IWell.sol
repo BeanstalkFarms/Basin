@@ -22,34 +22,38 @@ interface IWell {
      * @param toToken The token swapped to
      * @param amountIn The amount of `fromToken` transferred into the Well
      * @param amountOut The amount of `toToken` transferred out of the Well
+     * @param recipient The address to receive `toToken`
      */
-    event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut);
+    event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is added to the Well.
      * @param tokenAmountsIn The amount of each token added to the Well
      * @param lpAmountOut The amount of LP tokens minted
+     * @param recipient The address to receive the LP tokens
      */
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
+    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is removed from the Well as multiple underlying tokens.
      * @param lpAmountIn The amount of LP tokens burned
      * @param tokenAmountsOut The amount of each underlying token removed
+     * @param recipient The address to receive the underlying tokens
      * @dev Gas cost scales with `n` tokens.
      */
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
+    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is removed from the Well as a single underlying token.
      * @param lpAmountIn The amount of LP tokens burned
      * @param tokenOut The underlying token removed
      * @param tokenAmountOut The amount of `tokenOut` removed
+     * @param recipient The address to receive the underlying tokens
      * @dev Emitting a separate event when removing liquidity as a single token
      * saves gas, since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
      * for each token in the Well.
      */
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut);
+    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
 
     //////////////////// WELL DEFINITION ////////////////////
 

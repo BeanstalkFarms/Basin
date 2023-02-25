@@ -8,7 +8,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
 
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut);
+    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -30,7 +30,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         uint minTokenAmountOut = 875 * 1e18;
 
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut);
+        emit RemoveLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
         uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
@@ -89,7 +89,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0]);
+        emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0], user);
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user); // no minimum out
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);

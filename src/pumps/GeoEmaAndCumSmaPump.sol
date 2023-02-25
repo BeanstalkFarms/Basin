@@ -3,12 +3,15 @@
 pragma solidity ^0.8.17;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
 import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
+
+import {console} from "forge-std/Console.sol";
 
 /**
  * @title GeoEmaAndCumSmaPump
@@ -178,13 +181,19 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
         // TODO: What if reserve 0?
-        if (reserve < lastReserve) {
+
+        // Reserve decreasing (lastReserve > reserve)
+        if (lastReserve.cmp(reserve) == 1) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
-            if (reserve < minReserve) reserve = minReserve;
-        } else {
+            // if reserve < minimum reserve, set reserve to minimum reserve
+            if (minReserve.cmp(reserve) == 1) reserve = minReserve;
+        }
+        // Rerserve Increasing or staying the same.
+        else {
             bytes16 maxReserve = blocksPassed.mul(LOG_MAX_INCREASE);
             maxReserve = lastReserve.add(maxReserve);
-            if (reserve > maxReserve) reserve = maxReserve;
+            // If reserve > maximum reserve, set reserve to maximum reserve
+            if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
         }
         cappedReserve = reserve;
     }
@@ -206,8 +215,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
     }
 
-    function readInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
+    function readInstantaneousReserves(address well) public view returns (uint[] memory emaReserves) {
         bytes32 slot = getSlotForAddress(well);
+        uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         uint offset = getSlotsOffset(n);
         assembly {
@@ -215,11 +225,13 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(n);
         uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
+        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         bytes16 aN = A.powu(deltaTimestamp);
-        reserves = new uint[](n);
+        emaReserves = new uint[](n);
         uint length = reserves.length;
         for (uint i = 0; i < length; ++i) {
-            reserves[i] =
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            emaReserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(lastEmaReserves[i].mul(aN)).pow_2ToUInt();
         }
     }
@@ -232,7 +244,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
-        uint offset = getSlotsOffset(n) << 2;
+        uint offset = getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
         }
@@ -246,16 +258,20 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = getSlotForAddress(well);
+        uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
-        uint offset = getSlotsOffset(n) << 2;
+        uint offset = getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
         }
         cumulativeReserves = slot.readBytes16(n);
-        bytes16 deltaTimestamp = getDeltaTimestamp(lastTimestamp).fromUInt();
+        uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
+        bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
+        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         // TODO: Overflow desired ????
         for (uint i = 0; i < cumulativeReserves.length; ++i) {
-            cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestamp));
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
         }
     }
 
@@ -266,13 +282,15 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     ) public view returns (uint[] memory twaReserves, bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
         bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
-        twaReserves = new uint[](cumulativeReserves.length);
+        twaReserves = new uint[](byteCumulativeReserves.length);
         bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt(); // TODO: Verify no safe cast is desired
-        for (uint i = 0; i < cumulativeReserves.length; ++i) {
+        require(deltaTimestamp != bytes16(0), "Well: No time passed");
+        for (uint i = 0; i < byteCumulativeReserves.length; ++i) {
             // TODO: Unchecked?
             twaReserves[i] =
                 (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2ToUInt();
         }
+        cumulativeReserves = abi.encode(byteCumulativeReserves);
     }
 
     //////////////////// HELPERS ////////////////////
