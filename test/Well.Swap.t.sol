@@ -36,16 +36,6 @@ contract WellSwapTest is SwapHelper {
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
-    /// FIXME: remove in favor of fuzz
-    function test_swapFrom() public prank(user) {
-        uint amountIn = 1000 * 1e18;
-        uint minAmountOut = 500 * 1e18;
-
-        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn, user);
-        act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
-        afterSwapFrom(0, 1, bef, act);
-    }
-
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         
@@ -82,28 +72,6 @@ contract WellSwapTest is SwapHelper {
         uint maxAmountIn = 999 * 1e18; // actual: 1000
         vm.expectRevert("Well: slippage");
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
-    }
-
-    /// FIXME: remove in favor of fuzz
-    function test_swapTo() public prank(user) {
-        uint amountOut = 500 * 1e18;
-        uint maxAmountIn = 1000 * 1e18;
-
-        vm.expectEmit(true, true, true, true);
-        emit Swap(tokens[0], tokens[1], maxAmountIn, amountOut, user);
-
-        Balances memory userBalanceBefore = getBalances(user, well);
-
-        uint amountIn = well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
-
-        Balances memory userBalanceAfter = getBalances(user, well);
-        Balances memory wellBalanceAfter = getBalances(address(well), well);
-
-        assertEq(userBalanceBefore.tokens[0] - userBalanceAfter.tokens[0], amountIn, "incorrect token0 user amt");
-        assertEq(userBalanceAfter.tokens[1] - userBalanceBefore.tokens[1], amountOut, "incorrect token1 user amt");
-
-        assertEq(wellBalanceAfter.tokens[0], amountIn + initialLiquidity, "incorrect token0 well amt");
-        assertEq(wellBalanceAfter.tokens[1], initialLiquidity - amountOut, "incorrect token1 well amt");
     }
 
     function testFuzz_swapTo_equalSwap(uint token0AmtOut) public prank(user) {
