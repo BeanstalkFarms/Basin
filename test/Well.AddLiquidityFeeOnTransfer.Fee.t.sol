@@ -6,7 +6,7 @@ import {MockTokenFeeOnTransfer, TestHelper, IERC20, Call, Balances} from "test/T
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
 contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
+    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
     function setUp() public {
@@ -26,7 +26,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint lpAmountOut = 1980 * 1e27;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(feeAmounts, lpAmountOut);
+        emit AddLiquidity(feeAmounts, lpAmountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -55,7 +55,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint amountOut = 9_875_618_042_071_776_602_404_150_766;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(feeAmounts, amountOut);
+        emit AddLiquidity(feeAmounts, amountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -84,7 +84,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint liquidity = 0;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, liquidity);
+        emit AddLiquidity(amounts, liquidity, user);
         well.addLiquidityFeeOnTransfer(amounts, liquidity, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -122,7 +122,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         uint lpAmountOut = newLpTokenSupply - totalSupply;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(feeAmounts, lpAmountOut);
+        emit AddLiquidity(feeAmounts, lpAmountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
 
         Balances memory userBalanceAfterAddLiquidity = getBalances(user, well);
