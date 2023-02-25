@@ -7,7 +7,6 @@ import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.so
 
 contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
 
     function setUp() public {
         setupWell(deployWellFunction(), deployPumps(2), deployMockTokensFeeOnTransfer(2));

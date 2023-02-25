@@ -6,8 +6,8 @@ import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
 contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut);
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut);
+    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
+    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     function setUp() public {
         setupWell(2);
@@ -22,7 +22,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
         uint lpAmountOut = 2000 * 1e27;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, lpAmountOut);
+        emit AddLiquidity(amounts, lpAmountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -48,7 +48,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
         uint amountOut = 9_975_124_224_178_054_043_852_982_550;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, amountOut);
+        emit AddLiquidity(amounts, amountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -81,7 +81,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
 
         // addLiquidity
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, lpAmountOut);
+        emit AddLiquidity(amounts, lpAmountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
 
         Balances memory userBalanceAddLiquidity = getBalances(user, well);
@@ -96,7 +96,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
 
         // removeLiquidity
         vm.expectEmit(true, true, true, true);
-        emit RemoveLiquidity(lpAmountOut, amounts);
+        emit RemoveLiquidity(lpAmountOut, amounts, user);
         well.removeLiquidity(lpAmountOut, amounts, user);
 
         Balances memory userBalanceRemoveLiquidity = getBalances(user, well);
@@ -117,7 +117,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
         uint liquidity = 0;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, liquidity);
+        emit AddLiquidity(amounts, liquidity, user);
         well.addLiquidityFeeOnTransfer(amounts, liquidity, user);
 
         Balances memory userBalance = getBalances(user, well);
@@ -151,7 +151,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is TestHelper {
         uint lpAmountOut = newLpTokenSupply - totalSupply;
 
         vm.expectEmit(true, true, true, true);
-        emit AddLiquidity(amounts, lpAmountOut);
+        emit AddLiquidity(amounts, lpAmountOut, user);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
 
         Balances memory userBalanceAfterAddLiquidity = getBalances(user, well);
