@@ -224,7 +224,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
         require(amountOut >= minAmountOut, "Well: slippage");
         toToken.safeTransfer(recipient, amountOut);
-        emit Swap(fromToken, toToken, amountIn, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
         _setReserves(_tokens, reserves);
     }
 
