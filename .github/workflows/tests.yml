@@ -27,7 +27,7 @@ jobs:
         run: forge build --sizes
 
       - name: Run tests
-        run: forge test -vvv
+        run: forge test -vvv --ffi
 
       - name: Check gas snapshots
         run: yarn compare

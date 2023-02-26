@@ -177,13 +177,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
-        amountOut = _swapFrom(
-            fromToken,
-            toToken,
-            amountIn,
-            minAmountOut,
-            recipient
-        );
+        amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
 
     function swapFromFeeOnTransfer(
@@ -194,13 +188,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         address recipient
     ) external nonReentrant returns (uint amountOut) {
         amountIn = transferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
-        amountOut = _swapFrom(
-            fromToken,
-            toToken,
-            amountIn,
-            minAmountOut,
-            recipient
-        );
+        amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
 
     function _swapFrom(
@@ -596,7 +584,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         revert("Well: Invalid tokens");
     }
 
-    function transferFromFeeOnTransfer(IERC20 token, address from, uint256 amount) internal returns (uint amountTransferred) {
+    function transferFromFeeOnTransfer(
+        IERC20 token,
+        address from,
+        uint amount
+    ) internal returns (uint amountTransferred) {
         uint balanceBefore = token.balanceOf(address(this));
         token.safeTransferFrom(from, address(this), amount);
         amountTransferred = token.balanceOf(address(this)) - balanceBefore;

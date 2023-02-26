@@ -11,8 +11,6 @@ import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
-import {console} from "forge-std/Console.sol";
-
 /**
  * @title GeoEmaAndCumSmaPump
  * @author Publius
@@ -89,7 +87,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
             slot := add(slot, numSlots)
         }
         b.cumulativeReserves = slot.readBytes16(length);
-
 
         uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
         bytes16 aN = A.powu(deltaTimestamp);
