@@ -18,13 +18,13 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-
-      - name: Check formatting
-        run: forge fmt --check
 
       - name: Install dependencies
         run: forge install
