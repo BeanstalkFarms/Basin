@@ -176,6 +176,28 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
+        amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
+    }
+
+    function swapFromFeeOnTransfer(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn,
+        uint minAmountOut,
+        address recipient
+    ) external nonReentrant returns (uint amountOut) {
+        amountIn = transferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
+        amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
+    }
+
+    function _swapFrom(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn,
+        uint minAmountOut,
+        address recipient
+    ) internal returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -189,8 +211,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = reserveJBefore - reserves[j];
 
         require(amountOut >= minAmountOut, "Well: slippage");
-        _setReserves(reserves);
-        _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
+        toToken.safeTransfer(recipient, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
+        _setReserves(_tokens, reserves);
     }
 
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
@@ -228,8 +251,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage check needs to move to the actual amount out
         // need to take delta across _executeSwap
         require(amountIn <= maxAmountIn, "Well: slippage");
-        _setReserves(reserves);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
+        _setReserves(_tokens, reserves);
     }
 
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn) {
@@ -256,33 +279,56 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     ) internal {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         toToken.safeTransfer(recipient, amountOut);
-        emit Swap(fromToken, toToken, amountIn, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
     }
 
     //////////////////// ADD LIQUIDITY ////////////////////
 
-    /**
-     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
-     */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
         address recipient
     ) external nonReentrant returns (uint lpAmountOut) {
+        lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
+    }
+
+    function addLiquidityFeeOnTransfer(
+        uint[] memory tokenAmountsIn,
+        uint minLpAmountOut,
+        address recipient
+    ) external nonReentrant returns (uint lpAmountOut) {
+        lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
+    }
+
+    /**
+     * @dev Gas optimization: {IWell.AddLiquidity} is emitted even if `lpAmountOut` is 0.
+     */
+    function _addLiquidity(
+        uint[] memory tokenAmountsIn,
+        uint minLpAmountOut,
+        address recipient,
+        bool feeOnTransfer
+    ) internal returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
-
-        for (uint i; i < _tokens.length; ++i) {
-            if (tokenAmountsIn[i] == 0) continue;
-            _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
-            reserves[i] = reserves[i] + tokenAmountsIn[i]; //
+        if (feeOnTransfer) {
+            for (uint i; i < _tokens.length; ++i) {
+                if (tokenAmountsIn[i] == 0) continue;
+                tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+                reserves[i] = reserves[i] + tokenAmountsIn[i];
+            }
+        } else {
+            for (uint i; i < _tokens.length; ++i) {
+                if (tokenAmountsIn[i] == 0) continue;
+                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
+                reserves[i] = reserves[i] + tokenAmountsIn[i];
+            }
         }
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
-
         require(lpAmountOut >= minLpAmountOut, "Well: slippage");
         _mint(recipient, lpAmountOut);
-        _setReserves(reserves);
-        emit AddLiquidity(tokenAmountsIn, lpAmountOut);
+        _setReserves(_tokens, reserves);
+        emit AddLiquidity(tokenAmountsIn, lpAmountOut, recipient);
     }
 
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut) {
@@ -314,8 +360,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             reserves[i] = reserves[i] - tokenAmountsOut[i];
         }
 
-        _setReserves(reserves);
-        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
+        _setReserves(_tokens, reserves);
+        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut, recipient);
     }
 
     function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut) {
@@ -347,8 +393,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         tokenOut.safeTransfer(recipient, tokenAmountOut);
 
         reserves[j] = reserves[j] - tokenAmountOut;
-        _setReserves(reserves);
-        emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut);
+        _setReserves(_tokens, reserves);
+        emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut, recipient);
     }
 
     function getRemoveLiquidityOneTokenOut(
@@ -396,8 +442,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         require(lpAmountIn <= maxLpAmountIn, "Well: slippage");
         _burn(msg.sender, lpAmountIn);
 
-        _setReserves(reserves);
-        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut);
+        _setReserves(_tokens, reserves);
+        emit RemoveLiquidity(lpAmountIn, tokenAmountsOut, recipient);
     }
 
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn) {
@@ -514,9 +560,12 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     /**
-     * @dev Sets the Well's reserves of each token by writing to byte storage.
+     * @dev Checks that the balance of each ERC-20 token is >= the reserves and set the Well's reserves of each token by writing to byte storage.
      */
-    function _setReserves(uint[] memory reserves) internal {
+    function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
+        for (uint i; i < reserves.length; ++i) {
+            require(reserves[i] <= _tokens[i].balanceOf(address(this)), "Well: Invalid reserve");
+        }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
 
@@ -596,7 +645,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
 
-        require(foundI && foundJ, "Well: Invalid tokens");
+        require(foundI, "Well: Invalid tokens");
+        require(foundJ, "Well: Invalid tokens");
     }
 
     /**
@@ -609,5 +659,15 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
         revert("Well: Invalid tokens");
+    }
+
+    function transferFromFeeOnTransfer(
+        IERC20 token,
+        address from,
+        uint amount
+    ) internal returns (uint amountTransferred) {
+        uint balanceBefore = token.balanceOf(address(this));
+        token.safeTransferFrom(from, address(this), amount);
+        amountTransferred = token.balanceOf(address(this)) - balanceBefore;
     }
 }

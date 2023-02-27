@@ -17,7 +17,10 @@ abstract contract IntegrationTestHelper is TestHelper {
 
     function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](1);
-        _pumps[0] = Call(address(new GeoEmaAndCumSmaPump(from18(0.5e18), 12, from18(0.9e18))), new bytes(0));
+        _pumps[0] = Call(
+            address(new GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18))),
+            new bytes(0)
+        );
 
         return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }
@@ -31,10 +34,11 @@ abstract contract IntegrationTestHelper is TestHelper {
         wellFunction = _function;
         initUser();
 
-        deployWellImplementation();
+        wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
 
-        _well = Well(boreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0)));
+        // FIXME
+        _well = encodeAndBoreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, initialLiquidity);

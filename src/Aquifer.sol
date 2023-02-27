@@ -10,8 +10,6 @@ import {IAquifer} from "src/interfaces/IAquifer.sol";
 import {Well, IWell, Call, IERC20} from "src/Well.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
 
-import {console} from "forge-std/Test.sol";
-
 /**
  * @title Aquifer
  * @author Publius, Silo Chad, Brean
@@ -55,7 +53,14 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
         if (initFunctionCall.length > 0) {
             (bool success, bytes memory returnData) = well.call(initFunctionCall);
-            require(success, string(returnData));
+            if (!success) {
+                // Next 5 lines are based on https://ethereum.stackexchange.com/a/83577
+                if (returnData.length < 68) revert("Aquifer: well init");
+                assembly {
+                    returnData := add(returnData, 0x04)
+                }
+                revert(string.concat("Aquifer: Well Init (", abi.decode(returnData, (string)), ")"));
+            }
         }
 
         wellImplementations[well] = implementation;

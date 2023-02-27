@@ -45,7 +45,7 @@ contract DeployWell is Script, WellDeployer {
         address wellImplementation = address(new Well());
 
         // Well
-        Well well = boreWell(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
+        Well well = encodeAndBoreWell(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
 
         console.log("Deployed CP2 at address: ", address(cp2));
         console.log("Deployed Pump at address: ", address(pumps[0].target));
