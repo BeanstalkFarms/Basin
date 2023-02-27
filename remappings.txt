@@ -6,3 +6,4 @@ src/=src/
 mocks=mocks/
 tests=tests/
 utils=utils/
+properties/=lib/properties/contracts/
