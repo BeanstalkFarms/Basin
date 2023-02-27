@@ -8,7 +8,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap DO NOT
- * incur a fee on transfer. 
+ * incur a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function setUp() public {

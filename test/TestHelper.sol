@@ -21,7 +21,7 @@ import {stdMath} from "forge-std/StdMath.sol";
 /// @dev Helper struct for quickly loading user / well token balances
 struct Balances {
     /// Address balance of each token in the Well
-    uint[] tokens; 
+    uint[] tokens;
     /// Address balance of LP tokens
     uint lp;
     /// Total LP token supply for the relevant Well

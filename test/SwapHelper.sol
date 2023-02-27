@@ -36,7 +36,7 @@ struct SwapSnapshot {
 
 /**
  * @dev Provides common assertions when testing Swaps.
- * 
+ *
  * NOTE: Uses globals inherited from TestHelper.
  */
 contract SwapHelper is TestHelper {
@@ -76,7 +76,7 @@ contract SwapHelper is TestHelper {
         assertEq(aft.well.tokens[i], bef.well.tokens[i] + act.wellReceives, "Incorrect token[i] Well balance");
         assertEq(aft.well.tokens[j], bef.well.tokens[j] - act.wellSends, "Incorrect token[j] Well balance");
         assertEq(aft.user.tokens[j] - bef.user.tokens[j], act.userReceives, "Incorrect token[j] User balance");
-        
+
         // Check that reserves were updated
         uint[] memory reserves = well.getReserves();
         assertEq(aft.reserves[i], bef.reserves[i] + act.wellReceives, "Incorrect token[i] Well reserve");

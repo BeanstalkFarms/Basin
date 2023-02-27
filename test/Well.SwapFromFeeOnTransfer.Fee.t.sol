@@ -9,7 +9,7 @@ import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 /**
- * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur 
+ * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur
  * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
