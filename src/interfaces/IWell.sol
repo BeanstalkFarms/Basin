@@ -340,6 +340,12 @@ interface IWell {
      */
     function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
 
+    /**
+     * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
+     * @param tokenOut The token to shift into
+     * @return amountOut The amount of `tokenOut` received
+     */
+    function getShiftOut(IERC20 tokenOut) external returns (uint amountOut);
 
     /**
      * @notice Gets the reserves of each token held by the Well.
