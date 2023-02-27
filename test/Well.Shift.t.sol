@@ -4,102 +4,89 @@ pragma solidity ^0.8.17;
 import {TestHelper, Balances, ConstantProduct2, console} from "test/TestHelper.sol";
 
 contract WellShiftTest is TestHelper {
-    ConstantProduct2 cp;
-    bytes constant data = "";
-
     function setUp() public {
-        cp = new ConstantProduct2();
         setupWell(2);
     }
 
-    function testFuzz_shift(uint amounts) public prank(user) {
-        vm.assume(amounts <= 1000e18 && amounts > 0);
+    /// @dev Shift excess token0 into token1.
+    function testFuzz_shift(uint amount) public prank(user) {
+        amounts = bound(amounts, 1, 1000e18);
 
-        tokens[0].transfer(address(well), amounts);
+        // Transfer `amount` of token0 to the Well
+        tokens[0].transfer(address(well), amount);
         Balances memory wellBalanceBeforeShift = getBalances(address(well), well);
-        // Verify that the Well has received the tokens
-        console.log("amounts:", amounts);
-
-        console.log("balance 0:", wellBalanceBeforeShift.tokens[0]);
-        console.log("balance 1:", wellBalanceBeforeShift.tokens[1]);
-
-        uint[] memory __reserves = well.getReserves();
-        console.log("reserves 0:", __reserves[0]);
-        console.log("reserves 1:", __reserves[1]);
-
-        assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amounts, "Well should have received tokens");
-
-        uint[] memory reserves = new uint[](2);
-        reserves[0] = wellBalanceBeforeShift.tokens[0];
-        reserves[1] = wellBalanceBeforeShift.tokens[1];
+        assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amount, "Well should have received token0");
+        assertEq(wellBalanceBeforeShift.tokens[1], 1000e18, "Well should have NOT have received token1");
 
         // Get a user with a fresh address (no ERC20 tokens)
         address _user = users.getNextUserAddress();
-
-        // Verify that the user has no tokens
         Balances memory userBalanceBeforeShift = getBalances(_user, well);
+
+        // Verify that `_user` has no tokens
+        assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
+        assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
         uint amtOut = well.shift(tokens[1], 0, _user);
 
-        reserves = well.getReserves();
-
+        uint[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
-        assertEq(userBalanceAfterShift.tokens[1], amtOut, "User should have gained token 1");
-        assertEq(userBalanceAfterShift.tokens[0], 0, "User should have not gained token 2");
+        // User should have gained token1
+        assertEq(userBalanceAfterShift.tokens[0], 0, "User should NOT have gained token0");
+        assertEq(userBalanceAfterShift.tokens[1], amtOut, "User should have gained token1");
+        assertTrue(userBalanceAfterShift.tokens[1] > userBalanceBeforeShift.tokens[1], "User should have more token1");
 
-        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token 1 balance");
-        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token 2 balance");
-
-        assertTrue(userBalanceAfterShift.tokens[1] > userBalanceBeforeShift.tokens[1], "User should have more token 0");
+        // Reserves should now match balances
+        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
+        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token1 balance");
 
         // The difference has been sent to _user.
         assertEq(
             userBalanceAfterShift.tokens[1],
             wellBalanceBeforeShift.tokens[1] - wellBalanceAfterShift.tokens[1],
-            "User should have correct token 2 balance"
+            "User should have correct token1 balance"
         );
         assertEq(
             userBalanceAfterShift.tokens[1],
             userBalanceBeforeShift.tokens[1] + amtOut,
-            "User should have correct token 1 balance"
+            "User should have correct token1 balance"
         );
     }
 
+    /// @dev Shift excess token0 into token0 (just transfers the excess token0 to the user).
     function testFuzz_shift_tokenOut(uint amount) public prank(user) {
-        vm.assume(amount <= 1000e18 && amount > 0);
+        amount = bound(amount, 1, 1000e18);
 
+        // Transfer `amount` of token0 to the Well
         tokens[0].transfer(address(well), amount);
         Balances memory wellBalanceBeforeShift = getBalances(address(well), well);
-
         assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amount, "Well should have received tokens");
-
-        uint[] memory reserves = new uint[](2);
-        reserves[0] = wellBalanceBeforeShift.tokens[0];
-        reserves[1] = wellBalanceBeforeShift.tokens[1];
 
         // Get a user with a fresh address (no ERC20 tokens)
         address _user = users.getNextUserAddress();
-
-        // Verify that the user has no tokens
         Balances memory userBalanceBeforeShift = getBalances(_user, well);
 
-        // shift the imbalanced token as the token out
+        // Verify that the user has no tokens
+        assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
+        assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
+
+        // Shift the imbalanced token as the token out
         well.shift(tokens[0], 0, _user);
 
-        reserves = well.getReserves();
-
+        uint[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
-        assertEq(userBalanceAfterShift.tokens[0], amount, "User should  have gained token 1");
+        // User should have gained token0
+        assertEq(userBalanceAfterShift.tokens[0], amount, "User should have gained token0");
         assertEq(
-            userBalanceAfterShift.tokens[1], userBalanceBeforeShift.tokens[1], "User should not have gained token 2"
+            userBalanceAfterShift.tokens[1], userBalanceBeforeShift.tokens[1], "User should NOT have gained token1"
         );
 
-        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token 1 balance");
-        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token 2 balance");
+        // Reserves should now match balances
+        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
+        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token1 balance");
 
         assertEq(
             userBalanceAfterShift.tokens[0],
@@ -108,38 +95,35 @@ contract WellShiftTest is TestHelper {
         );
     }
 
+    /// @dev Calling shift() on a balanced Well should do nothing.
     function test_shift_balanced_pool() public prank(user) {
         Balances memory wellBalanceBeforeShift = getBalances(address(well), well);
-
-        assertEq(wellBalanceBeforeShift.tokens[0], 1000e18, "Well should have correct token balance");
-        assertEq(wellBalanceBeforeShift.tokens[1], 1000e18, "Well should have correct token balance");
-
-        uint[] memory reserves = new uint[](2);
-        reserves[0] = wellBalanceBeforeShift.tokens[0];
-        reserves[1] = wellBalanceBeforeShift.tokens[1];
+        assertEq(
+            wellBalanceBeforeShift.tokens[0],
+            wellBalanceBeforeShift.tokens[1],
+            "Well should should be balanced"
+        );
 
         // Get a user with a fresh address (no ERC20 tokens)
         address _user = users.getNextUserAddress();
+        Balances memory userBalanceBeforeShift = getBalances(_user, well);
 
         // Verify that the user has no tokens
-        Balances memory userBalanceBeforeShift = getBalances(_user, well);
+        assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
+        assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
         well.shift(tokens[1], 0, _user);
 
-        reserves = well.getReserves();
-
+        uint[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
-        assertEq(userBalanceAfterShift.tokens[1], 0, "User should have gained token 1");
-        assertEq(userBalanceAfterShift.tokens[0], 0, "User should have not gained token 2");
+        // User should have gained neither token
+        assertEq(userBalanceAfterShift.tokens[0], 0, "User should NOT have gained token0");
+        assertEq(userBalanceAfterShift.tokens[1], 0, "User should NOT have gained token1");
 
-        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token 1 balance");
-        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token 2 balance");
-
-        assertEq(userBalanceAfterShift.tokens[1], userBalanceBeforeShift.tokens[0], "User should have gained token 1");
-        assertEq(
-            userBalanceAfterShift.tokens[0], userBalanceBeforeShift.tokens[0], "User should have not gained token 2"
-        );
+        // Reserves should equal balances
+        assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
+        assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token1 balance");
     }
 }

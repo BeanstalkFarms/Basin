@@ -472,6 +472,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      *          USDC.transfer(sender=Well2, recipient=0xUSER)                [3]
      *
      * -------------------------------------------------------------------------
+     * 
+     * FIXME: check fee on transfer behavior after merge
      */
     function shift(
         IERC20 tokenOut,
