@@ -27,9 +27,8 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         curr = bound(curr, last * 2, type(uint).max);
 
         uint balance = ABDKMathQuad.toUInt(
-            _capReserve(
-                ABDKMathQuad.fromUIntToLog2(last), ABDKMathQuad.fromUIntToLog2(curr), ABDKMathQuad.fromUInt(0)
-            ).pow_2()
+            _capReserve(ABDKMathQuad.fromUIntToLog2(last), ABDKMathQuad.fromUIntToLog2(curr), ABDKMathQuad.fromUInt(0))
+                .pow_2()
         );
 
         // 0 block delta = no change

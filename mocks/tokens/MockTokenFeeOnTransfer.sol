@@ -48,16 +48,31 @@ contract MockTokenFeeOnTransfer is ERC20Burnable, ERC20Permit {
         fee = _fee;
     }
 
+    function transfer(
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        return __transfer(_msgSender(), to, amount);
+    }
+
     function transferFrom(
         address from,
         address to,
         uint256 amount
     ) public virtual override returns (bool) {
         address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        return __transfer(from, to, amount);
+    }
+
+    function __transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal returns (bool) {
         uint _fee = amount * fee / FEE_DIVISOR;
         uint amountSent = amount - _fee;
 
-        _spendAllowance(from, spender, amount);
         _transfer(from, to, amountSent);
         _burn(from, _fee);
 

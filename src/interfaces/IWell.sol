@@ -136,6 +136,25 @@ interface IWell {
     ) external returns (uint amountOut);
 
     /**
+     * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports
+     * fee on transfer tokens.
+     * @param fromToken The token to swap from
+     * @param toToken The token to swap to
+     * @param amountIn The amount of `fromToken` to spend
+     * @param minAmountOut The minimum amount of `toToken` to receive
+     * @param recipient The address to receive `toToken`
+     * @return amountOut The amount of `toToken` received
+     * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
+     */
+    function swapFromFeeOnTransfer(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint amountIn,
+        uint minAmountOut,
+        address recipient
+    ) external returns (uint amountOut);
+
+    /**
      * @notice Gets the amount of one token received for swapping an amount of another token.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
@@ -182,6 +201,21 @@ interface IWell {
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
+        uint[] memory tokenAmountsIn,
+        uint minLpAmountOut,
+        address recipient
+    ) external returns (uint lpAmountOut);
+
+    /**
+     * @notice Adds liquidity to the Well as multiple tokens in any ratio and supports
+     * fee on transfer tokens.
+     * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+     * @param minLpAmountOut The minimum amount of LP tokens to receive
+     * @param recipient The address to receive the LP tokens
+     * @return lpAmountOut The amount of LP tokens received
+     * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
+     */
+    function addLiquidityFeeOnTransfer(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
         address recipient
