@@ -55,6 +55,21 @@ interface IWell {
      */
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
 
+    /**
+     * @notice Emitted when a Shift occurs.
+     * @param reserves The ending reserves after a shift
+     * @param toToken The token swapped to
+     * @param minAmountOut The minimum amount of `toToken` transferred out of the Well
+     * @param recipient The address to receive `toToken`
+     */
+    event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
+
+    /**
+     * @notice Emitted when a Sync occurs.
+     * @param reserves The ending reserves after a sync
+     */
+    event Sync(uint[] reserves);
+
     //////////////////// WELL DEFINITION ////////////////////
 
     /**
@@ -302,19 +317,38 @@ interface IWell {
      */
     function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn);
 
-    //////////////////// RESERVES////////////////////
+    //////////////////// RESERVES ////////////////////
+
+    /**
+     * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens.
+     */
+    function sync() external;
+
+    /**
+     * @notice Sends excess tokens held by the Well to the `recipient`.
+     * @param recipient The address to send the tokens
+     * @return skimAmounts The amount of each token skimmed
+     */
+    function skim(address recipient) external returns (uint[] memory skimAmounts);
+
+    /**
+     * @notice Shifts excess tokens held by the Well into `tokenOut` and delivers to `recipient`.
+     * @param tokenOut The token to shift into
+     * @param minAmountOut The minimum amount of `tokenOut` to receive
+     * @param recipient The address to receive the token
+     * @return amountOut The amount of `tokenOut` received
+     */
+    function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
+
+    /**
+     * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
+     * @param tokenOut The token to shift into
+     * @return amountOut The amount of `tokenOut` received
+     */
+    function getShiftOut(IERC20 tokenOut) external returns (uint amountOut);
 
     /**
      * @notice Gets the reserves of each token held by the Well.
      */
     function getReserves() external view returns (uint[] memory reserves);
-
-    //////////////////// SKIM ////////////////////
-
-    /**
-     * @notice Sends excess ERC-20 tokens held by the Well to the `recipient`.
-     * @param recipient The address to send the tokens
-     * @return skimAmounts The amount of each token skimmed
-     */
-    function skim(address recipient) external returns (uint[] memory skimAmounts);
 }
