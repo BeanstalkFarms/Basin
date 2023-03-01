@@ -14,7 +14,7 @@ import {LibClone} from "src/libraries/LibClone.sol";
  * @title Aquifer
  * @author Publius, Silo Chad, Brean
  * @notice Aquifer is a permissionless Well registry and factory.
- * @dev Aquifer deploys Wells by cloning any pre-deployed Well implementations.
+ * @dev Aquifer deploys Wells by cloning a pre-deployed Well implementation.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
     using SafeCast for uint;
@@ -62,7 +62,13 @@ contract Aquifer is IAquifer, ReentrancyGuard {
                 revert(string.concat("Aquifer: Well Init (", abi.decode(returnData, (string)), ")"));
             }
         }
+        
+        // The Aquifer address MUST be set, either (a) via immutable data during cloning,
+        // or (b) as a storage variable during an init function call. 
+        // In either case, the address MUST match the address of the Aquifer that performed deployment.    
+        require(IWell(well).aquifer() == address(this), "Aquifer: wrong aquifer address");
 
+        // Save implementation
         wellImplementations[well] = implementation;
 
         emit BoreWell(
@@ -72,7 +78,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
             IWell(well).wellFunction(),
             IWell(well).pumps(),
             IWell(well).wellData()
-            );
+        );
     }
 
     /**

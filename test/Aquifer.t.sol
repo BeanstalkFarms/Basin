@@ -122,7 +122,22 @@ contract AquiferTest is TestHelper {
 
         _checkWell(mockWell, true);
     }
-    
+
+    /// @dev Revert if {aquifer()} function doesn't return the right Aquifer address after cloning.
+    function test_bore_expectRevert_wrongAquifer() public {
+        address wrongAquifer = address(bytes20("WRONG AQUIFER"));
+        assertTrue(wrongAquifer != address(aquifer));
+
+        wellImplementation = address(new MockStaticWell(tokens, wellFunction, pumps, wrongAquifer, wellData));
+        vm.expectRevert("Aquifer: wrong aquifer address");
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            initFunctionCall,
+            bytes32(0)
+        );
+    }
+
     /// @dev Revert if the Well implementation doesn't have the provided init function.
     /// FIXME: does fallback behavior affect this?
     function test_bore_expectRevert_missingInitFunction() public {
