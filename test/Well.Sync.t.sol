@@ -4,13 +4,12 @@ pragma solidity ^0.8.17;
 import {MockToken, TestHelper, Balances} from "test/TestHelper.sol";
 
 contract WellSyncTest is TestHelper {
-
     event Sync(uint[] reserves);
 
     function setUp() public {
         setupWell(2);
 
-        // Let `user` burn 
+        // Let `user` burn
         vm.startPrank(address(well));
         MockToken(address(tokens[0])).approve(address(user), type(uint).max);
         MockToken(address(tokens[1])).approve(address(user), type(uint).max);
@@ -59,10 +58,7 @@ contract WellSyncTest is TestHelper {
         assertEq(reserves[1], expectedReserves[1], "Reserve 1 should be Balance 1");
     }
 
-    function testFuzz_sync(
-        uint128[2] calldata mintAmount,
-        uint128[2] calldata burnAmount
-    ) public prank(user) {
+    function testFuzz_sync(uint128[2] calldata mintAmount, uint128[2] calldata burnAmount) public prank(user) {
         uint temp = bound(mintAmount[0], 0, type(uint128).max - tokens[0].balanceOf(address(well)) - 100);
         MockToken(address(tokens[0])).mint(address(well), temp);
         temp = bound(mintAmount[1], 0, type(uint128).max - tokens[1].balanceOf(address(well)) - 100);
