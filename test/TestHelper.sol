@@ -39,15 +39,17 @@ abstract contract TestHelper is Test, WellDeployer {
     // Primary well
     Well well;
     address wellImplementation;
+
+    // Primary well components
     IERC20[] tokens;
     Call wellFunction;
     Call[] pumps;
     bytes wellData;
 
-    // Factory / Registry
+    // Registry
     Aquifer aquifer;
 
-    // initial liquidity amount given to users and wells
+    // Initial liquidity amount given to users and wells
     uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
@@ -103,7 +105,7 @@ abstract contract TestHelper is Test, WellDeployer {
         user2 = _user[1];
     }
 
-    ////////// Test Tokens
+    //////////// Test Tokens ////////////
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokens(uint n) internal returns (IERC20[] memory _tokens) {
@@ -163,7 +165,7 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    ////////// Well Setup
+    //////////// Well Setup ////////////
 
     function deployWellFunction() internal returns (Call memory _wellFunction) {
         _wellFunction.target = address(new ConstantProduct2());
@@ -192,7 +194,7 @@ abstract contract TestHelper is Test, WellDeployer {
         well.addLiquidity(amounts, 0, from);
     }
 
-    ////////// Balance Helpers
+    //////////// Balance Helpers ////////////
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
     /// FIXME: uses global tokens but not global well
@@ -206,20 +208,19 @@ abstract contract TestHelper is Test, WellDeployer {
         balances.lpSupply = _well.totalSupply();
     }
 
-    ////////// EVM Helpers
+    //////////// EVM Helpers ////////////
 
     function increaseTime(uint _seconds) internal {
         vm.warp(block.timestamp + _seconds);
     }
 
-    /// @dev impersonate `from`
     modifier prank(address from) {
         vm.startPrank(from);
         _;
         vm.stopPrank();
     }
 
-    ////////// Assertions
+    //////////// Assertions ////////////
 
     function assertEq(IERC20 a, IERC20 b) internal {
         assertEq(a, b, "Address mismatch");

@@ -105,17 +105,17 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
+     * @notice Returns the Well data that the Well was bored with.
+     * @dev The existence and signature of Well data is determined by each individual implementation.
+     */
+    function wellData() external view returns (bytes memory);
+
+    /**
      * @notice Returns the Aquifer that a Well was bored in.
      * @dev Wells can be permissionlessly bored in an Aquifer.
      * Aquifers stores the implementation that was used to bore the Well.
      */
     function aquifer() external view returns (address);
-
-    /**
-     * @notice Returns the Well data that the Well was bored with.
-     * @dev The existence and signature of Well data is determined by each individual implementation.
-     */
-    function wellData() external view returns (bytes memory);
 
     /**
      * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.
