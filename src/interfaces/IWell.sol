@@ -16,6 +16,11 @@ struct Call {
  * @title IWell is the interface for the Well contract.
  */
 interface IWell {
+    error SlippageOut(uint amountOut, uint minAmountOut);
+    error SlippageIn(uint amountIn, uint maxAmountIn);
+    error InvalidTokens();
+    error InvalidReserves();
+
     /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
