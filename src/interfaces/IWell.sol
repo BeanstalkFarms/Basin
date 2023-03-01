@@ -16,9 +16,15 @@ struct Call {
  * @title IWell is the interface for the Well contract.
  */
 interface IWell {
+    /// @notice Returns the slippage of swapping `amountOut` of `fromToken` for `toToken`.
+    /// @dev Returns only a uint amountOut and a uint minAmountOut.
     error SlippageOut(uint amountOut, uint minAmountOut);
+    /// @notice Returns the slippage of swapping `amountIn` of `fromToken` for `toToken`.
+    /// @dev Returns only a uint amounntIn and a uint maxAmountIn.
     error SlippageIn(uint amountIn, uint maxAmountIn);
+    /// @notice Returns the amount of leaves the tree has.
     error InvalidTokens();
+    /// @notice Returns the amount of leaves the tree has.
     error InvalidReserves();
 
     /**
