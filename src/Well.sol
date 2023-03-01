@@ -101,11 +101,14 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
+    /**
+     * @dev {wellData} is unused in this implementation.
+     */
+    function wellData() public pure returns (bytes memory) {}
+
     function aquifer() public pure override returns (address) {
         return _getArgAddress(LOC_AQUIFER_ADDR);
     }
-
-    function wellData() public pure returns (bytes memory) {}
 
     function well()
         external
@@ -121,7 +124,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
-        // _wellData = bytes(0); // FIXME
         _aquifer = aquifer();
     }
 
