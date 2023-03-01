@@ -16,12 +16,12 @@ import {Call, IERC20} from "src/Well.sol";
  * storage during construction.
  */
 contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
-    address immutable token0;
-    address immutable token1;
-    address immutable wellFunctionTarget;
-    bytes32 immutable wellFunctionData;
-    address immutable pump0Target;
-    bytes32 immutable pump0Data;
+    address immutable TOKEN0;
+    address immutable TOKEN1;
+    address immutable WELL_FUNCTION_TARGET;
+    bytes32 immutable WELL_FUNCTION_DATA;
+    address immutable PUMP0_TARGET;
+    bytes32 immutable PUMP0_DATA;
     address immutable AQUIFER;
     bytes32 immutable WELL_DATA;
 
@@ -38,12 +38,12 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
         require(_tokens.length == 2, "MockStaticWell: invalid tokens");
         require(_pumps.length == 1, "MockStaticWell: invalid pumps");
 
-        token0 = address(_tokens[0]);
-        token1 = address(_tokens[1]);
-        wellFunctionTarget = _wellFunction.target;
-        wellFunctionData = bytes32(_wellFunction.data);
-        pump0Target = _pumps[0].target;
-        pump0Data = bytes32(_pumps[0].data);
+        TOKEN0 = address(_tokens[0]);
+        TOKEN1 = address(_tokens[1]);
+        WELL_FUNCTION_TARGET = _wellFunction.target;
+        WELL_FUNCTION_DATA = bytes32(_wellFunction.data);
+        PUMP0_TARGET = _pumps[0].target;
+        PUMP0_DATA = bytes32(_pumps[0].data);
         AQUIFER = _aquifer;
         WELL_DATA = bytes32(_wellData);
     }
@@ -55,17 +55,17 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
 
     function tokens() public view returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](2);
-        _tokens[0] = IERC20(token0);
-        _tokens[1] = IERC20(token1);
+        _tokens[0] = IERC20(TOKEN0);
+        _tokens[1] = IERC20(TOKEN1);
     }
 
     function wellFunction() public view returns (Call memory _wellFunction) {
-        _wellFunction = Call(wellFunctionTarget, bytes32ToBytes(wellFunctionData));
+        _wellFunction = Call(WELL_FUNCTION_TARGET, bytes32ToBytes(WELL_FUNCTION_DATA));
     }
 
     function pumps() public view returns (Call[] memory _pumps) {
         _pumps = new Call[](1);
-        _pumps[0] = Call(pump0Target, bytes32ToBytes(pump0Data));
+        _pumps[0] = Call(PUMP0_TARGET, bytes32ToBytes(PUMP0_DATA));
     }
 
     function aquifer() public view returns (address) {

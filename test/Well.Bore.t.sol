@@ -117,14 +117,14 @@ contract WellBoreTest is TestHelper {
             assertEq(MockPump(_pumps[i].target).lastData(), "0xATTACHED", "pump not attached");
         }
 
+        // Check token addresses
+        assertEq(_well.tokens(), wellTokens);
+
         // Check Well Function
         assertEq(_well.wellFunction(), wellFunction);
         assertEq(_well.wellFunctionAddress(), wellFunction.target);
 
-        // Check token addresses
-        assertEq(_well.tokens(), wellTokens);
-
-        // Check aquifer for deployment
+        // Check that Aquifer recorded the deployment
         assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
     }
 }

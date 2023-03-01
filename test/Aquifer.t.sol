@@ -50,7 +50,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Verify that the mock was deployed correctly.
     function test_constructed() public {
-        checkWell(MockStaticWell(wellImplementation), false);
+        _checkWell(MockStaticWell(wellImplementation), false);
     }
 
     //////////// DEPLOYMENT ////////////
@@ -69,7 +69,7 @@ contract AquiferTest is TestHelper {
             salt
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
         assertEq(address(mockWell), destination, "deployment address mismatch");
     }
@@ -86,7 +86,7 @@ contract AquiferTest is TestHelper {
             bytes32(0)
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
     }
 
@@ -104,7 +104,7 @@ contract AquiferTest is TestHelper {
             salt
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(address(mockWell), destination, "deployment address mismatch");
     }
 
@@ -120,10 +120,47 @@ contract AquiferTest is TestHelper {
             bytes32(0)
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
+    }
+    
+    /// @dev Revert if the Well implementation doesn't have the provided init function.
+    /// FIXME: does fallback behavior affect this?
+    function test_bore_expectRevert_missingInitFunction() public {
+        vm.expectRevert("Aquifer: well init");
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            abi.encodeWithSignature("doesNotExist()"),
+            bytes32(0)
+        );
     }
 
-    function checkWell(MockStaticWell _well, bool isInitialized) private {
+    /// @dev Reversion during init propagates the revert message if one is returned. 
+    /// See {MockInitFailWell.sol}
+    function test_bore_initRevert_withMessage() public {
+        vm.expectRevert("Aquifer: Well Init (Well: fail message)");
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            abi.encodeWithSignature("initMessage()"),
+            bytes32(0)
+        );
+    }
+
+
+    /// @dev Reversion during init uses default message if no revert message is returned. 
+    /// See {MockInitFailWell.sol}
+    function test_bore_initRevert_noMessage() public {
+        vm.expectRevert("Aquifer: well init");
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            abi.encodeWithSignature("initNoMessage()"),
+            bytes32(0)
+        );
+    }
+
+    function _checkWell(MockStaticWell _well, bool isInitialized) private {
         IERC20[] memory _tokens = _well.tokens();
         Call[] memory _pumps = _well.pumps();
     
@@ -138,29 +175,5 @@ contract AquiferTest is TestHelper {
             assertEq(_well.symbol(), "mWELL", "symbol mismatch");
             assertEq(aquifer.wellImplementation(address(_well)), wellImplementation, "implementation mismatch");
         }
-    }
-
-    function test_bore_fail_message() public {
-        initFunctionCall = abi.encodeWithSignature("initMessage()");
-
-        vm.expectRevert("Aquifer: Well Init (Well: fail message)");
-        aquifer.boreWell(
-            initFailImplementation,
-            "",
-            initFunctionCall,
-            bytes32(0)
-        );
-    }
-
-    function test_bore_fail_no_message() public {
-        initFunctionCall = abi.encodeWithSignature("initNoMessage()");
-
-        vm.expectRevert("Aquifer: well init");
-        aquifer.boreWell(
-            initFailImplementation,
-            "",
-            initFunctionCall,
-            bytes32(0)
-        );
     }
 }
