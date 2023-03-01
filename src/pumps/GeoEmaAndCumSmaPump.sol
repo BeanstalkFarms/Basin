@@ -57,9 +57,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     //////////////////// PUMP ////////////////////
 
-    // potentially check that the storage associated with the caller is empty
-    function attach(uint _n, bytes calldata pumpData) external {}
-
     function update(uint[] calldata reserves, bytes calldata) external {
         uint length = reserves.length;
         Reserves memory b;
@@ -70,7 +67,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Read: Last Timestamp & Last Reserves
         (, b.lastTimestamp, b.lastReserves) = slot.readLastReserves();
 
-        // TODO: Finalize init condition. timestamp? lastReserve?
+        // If the last timestamp is 0, then the pump has never been used before.
         if (b.lastTimestamp == 0) {
             _init(slot, uint40(block.timestamp), reserves);
             return;
@@ -91,11 +88,12 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
         bytes16 aN = A.powu(deltaTimestamp);
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        // TODO: Check if cheaper to use DeltaTimestampBytes
-        // TODO: Always require > 1 ???? Round up ????? `Look into timestamp manipulation
+
+        // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
 
         for (uint i; i < length; ++i) {
+            require(reserves[i] > 0, "Pump: Reserve must be greater than 0");
             b.lastReserves[i] = _capReserve(b.lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
             b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
@@ -116,9 +114,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         slot.storeLastReserves(uint40(block.timestamp), b.lastReserves);
     }
 
-    // TODO
-    function read(address well, bytes calldata readData) external view returns (bytes memory data) {}
-
     /**
      * @dev On first update for a particular Well, initialize oracle with
      * reserves data.
@@ -130,6 +125,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Skip {_capReserve} since we have no prior reference
 
         for (uint i = 0; i < length; ++i) {
+            require(reserves[i] > 0, "Pump: Reserve must be greater than 0");
             byteReserves[i] = reserves[i].fromUIntToLog2();
         }
 
@@ -171,13 +167,14 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     ∴ `maxReserve = lastReserve + blocks*LOG_MAX_INCREASE`
+     * 
      */
     function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
-        // TODO: What if reserve 0?
+        // `lastReserve` should be > 0 or `cappedReserve` will equal 0.
 
         // Reserve decreasing (lastReserve > reserve)
         if (lastReserve.cmp(reserve) == 1) {
@@ -265,7 +262,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
-        // TODO: Overflow desired ????
+        // Currently, there is so support for overflow.
         for (uint i = 0; i < cumulativeReserves.length; ++i) {
             lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
             cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
@@ -280,10 +277,12 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
         bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
         twaReserves = new uint[](byteCumulativeReserves.length);
-        bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt(); // TODO: Verify no safe cast is desired
+
+        // Overflow is desired on `startTimestamp`, so SafeCast is not used.
+        bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt();
         require(deltaTimestamp != bytes16(0), "Well: No time passed");
         for (uint i = 0; i < byteCumulativeReserves.length; ++i) {
-            // TODO: Unchecked?
+            // Currently, there is no support for overflow.
             twaReserves[i] =
                 (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2ToUInt();
         }
