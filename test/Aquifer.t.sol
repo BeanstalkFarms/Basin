@@ -139,7 +139,9 @@ contract AquiferTest is TestHelper {
     }
 
     /// @dev Revert if the Well implementation doesn't have the provided init function.
-    /// FIXME: does fallback behavior affect this?
+    /// NOTE: {MockWell} does not provide a fallback function, so this test passes. If
+    /// a Well chooses to implement a fallback function, an incorrectly encoded init
+    /// function call could cause unexpected behavior.
     function test_bore_expectRevert_missingInitFunction() public {
         vm.expectRevert("Aquifer: well init");
         aquifer.boreWell(
