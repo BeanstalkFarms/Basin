@@ -16,7 +16,7 @@ struct Call {
  * @title IWell is the interface for the Well contract.
  */
 interface IWell {
-    /// @notice Returns the slippage of swapping `amountOut` of `fromToken` for `toToken`.
+    /// @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
     /// @dev Returns only a uint amountOut and a uint minAmountOut.
     error SlippageOut(uint amountOut, uint minAmountOut);
     /// @notice Returns the slippage of swapping `amountIn` of `fromToken` for `toToken`.
