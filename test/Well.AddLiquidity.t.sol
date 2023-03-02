@@ -104,7 +104,7 @@ contract WellAddLiquidityTest is TestHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        // vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, 2001 * 1e27, amounts));
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, 2001 * 1e27, amounts));
         well.addLiquidity(amounts, 2001 * 1e27, user); // lpAmountOut is 2000*1e27
     }
 
