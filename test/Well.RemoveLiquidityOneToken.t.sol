@@ -5,11 +5,10 @@ import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.so
 import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityOneTokenTest is TestHelper {
-    ConstantProduct2 cp;
-    bytes constant data = "";
-    uint constant addedLiquidity = 1000 * 1e18;
-
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
+
+    ConstantProduct2 cp;
+    uint constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -56,9 +55,11 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev not enough tokens received for `lpAmountIn`.
     function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
-        uint lpAmountIn = 1000 * 1e18;
-        uint minTokenAmountOut = 876 * 1e18;
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, lpAmountIn, minTokenAmountOut));
+        uint lpAmountIn = 1000 * 1e27;
+        uint minTokenAmountOut = 876 * 1e18; // too high
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
+
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minTokenAmountOut));
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
     }
 
@@ -78,6 +79,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
+
         // Calculate change in Well reserves after removing liquidity
         uint[] memory reserves = new uint[](2);
         reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - amounts[0];
@@ -86,7 +88,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, data);
+        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
         uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
