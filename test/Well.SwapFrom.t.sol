@@ -5,11 +5,9 @@ import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.
 import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellSwapFromTest is SwapHelper {
-
-    error SlippageOut(uint amountOut, uint minAmountOut);
-    error InvalidTokens();
 
     function setUp() public {
         setupWell(2);
@@ -52,7 +50,7 @@ contract WellSwapFromTest is SwapHelper {
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapFrom_revertIf_sameToken() public prank(user) {
-        vm.expectRevert(InvalidTokens.selector);
+        vm.expectRevert(IWell.InvalidTokens.selector);
         well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user);
     }
 
@@ -61,7 +59,7 @@ contract WellSwapFromTest is SwapHelper {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
 
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, amountIn, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountIn, minAmountOut));
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 

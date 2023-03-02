@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, Balances, ConstantProduct2, console, IERC20} from "test/TestHelper.sol";
+import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellShiftTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
-
-    error SlippageIn(uint amountIn, uint maxAmountIn);
 
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
 
@@ -164,7 +163,7 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
-        vm.expectRevert(abi.encodeWithSelector(SlippageIn.selector, amount, type(uint).max));
-        uint amtOut = well.shift(tokens[1], type(uint).max, _user);
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, amount, type(uint).max));
+        well.shift(tokens[1], type(uint).max, _user);
     }
 }

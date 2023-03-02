@@ -2,13 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
-
-    error SlippageOut(uint amountOut, uint minAmountOut);
 
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
@@ -52,6 +51,7 @@ contract WellRemoveLiquidityTest is TestHelper {
 
         Balances memory userBalance = getBalances(user, well);
         Balances memory wellBalance = getBalances(address(well), well);
+
         // `user` balance of LP tokens decreases
         assertEq(userBalance.lp, 0);
 
@@ -72,12 +72,13 @@ contract WellRemoveLiquidityTest is TestHelper {
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
     function test_removeLiquidity_amountOutTooHigh() public prank(user) {
         uint lpAmountIn = 2000 * 1e18;
-        uint[] memory amountsOut = new uint[](2);
-        amountsOut[0] = 1001 * 1e18; // too high
-        amountsOut[1] = 1000 * 1e18;
 
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountIn, amountsOut[0]));
-        well.removeLiquidity(lpAmountIn, amountsOut, user);
+        uint[] memory minTokenAmountsOut = new uint[](2);
+        minTokenAmountsOut[0] = 1001 * 1e18; // too high
+        minTokenAmountsOut[1] = 1000 * 1e18;
+    
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal

@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {TestHelper, IERC20, Balances, Call, MockToken, Well} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap DO NOT
  * incur a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
-
-    error SlippageOut(uint amountOut, uint minAmountOut);
-    error InvalidTokens();
-
     function setUp() public {
         setupWell(2);
     }
@@ -24,7 +21,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
 
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, amountIn, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountIn, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
@@ -32,7 +29,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function testFuzz_swapFromFeeOnTransfer_noFee_revertIf_sameToken(uint128 amountIn) public prank(user) {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
-        vm.expectRevert(InvalidTokens.selector);
+        vm.expectRevert(IWell.InvalidTokens.selector);
         well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user);
     }
 

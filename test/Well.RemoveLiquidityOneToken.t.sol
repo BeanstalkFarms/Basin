@@ -2,13 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityOneTokenTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
-
-    error SlippageOut(uint amountOut, uint minAmountOut);
 
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
 
@@ -59,7 +58,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
     function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
         uint lpAmountIn = 1000 * 1e18;
         uint minTokenAmountOut = 876 * 1e18;
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountIn, minTokenAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, lpAmountIn, minTokenAmountOut));
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
     }
 

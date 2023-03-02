@@ -2,19 +2,18 @@
 pragma solidity ^0.8.17;
 
 import {
-    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well, console
+    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well
 } from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur
  * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
-
-    error SlippageOut(uint amountOut, uint minAmountOut);
 
     function setUp() public {
         tokens = new IERC20[](2);
@@ -32,7 +31,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, amountIn, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountIn, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
