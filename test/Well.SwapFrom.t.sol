@@ -21,10 +21,10 @@ contract WellSwapFromTest is SwapHelper {
     }
 
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint amountIn, uint i) public prank(user) {
-        // swap token `i` -> all other tokens
+        // Swap token `i` -> all other tokens
         vm.assume(i < tokens.length);
 
-        // find an input amount that produces an output amount higher than what the Well has.
+        // Find an input amount that produces an output amount higher than what the Well has.
         // When the Well is deployed it has zero reserves, so any nonzero value should revert.
         amountIn = bound(amountIn, 1, type(uint128).max);
 
@@ -58,8 +58,9 @@ contract WellSwapFromTest is SwapHelper {
     function test_swapFrom_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
+        uint amountOut = 500 * 1e18;
 
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountIn, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
