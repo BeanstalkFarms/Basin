@@ -10,6 +10,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  */
 struct AddLiquidityAction {
     uint[] amounts;
+    uint[] fees;
     uint lpAmountOut;
     address recipient;
 }
@@ -19,6 +20,7 @@ struct AddLiquidityAction {
  */
 struct RemoveLiquidityAction {
     uint[] amounts;
+    uint[] fees;
     uint lpAmountIn;
     address recipient;
 }
@@ -38,7 +40,7 @@ struct LiquiditySnapshot {
  *
  * NOTE: Uses globals inherited from TestHelper.
  */
-contract LiquidityHeler is TestHelper {
+contract LiquidityHelper is TestHelper {
     event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
@@ -62,7 +64,7 @@ contract LiquidityHeler is TestHelper {
     {
         LiquiditySnapshot memory beforeSnapshot = _newSnapshot();
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
         emit AddLiquidity(action.amounts, action.lpAmountOut, action.recipient);
 
         return (beforeSnapshot, action);
@@ -81,7 +83,8 @@ contract LiquidityHeler is TestHelper {
 
         // Check that the well balances incremented by the correct amount
         for (uint i = 0; i < tokens.length; i++) {
-            assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + action.amounts[i]);
+            uint valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
+            assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + valueToAdd);
         }
     }
 
