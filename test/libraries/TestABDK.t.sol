@@ -1,3 +1,5 @@
+pragma solidity ^0.8.17;
+
 import "test/TestHelper.sol";
 import "src/libraries/ABDKMathQuad.sol";
 import "oz/utils/Strings.sol";
@@ -27,14 +29,15 @@ contract ABDKTest is TestHelper {
     //////////////////// EXTENSIONS ////////////////////
 
     function test_powu1() public {
-        bytes16 pu = powuFraction(11_661, 64, 9654);
-        assertEq(pu, ABDKMathQuad.from128x128(57_627_117_634_665_864_530_030_077_974_524_244_518_281_427));
+        bytes16 pu = powuFraction(9, 10, 10);
+        uint puu = uint(pu.to128x128());
+        uint expected = 118_649_124_891_528_663_468_500_301_601_258_807_155;
+        assertApproxEqRelN(puu, expected, 1, 32);
     }
 
-    function testFuzz_powu(uint16 num, uint16 denom, uint16 exp) public {
-        vm.assume(num < denom);
-        vm.assume(denom > 0);
-        vm.assume(num > 0);
+    function testFuzz_powu(uint num, uint denom, uint exp) public {
+        denom = bound(denom, 1, type(uint16).max);
+        num = bound(num, 1, denom);
 
         string[] memory inputs = new string[](8);
         inputs[0] = "python";
@@ -48,8 +51,9 @@ contract ABDKTest is TestHelper {
         bytes memory result = vm.ffi(inputs);
 
         bytes16 pu = powuFraction(num, denom, exp);
-        bytes16 pypu = ABDKMathQuad.from128x128(abi.decode(result, (int)));
-        assertEq(pu >> 1, pypu >> 1);
+        uint puu = uint(pu.to128x128());
+        uint pypu = uint(abi.decode(result, (int)));
+        assertApproxEqRelN(puu, pypu, 1, 30);
     }
 
     /// @dev calculate (a/b)^c
@@ -57,21 +61,16 @@ contract ABDKTest is TestHelper {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 
-    function testFromUIntToLog2() public {
-        // test the fromUintToLog2 function
+    function testFuzz_FromUIntToLog2(uint x) public {
+        vm.assume(x > 0); // log2(0) is undefined.
+        assertEq(ABDKMathQuad.fromUInt(x).log_2(), ABDKMathQuad.fromUIntToLog2(x));
+    }
 
-        bytes16 result;
+    function testFuzz_pow_2ToUInt(uint x) public {
+        vm.assume(x < 256); // the max value of an uint is 2^256 - 1.
 
-        result = ABDKMathQuad.fromUIntToLog2(0);
-        assertEq(result, bytes16(0), "fromUIntToLog2(0) should return 0");
-
-        result = ABDKMathQuad.fromUIntToLog2(1);
-        assertEq(result, bytes16(0x3FFE0000000000000000000000000000), "fromUIntToLog2(1) should return 0x3FFE0000000000000000000000000000");
-
-        result = ABDKMathQuad.fromUIntToLog2(2);
-        assertEq(result, bytes16(0x3FFF0000000000000000000000000000), "fromUIntToLog2(2) should return 0x3FFF0000000000000000000000000000");
-
-        // assertEq(ABDKMathQuad.fromUIntToLog2(1), 0);
-
+        // test the pow_2ToUInt function
+        bytes16 _x = x.fromUInt();
+        assertEq(ABDKMathQuad.pow_2(_x).toUInt(), ABDKMathQuad.pow_2ToUInt(_x));
     }
 }

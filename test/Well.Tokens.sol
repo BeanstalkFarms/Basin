@@ -13,8 +13,8 @@ contract WellInternalTest is Well, Test {
     IERC20 tokenMissing2;
 
     function setUp() public {
-        token0 = IERC20(address(0));
-        token1 = IERC20(address(1));
+        token0 = IERC20(address(1));
+        token1 = IERC20(address(2));
         tokenMissing1 = IERC20(address(bytes20("not in well")));
         tokenMissing2 = IERC20(address(bytes20("also not in well")));
 

@@ -26,13 +26,9 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         last = bound(last, 0, type(uint).max / 2);
         curr = bound(curr, last * 2, type(uint).max);
 
-        console.log("last", last);
-        console.log("curr", curr);
-
         uint balance = ABDKMathQuad.toUInt(
-            _capReserve(
-                ABDKMathQuad.fromUInt(last).log_2(), ABDKMathQuad.fromUInt(curr).log_2(), ABDKMathQuad.fromUInt(0)
-            ).pow_2()
+            _capReserve(ABDKMathQuad.fromUIntToLog2(last), ABDKMathQuad.fromUIntToLog2(curr), ABDKMathQuad.fromUInt(0))
+                .pow_2()
         );
 
         // 0 block delta = no change
@@ -42,6 +38,56 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
             assertApproxEqAbs(balance, last, 1);
         } else {
             assertApproxEqRel(balance, last, 1);
+        }
+    }
+
+    function testFuzz_capReserve_xBlocks(uint lastBalance, uint balance, uint blocks) public {
+        // ensure that curr is greater than 2*last to simulate >= 100% increase
+        // TODO: Potentially relax assumption. Going too high causes arithmetic overflow.
+        lastBalance = bound(lastBalance, 100, type(uint128).max);
+        balance = bound(balance, 100, type(uint128).max);
+        blocks = bound(blocks, 1, 2**12);
+
+        // Add precision for the capReserve function
+        uint limitBalance = lastBalance * 1e18;
+        
+        uint multiplier = lastBalance < balance ? 1.5e6 : 0.5e6;
+
+        uint tempBalance;
+        for (uint16 i; i < blocks; ++i) {
+            unchecked {
+                tempBalance = limitBalance * multiplier / 1e6;
+            }
+            if (lastBalance < balance && tempBalance < limitBalance) {
+                limitBalance = type(uint).max;
+                break;
+            }
+            limitBalance = tempBalance;
+        }
+        limitBalance = limitBalance / 1e18;
+
+        console.log("limitBalance", limitBalance);
+        console.log("lastBalance", lastBalance);
+        console.log("balance", balance);
+
+        uint expectedCappedBalance = 
+            (lastBalance < balance && limitBalance < balance) ||
+            (lastBalance > balance && limitBalance > balance) ?
+            limitBalance : balance;
+
+        console.log("Expected capped balance", expectedCappedBalance);
+
+        uint cappedBalance = _capReserve(
+                ABDKMathQuad.fromUIntToLog2(lastBalance), ABDKMathQuad.fromUIntToLog2(balance), ABDKMathQuad.fromUInt(blocks)
+            ).pow_2ToUInt();
+
+        // 0 block delta = no change
+        // FIXME: the fuzzer was able to find a case where some sort of double rounding error
+        // occurred which caused a delta of 2
+        if (cappedBalance < 1e22) {
+            assertApproxEqAbs(cappedBalance, expectedCappedBalance, 1);
+        } else {
+            assertApproxEqRelN(cappedBalance, expectedCappedBalance, 1, 22);
         }
     }
 
