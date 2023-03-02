@@ -212,7 +212,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage from imprecision goes to the Well or to the User.
         amountOut = reserveJBefore - reserves[j];
 
-        if(!(amountOut >= minAmountOut)) revert SlippageOut(amountOut, minAmountOut);
+        if(amountOut < minAmountOut) revert SlippageOut(amountOut, minAmountOut);
         toToken.safeTransfer(recipient, amountOut);
         emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
         _setReserves(_tokens, reserves);
