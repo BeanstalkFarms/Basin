@@ -11,6 +11,10 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * incur a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
+
+    error SlippageOut(uint amountOut, uint minAmountOut);
+    error InvalidTokens();
+
     function setUp() public {
         setupWell(2);
     }
@@ -20,7 +24,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
 
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, amountIn, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
@@ -28,7 +32,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function testFuzz_swapFromFeeOnTransfer_noFee_revertIf_sameToken(uint128 amountIn) public prank(user) {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user);
     }
 

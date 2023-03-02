@@ -6,6 +6,9 @@ import {MockTokenFeeOnTransfer, TestHelper, IERC20, Call, Balances} from "test/T
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
 contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
+
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
 
     function setUp() public {
@@ -73,7 +76,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is TestHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, 0, 1));
         well.addLiquidityFeeOnTransfer(amounts, 2000 * 1e27, user); // lpAmountOut is 1980*1e27
     }
 

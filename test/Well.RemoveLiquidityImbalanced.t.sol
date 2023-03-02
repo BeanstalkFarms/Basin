@@ -10,6 +10,8 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     uint constant addedLiquidity = 1000 * 1e18;
 
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     function setUp() public {
@@ -58,7 +60,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
         uint maxLpAmountIn = 10 * 1e27;
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, tokenAmountsOut[0], 0));
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
     }
 

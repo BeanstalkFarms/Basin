@@ -8,6 +8,8 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
 
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
 
     function setUp() public {
@@ -57,7 +59,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
     function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
         uint lpAmountIn = 1000 * 1e18;
         uint minTokenAmountOut = 876 * 1e18;
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountIn, minTokenAmountOut));
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
     }
 

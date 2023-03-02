@@ -7,6 +7,8 @@ contract WellShiftTest is TestHelper {
     ConstantProduct2 cp;
     bytes constant data = "";
 
+    error SlippageIn(uint amountIn, uint maxAmountIn);
+
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
 
     function setUp() public {
@@ -162,7 +164,7 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageIn.selector, amount, type(uint).max));
         uint amtOut = well.shift(tokens[1], type(uint).max, _user);
     }
 }

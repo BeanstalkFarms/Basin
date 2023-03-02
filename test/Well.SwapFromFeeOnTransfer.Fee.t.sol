@@ -13,6 +13,9 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
+
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     function setUp() public {
         tokens = new IERC20[](2);
         tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
@@ -29,7 +32,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, amountIn, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 

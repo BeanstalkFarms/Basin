@@ -8,6 +8,8 @@ contract WellRemoveLiquidityTest is TestHelper {
     bytes constant data = "";
     uint constant addedLiquidity = 1000 * 1e18;
 
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
     function setUp() public {
@@ -74,7 +76,7 @@ contract WellRemoveLiquidityTest is TestHelper {
         amountsOut[0] = 1001 * 1e18; // too high
         amountsOut[1] = 1000 * 1e18;
 
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountIn, amountsOut[0]));
         well.removeLiquidity(lpAmountIn, amountsOut, user);
     }
 
