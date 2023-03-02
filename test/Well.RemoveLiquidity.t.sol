@@ -71,7 +71,7 @@ contract WellRemoveLiquidityTest is TestHelper {
 
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
     function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-        uint lpAmountIn = 2000 * 1e18;
+        uint lpAmountIn = 2000 * 1e27;
 
         uint[] memory minTokenAmountsOut = new uint[](2);
         minTokenAmountsOut[0] = 1001 * 1e18; // too high
