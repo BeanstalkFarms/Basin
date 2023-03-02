@@ -46,7 +46,9 @@ contract WellSwapToTest is SwapHelper {
     function test_swapTo_revertIf_maxAmountInTooLow() public prank(user) {
         uint amountOut = 500 * 1e18;
         uint maxAmountIn = 999 * 1e18; // actual: 1000
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, amountOut, maxAmountIn));
+        uint amountIn = 1000 * 1e18;
+
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, amountIn, maxAmountIn));
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
     }
 
