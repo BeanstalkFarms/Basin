@@ -19,15 +19,11 @@ interface IWell {
   
     /**
      * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
-     * @return amountOut 
-     * @return minAmountOut 
      */
     error SlippageOut(uint amountOut, uint minAmountOut);
     
     /**
      * @notice Thrown when an operation would deliver more tokens than `maxAmountIn`.
-     * @return amountIn 
-     * @return maxAmountIn 
      */
     error SlippageIn(uint amountIn, uint maxAmountIn);
         
