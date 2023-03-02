@@ -390,7 +390,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint j = _getJ(_tokens, tokenOut);
 
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(lpAmountIn, j, reserves);
-        if(!(tokenAmountOut >= minTokenAmountOut)) revert SlippageOut(tokenAmountOut, minTokenAmountOut);
+        if(tokenAmountOut < minTokenAmountOut) revert SlippageOut(tokenAmountOut, minTokenAmountOut);
         _burn(msg.sender, lpAmountIn);
         tokenOut.safeTransfer(recipient, tokenAmountOut);
 
