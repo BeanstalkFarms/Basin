@@ -20,8 +20,9 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function test_swapFromFeeOnTransfer_noFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
+        uint amountOut = 500 * 1e18;
 
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountIn, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
