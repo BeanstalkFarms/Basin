@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import {MockTokenFeeOnTransfer, TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
-import {LiquiditySnapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
     function setUp() public {
@@ -23,7 +23,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         }
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -50,7 +50,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
 
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -79,7 +79,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
     function test_addLiquidity_zeroChange_feeOnTransfer_fee() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -104,7 +104,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         feeAmounts[0] = amounts[0] - (amounts[0] * 1e16 / 1e18);
         feeAmounts[1] = amounts[1] - (amounts[1] * 1e16 / 1e18);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 

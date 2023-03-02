@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {TestHelper, IERC20, Balances, Call, MockToken, Well, console, Snapshot} from "test/TestHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -26,16 +26,6 @@ struct RemoveLiquidityAction {
 }
 
 /**
- * @dev Holds a snapshot of User & Well balances. Used to calculate the change
- * in balanace across some action in the Well.
- */
-struct LiquiditySnapshot {
-    Balances user;
-    Balances well;
-    uint[] reserves;
-}
-
-/**
  * @dev Provides common assertions when testing adding and removing liquidity.
  *
  * NOTE: Uses globals inherited from TestHelper.
@@ -48,7 +38,7 @@ contract LiquidityHelper is TestHelper {
         uint[] memory amounts,
         uint lpAmountOut,
         address recipient
-    ) internal returns (LiquiditySnapshot memory, AddLiquidityAction memory) {
+    ) internal returns (Snapshot memory, AddLiquidityAction memory) {
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -60,9 +50,9 @@ contract LiquidityHelper is TestHelper {
 
     function beforeAddLiquidity(AddLiquidityAction memory action)
         internal
-        returns (LiquiditySnapshot memory, AddLiquidityAction memory)
+        returns (Snapshot memory, AddLiquidityAction memory)
     {
-        LiquiditySnapshot memory beforeSnapshot = _newSnapshot();
+        Snapshot memory beforeSnapshot = _newSnapshot();
 
         vm.expectEmit(true, true, true, false);
         emit AddLiquidity(action.amounts, action.lpAmountOut, action.recipient);
@@ -70,8 +60,8 @@ contract LiquidityHelper is TestHelper {
         return (beforeSnapshot, action);
     }
 
-    function afterAddLiquidity(LiquiditySnapshot memory beforeSnapshot, AddLiquidityAction memory action) internal {
-        LiquiditySnapshot memory afterSnapshot = _newSnapshot();
+    function afterAddLiquidity(Snapshot memory beforeSnapshot, AddLiquidityAction memory action) internal {
+        Snapshot memory afterSnapshot = _newSnapshot();
 
         // Check that the LP token balance of the recipient increased by the expected amount
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp + action.lpAmountOut);
@@ -92,7 +82,7 @@ contract LiquidityHelper is TestHelper {
         uint lpAmountIn,
         uint[] memory amounts,
         address recipient
-    ) internal returns (LiquiditySnapshot memory, RemoveLiquidityAction memory) {
+    ) internal returns (Snapshot memory, RemoveLiquidityAction memory) {
         RemoveLiquidityAction memory action;
 
         action.lpAmountIn = lpAmountIn;
@@ -104,9 +94,9 @@ contract LiquidityHelper is TestHelper {
 
     function beforeRemoveLiquidity(RemoveLiquidityAction memory action)
         internal
-        returns (LiquiditySnapshot memory, RemoveLiquidityAction memory)
+        returns (Snapshot memory, RemoveLiquidityAction memory)
     {
-        LiquiditySnapshot memory beforeSnapshot = _newSnapshot();
+        Snapshot memory beforeSnapshot = _newSnapshot();
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(action.lpAmountIn, action.amounts, action.recipient);
@@ -114,11 +104,8 @@ contract LiquidityHelper is TestHelper {
         return (beforeSnapshot, action);
     }
 
-    function afterRemoveLiquidity(
-        LiquiditySnapshot memory beforeSnapshot,
-        RemoveLiquidityAction memory action
-    ) internal {
-        LiquiditySnapshot memory afterSnapshot = _newSnapshot();
+    function afterRemoveLiquidity(Snapshot memory beforeSnapshot, RemoveLiquidityAction memory action) internal {
+        Snapshot memory afterSnapshot = _newSnapshot();
 
         // Check that the LP token balance of the recipient decreased by the expected amount
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp - action.lpAmountIn);
@@ -134,7 +121,7 @@ contract LiquidityHelper is TestHelper {
         }
     }
 
-    function _newSnapshot() internal view returns (LiquiditySnapshot memory snapshot) {
+    function _newSnapshot() internal view returns (Snapshot memory snapshot) {
         snapshot.user = getBalances(user, well);
         snapshot.well = getBalances(address(well), well);
         snapshot.reserves = well.getReserves();

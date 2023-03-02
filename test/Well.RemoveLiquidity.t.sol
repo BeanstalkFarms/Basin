@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
-import {LiquiditySnapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellRemoveLiquidityTest is LiquidityHelper {
     ConstantProduct2 cp;
@@ -43,7 +43,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         amountsOut[0] = 1000 * 1e18;
         amountsOut[1] = 1000 * 1e18;
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         RemoveLiquidityAction memory action;
 
         action.amounts = amountsOut;
@@ -77,7 +77,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         amounts[0] = bound(a0, 0, 1000e18);
         amounts[1] = amounts[0];
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         RemoveLiquidityAction memory action;
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
@@ -113,7 +113,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         uint[] memory tokenAmountsOut = new uint[](2);
         tokenAmountsOut = well.getRemoveLiquidityOut(lpAmountBurned);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         RemoveLiquidityAction memory action;
 
         action.amounts = tokenAmountsOut;

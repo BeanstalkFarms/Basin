@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
 
-import {LiquiditySnapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityTest is LiquidityHelper {
     function setUp() public {
@@ -78,7 +78,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -110,7 +110,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         }
         uint lpAmountOut = 2000 * 1e27;
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -123,7 +123,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
 
         afterAddLiquidity(before, action);
 
-        LiquiditySnapshot memory beforeRemove;
+        Snapshot memory beforeRemove;
         RemoveLiquidityAction memory actionRemove;
 
         actionRemove.lpAmountIn = well.getAddLiquidityOut(amounts);
@@ -140,7 +140,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
     function test_addLiquidity_zeroChange() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         uint liquidity = 0;
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -161,7 +161,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         amounts[0] = bound(x, 0, 1000e18);
         amounts[1] = bound(y, 0, 1000e18);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;

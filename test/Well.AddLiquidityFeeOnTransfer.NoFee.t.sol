@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
-import {LiquiditySnapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
     function setUp() public {
@@ -20,7 +20,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -44,7 +44,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -77,7 +77,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         }
         uint lpAmountOut = 2000 * 1e27;
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -90,7 +90,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         afterAddLiquidity(before, action);
 
-        LiquiditySnapshot memory beforeRemove;
+        Snapshot memory beforeRemove;
         RemoveLiquidityAction memory actionRemove;
 
         actionRemove.lpAmountIn = well.getAddLiquidityOut(amounts);
@@ -108,7 +108,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
     function test_addLiquidity_zeroChange_feeOnTransfer_noFee() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
 
         action.amounts = amounts;
@@ -129,7 +129,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         amounts[0] = bound(x, 0, 1000e18);
         amounts[1] = bound(y, 0, 1000e18);
 
-        LiquiditySnapshot memory before;
+        Snapshot memory before;
         AddLiquidityAction memory action;
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
 
