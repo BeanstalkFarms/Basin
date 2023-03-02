@@ -441,7 +441,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             reserves[i] = reserves[i] - tokenAmountsOut[i];
         }
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
-        if(!(lpAmountIn <= maxLpAmountIn)) revert SlippageIn(lpAmountIn, maxLpAmountIn);
+        if(lpAmountIn > maxLpAmountIn) revert SlippageIn(lpAmountIn, maxLpAmountIn);
         _burn(msg.sender, lpAmountIn);
 
         _setReserves(_tokens, reserves);
