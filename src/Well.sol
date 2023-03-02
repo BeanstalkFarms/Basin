@@ -252,7 +252,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
         // slippage check needs to move to the actual amount out
         // need to take delta across _executeSwap
-        if(!(amountIn <= maxAmountIn)) revert SlippageIn(amountIn, maxAmountIn);
+        if(amountIn > maxAmountIn) revert SlippageIn(amountIn, maxAmountIn);
         _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
         _setReserves(_tokens, reserves);
     }
