@@ -21,14 +21,14 @@ interface IWell {
     /// @dev Returns only a uint amountOut and a uint minAmountOut.
     error SlippageOut(uint amountOut, uint minAmountOut);
     
-    /// @notice Returns the slippage of swapping `amountIn` of `fromToken` for `toToken`.
+    /// @notice Thrown when an operation would deliver more tokens than `maxAmountIn`.
     /// @dev Returns only a uint amounntIn and a uint maxAmountIn.
     error SlippageIn(uint amountIn, uint maxAmountIn);
     
-    /// @notice Returns the amount of leaves the tree has.
+    /// @notice Thrown if given token is nonexistent
     error InvalidTokens();
     
-    /// @notice Returns the amount of leaves the tree has.
+    /// @notice Thrown if reserves don't match the condition provided
     error InvalidReserves();
 
     /**
