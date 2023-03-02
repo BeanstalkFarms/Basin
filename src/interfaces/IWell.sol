@@ -16,19 +16,29 @@ struct Call {
  * @title IWell is the interface for the Well contract.
  */
 interface IWell {
-
-    /// @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
-    /// @dev Returns only a uint amountOut and a uint minAmountOut.
+  
+    /**
+     * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
+     * @return amountOut 
+     * @return minAmountOut 
+     */
     error SlippageOut(uint amountOut, uint minAmountOut);
     
-    /// @notice Thrown when an operation would deliver more tokens than `maxAmountIn`.
-    /// @dev Returns only a uint amounntIn and a uint maxAmountIn.
+    /**
+     * @notice Thrown when an operation would deliver more tokens than `maxAmountIn`.
+     * @return amountIn 
+     * @return maxAmountIn 
+     */
     error SlippageIn(uint amountIn, uint maxAmountIn);
-    
-    /// @notice Thrown if given token is nonexistent
+        
+     /**
+     * @notice Thrown if given token is nonexistent.
+     */
     error InvalidTokens();
-    
-    /// @notice Thrown if reserves don't match the condition provided
+       
+    /**
+     * @notice Thrown if reserves don't match the condition provided.
+     */
     error InvalidReserves();
 
     /**
