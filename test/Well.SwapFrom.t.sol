@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
-import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
+import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -64,7 +64,7 @@ contract WellSwapFromTest is SwapHelper {
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
-        (SwapSnapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
+        (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
         act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
         afterSwapFrom(bef, act);
     }

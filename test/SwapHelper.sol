@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {TestHelper, IERC20, Balances, Call, MockToken, Well, console, Snapshot} from "test/TestHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
@@ -25,16 +25,6 @@ struct SwapAction {
 }
 
 /**
- * @dev Holds a snapshot of User & Well balances. Used to calculate the change
- * in balanace across some action in the Well.
- */
-struct SwapSnapshot {
-    Balances user;
-    Balances well;
-    uint[] reserves;
-}
-
-/**
  * @dev Provides common assertions when testing Swaps.
  *
  * NOTE: Uses globals inherited from TestHelper.
@@ -44,7 +34,7 @@ contract SwapHelper is TestHelper {
     event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
 
     /// @dev Default Swap behavior assuming zero fee on transfer
-    function beforeSwapFrom(uint i, uint j, uint amountIn) internal returns (SwapSnapshot memory, SwapAction memory) {
+    function beforeSwapFrom(uint i, uint j, uint amountIn) internal returns (Snapshot memory, SwapAction memory) {
         SwapAction memory act;
 
         act.i = i;
@@ -57,8 +47,8 @@ contract SwapHelper is TestHelper {
         return beforeSwapFrom(act);
     }
 
-    function beforeSwapFrom(SwapAction memory act) internal returns (SwapSnapshot memory, SwapAction memory) {
-        SwapSnapshot memory bef = _newSnapshot();
+    function beforeSwapFrom(SwapAction memory act) internal returns (Snapshot memory, SwapAction memory) {
+        Snapshot memory bef = _newSnapshot();
 
         vm.expectEmit(true, true, true, true, address(well));
         emit Swap(tokens[act.i], tokens[act.j], act.wellReceives, act.wellSends, user);
@@ -66,8 +56,8 @@ contract SwapHelper is TestHelper {
         return (bef, act);
     }
 
-    function afterSwapFrom(SwapSnapshot memory bef, SwapAction memory act) public {
-        SwapSnapshot memory aft = _newSnapshot();
+    function afterSwapFrom(Snapshot memory bef, SwapAction memory act) public {
+        Snapshot memory aft = _newSnapshot();
         uint i = act.i;
         uint j = act.j;
 
@@ -90,7 +80,7 @@ contract SwapHelper is TestHelper {
         }
     }
 
-    function _newSnapshot() internal view returns (SwapSnapshot memory ss) {
+    function _newSnapshot() internal view returns (Snapshot memory ss) {
         ss.user = getBalances(user, well);
         ss.well = getBalances(address(well), well);
         ss.reserves = well.getReserves();

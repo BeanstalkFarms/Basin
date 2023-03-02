@@ -28,6 +28,16 @@ struct Balances {
     uint lpSupply;
 }
 
+/**
+ * @dev Holds a snapshot of User & Well balances. Used to calculate the change
+ * in balanace across some action in the Well.
+ */
+struct Snapshot {
+    Balances user;
+    Balances well;
+    uint[] reserves;
+}
+
 abstract contract TestHelper is Test, WellDeployer {
     using Strings for uint;
 
