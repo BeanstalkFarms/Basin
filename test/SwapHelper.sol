@@ -79,10 +79,4 @@ contract SwapHelper is TestHelper {
             assertEq(aft.reserves[k], bef.reserves[k], "token[k] Well reserve changed unexpectedly");
         }
     }
-
-    function _newSnapshot() internal view returns (Snapshot memory ss) {
-        ss.user = getBalances(user, well);
-        ss.well = getBalances(address(well), well);
-        ss.reserves = well.getReserves();
-    }
 }

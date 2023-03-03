@@ -295,4 +295,10 @@ abstract contract TestHelper is Test, WellDeployer {
 
         return absDelta * (10 ** precision) / b;
     }
+
+    function _newSnapshot() internal view returns (Snapshot memory snapshot) {
+        snapshot.user = getBalances(user, well);
+        snapshot.well = getBalances(address(well), well);
+        snapshot.reserves = well.getReserves();
+    }
 }

@@ -10,7 +10,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  */
 struct AddLiquidityAction {
     uint[] amounts;
-    uint[] fees;
+    uint[] postFeeAmounts;
     uint lpAmountOut;
     address recipient;
 }
@@ -20,7 +20,7 @@ struct AddLiquidityAction {
  */
 struct RemoveLiquidityAction {
     uint[] amounts;
-    uint[] fees;
+    uint[] postFeeAmounts;
     uint lpAmountIn;
     address recipient;
 }
@@ -54,8 +54,13 @@ contract LiquidityHelper is TestHelper {
     {
         Snapshot memory beforeSnapshot = _newSnapshot();
 
-        vm.expectEmit(true, true, true, false);
-        emit AddLiquidity(action.amounts, action.lpAmountOut, action.recipient);
+        uint[] memory amountToTransfer = new uint[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) {
+            amountToTransfer[i] = action.postFeeAmounts[i] > 0 ? action.postFeeAmounts[i] : action.amounts[i];
+        }
+
+        vm.expectEmit(true, true, true, true, address(well));
+        emit AddLiquidity(amountToTransfer, action.lpAmountOut, action.recipient);
 
         return (beforeSnapshot, action);
     }
@@ -73,7 +78,7 @@ contract LiquidityHelper is TestHelper {
 
         // Check that the well balances incremented by the correct amount
         for (uint i = 0; i < tokens.length; i++) {
-            uint valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
+            uint valueToAdd = action.postFeeAmounts[i] > 0 ? action.postFeeAmounts[i] : action.amounts[i];
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + valueToAdd);
         }
     }
@@ -121,9 +126,16 @@ contract LiquidityHelper is TestHelper {
         }
     }
 
-    function _newSnapshot() internal view returns (Snapshot memory snapshot) {
-        snapshot.user = getBalances(user, well);
-        snapshot.well = getBalances(address(well), well);
-        snapshot.reserves = well.getReserves();
+    function _amountAferFees(
+        uint[] memory amounts,
+        uint[] memory postFeeAmounts
+    ) internal view returns (uint[] memory) {
+        uint[] memory amountAfterFees = new uint[](tokens.length);
+
+        for (uint i = 0; i < tokens.length; i++) {
+            amounts[i] = amounts[i] - postFeeAmounts[i];
+        }
+
+        return amountAfterFees;
     }
 }

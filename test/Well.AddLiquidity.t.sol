@@ -84,7 +84,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, well.getAddLiquidityOut(amounts), user);
@@ -116,7 +116,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, lpAmountOut, user);
@@ -146,7 +146,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = liquidity;
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, liquidity, user);
@@ -167,7 +167,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, well.getAddLiquidityOut(amounts), user);

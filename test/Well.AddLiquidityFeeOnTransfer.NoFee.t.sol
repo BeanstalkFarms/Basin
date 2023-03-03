@@ -26,7 +26,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.fees = new uint[](tokens.length);
+        action.postFeeAmounts = new uint[](tokens.length);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
@@ -50,7 +50,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.fees = new uint[](tokens.length);
+        action.postFeeAmounts = new uint[](tokens.length);
 
         assertEq(amountOut, lpAmountOut);
         (before, action) = beforeAddLiquidity(action);
@@ -83,7 +83,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
@@ -96,7 +96,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         actionRemove.lpAmountIn = well.getAddLiquidityOut(amounts);
         actionRemove.amounts = amounts;
         actionRemove.recipient = user;
-        actionRemove.fees = new uint[](2);
+        actionRemove.postFeeAmounts = new uint[](2);
 
         (beforeRemove, actionRemove) = beforeRemoveLiquidity(actionRemove);
         well.removeLiquidity(lpAmountOut, amounts, user);
@@ -114,7 +114,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = 0;
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
@@ -136,7 +136,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.fees = new uint[](2);
+        action.postFeeAmounts = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
