@@ -21,6 +21,9 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  *  1. Multi-block MEV resistence reserves
  *  2. MEV-resistant Geometric EMA intended for instantaneous reserve queries
  *  3. MEV-resistant Cumulative Geometric intended for SMA reserve queries
+ *
+ * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
+ * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
 contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
@@ -93,7 +96,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
 
         for (uint i; i < length; ++i) {
-            require(reserves[i] > 0, "Pump: Reserve must be greater than 0");
             b.lastReserves[i] = _capReserve(b.lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
             b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
@@ -125,7 +127,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         // Skip {_capReserve} since we have no prior reference
 
         for (uint i = 0; i < length; ++i) {
-            require(reserves[i] > 0, "Pump: Reserve must be greater than 0");
             byteReserves[i] = reserves[i].fromUIntToLog2();
         }
 

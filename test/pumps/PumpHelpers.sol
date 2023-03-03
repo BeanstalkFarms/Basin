@@ -44,7 +44,7 @@ function simCapReserve50Percent(uint256 lastReserve, uint256 reserve, uint block
         limitReserve : reserve;
 }
 
-function generateRandomUpdate(uint n, bytes32 seed) returns (uint256[] memory balances, uint40 timeIncrease, bytes32 newSeed) {
+function generateRandomUpdate(uint n, bytes32 seed) pure returns (uint256[] memory balances, uint40 timeIncrease, bytes32 newSeed) {
     balances = new uint[](n);
     seed = stepSeed(seed);
     timeIncrease = uint40(uint256(seed)) % 50_000_000;
@@ -55,6 +55,6 @@ function generateRandomUpdate(uint n, bytes32 seed) returns (uint256[] memory ba
     newSeed = seed;
 }
 
-function stepSeed(bytes32 seed) returns (bytes32 newSeed) {
+function stepSeed(bytes32 seed) pure returns (bytes32 newSeed) {
     newSeed = keccak256(abi.encode(seed));
 }
