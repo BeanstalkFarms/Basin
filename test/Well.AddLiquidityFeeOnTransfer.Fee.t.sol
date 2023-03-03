@@ -29,7 +29,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.postFeeAmounts = feeAmounts;
+        action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
@@ -56,7 +56,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.postFeeAmounts = feeAmounts;
+        action.fees = feeAmounts;
 
         assertEq(amountOut, lpAmountOut);
         (before, action) = beforeAddLiquidity(action);
@@ -85,7 +85,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = 0;
         action.recipient = user;
-        action.postFeeAmounts = new uint[](tokens.length);
+        action.fees = new uint[](tokens.length);
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, 0, user);
@@ -111,7 +111,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
-        action.postFeeAmounts = feeAmounts;
+        action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);

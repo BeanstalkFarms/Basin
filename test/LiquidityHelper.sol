@@ -10,7 +10,7 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  */
 struct AddLiquidityAction {
     uint[] amounts;
-    uint[] postFeeAmounts;
+    uint[] fees;
     uint lpAmountOut;
     address recipient;
 }
@@ -20,7 +20,7 @@ struct AddLiquidityAction {
  */
 struct RemoveLiquidityAction {
     uint[] amounts;
-    uint[] postFeeAmounts;
+    uint[] fees;
     uint lpAmountIn;
     address recipient;
 }
@@ -56,7 +56,7 @@ contract LiquidityHelper is TestHelper {
 
         uint[] memory amountToTransfer = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
-            amountToTransfer[i] = action.postFeeAmounts[i] > 0 ? action.postFeeAmounts[i] : action.amounts[i];
+            amountToTransfer[i] = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
         }
 
         vm.expectEmit(true, true, true, true, address(well));
@@ -78,7 +78,7 @@ contract LiquidityHelper is TestHelper {
 
         // Check that the well balances incremented by the correct amount
         for (uint i = 0; i < tokens.length; i++) {
-            uint valueToAdd = action.postFeeAmounts[i] > 0 ? action.postFeeAmounts[i] : action.amounts[i];
+            uint valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + valueToAdd);
         }
     }
@@ -126,14 +126,11 @@ contract LiquidityHelper is TestHelper {
         }
     }
 
-    function _amountAferFees(
-        uint[] memory amounts,
-        uint[] memory postFeeAmounts
-    ) internal view returns (uint[] memory) {
+    function _amountAferFees(uint[] memory amounts, uint[] memory fees) internal view returns (uint[] memory) {
         uint[] memory amountAfterFees = new uint[](tokens.length);
 
         for (uint i = 0; i < tokens.length; i++) {
-            amounts[i] = amounts[i] - postFeeAmounts[i];
+            amounts[i] = amounts[i] - fees[i];
         }
 
         return amountAfterFees;

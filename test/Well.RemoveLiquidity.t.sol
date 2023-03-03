@@ -49,7 +49,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.amounts = amountsOut;
         action.lpAmountIn = lpAmountIn;
         action.recipient = user;
-        action.postFeeAmounts = new uint[](2);
+        action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amountsOut, user);
@@ -84,7 +84,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountIn = lpAmountIn;
         action.recipient = user;
-        action.postFeeAmounts = new uint[](2);
+        action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amounts, user);
@@ -119,7 +119,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.amounts = tokenAmountsOut;
         action.lpAmountIn = lpAmountBurned;
         action.recipient = user;
-        action.postFeeAmounts = new uint[](2);
+        action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user);
