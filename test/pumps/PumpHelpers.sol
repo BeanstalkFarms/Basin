@@ -50,7 +50,7 @@ function generateRandomUpdate(uint n, bytes32 seed) pure returns (uint256[] memo
     timeIncrease = uint40(uint256(seed)) % 50_000_000;
     for (uint i; i < n; ++i) {
         seed = stepSeed(seed);
-        balances[i] = uint(uint128(uint(seed))); // case to uin128
+        balances[i] = uint(uint128(uint(seed))); // case to uint128
     }
     newSeed = seed;
 }
