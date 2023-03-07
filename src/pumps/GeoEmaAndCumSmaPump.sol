@@ -99,6 +99,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
 
         for (uint i; i < length; ++i) {
+
+            // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
             b.lastReserves[i] = _capReserve(
                 b.lastReserves[i],
                 (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(),
@@ -182,7 +184,6 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
-        // `lastReserve` should be > 0 or `cappedReserve` will equal 0.
 
         // Reserve decreasing (lastReserve > reserve)
         if (lastReserve.cmp(reserve) == 1) {
