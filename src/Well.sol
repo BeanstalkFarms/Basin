@@ -570,8 +570,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      */
     function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
         for (uint i; i < reserves.length; ++i) {
-            require(reserves[i] <= _tokens[i].balanceOf(address(this)) &&
-                    reserves[i] > 0, "Well: Invalid reserve"); // reserve of zero breaks the Pump
+            require(reserves[i] <= _tokens[i].balanceOf(address(this)), "Well: Invalid reserve"); // reserve of zero breaks the Pump
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }

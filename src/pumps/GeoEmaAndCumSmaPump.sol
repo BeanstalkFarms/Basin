@@ -88,15 +88,22 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
         b.cumulativeReserves = slot.readBytes16(length);
 
-        uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
-        bytes16 aN = A.powu(deltaTimestamp);
-        bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-
-        // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
-        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+        bytes16 aN; bytes16 deltaTimestampBytes; bytes16 blocksPassed;
+        // Isolate in brackets to prevent stack too deep errors
+        {
+            uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
+            aN = A.powu(deltaTimestamp);
+            deltaTimestampBytes = deltaTimestamp.fromUInt();
+            // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
+            blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+        }
 
         for (uint i; i < length; ++i) {
-            b.lastReserves[i] = _capReserve(b.lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            b.lastReserves[i] = _capReserve(
+                b.lastReserves[i],
+                (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(),
+                blocksPassed
+            );
             b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
         }
