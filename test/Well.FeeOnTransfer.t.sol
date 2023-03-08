@@ -43,7 +43,7 @@ contract WellFeeOnTransferTest is TestHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        uint lpAmountOut = 2000 * 1e27;
+        uint lpAmountOut = 1000 * 1e24;
 
         vm.expectRevert(IWell.InvalidReserves.selector);
         well.addLiquidity(amounts, lpAmountOut, user);

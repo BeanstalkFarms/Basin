@@ -42,7 +42,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
 
-        uint amountOut = 9_975_124_224_178_054_043_852_982_550;
+        uint amountOut = 4_987_562_112_089_027_021_926_491;
 
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
 
@@ -79,7 +79,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        uint lpAmountOut = 2000 * 1e27;
+        uint lpAmountOut = 1000 * 1e24;
 
         Snapshot memory before;
         AddLiquidityAction memory action;

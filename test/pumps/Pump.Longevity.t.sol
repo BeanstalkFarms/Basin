@@ -12,7 +12,7 @@ import {generateRandomUpdate, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
-contract PumpFuzzTest is TestHelper {
+contract PumpLongevityTest is TestHelper {
 
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint;
