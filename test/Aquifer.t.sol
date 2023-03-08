@@ -128,7 +128,7 @@ contract AquiferTest is TestHelper {
         assertTrue(wrongAquifer != address(aquifer));
 
         wellImplementation = address(new MockStaticWell(tokens, wellFunction, pumps, wrongAquifer, wellData));
-        vm.expectRevert("Aquifer: wrong aquifer address");
+        vm.expectRevert(IAquifer.InvalidConfig.selector);
         aquifer.boreWell(
             wellImplementation,
             "",
@@ -142,7 +142,7 @@ contract AquiferTest is TestHelper {
     /// a Well chooses to implement a fallback function, an incorrectly encoded init
     /// function call could cause unexpected behavior.
     function test_bore_expectRevert_missingInitFunction() public {
-        vm.expectRevert("Aquifer: well init");
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
         aquifer.boreWell(
             wellImplementation,
             "",

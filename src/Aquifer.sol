@@ -64,9 +64,11 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         }
         
         // The Aquifer address MUST be set, either (a) via immutable data during cloning,
-        // or (b) as a storage variable during an init function call. 
-        // In either case, the address MUST match the address of the Aquifer that performed deployment.    
-        require(IWell(well).aquifer() == address(this), "Aquifer: wrong aquifer address");
+        // or (b) as a storage variable during an init function call. In either case, 
+        // the address MUST match the address of the Aquifer that performed deployment.    
+        if(IWell(well).aquifer() != address(this)) {
+            revert InvalidConfig();
+        }
 
         // Save implementation
         wellImplementations[well] = implementation;

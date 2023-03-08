@@ -17,6 +17,11 @@ interface IAquifer {
     error InitFailed(string reason);
 
     /**
+     * @notice Thrown when the user attempts to bore a Well with invalid configuration.
+     */
+    error InvalidConfig();
+
+    /**
      * @notice Emitted when a Well is deployed.
      * @param well The address of the new Well
      * @param implementation The Well implementation address
