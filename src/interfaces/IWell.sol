@@ -16,6 +16,27 @@ struct Call {
  * @title IWell is the interface for the Well contract.
  */
 interface IWell {
+  
+    /**
+     * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
+     */
+    error SlippageOut(uint amountOut, uint minAmountOut);
+    
+    /**
+     * @notice Thrown when an operation would require more tokens than `maxAmountIn`.
+     */
+    error SlippageIn(uint amountIn, uint maxAmountIn);
+        
+    /**
+     * @notice Thrown if one or more tokens used in the operation are not supported by the Well.
+     */
+    error InvalidTokens();
+       
+    /**
+     * @notice Thrown if this operation would cause an incorrect change in Well reserves.
+     */
+    error InvalidReserves();
+
     /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
@@ -105,17 +126,17 @@ interface IWell {
     function pumps() external view returns (Call[] memory);
 
     /**
+     * @notice Returns the Well data that the Well was bored with.
+     * @dev The existence and signature of Well data is determined by each individual implementation.
+     */
+    function wellData() external view returns (bytes memory);
+
+    /**
      * @notice Returns the Aquifer that a Well was bored in.
      * @dev Wells can be permissionlessly bored in an Aquifer.
      * Aquifers stores the implementation that was used to bore the Well.
      */
     function aquifer() external view returns (address);
-
-    /**
-     * @notice Returns the Well data that the Well was bored with.
-     * @dev The existence and signature of Well data is determined by each individual implementation.
-     */
-    function wellData() external view returns (bytes memory);
 
     /**
      * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.

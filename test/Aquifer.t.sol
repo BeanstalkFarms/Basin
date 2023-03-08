@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
 import {MockStaticWell} from "mocks/wells/MockStaticWell.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
+import {IAquifer} from "src/interfaces/IAquifer.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
@@ -52,8 +53,6 @@ contract AquiferTest is TestHelper {
     function test_constructed() public {
         _checkWell(MockStaticWell(wellImplementation), false);
     }
-
-    //////////// DEPLOYMENT ////////////
 
     /// @dev Bore a Well with immutable data and salt.
     function test_bore_cloneDeterministic_withImmutableData() public {
@@ -155,7 +154,7 @@ contract AquiferTest is TestHelper {
     /// @dev Reversion during init propagates the revert message if one is returned. 
     /// See {MockInitFailWell.sol}
     function test_bore_initRevert_withMessage() public {
-        vm.expectRevert("Aquifer: Well Init (Well: fail message)");
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, "Well: fail message"));
         aquifer.boreWell(
             initFailImplementation,
             "",
@@ -168,7 +167,7 @@ contract AquiferTest is TestHelper {
     /// @dev Reversion during init uses default message if no revert message is returned. 
     /// See {MockInitFailWell.sol}
     function test_bore_initRevert_noMessage() public {
-        vm.expectRevert("Aquifer: well init");
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
         aquifer.boreWell(
             initFailImplementation,
             "",
