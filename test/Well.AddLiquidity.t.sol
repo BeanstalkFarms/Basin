@@ -8,7 +8,7 @@ import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} fr
 
 contract WellAddLiquidityTest is LiquidityHelper {
     error SlippageOut(uint amountOut, uint minAmountOut);
-    
+
     function setUp() public {
         setupWell(2);
     }
@@ -99,8 +99,9 @@ contract WellAddLiquidityTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, 2001 * 1e27, amounts));
-        well.addLiquidity(amounts, 2001 * 1e27, user); // lpAmountOut is 2000*1e27
+        uint lpAmountOut = well.getAddLiquidityOut(amounts);
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
+        well.addLiquidity(amounts, lpAmountOut + 1, user); // lpAmountOut is 2000*1e27
     }
 
     /// @dev addLiquidity -> removeLiquidity: zero hysteresis

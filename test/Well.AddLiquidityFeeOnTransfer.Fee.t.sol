@@ -7,9 +7,8 @@ import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.so
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
-
     error SlippageOut(uint amountOut, uint minAmountOut);
-    
+
     function setUp() public {
         setupWell(deployWellFunction(), deployPumps(2), deployMockTokensFeeOnTransfer(2));
         MockTokenFeeOnTransfer(address(tokens[0])).setFee(1e16);
@@ -74,8 +73,10 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, 0, 1));
-        well.addLiquidityFeeOnTransfer(amounts, 2000 * 1e27, user); // lpAmountOut is 1980*1e27
+
+        uint lpAmountOut = 1980 * 1e27;
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 1980*1e27
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves
