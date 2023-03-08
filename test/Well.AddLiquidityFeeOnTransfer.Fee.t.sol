@@ -73,10 +73,11 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-
-        uint lpAmountOut = 1980 * 1e27;
+        // expected amount is 1000 * 1e24, actual will be 990 * 1e24
+        uint lpAmountOut = 990 * 1e24;
+        
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 1980*1e27
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // 
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves

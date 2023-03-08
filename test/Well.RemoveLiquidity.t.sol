@@ -40,6 +40,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
     /// @dev removeLiquidity: remove to equal amounts of underlying
     function test_removeLiquidity() public prank(user) {
         uint lpAmountIn = 1000 * 1e24;
+        
         uint[] memory amountsOut = new uint[](2);
         amountsOut[0] = 1000 * 1e18;
         amountsOut[1] = 1000 * 1e18;
@@ -60,14 +61,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
     function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-<<<<<<< Updated upstream
-        uint lpAmountIn = 2000 * 1e27;
-=======
-        uint lpAmountIn = 1000 * 1e15;
-        uint[] memory amountsOut = new uint[](2);
-        amountsOut[0] = 1001 * 1e18; // too high
-        amountsOut[1] = 1000 * 1e18;
->>>>>>> Stashed changes
+        uint lpAmountIn = 1000 * 1e24;
 
         uint[] memory minTokenAmountsOut = new uint[](2);
         minTokenAmountsOut[0] = 1001 * 1e18; // too high
