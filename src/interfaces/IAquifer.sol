@@ -12,6 +12,11 @@ import {IWell, Call} from "src/interfaces/IWell.sol";
  */
 interface IAquifer {
     /**
+     * @notice Thrown when the {init} function call on the Well reverts.
+     */
+    error InitFailed(string reason);
+
+    /**
      * @notice Emitted when a Well is deployed.
      * @param well The address of the new Well
      * @param implementation The Well implementation address

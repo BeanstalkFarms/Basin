@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
 import {MockStaticWell} from "mocks/wells/MockStaticWell.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
+import {IAquifer} from "src/interfaces/IAquifer.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
@@ -141,7 +142,7 @@ contract AquiferTest is TestHelper {
     function test_bore_fail_message() public {
         initFunctionCall = abi.encodeWithSignature("initMessage()");
 
-        vm.expectRevert("Aquifer: Well Init (Well: fail message)");
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, "Well: fail message"));
         aquifer.boreWell(
             initFailImplementation,
             "",
@@ -153,7 +154,7 @@ contract AquiferTest is TestHelper {
     function test_bore_fail_no_message() public {
         initFunctionCall = abi.encodeWithSignature("initNoMessage()");
 
-        vm.expectRevert("Aquifer: well init");
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
         aquifer.boreWell(
             initFailImplementation,
             "",
