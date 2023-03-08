@@ -23,17 +23,17 @@ interface IWell {
     error SlippageOut(uint amountOut, uint minAmountOut);
     
     /**
-     * @notice Thrown when an operation would deliver more tokens than `maxAmountIn`.
+     * @notice Thrown when an operation would require more tokens than `maxAmountIn`.
      */
     error SlippageIn(uint amountIn, uint maxAmountIn);
         
-     /**
-     * @notice Thrown if given token is nonexistent.
+    /**
+     * @notice Thrown if one or more tokens used in the operation are not supported by the Well.
      */
     error InvalidTokens();
        
     /**
-     * @notice Thrown if reserves don't match the condition provided.
+     * @notice Thrown if this operation would cause an incorrect change in Well reserves.
      */
     error InvalidReserves();
 
