@@ -17,8 +17,7 @@ library LibLastReserveBytes {
     }
 
     function storeLastReserves(bytes32 slot, uint40 lastTimestamp, bytes16[] memory reserves) internal {
-        // require(reserves[0] <= type(uint104).max, "ByteStorage: too large");
-        // TODO: Remove most significant bytes
+        // Potential optimization – shift reserve bytes left to perserve extra decimal precision.
         uint8 n = uint8(reserves.length);
         if (n == 1) {
             assembly {
