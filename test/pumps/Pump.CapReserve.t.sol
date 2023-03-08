@@ -46,7 +46,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         // TODO: Potentially relax assumption. Going too high causes arithmetic overflow.
         lastBalance = bound(lastBalance, 100, type(uint128).max);
         balance = bound(balance, 100, type(uint128).max);
-        blocks = bound(blocks, 1, 2**12);
+        blocks = bound(blocks, 1, 2 ** 12);
 
         // Add precision for the capReserve function
         uint expectedCappedBalance = simCapReserve50Percent(lastBalance, balance, blocks);
@@ -54,8 +54,10 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         console.log("Expected capped balance", expectedCappedBalance);
 
         uint cappedBalance = _capReserve(
-                ABDKMathQuad.fromUIntToLog2(lastBalance), ABDKMathQuad.fromUIntToLog2(balance), ABDKMathQuad.fromUInt(blocks)
-            ).pow_2ToUInt();
+            ABDKMathQuad.fromUIntToLog2(lastBalance),
+            ABDKMathQuad.fromUIntToLog2(balance),
+            ABDKMathQuad.fromUInt(blocks)
+        ).pow_2ToUInt();
 
         // 0 block delta = no change
         // FIXME: the fuzzer was able to find a case where some sort of double rounding error

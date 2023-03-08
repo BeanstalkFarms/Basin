@@ -28,6 +28,16 @@ struct Balances {
     uint lpSupply;
 }
 
+/**
+ * @dev Holds a snapshot of User & Well balances. Used to calculate the change
+ * in balanace across some action in the Well.
+ */
+struct Snapshot {
+    Balances user;
+    Balances well;
+    uint[] reserves;
+}
+
 abstract contract TestHelper is Test, WellDeployer {
     using Strings for uint;
 
@@ -285,5 +295,11 @@ abstract contract TestHelper is Test, WellDeployer {
         uint absDelta = stdMath.delta(a, b);
 
         return absDelta * (10 ** precision) / b;
+    }
+
+    function _newSnapshot() internal view returns (Snapshot memory snapshot) {
+        snapshot.user = getBalances(user, well);
+        snapshot.well = getBalances(address(well), well);
+        snapshot.reserves = well.getReserves();
     }
 }
