@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, Balances, ConstantProduct2, console, IERC20} from "test/TestHelper.sol";
+import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellShiftTest is TestHelper {
-    ConstantProduct2 cp;
-    bytes constant data = "";
-
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
+    
+    ConstantProduct2 cp;
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -154,15 +154,8 @@ contract WellShiftTest is TestHelper {
         assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amount, "Well should have received token0");
         assertEq(wellBalanceBeforeShift.tokens[1], 1000e18, "Well should have NOT have received token1");
 
-        // Get a user with a fresh address (no ERC20 tokens)
-        address _user = users.getNextUserAddress();
-        Balances memory userBalanceBeforeShift = getBalances(_user, well);
-
-        // Verify that `_user` has no tokens
-        assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
-        assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
-
-        vm.expectRevert("Well: slippage");
-        uint amtOut = well.shift(tokens[1], type(uint).max, _user);
+        uint amountOut = well.getShiftOut(tokens[1]);
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, type(uint).max));
+        well.shift(tokens[1], type(uint).max, user);
     }
 }

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
+import {IERC20, Balances, Call, MockToken, Well} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellSwapToTest is SwapHelper {
+
     function setUp() public {
         setupWell(2);
     }
@@ -36,7 +38,7 @@ contract WellSwapToTest is SwapHelper {
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapTo_revertIf_sameToken() public prank(user) {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(IWell.InvalidTokens.selector);
         well.swapTo(tokens[0], tokens[0], 100 * 1e18, 0, user);
     }
 
@@ -44,7 +46,9 @@ contract WellSwapToTest is SwapHelper {
     function test_swapTo_revertIf_maxAmountInTooLow() public prank(user) {
         uint amountOut = 500 * 1e18;
         uint maxAmountIn = 999 * 1e18; // actual: 1000
-        vm.expectRevert("Well: slippage");
+        uint amountIn = 1000 * 1e18;
+
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, amountIn, maxAmountIn));
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
     }
 
@@ -62,8 +66,6 @@ contract WellSwapToTest is SwapHelper {
         uint[] memory calcBalances = new uint[](wellBalancesBefore.tokens.length);
         calcBalances[0] = wellBalancesBefore.tokens[0];
         calcBalances[1] = wellBalancesBefore.tokens[1] - amountOut;
-
-        console.log(calcBalances[1], wellBalancesBefore.tokens[1]);
 
         uint calcAmountIn = IWellFunction(wellFunction.target).calcReserve(
             calcBalances,

@@ -2,14 +2,17 @@
 
 pragma solidity ^0.8.17;
 
-import {console, TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} from "test/TestHelper.sol";
+import {TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 /**
  * @dev Functions that increase the Well's reserves without accounting for fees
  * (swapFrom, swapTo, addLiquidity) should revert if there actually are fees.
  */
 contract WellFeeOnTransferTest is TestHelper {
+
+
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 
@@ -22,7 +25,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint minAmountOut = 500 * 1e18;
         uint amountIn = 1000 * 1e18;
 
-        vm.expectRevert("Well: Invalid reserve");
+        vm.expectRevert(IWell.InvalidReserves.selector);
         well.swapTo(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
@@ -30,7 +33,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint minAmountOut = 500 * 1e18;
         uint amountIn = 1000 * 1e18;
 
-        vm.expectRevert("Well: Invalid reserve");
+        vm.expectRevert(IWell.InvalidReserves.selector);
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
@@ -42,7 +45,7 @@ contract WellFeeOnTransferTest is TestHelper {
         }
         uint lpAmountOut = 2000 * 1e27;
 
-        vm.expectRevert("Well: Invalid reserve");
+        vm.expectRevert(IWell.InvalidReserves.selector);
         well.addLiquidity(amounts, lpAmountOut, user);
     }
 }

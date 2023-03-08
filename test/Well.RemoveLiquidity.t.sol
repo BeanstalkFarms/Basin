@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityTest is LiquidityHelper {
     ConstantProduct2 cp;
@@ -59,13 +60,14 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
     function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-        uint lpAmountIn = 2000 * 1e18;
-        uint[] memory amountsOut = new uint[](2);
-        amountsOut[0] = 1001 * 1e18; // too high
-        amountsOut[1] = 1000 * 1e18;
+        uint lpAmountIn = 2000 * 1e27;
 
-        vm.expectRevert("Well: slippage");
-        well.removeLiquidity(lpAmountIn, amountsOut, user);
+        uint[] memory minTokenAmountsOut = new uint[](2);
+        minTokenAmountsOut[0] = 1001 * 1e18; // too high
+        minTokenAmountsOut[1] = 1000 * 1e18;
+    
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal

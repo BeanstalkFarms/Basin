@@ -45,7 +45,7 @@ contract WellInternalTest is Well, Test {
         for (uint i = 0; i < n; ++i) {
             for (uint j = 0; j < n; ++j) {
                 if (i == j) {
-                    vm.expectRevert("Well: Invalid tokens");
+                    vm.expectRevert(InvalidTokens.selector);
                 }
                 (uint i_, uint j_) = _getIJ(_tokens, _tokens[i], _tokens[j]);
                 if (i != j) {
@@ -57,20 +57,20 @@ contract WellInternalTest is Well, Test {
     }
 
     function test_getIJ_revertIfIdentical() public {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         _getIJ(_tokens, token0, token0);
     }
 
     function test_getIJ_revertIfOneMissing() public {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         _getIJ(_tokens, tokenMissing1, token0); // i is missing
 
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         _getIJ(_tokens, token0, tokenMissing1); // j is missing
     }
 
     function test_getIJ_revertIfBothMissing() public {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         _getIJ(_tokens, tokenMissing1, tokenMissing2);
     }
 
@@ -83,7 +83,7 @@ contract WellInternalTest is Well, Test {
     }
 
     function test_getJ_revertIfMissing() public {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(InvalidTokens.selector);
         _getJ(_tokens, tokenMissing1);
     }
 }

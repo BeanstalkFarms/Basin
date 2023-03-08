@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, Well, IERC20, Call, Balances, console} from "test/TestHelper.sol";
+import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 contract WellBoreTest is TestHelper {
-    event AddLiquidity(uint[] amounts);
-
     /// @dev Bore a 4-token Well with ConstantProduct2 & several pumps.
     function setUp() public {
         setupWell(4);

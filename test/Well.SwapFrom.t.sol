@@ -5,8 +5,10 @@ import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellSwapFromTest is SwapHelper {
+
     function setUp() public {
         setupWell(2);
     }
@@ -19,10 +21,10 @@ contract WellSwapFromTest is SwapHelper {
     }
 
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint amountIn, uint i) public prank(user) {
-        // swap token `i` -> all other tokens
+        // Swap token `i` -> all other tokens
         vm.assume(i < tokens.length);
 
-        // find an input amount that produces an output amount higher than what the Well has.
+        // Find an input amount that produces an output amount higher than what the Well has.
         // When the Well is deployed it has zero reserves, so any nonzero value should revert.
         amountIn = bound(amountIn, 1, type(uint128).max);
 
@@ -48,7 +50,7 @@ contract WellSwapFromTest is SwapHelper {
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapFrom_revertIf_sameToken() public prank(user) {
-        vm.expectRevert("Well: Invalid tokens");
+        vm.expectRevert(IWell.InvalidTokens.selector);
         well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user);
     }
 
@@ -56,8 +58,9 @@ contract WellSwapFromTest is SwapHelper {
     function test_swapFrom_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 501 * 1e18; // actual: 500
+        uint amountOut = 500 * 1e18;
 
-        vm.expectRevert("Well: slippage");
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 

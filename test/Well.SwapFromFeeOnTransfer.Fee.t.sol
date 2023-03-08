@@ -2,17 +2,19 @@
 pragma solidity ^0.8.17;
 
 import {
-    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well, console
+    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well
 } from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IWell} from "src/interfaces/IWell.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur
  * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
+
     function setUp() public {
         tokens = new IERC20[](2);
         tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
@@ -29,7 +31,9 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
     function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
-        vm.expectRevert("Well: slippage");
+        uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn - _getFee(amountIn));
+        
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
     }
 
@@ -52,8 +56,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         act.i = 0;
         act.j = 1;
         act.userSpends = amountIn;
-        uint _fee = act.userSpends * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
-        act.wellReceives = amountIn - _fee;
+        act.wellReceives = amountIn - _getFee(act.userSpends);
         act.wellSends = well.getSwapOut(tokens[act.i], tokens[act.j], act.wellReceives);
         act.userReceives = act.wellSends;
 
@@ -91,8 +94,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         act.userSpends = amountIn;
         act.wellReceives = amountIn;
         act.wellSends = well.getSwapOut(tokens[act.i], tokens[act.j], amountIn);
-        uint _fee = act.wellSends * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
-        act.userReceives = act.wellSends - _fee;
+        act.userReceives = act.wellSends - _getFee(act.wellSends);
 
         (bef, act) = beforeSwapFrom(act);
 
@@ -101,5 +103,9 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
 
         assertEq(amountOut, act.wellSends, "amountOut different than calculated");
         afterSwapFrom(bef, act);
+    }
+
+    function _getFee(uint amount) internal view returns (uint) {
+        return amount * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
     }
 }

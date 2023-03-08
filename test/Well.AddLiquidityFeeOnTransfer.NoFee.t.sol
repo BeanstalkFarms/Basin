@@ -7,6 +7,8 @@ import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.so
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
+    error SlippageOut(uint amountOut, uint minAmountOut);
+
     function setUp() public {
         setupWell(2);
     }
@@ -65,8 +67,10 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        vm.expectRevert("Well: slippage");
-        well.addLiquidityFeeOnTransfer(amounts, 2001 * 1e27, user); // lpAmountOut is 2000*1e27
+
+        uint lpAmountOut = well.getAddLiquidityOut(amounts);
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 2000*1e27
     }
 
     /// @dev addLiquidity -> removeLiquidity: zero hysteresis
