@@ -51,7 +51,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Verify that the mock was deployed correctly.
     function test_constructed() public {
-        checkWell(MockStaticWell(wellImplementation), false);
+        _checkWell(MockStaticWell(wellImplementation), false);
     }
 
     /// @dev Bore a Well with immutable data and salt.
@@ -68,7 +68,7 @@ contract AquiferTest is TestHelper {
             salt
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
         assertEq(address(mockWell), destination, "deployment address mismatch");
     }
@@ -85,7 +85,7 @@ contract AquiferTest is TestHelper {
             bytes32(0)
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
     }
 
@@ -103,7 +103,7 @@ contract AquiferTest is TestHelper {
             salt
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
         assertEq(address(mockWell), destination, "deployment address mismatch");
     }
 
@@ -119,47 +119,77 @@ contract AquiferTest is TestHelper {
             bytes32(0)
         ));
 
-        checkWell(mockWell, true);
+        _checkWell(mockWell, true);
     }
 
-    function checkWell(MockStaticWell _well, bool isInitialized) private {
+    /// @dev Revert if {aquifer()} function doesn't return the right Aquifer address after cloning.
+    function test_bore_expectRevert_wrongAquifer() public {
+        address wrongAquifer = address(bytes20("WRONG AQUIFER"));
+        assertTrue(wrongAquifer != address(aquifer));
+
+        wellImplementation = address(new MockStaticWell(tokens, wellFunction, pumps, wrongAquifer, wellData));
+        vm.expectRevert(IAquifer.InvalidConfig.selector);
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            initFunctionCall,
+            bytes32(0)
+        );
+    }
+
+    /// @dev Revert if the Well implementation doesn't have the provided init function.
+    /// NOTE: {MockWell} does not provide a fallback function, so this test passes. If
+    /// a Well chooses to implement a fallback function, an incorrectly encoded init
+    /// function call could cause unexpected behavior.
+    function test_bore_expectRevert_missingInitFunction() public {
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            abi.encodeWithSignature("doesNotExist()"),
+            bytes32(0)
+        );
+    }
+
+    /// @dev Reversion during init propagates the revert message if one is returned. 
+    /// See {MockInitFailWell.sol}
+    function test_bore_initRevert_withMessage() public {
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, "Well: fail message"));
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            abi.encodeWithSignature("initMessage()"),
+            bytes32(0)
+        );
+    }
+
+
+    /// @dev Reversion during init uses default message if no revert message is returned. 
+    /// See {MockInitFailWell.sol}
+    function test_bore_initRevert_noMessage() public {
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
+        aquifer.boreWell(
+            initFailImplementation,
+            "",
+            abi.encodeWithSignature("initNoMessage()"),
+            bytes32(0)
+        );
+    }
+
+    function _checkWell(MockStaticWell _well, bool isInitialized) private {
         IERC20[] memory _tokens = _well.tokens();
         Call[] memory _pumps = _well.pumps();
     
         assertEq(_tokens, tokens);
-        assertEq(_well.wellFunction(), wellFunction);
         assertEq(_pumps, pumps);
-        assertEq(_well.wellData(), wellData);
+        assertEq(_well.wellFunction(), wellFunction);
         assertEq(_well.aquifer(), address(aquifer));
+        assertEq(_well.wellData(), wellData);
         
         if (isInitialized) {
             assertEq(_well.name(), "MockWell", "name mismatch");
             assertEq(_well.symbol(), "mWELL", "symbol mismatch");
             assertEq(aquifer.wellImplementation(address(_well)), wellImplementation, "implementation mismatch");
         }
-    }
-
-    function test_bore_fail_message() public {
-        initFunctionCall = abi.encodeWithSignature("initMessage()");
-
-        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, "Well: fail message"));
-        aquifer.boreWell(
-            initFailImplementation,
-            "",
-            initFunctionCall,
-            bytes32(0)
-        );
-    }
-
-    function test_bore_fail_no_message() public {
-        initFunctionCall = abi.encodeWithSignature("initNoMessage()");
-
-        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
-        aquifer.boreWell(
-            initFailImplementation,
-            "",
-            initFunctionCall,
-            bytes32(0)
-        );
     }
 }

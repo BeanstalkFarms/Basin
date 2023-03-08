@@ -17,7 +17,6 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * @author Publius, Silo Chad, Brean
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
- *
  */
 contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;

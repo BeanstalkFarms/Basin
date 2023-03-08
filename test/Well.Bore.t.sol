@@ -116,14 +116,14 @@ contract WellBoreTest is TestHelper {
             assertEq(_pumps[i], pumps[i], "pump mismatch");
         }
 
+        // Check token addresses
+        assertEq(_well.tokens(), wellTokens);
+
         // Check Well Function
         assertEq(_well.wellFunction(), wellFunction);
         assertEq(_well.wellFunctionAddress(), wellFunction.target);
 
-        // Check token addresses
-        assertEq(_well.tokens(), wellTokens);
-
-        // Check aquifer for deployment
+        // Check that Aquifer recorded the deployment
         assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
     }
 }
