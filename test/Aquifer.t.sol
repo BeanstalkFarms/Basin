@@ -53,8 +53,6 @@ contract AquiferTest is TestHelper {
         checkWell(MockStaticWell(wellImplementation), false);
     }
 
-    //////////// DEPLOYMENT ////////////
-
     /// @dev Bore a Well with immutable data and salt.
     function test_bore_cloneDeterministic_withImmutableData() public {
         address destination = LibClone.predictDeterministicAddress(wellImplementation, immutableData, salt, address(aquifer));
@@ -128,10 +126,10 @@ contract AquiferTest is TestHelper {
         Call[] memory _pumps = _well.pumps();
     
         assertEq(_tokens, tokens);
-        assertEq(_pumps, pumps);
         assertEq(_well.wellFunction(), wellFunction);
-        assertEq(_well.aquifer(), address(aquifer));
+        assertEq(_pumps, pumps);
         assertEq(_well.wellData(), wellData);
+        assertEq(_well.aquifer(), address(aquifer));
         
         if (isInitialized) {
             assertEq(_well.name(), "MockWell", "name mismatch");

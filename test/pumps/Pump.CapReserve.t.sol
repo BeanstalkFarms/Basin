@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, console} from "test/TestHelper.sol";
 import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
-import {from18, to18} from "test/pumps/PumpHelpers.sol";
+import {simCapReserve50Percent, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
@@ -49,29 +49,7 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
         blocks = bound(blocks, 1, 2 ** 12);
 
         // Add precision for the capReserve function
-        uint limitBalance = lastBalance * 1e18;
-
-        uint multiplier = lastBalance < balance ? 1.5e6 : 0.5e6;
-
-        uint tempBalance;
-        for (uint16 i; i < blocks; ++i) {
-            unchecked {
-                tempBalance = limitBalance * multiplier / 1e6;
-            }
-            if (lastBalance < balance && tempBalance < limitBalance) {
-                limitBalance = type(uint).max;
-                break;
-            }
-            limitBalance = tempBalance;
-        }
-        limitBalance = limitBalance / 1e18;
-
-        console.log("limitBalance", limitBalance);
-        console.log("lastBalance", lastBalance);
-        console.log("balance", balance);
-
-        uint expectedCappedBalance = (lastBalance < balance && limitBalance < balance)
-            || (lastBalance > balance && limitBalance > balance) ? limitBalance : balance;
+        uint expectedCappedBalance = simCapReserve50Percent(lastBalance, balance, blocks);
 
         console.log("Expected capped balance", expectedCappedBalance);
 

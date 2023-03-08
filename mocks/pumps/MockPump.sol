@@ -14,10 +14,6 @@ import "src/interfaces/pumps/IPump.sol";
 contract MockPump is IPump {
     bytes public lastData;
 
-    function attach(uint, bytes calldata) external {
-        lastData = "0xATTACHED";
-    }
-
     function update(uint[] calldata, bytes calldata data) external {
         lastData = data;
     }

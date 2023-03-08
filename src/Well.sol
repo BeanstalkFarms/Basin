@@ -28,11 +28,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function init(string memory name, string memory symbol) public initializer {
         __ERC20Permit_init(name);
         __ERC20_init(name, symbol);
-
-        Call[] memory _pumps = pumps();
-        for (uint i = 0; i < _pumps.length; i++) {
-            IPump(_pumps[i].target).attach(numberOfTokens(), new bytes(0));
-        }
     }
 
     //////////////////// WELL DEFINITION ////////////////////
@@ -101,11 +96,14 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
+    /**
+     * @dev {wellData} is unused in this implementation.
+     */
+    function wellData() public pure returns (bytes memory) {}
+
     function aquifer() public pure override returns (address) {
         return _getArgAddress(LOC_AQUIFER_ADDR);
     }
-
-    function wellData() public pure returns (bytes memory) {}
 
     function well()
         external
@@ -121,7 +119,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
-        // _wellData = bytes(0); // FIXME
         _aquifer = aquifer();
     }
 
@@ -575,7 +572,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      */
     function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
         for (uint i; i < reserves.length; ++i) {
-            require(reserves[i] <= _tokens[i].balanceOf(address(this)), "Well: Invalid reserve");
+            require(reserves[i] <= _tokens[i].balanceOf(address(this)), "Well: Invalid reserve"); // reserve of zero breaks the Pump
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }

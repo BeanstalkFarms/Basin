@@ -13,12 +13,16 @@ contract MockEmptyFunction is IWellFunction {
         uint256 j,
         uint256 lpTokenSupply,
         bytes calldata data
-    ) external pure returns (uint d) {}
+    ) external pure returns (uint d) {
+        return 1;
+    }
 
     function calcLpTokenSupply(
         uint256[] memory reserves,
         bytes calldata data
-    ) external pure returns (uint xj) {}
+    ) external pure returns (uint xj) {
+        return 1;
+    }
 
     function name() external override pure returns (string memory) {}
 

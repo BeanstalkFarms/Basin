@@ -11,18 +11,16 @@ contract WellBoreTest is TestHelper {
     /// @dev Bore a 4-token Well with ConstantProduct2 & several pumps.
     function setUp() public {
         setupWell(4);
+        
+        // Well.sol doesn't use wellData, so it should always return empty bytes
+        wellData = new bytes(0); 
     }
 
     //////////// Well Definition ////////////
 
     function test_tokens() public {
-        assertEq(tokens, well.tokens());
+        assertEq(well.tokens(), tokens);
     }
-
-    function test_getReserves() public {
-        assertEq(well.getReserves(), getBalances(address(well), well).tokens);
-    }
-
     function test_wellFunction() public {
         assertEq(well.wellFunction(), wellFunction);
     }
@@ -31,12 +29,12 @@ contract WellBoreTest is TestHelper {
         assertEq(well.pumps(), pumps);
     }
 
-    function test_aquifer() public {
-        assertEq(well.aquifer(), address(aquifer));
-    }
-
     function test_wellData() public {
         assertEq(well.wellData(), wellData);
+    }
+
+    function test_aquifer() public {
+        assertEq(well.aquifer(), address(aquifer));
     }
 
     function test_well() public {
@@ -55,6 +53,10 @@ contract WellBoreTest is TestHelper {
         assertEq(_aquifer, address(aquifer));
     }
 
+    function test_getReserves() public {
+        assertEq(well.getReserves(), getBalances(address(well), well).tokens);
+    }
+
     //////////// ERC20 LP Token ////////////
 
     function test_name() public {
@@ -69,7 +71,7 @@ contract WellBoreTest is TestHelper {
         assertEq(well.decimals(), 18);
     }
 
-    //////////// ERC20 LP Token ////////////
+    //////////// Deployment ////////////
 
     /// @dev Fuzz different combinations of Well configuration data and check
     /// that the Aquifer deploys everything correctly.
@@ -114,7 +116,6 @@ contract WellBoreTest is TestHelper {
 
         for (uint i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i], pumps[i], "pump mismatch");
-            assertEq(MockPump(_pumps[i].target).lastData(), "0xATTACHED", "pump not attached");
         }
 
         // Check Well Function
