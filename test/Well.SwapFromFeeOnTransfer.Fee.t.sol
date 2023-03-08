@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {
     MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well
 } from "test/TestHelper.sol";
-import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
+import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
@@ -49,7 +49,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      */
     function testFuzz_swapFromFeeOnTransfer_fromToken(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(address(user)));
-        SwapSnapshot memory bef;
+        Snapshot memory bef;
         SwapAction memory act;
 
         // Setup delta
@@ -85,7 +85,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      */
     function testFuzz_swapFromFeeOnTransfer_toToken(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[1].balanceOf(address(well)));
-        SwapSnapshot memory bef;
+        Snapshot memory bef;
         SwapAction memory act;
 
         // Setup delta

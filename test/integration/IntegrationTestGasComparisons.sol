@@ -127,39 +127,24 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         WETH.approve(address(depot), type(uint).max);
 
         // unlike swap test (previous test), no tokens are sent back to pipeline.
-        // this means that pipeline does not prior approvals. 
+        // this means that pipeline does not prior approvals.
 
         AdvancedPipeCall[] memory _pipeCall = new AdvancedPipeCall[](2);
 
         // Shift excess tokens into DAI; deliver to the DAI:USDC Well
         _pipeCall[0].target = address(daiWethWell);
-        _pipeCall[0].callData = abi.encodeWithSelector(
-            Well.shift.selector, 
-            DAI,
-            0,
-            address(daiUsdcWell)
-        );
+        _pipeCall[0].callData = abi.encodeWithSelector(Well.shift.selector, DAI, 0, address(daiUsdcWell));
         _pipeCall[0].clipboard = abi.encodePacked(uint(0));
 
         // Shift excess tokens into USDC; deliver to the user
         _pipeCall[1].target = address(daiUsdcWell);
-        _pipeCall[1].callData = abi.encodeWithSelector(
-            Well.shift.selector, 
-            daiUsdcTokens[1],
-            0,
-            address(this)
-        );
+        _pipeCall[1].callData = abi.encodeWithSelector(Well.shift.selector, daiUsdcTokens[1], 0, address(this));
         _pipeCall[1].clipboard = abi.encodePacked(uint(0));
 
         // Send WETH directly to the DAI:WETH Well, then perform the Pipe calls above.
         bytes[] memory _farmCalls = new bytes[](2);
         _farmCalls[0] = abi.encodeWithSelector(
-            depot.transferToken.selector,
-            WETH,
-            address(daiWethWell),
-            amountIn,
-            From.EXTERNAL,
-            To.EXTERNAL
+            depot.transferToken.selector, WETH, address(daiWethWell), amountIn, From.EXTERNAL, To.EXTERNAL
         );
         _farmCalls[1] = abi.encodeWithSelector(depot.advancedPipe.selector, _pipeCall, 0);
 

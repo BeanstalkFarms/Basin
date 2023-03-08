@@ -28,11 +28,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function init(string memory name, string memory symbol) public initializer {
         __ERC20Permit_init(name);
         __ERC20_init(name, symbol);
-
-        Call[] memory _pumps = pumps();
-        for (uint i = 0; i < _pumps.length; i++) {
-            IPump(_pumps[i].target).attach(numberOfTokens(), new bytes(0));
-        }
     }
 
     //////////////////// WELL DEFINITION ////////////////////
@@ -596,7 +591,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      */
     function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
         for (uint i; i < reserves.length; ++i) {
-            if(reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves();
+            if(reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves(); // FIXME: reserve of zero breaks the Pump
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }

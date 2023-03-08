@@ -114,7 +114,6 @@ contract WellBoreTest is TestHelper {
 
         for (uint i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i], pumps[i], "pump mismatch");
-            assertEq(MockPump(_pumps[i].target).lastData(), "0xATTACHED", "pump not attached");
         }
 
         // Check Well Function

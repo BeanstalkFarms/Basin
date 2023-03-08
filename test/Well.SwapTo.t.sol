@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20, Balances, Call, MockToken, Well} from "test/TestHelper.sol";
-import {SwapHelper, SwapAction, SwapSnapshot} from "test/SwapHelper.sol";
+import {SwapHelper, SwapAction} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
