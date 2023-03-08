@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
-
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityTest is LiquidityHelper {
@@ -33,7 +32,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
             amounts[i] = 1000 * 1e18;
         }
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
-        assertEq(lpAmountOut, 2000 * 1e27, "Incorrect AmountOut");
+        assertEq(lpAmountOut, 1000 * 1e24, "Incorrect AmountOut");
     }
 
     /// @dev addLiquidity: equal amounts.
@@ -42,7 +41,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        uint lpAmountOut = 2000 * 1e27;
+        uint lpAmountOut = 1000 * 1e24;
 
         vm.expectEmit(true, true, true, true);
         emit AddLiquidity(amounts, lpAmountOut, user);
@@ -69,7 +68,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         amounts[1] = 0;
 
         uint amountOut = well.getAddLiquidityOut(amounts);
-        assertEq(amountOut, 9_975_124_224_178_054_043_852_982_550, "incorrect amt out");
+        assertEq(amountOut, 4_987_562_112_089_027_021_926_491, "incorrect amt out");
     }
 
     /// @dev addLiquidity: one-sided.
@@ -108,7 +107,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-        uint lpAmountOut = 2000 * 1e27;
+        uint lpAmountOut = 1000 * 1e24;
 
         Snapshot memory before;
         AddLiquidityAction memory action;
@@ -158,8 +157,9 @@ contract WellAddLiquidityTest is LiquidityHelper {
     function testFuzz_addLiquidity(uint x, uint y) public prank(user) {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(x, 0, 1000e18);
-        amounts[1] = bound(y, 0, 1000e18);
+        amounts[0] = bound(x, 0, type(uint104).max);
+        amounts[1] = bound(y, 0, type(uint104).max);
+        mintTokens(user, amounts);
 
         Snapshot memory before;
         AddLiquidityAction memory action;

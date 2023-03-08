@@ -20,13 +20,13 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityOneTokenOut() public {
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(1000 * 1e27, tokens[0]);
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(500 * 1e24, tokens[0]);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 
     /// @dev Base case
     function test_removeLiquidityOneToken() public prank(user) {
-        uint lpAmountIn = 1000 * 1e27;
+        uint lpAmountIn = 500 * 1e24;
         uint minTokenAmountOut = 875 * 1e18;
 
         vm.expectEmit(true, true, true, true);
@@ -55,7 +55,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev not enough tokens received for `lpAmountIn`.
     function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
-        uint lpAmountIn = 1000 * 1e18;
+        uint lpAmountIn = 500 * 1e15;
         uint minTokenAmountOut = 876 * 1e18;
         vm.expectRevert("Well: slippage");
         well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);

@@ -27,13 +27,13 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityImbalancedIn() public {
         uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
-        assertEq(lpAmountIn, 580 * 1e27);
+        assertEq(lpAmountIn, 290 * 1e24);
     }
 
     /// @dev Base case
     function test_removeLiquidityImbalanced() public prank(user) {
-        uint initialLpAmount = 2000 * 1e27;
-        uint maxLpAmountIn = 580 * 1e27; // LP needed to remove `tokenAmountsOut`
+        uint initialLpAmount = 1000 * 1e24;
+        uint maxLpAmountIn = 290 * 1e24; // LP needed to remove `tokenAmountsOut`
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLpAmountIn, tokenAmountsOut, user);
@@ -57,7 +57,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
-        uint maxLpAmountIn = 10 * 1e27;
+        uint maxLpAmountIn = 5 * 1e24;
         vm.expectRevert("Well: slippage");
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
     }
