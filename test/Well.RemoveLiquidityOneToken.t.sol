@@ -32,7 +32,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
-        uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
+        uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
 
         Balances memory userBalance = getBalances(user, well);
         Balances memory wellBalance = getBalances(address(well), well);
@@ -60,7 +60,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         uint amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
 
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minTokenAmountOut));
-        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
@@ -93,7 +93,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0], user);
-        well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user); // no minimum out
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user, type(uint).max); // no minimum out
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);

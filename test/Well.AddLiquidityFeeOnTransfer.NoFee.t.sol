@@ -31,8 +31,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.fees = new uint[](tokens.length);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -43,21 +42,19 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         amounts[1] = 0;
 
         uint amountOut = 4_987_562_112_089_027_021_926_491;
-
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
         action.fees = new uint[](tokens.length);
 
         assertEq(amountOut, lpAmountOut);
-        (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
 
+        (before, action) = beforeAddLiquidity(action);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -70,7 +67,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 2000*1e27
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max); // lpAmountOut is 2000*1e27
     }
 
     /// @dev addLiquidity -> removeLiquidity: zero hysteresis
@@ -83,28 +80,24 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
 
         Snapshot memory beforeRemove;
         RemoveLiquidityAction memory actionRemove;
-
         actionRemove.lpAmountIn = well.getAddLiquidityOut(amounts);
         actionRemove.amounts = amounts;
         actionRemove.recipient = user;
         actionRemove.fees = new uint[](2);
 
         (beforeRemove, actionRemove) = beforeRemoveLiquidity(actionRemove);
-        well.removeLiquidity(lpAmountOut, amounts, user);
-
+        well.removeLiquidity(lpAmountOut, amounts, user, type(uint).max);
         afterRemoveLiquidity(beforeRemove, actionRemove);
     }
 
@@ -121,8 +114,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, 0, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, 0, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -143,8 +135,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 }

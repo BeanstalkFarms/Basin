@@ -34,7 +34,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn - _getFee(amountIn));
         
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
-        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     /**
@@ -63,7 +63,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         (bef, act) = beforeSwapFrom(act);
 
         // Perform swap; returns the amount that the Well sent NOT including any transfer fee
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user);
+        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
 
         assertEq(amountOut, act.wellSends, "amountOut different than calculated");
         afterSwapFrom(bef, act);
@@ -99,7 +99,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         (bef, act) = beforeSwapFrom(act);
 
         // Perform swap; returns the amount that the Well sent NOT including any transfer fee
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user);
+        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
 
         assertEq(amountOut, act.wellSends, "amountOut different than calculated");
         afterSwapFrom(bef, act);

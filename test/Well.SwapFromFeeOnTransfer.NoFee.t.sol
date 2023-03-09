@@ -23,7 +23,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         uint amountOut = 500 * 1e18;
 
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
-        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
@@ -31,7 +31,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
         vm.expectRevert(IWell.InvalidTokens.selector);
-        well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user);
+        well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user, type(uint).max);
     }
 
     /// @dev With no fees, behavior is identical to {swapFrom}.
@@ -39,7 +39,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
-        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, act.userReceives, user);
+        well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, act.userReceives, user, type(uint).max);
         afterSwapFrom(bef, act);
     }
 }

@@ -39,7 +39,7 @@ contract WellSwapToTest is SwapHelper {
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapTo_revertIf_sameToken() public prank(user) {
         vm.expectRevert(IWell.InvalidTokens.selector);
-        well.swapTo(tokens[0], tokens[0], 100 * 1e18, 0, user);
+        well.swapTo(tokens[0], tokens[0], 100 * 1e18, 0, user, type(uint).max);
     }
 
     /// @dev Slippage revert occurs if maxAmountIn is too low
@@ -49,7 +49,7 @@ contract WellSwapToTest is SwapHelper {
         uint amountIn = 1000 * 1e18;
 
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, amountIn, maxAmountIn));
-        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user, type(uint).max);
     }
 
     function testFuzz_swapTo(uint amountOut) public prank(user) {
@@ -76,7 +76,7 @@ contract WellSwapToTest is SwapHelper {
 
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut, user);
-        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user);
+        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user, type(uint).max);
 
         Balances memory userBalancesAfter = getBalances(user, well);
         Balances memory wellBalancesAfter = getBalances(address(well), well);
@@ -95,8 +95,8 @@ contract WellSwapToTest is SwapHelper {
     function testFuzz_swapTo_equalSwap(uint token0AmtOut) public prank(user) {
         // assume amtOut is lower due to slippage
         vm.assume(token0AmtOut < 500e18);
-        uint token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut, user);
-        uint token0In = well.swapTo(tokens[1], tokens[0], 1000e18, token1In, user);
+        uint token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut, user, type(uint).max);
+        uint token0In = well.swapTo(tokens[1], tokens[0], 1000e18, token1In, user, type(uint).max);
         assertEq(token0In, token0AmtOut);
     }
 }

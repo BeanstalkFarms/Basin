@@ -170,8 +170,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountOut) {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
@@ -181,8 +182,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountOut) {
         amountIn = _safeTransferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
@@ -232,8 +234,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint maxAmountIn,
         uint amountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountIn) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -246,8 +249,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage from imprecision goes to the Well or to the User.
         amountIn = reserves[i] - reserveIBefore;
 
-        // FIXME: slippage check needs to move to the actual amount out
-        // need to take delta across _executeSwap
         if(amountIn > maxAmountIn) {
             revert SlippageIn(amountIn, maxAmountIn);
         }
@@ -288,16 +289,18 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountOut) {
         lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
     }
 
     function addLiquidityFeeOnTransfer(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountOut) {
         lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
     }
 
@@ -351,8 +354,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
-        address recipient
-    ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint lpTokenSupply = totalSupply();
@@ -389,8 +393,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint lpAmountIn,
         IERC20 tokenOut,
         uint minTokenAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint tokenAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
@@ -440,8 +445,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountIn) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
 
@@ -692,7 +698,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         revert InvalidTokens();
     }
 
-    //////////////////// INTERNAL: TRANSFER ////////////////////
+    //////////////////// INTERNAL: TRANSFER HELPERS ////////////////////
 
     /**
      * @dev Calculates the change in token balance of the Well across a transfer.
@@ -707,4 +713,16 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         token.safeTransferFrom(from, address(this), amount);
         amountTransferred = token.balanceOf(address(this)) - balanceBefore;
     }
+
+    //////////////////// INTERNAL: EXPIRY ////////////////////
+
+    /**
+     * @dev Reverts if the deadline has passed.
+     */
+    modifier expire(uint deadline) {
+        if (block.timestamp > deadline) {
+            revert Expired();
+        }
+        _;
+    }   
 }

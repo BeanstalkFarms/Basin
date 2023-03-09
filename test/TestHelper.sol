@@ -208,7 +208,7 @@ abstract contract TestHelper is Test, WellDeployer {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = amount;
         }
-        well.addLiquidity(amounts, 0, from);
+        well.addLiquidity(amounts, 0, from, type(uint).max);
     }
 
     //////////// Balance Helpers ////////////

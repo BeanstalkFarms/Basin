@@ -51,7 +51,7 @@ contract WellSwapFromTest is SwapHelper {
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapFrom_revertIf_sameToken() public prank(user) {
         vm.expectRevert(IWell.InvalidTokens.selector);
-        well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user);
+        well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user, type(uint).max);
     }
 
     /// @dev Slippage revert if minAmountOut is too high
@@ -61,22 +61,22 @@ contract WellSwapFromTest is SwapHelper {
         uint amountOut = 500 * 1e18;
 
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
-        well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
-        act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user);
+        act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user, type(uint).max);
         afterSwapFrom(bef, act);
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
     function testFuzz_swapFrom_equalSwap(uint token0AmtIn) public prank(user) {
         vm.assume(token0AmtIn < tokens[0].balanceOf(user));
-        uint token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user);
-        uint token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user);
+        uint token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user, type(uint).max);
+        uint token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user, type(uint).max);
         assertEq(token0Out, token0AmtIn);
     }
 }

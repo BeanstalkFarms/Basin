@@ -27,15 +27,13 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
         action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -44,26 +42,25 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         uint[] memory amounts = new uint[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
+
         uint[] memory feeAmounts = new uint[](2);
         feeAmounts[0] = amounts[0] * (1e18 - 1e16) / 1e18;
         feeAmounts[1] = 0;
 
         uint amountOut = 4_937_809_021_035_888_301_202_075;
-
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
         action.fees = feeAmounts;
 
         assertEq(amountOut, lpAmountOut);
-        (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
 
+        (before, action) = beforeAddLiquidity(action);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -77,7 +74,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         uint lpAmountOut = 990 * 1e24;
         
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // 
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max);
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves
@@ -93,8 +90,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         action.fees = new uint[](tokens.length);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, 0, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, 0, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
@@ -112,15 +108,13 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         Snapshot memory before;
         AddLiquidityAction memory action;
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
-
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
         action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 }

@@ -54,8 +54,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountIn, amountsOut, user);
-
+        well.removeLiquidity(lpAmountIn, amountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
     }
 
@@ -68,7 +67,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         minTokenAmountsOut[1] = 1000 * 1e18;
     
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
-        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user);
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user, type(uint).max);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal
@@ -90,8 +89,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountIn, amounts, user);
-
+        well.removeLiquidity(lpAmountIn, amounts, user, type(uint).max);
         afterRemoveLiquidity(before, action);
     }
 
@@ -107,7 +105,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
         vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidity` call
@@ -125,8 +123,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user);
-
+        well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
     }
 }

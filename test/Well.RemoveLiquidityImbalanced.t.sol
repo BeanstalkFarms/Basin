@@ -43,7 +43,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLpAmountIn, tokenAmountsOut, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
 
         Balances memory userBalanceAfter = getBalances(user, well);
         Balances memory wellBalanceAfter = getBalances(address(well), well);
@@ -65,7 +65,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
         uint maxLpAmountIn = 5 * 1e24;
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
@@ -97,7 +97,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Remove all of `user`'s liquidity and deliver them the tokens
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
@@ -139,7 +139,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
         vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidityImbalanced` call
@@ -166,7 +166,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         uint maxLpAmountIn = userBalanceBefore.lp;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
 
         Balances memory wellBalanceAfter = getBalances(address(well), well);
         Balances memory userBalanceAfter = getBalances(user, well);
