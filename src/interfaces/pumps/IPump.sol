@@ -10,7 +10,6 @@ pragma experimental ABIEncoderV2;
  * When reading a Pump, always verify the Pump's functionality.
  */
 interface IPump {
-
     /**
      * @notice Updates the Pump with the given reserves.
      * @param reserves The previous reserves of the tokens in the Well.
@@ -19,5 +18,4 @@ interface IPump {
      * removes liquidity from a Well.
      */
     function update(uint[] calldata reserves, bytes calldata data) external;
-
 }

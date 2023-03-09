@@ -6,7 +6,7 @@ import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellShiftTest is TestHelper {
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
-    
+
     ConstantProduct2 cp;
 
     function setUp() public {

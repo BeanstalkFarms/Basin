@@ -23,7 +23,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         }
     }
 
-    /// @dev Adding liquidity in equal proportions should summate and be scaled 
+    /// @dev Adding liquidity in equal proportions should summate and be scaled
     /// up by sqrt(ConstantProduct2.EXP_PRECISION)
     function test_getAddLiquidityOut_equalAmounts() public {
         uint[] memory amounts = new uint[](tokens.length);

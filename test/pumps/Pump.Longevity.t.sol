@@ -13,7 +13,6 @@ import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
 contract PumpLongevityTest is TestHelper {
-
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint;
 
@@ -21,8 +20,7 @@ contract PumpLongevityTest is TestHelper {
     MockReserveWell mWell;
     uint[] b = new uint[](2);
 
-    constructor()
-    {}
+    constructor() {}
 
     function setUp() public {
         mWell = new MockReserveWell();
@@ -41,7 +39,7 @@ contract PumpLongevityTest is TestHelper {
         uint[] memory balances;
         uint40 timeStep;
         uint timestamp = block.timestamp;
-        for (uint i; i < 30000; ++i) {
+        for (uint i; i < 30_000; ++i) {
             (balances, timeStep, seed) = generateRandomUpdate(n, seed);
             // console.log("Time Step: ", timeStep);
             // for (uint j; j < n; ++j) {

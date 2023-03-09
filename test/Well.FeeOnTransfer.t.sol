@@ -11,8 +11,6 @@ import {IWell} from "src/interfaces/IWell.sol";
  * (swapFrom, swapTo, addLiquidity) should revert if there actually are fees.
  */
 contract WellFeeOnTransferTest is TestHelper {
-
-
     event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
 

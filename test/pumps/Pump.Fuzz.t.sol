@@ -13,7 +13,6 @@ import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
 contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
-
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint;
 
@@ -21,13 +20,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
     MockReserveWell mWell;
     uint[] b = new uint[](2);
 
-    constructor() GeoEmaAndCumSmaPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        )
-    {}
+    constructor() GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18)) {}
 
     function setUp() public {
         mWell = new MockReserveWell();
@@ -78,10 +71,10 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
 
         for (uint i; i < n; ++i) {
             uint capReserve = _capReserve(
-                                    initReserves[i].fromUIntToLog2(),
-                                    updateReserves[i].fromUIntToLog2(),
-                                    (timeIncrease / BLOCK_TIME).fromUInt()
-                                ).pow_2ToUInt();
+                initReserves[i].fromUIntToLog2(),
+                updateReserves[i].fromUIntToLog2(),
+                (timeIncrease / BLOCK_TIME).fromUInt()
+            ).pow_2ToUInt();
             if (lastReserves[i] > 1e20) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
             } else {

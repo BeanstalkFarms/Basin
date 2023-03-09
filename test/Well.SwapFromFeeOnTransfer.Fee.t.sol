@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {
-    MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well
-} from "test/TestHelper.sol";
+import {MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
@@ -14,7 +12,6 @@ import {IWell} from "src/interfaces/IWell.sol";
  * a fee on transfer.
  */
 contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
-
     function setUp() public {
         tokens = new IERC20[](2);
         tokens[0] = deployMockTokenFeeOnTransfer(0); // token[0] has fee
@@ -32,7 +29,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn - _getFee(amountIn));
-        
+
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
@@ -63,7 +60,8 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         (bef, act) = beforeSwapFrom(act);
 
         // Perform swap; returns the amount that the Well sent NOT including any transfer fee
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
+        uint amountOut =
+            well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
 
         assertEq(amountOut, act.wellSends, "amountOut different than calculated");
         afterSwapFrom(bef, act);
@@ -99,7 +97,8 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         (bef, act) = beforeSwapFrom(act);
 
         // Perform swap; returns the amount that the Well sent NOT including any transfer fee
-        uint amountOut = well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
+        uint amountOut =
+            well.swapFromFeeOnTransfer(tokens[act.i], tokens[act.j], amountIn, act.userReceives, user, type(uint).max);
 
         assertEq(amountOut, act.wellSends, "amountOut different than calculated");
         afterSwapFrom(bef, act);

@@ -9,9 +9,9 @@ contract WellBoreTest is TestHelper {
     /// @dev Bore a 4-token Well with ConstantProduct2 & several pumps.
     function setUp() public {
         setupWell(4);
-        
+
         // Well.sol doesn't use wellData, so it should always return empty bytes
-        wellData = new bytes(0); 
+        wellData = new bytes(0);
     }
 
     //////////// Well Definition ////////////
@@ -19,6 +19,7 @@ contract WellBoreTest is TestHelper {
     function test_tokens() public {
         assertEq(well.tokens(), tokens);
     }
+
     function test_wellFunction() public {
         assertEq(well.wellFunction(), wellFunction);
     }

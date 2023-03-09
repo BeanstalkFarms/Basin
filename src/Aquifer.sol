@@ -62,11 +62,11 @@ contract Aquifer is IAquifer, ReentrancyGuard {
                 revert InitFailed(abi.decode(returnData, (string)));
             }
         }
-        
+
         // The Aquifer address MUST be set, either (a) via immutable data during cloning,
-        // or (b) as a storage variable during an init function call. In either case, 
-        // the address MUST match the address of the Aquifer that performed deployment.    
-        if(IWell(well).aquifer() != address(this)) {
+        // or (b) as a storage variable during an init function call. In either case,
+        // the address MUST match the address of the Aquifer that performed deployment.
+        if (IWell(well).aquifer() != address(this)) {
             revert InvalidConfig();
         }
 

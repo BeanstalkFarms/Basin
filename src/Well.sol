@@ -207,7 +207,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
         amountOut = reserveJBefore - reserves[j];
-        if(amountOut < minAmountOut) {
+        if (amountOut < minAmountOut) {
             revert SlippageOut(amountOut, minAmountOut);
         }
 
@@ -249,7 +249,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage from imprecision goes to the Well or to the User.
         amountIn = reserves[i] - reserveIBefore;
 
-        if(amountIn > maxAmountIn) {
+        if (amountIn > maxAmountIn) {
             revert SlippageIn(amountIn, maxAmountIn);
         }
 
@@ -331,7 +331,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
 
         lpAmountOut = _calcLpTokenSupply(wellFunction(), reserves) - totalSupply();
-        if(lpAmountOut < minLpAmountOut) {
+        if (lpAmountOut < minLpAmountOut) {
             revert SlippageOut(lpAmountOut, minLpAmountOut);
         }
 
@@ -401,7 +401,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint j = _getJ(_tokens, tokenOut);
 
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(lpAmountIn, j, reserves);
-        if(tokenAmountOut < minTokenAmountOut) {
+        if (tokenAmountOut < minTokenAmountOut) {
             revert SlippageOut(tokenAmountOut, minTokenAmountOut);
         }
 
@@ -457,7 +457,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
 
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
-        if(lpAmountIn > maxLpAmountIn) {
+        if (lpAmountIn > maxLpAmountIn) {
             revert SlippageIn(lpAmountIn, maxLpAmountIn);
         }
         _burn(msg.sender, lpAmountIn);
@@ -591,12 +591,12 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     /**
-     * @dev Checks that the balance of each ERC-20 token is >= the reserves and 
+     * @dev Checks that the balance of each ERC-20 token is >= the reserves and
      * sets the Well's reserves of each token by writing to byte storage.
      */
     function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
         for (uint i; i < reserves.length; ++i) {
-            if(reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves(); // FIXME: reserve of zero breaks the Pump
+            if (reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves(); // FIXME: reserve of zero breaks the Pump
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
@@ -678,14 +678,14 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             }
         }
 
-        if(!foundI) revert InvalidTokens();
-        if(!foundJ) revert InvalidTokens();
+        if (!foundI) revert InvalidTokens();
+        if (!foundJ) revert InvalidTokens();
     }
 
     /**
-     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is 
+     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is
      * not in `_tokens`.
-     * 
+     *
      * If `_tokens` contains multiple instances of `jToken`, this will return
      * the first one. A {Well} with duplicate tokens has been misconfigured.
      */
@@ -724,5 +724,5 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             revert Expired();
         }
         _;
-    }   
+    }
 }
