@@ -7,14 +7,12 @@ import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.so
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityTest is LiquidityHelper {
-    error SlippageOut(uint amountOut, uint minAmountOut);
-
     function setUp() public {
         setupWell(2);
     }
 
-    /// @dev liquidity is initially added in {TestHelper}
-    /// this will ensure that subsequent tests run correctly.
+    /// @dev Liquidity is initially added in {TestHelper}; ensure that subsequent
+    /// tests will run correctly.
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         Balances memory userBalance = getBalances(user, well);
@@ -25,9 +23,8 @@ contract WellAddLiquidityTest is LiquidityHelper {
         }
     }
 
-    /// @dev getAddLiquidityOut: equal amounts.
-    /// adding liquidity in equal proportions should summate and be
-    /// scaled up by sqrt(ConstantProduct2.EXP_PRECISION)
+    /// @dev Adding liquidity in equal proportions should summate and be scaled 
+    /// up by sqrt(ConstantProduct2.EXP_PRECISION)
     function test_getAddLiquidityOut_equalAmounts() public {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
@@ -37,8 +34,32 @@ contract WellAddLiquidityTest is LiquidityHelper {
         assertEq(lpAmountOut, 1000 * 1e24, "Incorrect AmountOut");
     }
 
-    /// @dev addLiquidity: equal amounts.
-    function test_addLiquidity_equalAmounts() public prank(user) {
+    function test_getAddLiquidityOut_oneToken() public {
+        uint[] memory amounts = new uint[](2);
+        amounts[0] = 10 * 1e18;
+        amounts[1] = 0;
+
+        uint amountOut = well.getAddLiquidityOut(amounts);
+        assertEq(amountOut, 4_987_562_112_089_027_021_926_491, "incorrect amt out");
+    }
+
+    function test_addLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
+        uint[] memory amounts = new uint[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) {
+            amounts[i] = 1000 * 1e18;
+        }
+        uint lpAmountOut = well.getAddLiquidityOut(amounts);
+
+        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
+        well.addLiquidity(amounts, lpAmountOut + 1, user, type(uint).max); // lpAmountOut is 2000*1e27
+    }
+
+    function test_addLiquidity_revertIf_expired() public {
+        vm.expectRevert(Expired.selector);
+        well.addLiquidity(new uint[](tokens.length), 0, user, block.timestamp - 1);
+    }
+
+    function test_addLiquidity_balanced() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
@@ -63,18 +84,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         assertEq(wellBalance.tokens[1], initialLiquidity + amounts[1], "incorrect token1 well amt");
     }
 
-    /// @dev getAddLiquidityOut: one-sided.
-    function test_getAddLiquidityOut_oneToken() public {
-        uint[] memory amounts = new uint[](2);
-        amounts[0] = 10 * 1e18;
-        amounts[1] = 0;
-
-        uint amountOut = well.getAddLiquidityOut(amounts);
-        assertEq(amountOut, 4_987_562_112_089_027_021_926_491, "incorrect amt out");
-    }
-
-    /// @dev addLiquidity: one-sided.
-    function test_addLiquidity_oneToken() public prank(user) {
+    function test_addLiquidity_oneSided() public prank(user) {
         uint[] memory amounts = new uint[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
@@ -91,19 +101,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         afterAddLiquidity(before, action);
     }
 
-    /// @dev addLiquidity: reverts for slippage
-    function test_addLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
-        uint[] memory amounts = new uint[](tokens.length);
-        for (uint i = 0; i < tokens.length; i++) {
-            amounts[i] = 1000 * 1e18;
-        }
-        uint lpAmountOut = well.getAddLiquidityOut(amounts);
-
-        vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidity(amounts, lpAmountOut + 1, user, type(uint).max); // lpAmountOut is 2000*1e27
-    }
-
-    /// @dev addLiquidity -> removeLiquidity: zero hysteresis
+    /// @dev Adding and removing liquidity in sequence should return the Well to its previous state
     function test_addAndRemoveLiquidity() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
@@ -133,7 +131,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         afterRemoveLiquidity(beforeRemove, actionRemove);
     }
 
-    /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves
+    /// @dev Adding zero liquidity emits empty event but doesn't change reserves
     function test_addLiquidity_zeroChange() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         uint liquidity = 0;
@@ -150,7 +148,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         afterAddLiquidity(before, action);
     }
 
-    /// @dev addLiquidity: two-token fuzzed
+    /// @dev Two-token fuzz test adding liquidity in any ratio
     function testFuzz_addLiquidity(uint x, uint y) public prank(user) {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);

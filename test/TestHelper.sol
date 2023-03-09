@@ -41,6 +41,10 @@ struct Snapshot {
 abstract contract TestHelper is Test, WellDeployer {
     using Strings for uint;
 
+    // Errors are mirrored from IWell
+    error SlippageOut(uint amountOut, uint minAmountOut);
+    error Expired();
+
     // Users
     Users users;
     address user;
