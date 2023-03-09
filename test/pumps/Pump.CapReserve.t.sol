@@ -31,9 +31,6 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
                 .pow_2()
         );
 
-        // 0 block delta = no change
-        // FIXME: the fuzzer was able to find a case where some sort of double rounding error
-        // occurred which caused a delta of 2
         if (last < 1e24) {
             assertApproxEqAbs(balance, last, 1);
         } else {
@@ -59,9 +56,6 @@ contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
             ABDKMathQuad.fromUInt(blocks)
         ).pow_2ToUInt();
 
-        // 0 block delta = no change
-        // FIXME: the fuzzer was able to find a case where some sort of double rounding error
-        // occurred which caused a delta of 2
         if (cappedBalance < 1e22) {
             assertApproxEqAbs(cappedBalance, expectedCappedBalance, 1);
         } else {

@@ -20,7 +20,6 @@ contract WellSkimTest is TestHelper {
         vm.assume(amounts[1] <= 800e18);
 
         // Transfer from Test contract to Well
-        // FIXME: which contract are these being transferred from?
         tokens[0].transfer(address(well), amounts[0]);
         tokens[1].transfer(address(well), amounts[1]);
 
