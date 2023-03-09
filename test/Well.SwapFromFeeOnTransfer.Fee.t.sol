@@ -28,7 +28,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      * Since a fee is charged on `amountIn`, `amountOut` falls below the slippage
      * threshold.
      */
-    function test_swapFromFeeOnTransfer_revertIf_minAmountOutTooHigh_fee() public prank(user) {
+    function test_swapFromFeeOnTransferWithFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 1000 * 1e18;
         uint minAmountOut = 500 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn - _getFee(amountIn));
@@ -47,7 +47,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      * Well sends:      amountOut           token1
      * User receives:   amountOut           token1
      */
-    function testFuzz_swapFromFeeOnTransfer_fromToken(uint amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransferWithFee_fromToken(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(address(user)));
         Snapshot memory bef;
         SwapAction memory act;
@@ -83,7 +83,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      * the Swap event contains the amount sent by the Well, which will be larger
      * than the amount received by the User.
      */
-    function testFuzz_swapFromFeeOnTransfer_toToken(uint amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransferWithFee_toToken(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[1].balanceOf(address(well)));
         Snapshot memory bef;
         SwapAction memory act;

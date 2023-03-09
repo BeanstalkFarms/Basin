@@ -22,6 +22,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max); // lpAmountOut is 2000*1e27
     }
 
+    /// @dev Note: this covers the case where there is a fee as well
     function test_addLiquidityFeeOnTransferNoFee_revertIf_expired() public {
         vm.expectRevert(Expired.selector);
         well.addLiquidityFeeOnTransfer(new uint[](tokens.length), 0, user, block.timestamp - 1);

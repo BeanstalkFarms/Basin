@@ -64,6 +64,11 @@ contract WellSwapFromTest is SwapHelper {
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
+    function test_swapFrom_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.swapFrom(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
+    }
+
     function testFuzz_swapFrom(uint amountIn) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 

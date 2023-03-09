@@ -52,6 +52,12 @@ contract WellSwapToTest is SwapHelper {
         well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user, type(uint).max);
     }
 
+    /// @dev Note: this covers the case where there is a fee as well
+    function test_swapFromFeeOnTransferNoFee_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.swapTo(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
+    }
+
     function testFuzz_swapTo(uint amountOut) public prank(user) {
         // User has 1000 of each token
         // Given current liquidity, swapping 1000 of one token gives 500 of the other
