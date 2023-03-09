@@ -35,7 +35,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
 
     /**
      * @dev Reserves precision:
-     * 
+     *
      * When reserves are <= 1e24, we accept an absolute error of 1.
      * When reserves are > 1e24, we accept a relative error of 1e-24.
      * i.e. the maximum delta between actual and expected reserves is:
@@ -64,7 +64,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
         // Read a snapshot from the Pump
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell));
         uint startTimestamp = block.timestamp;
-        
+
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
         for (uint i = 0; i < n; i++) {
@@ -80,7 +80,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
                 updateReserves[i].fromUIntToLog2(),
                 (timeIncrease / BLOCK_TIME).fromUInt()
             ).pow_2ToUInt();
-            
+
             if (lastReserves[i] > 1e24) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
             } else {
