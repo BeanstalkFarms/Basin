@@ -37,6 +37,23 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         }
     }
 
+    /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
+    function test_removeLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
+        uint lpAmountIn = 1000 * 1e24;
+
+        uint[] memory minTokenAmountsOut = new uint[](2);
+        minTokenAmountsOut[0] = 1001 * 1e18; // too high
+        minTokenAmountsOut[1] = 1000 * 1e18;
+    
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user, type(uint).max);
+    }
+    
+    function test_removeLiquidity_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.removeLiquidity(0, new uint[](2), user, block.timestamp - 1);
+    }
+
     /// @dev removeLiquidity: remove to equal amounts of underlying
     function test_removeLiquidity() public prank(user) {
         uint lpAmountIn = 1000 * 1e24;
@@ -54,21 +71,8 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountIn, amountsOut, user);
-
+        well.removeLiquidity(lpAmountIn, amountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
-    }
-
-    /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
-    function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-        uint lpAmountIn = 1000 * 1e24;
-
-        uint[] memory minTokenAmountsOut = new uint[](2);
-        minTokenAmountsOut[0] = 1001 * 1e18; // too high
-        minTokenAmountsOut[1] = 1000 * 1e18;
-    
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
-        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal
@@ -90,8 +94,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountIn, amounts, user);
-
+        well.removeLiquidity(lpAmountIn, amounts, user, type(uint).max);
         afterRemoveLiquidity(before, action);
     }
 
@@ -107,7 +110,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
         vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidity` call
@@ -125,8 +128,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user);
-
+        well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
     }
 }

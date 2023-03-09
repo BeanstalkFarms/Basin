@@ -31,6 +31,10 @@ library LibWellConstructor {
      *
      * Arbitrary-length bytes are applied to the end of the encoded bytes array
      * for easy reading of statically-sized data.
+     * 
+     * FIXME: if this is expected to be called statically, we might provide some
+     * common-sense checks, for example enforcing that there are no duplicate
+     * tokens in `_tokens`.
      */
     function encodeWellImmutableData(
         address _aquifer,

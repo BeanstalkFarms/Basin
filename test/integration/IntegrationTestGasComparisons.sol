@@ -67,7 +67,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         amountIn = bound(amountIn, 1e18, daiWethTokens[1].balanceOf(address(this)));
         vm.resumeGasMetering();
 
-        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this));
+        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this), type(uint).max);
     }
 
     function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {
@@ -98,12 +98,14 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         pipeline.multiPipe(_prePipeCall);
 
         AdvancedPipeCall[] memory _pipeCall = new AdvancedPipeCall[](2);
+
         // Swap WETH for DAI
         _pipeCall[0].target = address(daiWethWell);
         _pipeCall[0].callData = abi.encodeWithSelector(
             Well.swapFrom.selector, daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(pipeline)
         );
         _pipeCall[0].clipboard = abi.encodePacked(uint(0));
+
         // Swap DAI for USDC
         _pipeCall[1].target = address(daiUsdcWell);
         _pipeCall[1].callData =
@@ -159,7 +161,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         amounts[1] = bound(amount, 1e18, 1000e18);
         vm.resumeGasMetering();
 
-        daiWethWell.addLiquidity(amounts, 0, address(this));
+        daiWethWell.addLiquidity(amounts, 0, address(this), type(uint).max);
     }
 
     function testFuzz_wells_WethDai_RemoveLiquidity(uint amount) public {
@@ -177,7 +179,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uint[] memory minAmountsOut = new uint[](2);
         vm.resumeGasMetering();
 
-        daiWethWell.removeLiquidity(lpAmountBurned, minAmountsOut, address(this));
+        daiWethWell.removeLiquidity(lpAmountBurned, minAmountsOut, address(this), type(uint).max);
     }
 
     ////////// Uniswap V2
@@ -288,11 +290,11 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     /// @dev Perform a few swaps on the provided Well to proper initialization.
     function _wellsInitializedHelper() private {
         // DAI -> WETH
-        daiWethWell.swapFrom(daiWethTokens[0], daiWethTokens[1], 1000 * 1e18, 500 * 1e18, address(this));
+        daiWethWell.swapFrom(daiWethTokens[0], daiWethTokens[1], 1000 * 1e18, 500 * 1e18, address(this), type(uint).max);
 
         // WETH -> DAI
         vm.warp(block.timestamp + 1);
-        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this));
+        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this), type(uint).max);
     }
 }
 

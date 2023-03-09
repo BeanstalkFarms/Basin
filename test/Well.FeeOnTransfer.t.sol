@@ -26,7 +26,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint amountIn = 1000 * 1e18;
 
         vm.expectRevert(IWell.InvalidReserves.selector);
-        well.swapTo(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        well.swapTo(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     function test_swapFrom_feeOnTransfer() public prank(user) {
@@ -34,7 +34,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint amountIn = 1000 * 1e18;
 
         vm.expectRevert(IWell.InvalidReserves.selector);
-        well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user);
+        well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     function test_addLiquidity_feeOnTransfer() public prank(user) {
@@ -46,6 +46,6 @@ contract WellFeeOnTransferTest is TestHelper {
         uint lpAmountOut = 1000 * 1e24;
 
         vm.expectRevert(IWell.InvalidReserves.selector);
-        well.addLiquidity(amounts, lpAmountOut, user);
+        well.addLiquidity(amounts, lpAmountOut, user, type(uint).max);
     }
 }

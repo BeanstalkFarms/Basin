@@ -38,6 +38,11 @@ interface IWell {
     error InvalidReserves();
 
     /**
+     * @notice Thrown if an operation is executed after the provided `deadline` has passed.
+     */
+    error Expired();
+
+    /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
      * @param toToken The token swapped to
@@ -161,6 +166,7 @@ interface IWell {
      * @param amountIn The amount of `fromToken` to spend
      * @param minAmountOut The minimum amount of `toToken` to receive
      * @param recipient The address to receive `toToken`
+     * @param deadline The timestamp after which this operation is invalid
      * @return amountOut The amount of `toToken` received
      */
     function swapFrom(
@@ -168,7 +174,8 @@ interface IWell {
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint amountOut);
 
     /**
@@ -179,6 +186,7 @@ interface IWell {
      * @param amountIn The amount of `fromToken` to spend
      * @param minAmountOut The minimum amount of `toToken` to receive
      * @param recipient The address to receive `toToken`
+     * @param deadline The timestamp after which this operation is invalid
      * @return amountOut The amount of `toToken` received
      * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
      */
@@ -187,7 +195,8 @@ interface IWell {
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint amountOut);
 
     /**
@@ -208,6 +217,7 @@ interface IWell {
      * @param maxAmountIn The maximum amount of `fromToken` to spend
      * @param amountOut The amount of `toToken` to receive
      * @param recipient The address to receive `toToken`
+     * @param deadline The timestamp after which this operation is invalid
      * @return amountIn The amount of `toToken` received
      */
     function swapTo(
@@ -215,7 +225,8 @@ interface IWell {
         IERC20 toToken,
         uint maxAmountIn,
         uint amountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint amountIn);
 
     /**
@@ -234,12 +245,14 @@ interface IWell {
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @param recipient The address to receive the LP tokens
+     * @param deadline The timestamp after which this operation is invalid
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint lpAmountOut);
 
     /**
@@ -248,13 +261,15 @@ interface IWell {
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @param recipient The address to receive the LP tokens
+     * @param deadline The timestamp after which this operation is invalid
      * @return lpAmountOut The amount of LP tokens received
      * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
      */
     function addLiquidityFeeOnTransfer(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint lpAmountOut);
 
     /**
@@ -271,12 +286,14 @@ interface IWell {
      * @param lpAmountIn The amount of LP tokens to burn
      * @param minTokenAmountsOut The minimum amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
      * @param recipient The address to receive the underlying tokens
+     * @param deadline The timestamp after which this operation is invalid
      * @return tokenAmountsOut The amount of each underlying token received
      */
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint[] memory tokenAmountsOut);
 
     /**
@@ -294,13 +311,15 @@ interface IWell {
      * @param tokenOut The underlying token to receive
      * @param minTokenAmountOut The minimum amount of `tokenOut` to receive
      * @param recipient The address to receive the underlying tokens
+     * @param deadline The timestamp after which this operation is invalid
      * @return tokenAmountOut The amount of `tokenOut` received
      */
     function removeLiquidityOneToken(
         uint lpAmountIn,
         IERC20 tokenOut,
         uint minTokenAmountOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint tokenAmountOut);
 
     /**
@@ -328,7 +347,8 @@ interface IWell {
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
-        address recipient
+        address recipient,
+        uint deadline
     ) external returns (uint lpAmountIn);
 
     /**

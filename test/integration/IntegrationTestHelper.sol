@@ -82,7 +82,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         for (uint i = 0; i < _tokens.length; i++) {
             amounts[i] = amount;
         }
-        _well.addLiquidity(amounts, 0, from);
+        _well.addLiquidity(amounts, 0, from, type(uint).max);
     }
 
     enum ClipboardType {

@@ -170,8 +170,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountOut) {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
@@ -181,9 +182,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint amountIn,
         uint minAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountOut) {
-        amountIn = transferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountOut) {
+        amountIn = _safeTransferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
 
@@ -232,8 +234,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         IERC20 toToken,
         uint maxAmountIn,
         uint amountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountIn) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         (uint i, uint j) = _getIJ(_tokens, fromToken, toToken);
@@ -246,8 +249,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // slippage from imprecision goes to the Well or to the User.
         amountIn = reserves[i] - reserveIBefore;
 
-        // FIXME: slippage check needs to move to the actual amount out
-        // need to take delta across _executeSwap
         if(amountIn > maxAmountIn) {
             revert SlippageIn(amountIn, maxAmountIn);
         }
@@ -288,16 +289,18 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function addLiquidity(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountOut) {
         lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, false);
     }
 
     function addLiquidityFeeOnTransfer(
         uint[] memory tokenAmountsIn,
         uint minLpAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountOut) {
         lpAmountOut = _addLiquidity(tokenAmountsIn, minLpAmountOut, recipient, true);
     }
 
@@ -316,7 +319,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         if (feeOnTransfer) {
             for (uint i; i < _tokens.length; ++i) {
                 if (tokenAmountsIn[i] == 0) continue;
-                tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+                tokenAmountsIn[i] = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
                 reserves[i] = reserves[i] + tokenAmountsIn[i];
             }
         } else {
@@ -351,8 +354,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function removeLiquidity(
         uint lpAmountIn,
         uint[] calldata minTokenAmountsOut,
-        address recipient
-    ) external nonReentrant returns (uint[] memory tokenAmountsOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint[] memory tokenAmountsOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint lpTokenSupply = totalSupply();
@@ -389,8 +393,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint lpAmountIn,
         IERC20 tokenOut,
         uint minTokenAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint tokenAmountOut) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
         uint j = _getJ(_tokens, tokenOut);
@@ -440,8 +445,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function removeLiquidityImbalanced(
         uint maxLpAmountIn,
         uint[] calldata tokenAmountsOut,
-        address recipient
-    ) external nonReentrant returns (uint lpAmountIn) {
+        address recipient,
+        uint deadline
+    ) external nonReentrant expire(deadline) returns (uint lpAmountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _updatePumps(_tokens.length);
 
@@ -655,7 +661,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     //////////////////// INTERNAL: WELL TOKEN INDEXING ////////////////////
 
     /**
-     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`. Reverts if either token is not in `_tokens`.
+     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
+     * Reverts if either token is not in `_tokens`.
      */
     function _getIJ(IERC20[] memory _tokens, IERC20 iToken, IERC20 jToken) internal pure returns (uint i, uint j) {
         bool foundI = false;
@@ -676,7 +683,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     /**
-     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is not in `_tokens`.
+     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is 
+     * not in `_tokens`.
+     * 
+     * If `_tokens` contains multiple instances of `jToken`, this will return
+     * the first one. A {Well} with duplicate tokens has been misconfigured.
      */
     function _getJ(IERC20[] memory _tokens, IERC20 jToken) internal pure returns (uint j) {
         for (j; j < _tokens.length; ++j) {
@@ -687,7 +698,13 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         revert InvalidTokens();
     }
 
-    function transferFromFeeOnTransfer(
+    //////////////////// INTERNAL: TRANSFER HELPERS ////////////////////
+
+    /**
+     * @dev Calculates the change in token balance of the Well across a transfer.
+     * Used when a fee might be incurred during safeTransferFrom.
+     */
+    function _safeTransferFromFeeOnTransfer(
         IERC20 token,
         address from,
         uint amount
@@ -696,4 +713,16 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         token.safeTransferFrom(from, address(this), amount);
         amountTransferred = token.balanceOf(address(this)) - balanceBefore;
     }
+
+    //////////////////// INTERNAL: EXPIRY ////////////////////
+
+    /**
+     * @dev Reverts if the deadline has passed.
+     */
+    modifier expire(uint deadline) {
+        if (block.timestamp > deadline) {
+            revert Expired();
+        }
+        _;
+    }   
 }

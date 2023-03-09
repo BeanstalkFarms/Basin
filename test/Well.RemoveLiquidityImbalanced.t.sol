@@ -7,7 +7,6 @@ import {IWell} from "src/interfaces/IWell.sol";
 contract WellRemoveLiquidityImbalancedTest is TestHelper {
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
     
-    // 
     uint[] tokenAmountsOut;
     uint requiredLpAmountIn;
 
@@ -34,6 +33,18 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         assertEq(lpAmountIn, requiredLpAmountIn);
     }
 
+    /// @dev not enough LP to receive `tokenAmountsOut`
+    function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
+        uint maxLpAmountIn = 5 * 1e24;
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
+    }
+
+    function test_removeLiquidityImbalanced_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.removeLiquidityImbalanced(0, new uint[](2), user, block.timestamp - 1);
+    }
+
     /// @dev Base case
     function test_removeLiquidityImbalanced() public prank(user) {
         Balances memory userBalanceBefore = getBalances(user, well);
@@ -43,7 +54,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLpAmountIn, tokenAmountsOut, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
 
         Balances memory userBalanceAfter = getBalances(user, well);
         Balances memory wellBalanceAfter = getBalances(address(well), well);
@@ -59,13 +70,6 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Well's reserve of underlying tokens decreases
         assertEq(wellBalanceAfter.tokens[0], 1500 * 1e18, "Incorrect token0 well reserve");
         assertEq(wellBalanceAfter.tokens[1], 19_494 * 1e17, "Incorrect token1 well reserve");
-    }
-
-    /// @dev not enough LP to receive `tokenAmountsOut`
-    function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
-        uint maxLpAmountIn = 5 * 1e24;
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
@@ -97,7 +101,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Remove all of `user`'s liquidity and deliver them the tokens
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
@@ -139,7 +143,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
         vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidityImbalanced` call
@@ -166,7 +170,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         uint maxLpAmountIn = userBalanceBefore.lp;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
 
         Balances memory wellBalanceAfter = getBalances(address(well), well);
         Balances memory userBalanceAfter = getBalances(user, well);

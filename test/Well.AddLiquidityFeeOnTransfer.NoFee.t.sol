@@ -7,62 +7,11 @@ import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.so
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 
 contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
-    error SlippageOut(uint amountOut, uint minAmountOut);
-
     function setUp() public {
         setupWell(2);
     }
 
-    /// @dev addLiquidity: equal amounts.
-    function test_addLiquidity_equalAmounts_feeOnTransfer_noFee() public prank(user) {
-        uint[] memory amounts = new uint[](tokens.length);
-        for (uint i = 0; i < tokens.length; i++) {
-            amounts[i] = 1000 * 1e18;
-        }
-
-        uint lpAmountOut = well.getAddLiquidityOut(amounts);
-
-        Snapshot memory before;
-        AddLiquidityAction memory action;
-
-        action.amounts = amounts;
-        action.lpAmountOut = lpAmountOut;
-        action.recipient = user;
-        action.fees = new uint[](tokens.length);
-
-        (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
-        afterAddLiquidity(before, action);
-    }
-
-    /// @dev addLiquidity: one-sided.
-    function test_addLiquidity_oneToken_feeOnTransfer_noFee() public prank(user) {
-        uint[] memory amounts = new uint[](2);
-        amounts[0] = 10 * 1e18;
-        amounts[1] = 0;
-
-        uint amountOut = 4_987_562_112_089_027_021_926_491;
-
-        uint lpAmountOut = well.getAddLiquidityOut(amounts);
-
-        Snapshot memory before;
-        AddLiquidityAction memory action;
-
-        action.amounts = amounts;
-        action.lpAmountOut = lpAmountOut;
-        action.recipient = user;
-        action.fees = new uint[](tokens.length);
-
-        assertEq(amountOut, lpAmountOut);
-        (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
-        afterAddLiquidity(before, action);
-    }
-
-    /// @dev addLiquidity: reverts for slippage
-    function test_addLiquidity_revertIf_minAmountOutTooHigh_feeOnTransfer_noFee() public prank(user) {
+    function test_addLiquidityFeeOnTransferNoFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
@@ -70,11 +19,60 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         uint lpAmountOut = well.getAddLiquidityOut(amounts);
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 2000*1e27
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max); // lpAmountOut is 2000*1e27
     }
 
-    /// @dev addLiquidity -> removeLiquidity: zero hysteresis
-    function test_addAndRemoveLiquidity_feeOnTransfer_noFee() public prank(user) {
+    /// @dev Note: this covers the case where there is a fee as well
+    function test_addLiquidityFeeOnTransferNoFee_revertIf_expired() public {
+        vm.expectRevert(Expired.selector);
+        well.addLiquidityFeeOnTransfer(new uint[](tokens.length), 0, user, block.timestamp - 1);
+    }
+
+    function test_addLiquidityFeeOnTransferNoFee_equalAmounts() public prank(user) {
+        uint[] memory amounts = new uint[](tokens.length);
+        for (uint i = 0; i < tokens.length; i++) {
+            amounts[i] = 1000 * 1e18;
+        }
+        uint lpAmountOut = well.getAddLiquidityOut(amounts);
+
+        Snapshot memory before;
+        AddLiquidityAction memory action;
+        action.amounts = amounts;
+        action.lpAmountOut = lpAmountOut;
+        action.recipient = user;
+        action.fees = new uint[](tokens.length);
+
+        (before, action) = beforeAddLiquidity(action);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
+        afterAddLiquidity(before, action);
+    }
+
+    function test_addLiquidityFeeOnTransferNoFee_oneToken() public prank(user) {
+        uint[] memory amounts = new uint[](2);
+        amounts[0] = 10 * 1e18;
+        amounts[1] = 0;
+
+        uint amountOut = 4_987_562_112_089_027_021_926_491;
+        uint lpAmountOut = well.getAddLiquidityOut(amounts);
+
+        Snapshot memory before;
+        AddLiquidityAction memory action;
+        action.amounts = amounts;
+        action.lpAmountOut = lpAmountOut;
+        action.recipient = user;
+        action.fees = new uint[](tokens.length);
+
+        assertEq(amountOut, lpAmountOut);
+
+        (before, action) = beforeAddLiquidity(action);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
+        afterAddLiquidity(before, action);
+    }
+
+    /// @dev Add liquidity using the feeOnTransfer method and then remove it.
+    /// Since the token used doesn't actually charge fees, this should result in
+    /// result in net zero change 
+    function test_addLiquidityFeeOnTransferNoFeeAndRemoveLiquidity() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
@@ -83,33 +81,29 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-
         action.amounts = amounts;
         action.lpAmountOut = well.getAddLiquidityOut(amounts);
         action.recipient = user;
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
 
         Snapshot memory beforeRemove;
         RemoveLiquidityAction memory actionRemove;
-
-        actionRemove.lpAmountIn = well.getAddLiquidityOut(amounts);
+        actionRemove.lpAmountIn = lpAmountOut; // recycle
         actionRemove.amounts = amounts;
         actionRemove.recipient = user;
         actionRemove.fees = new uint[](2);
 
         (beforeRemove, actionRemove) = beforeRemoveLiquidity(actionRemove);
-        well.removeLiquidity(lpAmountOut, amounts, user);
-
+        well.removeLiquidity(lpAmountOut, amounts, user, type(uint).max);
         afterRemoveLiquidity(beforeRemove, actionRemove);
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves
-    function test_addLiquidity_zeroChange_feeOnTransfer_noFee() public prank(user) {
+    function test_addLiquidityFeeOnTransferNoFee_zeroChange() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
 
         Snapshot memory before;
@@ -121,13 +115,12 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, 0, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, 0, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 
-    /// @dev addLiquidity: two-token fuzzed
-    function testFuzz_addLiquidity_feeOnTransfer_noFee(uint x, uint y) public prank(user) {
+    /// @dev Two-token fuzz test adding liquidity in any ratio
+    function testFuzz_addLiquidityFeeOnTransferNoFee(uint x, uint y) public prank(user) {
         // amounts to add as liquidity
         uint[] memory amounts = new uint[](2);
         amounts[0] = bound(x, 0, 1000e18);
@@ -143,8 +136,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
         action.fees = new uint[](2);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user);
-
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
         afterAddLiquidity(before, action);
     }
 }

@@ -30,7 +30,7 @@ contract WellUpdatePumpTest is TestHelper {
 
         // Perform an action on the Well to initialize pumps
         vm.prank(user);
-        well.swapFrom(tokens[0], tokens[1], 1e18, 1, user);
+        well.swapFrom(tokens[0], tokens[1], 1e18, 1, user, type(uint).max);
 
         // During update(), MockPump sets a public storage var `lastData` equal
         // to Call.data.
