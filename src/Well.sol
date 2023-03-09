@@ -183,7 +183,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint minAmountOut,
         address recipient
     ) external nonReentrant returns (uint amountOut) {
-        amountIn = transferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
+        amountIn = _safeTransferFromFeeOnTransfer(fromToken, msg.sender, amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
 
@@ -316,7 +316,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         if (feeOnTransfer) {
             for (uint i; i < _tokens.length; ++i) {
                 if (tokenAmountsIn[i] == 0) continue;
-                tokenAmountsIn[i] = transferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+                tokenAmountsIn[i] = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
                 reserves[i] = reserves[i] + tokenAmountsIn[i];
             }
         } else {
@@ -655,7 +655,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     //////////////////// INTERNAL: WELL TOKEN INDEXING ////////////////////
 
     /**
-     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`. Reverts if either token is not in `_tokens`.
+     * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
+     * Reverts if either token is not in `_tokens`.
      */
     function _getIJ(IERC20[] memory _tokens, IERC20 iToken, IERC20 jToken) internal pure returns (uint i, uint j) {
         bool foundI = false;
@@ -676,7 +677,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     /**
-     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is not in `_tokens`.
+     * @dev Returns the index of `jToken` in `_tokens`. Reverts if `jToken` is 
+     * not in `_tokens`.
+     * 
+     * If `_tokens` contains multiple instances of `jToken`, this will return
+     * the first one. A {Well} with duplicate tokens has been misconfigured.
      */
     function _getJ(IERC20[] memory _tokens, IERC20 jToken) internal pure returns (uint j) {
         for (j; j < _tokens.length; ++j) {
@@ -687,7 +692,13 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         revert InvalidTokens();
     }
 
-    function transferFromFeeOnTransfer(
+    //////////////////// INTERNAL: TRANSFER ////////////////////
+
+    /**
+     * @dev Calculates the change in token balance of the Well across a transfer.
+     * Used when a fee might be incurred during safeTransferFrom.
+     */
+    function _safeTransferFromFeeOnTransfer(
         IERC20 token,
         address from,
         uint amount
