@@ -25,13 +25,13 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             assertEq(tokens[i].balanceOf(address(well)), initialLiquidity + addedLiquidity, "incorrect token reserve");
         }
-        assertEq(well.totalSupply(), 4000 * 1e27, "incorrect totalSupply");
+        assertEq(well.totalSupply(), 2000 * 1e24, "incorrect totalSupply");
     }
 
     /// @dev getRemoveLiquidityOut: remove to equal amounts of underlying
     /// since the tokens in the Well are balanced, user receives equal amounts
     function test_getRemoveLiquidityOut() public {
-        uint[] memory amountsOut = well.getRemoveLiquidityOut(2000 * 1e27);
+        uint[] memory amountsOut = well.getRemoveLiquidityOut(1000 * 1e24);
         for (uint i = 0; i < tokens.length; i++) {
             assertEq(amountsOut[i], 1000 * 1e18, "incorrect getRemoveLiquidityOut");
         }
@@ -39,7 +39,8 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
     /// @dev removeLiquidity: remove to equal amounts of underlying
     function test_removeLiquidity() public prank(user) {
-        uint lpAmountIn = 2000 * 1e27;
+        uint lpAmountIn = 1000 * 1e24;
+        
         uint[] memory amountsOut = new uint[](2);
         amountsOut[0] = 1000 * 1e18;
         amountsOut[1] = 1000 * 1e18;
@@ -60,7 +61,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
 
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
     function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-        uint lpAmountIn = 2000 * 1e27;
+        uint lpAmountIn = 1000 * 1e24;
 
         uint[] memory minTokenAmountsOut = new uint[](2);
         minTokenAmountsOut[0] = 1001 * 1e18; // too high

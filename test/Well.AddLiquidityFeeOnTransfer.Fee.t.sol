@@ -48,7 +48,7 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         feeAmounts[0] = amounts[0] * (1e18 - 1e16) / 1e18;
         feeAmounts[1] = 0;
 
-        uint amountOut = 9_875_618_042_071_776_602_404_150_766;
+        uint amountOut = 4_937_809_021_035_888_301_202_075;
 
         uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
@@ -73,10 +73,11 @@ contract WellAddLiquidityFeeOnTransferFeeTest is LiquidityHelper {
         for (uint i = 0; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
-
-        uint lpAmountOut = 1980 * 1e27;
+        // expected amount is 1000 * 1e24, actual will be 990 * 1e24
+        uint lpAmountOut = 990 * 1e24;
+        
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // lpAmountOut is 1980*1e27
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user); // 
     }
 
     /// @dev addLiquidity: adding zero liquidity emits empty event but doesn't change reserves

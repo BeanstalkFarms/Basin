@@ -160,6 +160,13 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
+    /// @dev mint mock tokens to each recipient in different amounts
+    function mintTokens(address recipient, uint[] memory amounts) internal {
+        for (uint i = 0; i < tokens.length; i++) {
+            MockToken(address(tokens[i])).mint(recipient, amounts[i]);
+        }
+    }
+
     /// @dev approve `spender` to use `owner` tokens
     function approveMaxTokens(address owner, address spender) internal prank(owner) {
         for (uint i = 0; i < tokens.length; i++) {

@@ -25,7 +25,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Shared removal amounts
         tokenAmountsOut.push(500 * 1e18); // 500   token0
         tokenAmountsOut.push(506 * 1e17); //  50.6 token1
-        requiredLpAmountIn = 580 * 1e27; // LP needed to remove `tokenAmountsOut`
+        requiredLpAmountIn = 290 * 1e24; // LP needed to remove `tokenAmountsOut`
     }
 
     /// @dev Assumes use of ConstantProduct2
@@ -63,7 +63,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
-        uint maxLpAmountIn = 10 * 1e27; // not enough
+        uint maxLpAmountIn = 5 * 1e24;
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user);
     }
