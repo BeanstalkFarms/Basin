@@ -37,6 +37,23 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         }
     }
 
+    /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
+    function test_removeLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
+        uint lpAmountIn = 1000 * 1e24;
+
+        uint[] memory minTokenAmountsOut = new uint[](2);
+        minTokenAmountsOut[0] = 1001 * 1e18; // too high
+        minTokenAmountsOut[1] = 1000 * 1e18;
+    
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user, type(uint).max);
+    }
+    
+    function test_removeLiquidity_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.removeLiquidity(0, new uint[](2), user, block.timestamp - 1);
+    }
+
     /// @dev removeLiquidity: remove to equal amounts of underlying
     function test_removeLiquidity() public prank(user) {
         uint lpAmountIn = 1000 * 1e24;
@@ -56,18 +73,6 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
-    }
-
-    /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
-    function test_removeLiquidity_amountOutTooHigh() public prank(user) {
-        uint lpAmountIn = 1000 * 1e24;
-
-        uint[] memory minTokenAmountsOut = new uint[](2);
-        minTokenAmountsOut[0] = 1001 * 1e18; // too high
-        minTokenAmountsOut[1] = 1000 * 1e18;
-    
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, 1000 * 1e18, minTokenAmountsOut[0]));
-        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user, type(uint).max);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal

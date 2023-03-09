@@ -24,6 +24,21 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 
+    /// @dev not enough tokens received for `lpAmountIn`.
+    function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
+        uint lpAmountIn = 500 * 1e15;
+        uint minTokenAmountOut = 876 * 1e18; // too high
+        uint amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
+
+        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minTokenAmountOut));
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
+    }
+
+    function test_removeLiquidityOneToken_revertIf_expired() public {
+        vm.expectRevert(IWell.Expired.selector);
+        well.removeLiquidityOneToken(0, tokens[0], 0, user, block.timestamp - 1);
+    }
+
     /// @dev Base case
     function test_removeLiquidityOneToken() public prank(user) {
         uint lpAmountIn = 500 * 1e24;
@@ -51,16 +66,6 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
             "Incorrect token0 well reserve"
         );
         assertEq(wellBalance.tokens[1], (initialLiquidity + addedLiquidity), "Incorrect token1 well reserve");
-    }
-
-    /// @dev not enough tokens received for `lpAmountIn`.
-    function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
-        uint lpAmountIn = 500 * 1e15;
-        uint minTokenAmountOut = 876 * 1e18; // too high
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
-
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minTokenAmountOut));
-        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
