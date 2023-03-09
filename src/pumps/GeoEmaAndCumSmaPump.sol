@@ -88,7 +88,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
         b.cumulativeReserves = slot.readBytes16(length);
 
-        bytes16 aN; bytes16 deltaTimestampBytes; bytes16 blocksPassed;
+        bytes16 aN;
+        bytes16 deltaTimestampBytes;
+        bytes16 blocksPassed;
         // Isolate in brackets to prevent stack too deep errors
         {
             uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
@@ -99,13 +101,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         }
 
         for (uint i; i < length; ++i) {
-
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-            b.lastReserves[i] = _capReserve(
-                b.lastReserves[i],
-                (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(),
-                blocksPassed
-            );
+            b.lastReserves[i] =
+                _capReserve(b.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), blocksPassed);
             b.emaReserves[i] = b.lastReserves[i].mul((ABDKMathQuad.ONE.sub(aN))).add(b.emaReserves[i].mul(aN));
             b.cumulativeReserves[i] = b.cumulativeReserves[i].add(b.lastReserves[i].mul(deltaTimestampBytes));
         }
@@ -177,14 +175,13 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     ∴ `maxReserve = lastReserve + blocks*LOG_MAX_INCREASE`
-     * 
+     *
      */
     function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
         bytes16 blocksPassed
     ) internal view returns (bytes16 cappedReserve) {
-
         // Reserve decreasing (lastReserve > reserve)
         if (lastReserve.cmp(reserve) == 1) {
             bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));

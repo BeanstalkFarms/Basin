@@ -71,7 +71,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
     /// @dev Add liquidity using the feeOnTransfer method and then remove it.
     /// Since the token used doesn't actually charge fees, this should result in
-    /// result in net zero change 
+    /// result in net zero change
     function test_addLiquidityFeeOnTransferNoFeeAndRemoveLiquidity() public prank(user) {
         uint[] memory amounts = new uint[](tokens.length);
         for (uint i = 0; i < tokens.length; i++) {

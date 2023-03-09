@@ -6,7 +6,7 @@ import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityImbalancedTest is TestHelper {
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
-    
+
     uint[] tokenAmountsOut;
     uint requiredLpAmountIn;
 

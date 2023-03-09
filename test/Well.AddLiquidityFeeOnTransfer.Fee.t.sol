@@ -21,7 +21,7 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
 
         // expected amount is 1000 * 1e24, actual will be 990 * 1e24
         uint lpAmountOut = 990 * 1e24;
-        
+
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
         well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max);
     }

@@ -33,7 +33,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         vm.expectRevert(IWell.InvalidTokens.selector);
         well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user, type(uint).max);
     }
-    
+
     /// @dev Note: this covers the case where there is a fee as well
     function test_swapFromFeeOnTransferNoFee_revertIf_expired() public {
         vm.expectRevert(IWell.Expired.selector);

@@ -8,7 +8,6 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellSwapToTest is SwapHelper {
-
     function setUp() public {
         setupWell(2);
     }
