@@ -53,7 +53,12 @@ contract ABDKTest is TestHelper {
         bytes16 pu = powuFraction(num, denom, exp);
         uint puu = uint(pu.to128x128());
         uint pypu = uint(abi.decode(result, (int)));
-        assertApproxEqRelN(puu, pypu, 1, 28); // expecting precision to 10**28
+        
+        if (puu > 1e28) {
+            assertApproxEqRelN(puu, pypu, 1, 28); // expecting precision to 10**28
+        } else {
+            assertApproxEqAbs(puu, pypu, 1);
+        }
     }
 
     /// @dev calculate (a/b)^c

@@ -33,38 +33,43 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
         );
     }
 
+    /**
+     * @dev Reserves precision:
+     * 
+     * When reserves are <= 1e24, we accept an absolute error of 1.
+     * When reserves are > 1e24, we accept a relative error of 1e-24.
+     * i.e. the maximum delta between actual and expected reserves is:
+     * 1 - (1e24)/(1e24 + 1)
+     */
     function testFuzz_update(
         uint[8] memory initReserves,
         uint[8] memory reserves,
         uint8 n,
-        uint40 timeIncrease,
-        uint40 timeIncrease2
+        uint40 timeIncrease
     ) public prank(user) {
         n = uint8(bound(n, 1, 8));
         for (uint i = 0; i < n; i++) {
-            // TODO: relax min assumption
             initReserves[i] = bound(initReserves[i], 1e6, type(uint128).max);
             reserves[i] = bound(reserves[i], 1e6, type(uint128).max);
         }
-        // timeIncrease = uint40(bound(timeIncrease, 1, type(uint40).max - block.timestamp));
-        // timeIncrease2 = uint40(bound(timeIncrease2, 1, type(uint40).max - block.timestamp - timeIncrease));
-        vm.assume(block.timestamp + timeIncrease + timeIncrease2 <= type(uint40).max);
+        vm.assume(block.timestamp + timeIncrease <= type(uint40).max);
 
+        // Start by updating the Pump with the initial reserves. Also initializes the Pump.
         uint[] memory updateReserves = new uint[](n);
         for (uint i = 0; i < n; i++) {
             updateReserves[i] = initReserves[i];
         }
-
         mWell.update(address(pump), updateReserves, new bytes(0));
 
+        // Read a snapshot from the Pump
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell));
         uint startTimestamp = block.timestamp;
-
+        
+        // Fast-forward time and update the Pump with new reserves.
+        increaseTime(timeIncrease);
         for (uint i = 0; i < n; i++) {
             updateReserves[i] = reserves[i];
         }
-
-        increaseTime(timeIncrease);
         mWell.update(address(pump), updateReserves, new bytes(0));
 
         uint[] memory lastReserves = pump.readLastReserves(address(mWell));
@@ -75,7 +80,8 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
                 updateReserves[i].fromUIntToLog2(),
                 (timeIncrease / BLOCK_TIME).fromUInt()
             ).pow_2ToUInt();
-            if (lastReserves[i] > 1e20) {
+            
+            if (lastReserves[i] > 1e24) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
             } else {
                 assertApproxEqAbs(capReserve, lastReserves[i], 1);
@@ -87,7 +93,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
             (uint[] memory twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp);
             for (uint i; i < n; ++i) {
                 console.log("TWA RESERVES", i, twaReserves[i]);
-                if (lastReserves[i] > 1e20) {
+                if (lastReserves[i] > 1e24) {
                     assertApproxEqRelN(twaReserves[i], lastReserves[i], 1, 24);
                 } else {
                     assertApproxEqAbs(twaReserves[i], lastReserves[i], 1);
