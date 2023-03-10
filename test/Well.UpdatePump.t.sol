@@ -23,7 +23,7 @@ contract WellUpdatePumpTest is TestHelper {
         }
 
         // Setup a Well with multiple pumps and test each
-        // FIXME: this works because liquidity is deployed which switches
+        // NOTE: this works because liquidity is deployed which switches
         // lastData from "0xATTACHED" to the `data` param which is passed during
         // the `update()` call. If liquidity is not added, this will fail.
         setupWell(2, wellFunction, pumps);
@@ -38,7 +38,4 @@ contract WellUpdatePumpTest is TestHelper {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }
     }
-
-    /// FIXME(test): verify that transferring a token to the well -> calling setReserves
-    /// doesn't take into account the extra tokens. must call sync / etc.
 }

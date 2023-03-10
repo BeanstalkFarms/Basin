@@ -165,6 +165,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// SWAP: FROM ////////////////////
 
+    /**
+     * @dev MUST revert if a fee on transfer token is used. The requisite check
+     * is performed in {_setReserves}.
+     */
     function swapFrom(
         IERC20 fromToken,
         IERC20 toToken,
@@ -177,6 +181,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);
     }
 
+    /**
+     * @dev Note that `amountOut` is the amount *transferred* by the Well; if a fee
+     * is charged on transfers of `toToken`, the amount received by `recipient`
+     * will be less than `amountOut`.
+     */
     function swapFromFeeOnTransfer(
         IERC20 fromToken,
         IERC20 toToken,
@@ -216,6 +225,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _setReserves(_tokens, reserves);
     }
 
+    /**
+     * @dev Assumes both tokens incur no fee on transfer.
+     */
     function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -229,6 +241,12 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     //////////////////// SWAP: TO ////////////////////
 
+    /**
+     * @dev {swapTo} does not support fee on transfer tokens, and no corresponding
+     * "swapToFeeOnTransfer" function is provided as this would require either:
+     * (a) inclusion of the fee as a parameter with verification; or
+     * (b) iterative transfers which attempts to back-calculate the fee.
+     */
     function swapTo(
         IERC20 fromToken,
         IERC20 toToken,
@@ -253,10 +271,23 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
             revert SlippageIn(amountIn, maxAmountIn);
         }
 
-        _executeSwap(fromToken, toToken, amountIn, amountOut, recipient);
+        _swapTo(fromToken, toToken, amountIn, amountOut, recipient);
         _setReserves(_tokens, reserves);
     }
 
+    /**
+     * @dev Executes token transfers and emits Swap event. Used by {swapTo} to
+     * avoid stack too deep errors.
+     */
+    function _swapTo(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient) internal {
+        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
+        toToken.safeTransfer(recipient, amountOut);
+        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
+    }
+
+    /**
+     * @dev Assumes both tokens incur no fee on transfer.
+     */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -267,21 +298,73 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         amountIn = _calcReserve(wellFunction(), reserves, i, totalSupply()) - reserves[i];
     }
 
-    //////////////////// SWAP: UTILITIES ////////////////////
+    //////////////////// SHIFT ////////////////////
 
     /**
-     * @dev Executes token transfers and emits Swap event.
+     * @dev When using Wells for a multi-step swap, gas costs can be reduced by
+     * "shifting" tokens from one Well to another rather than returning them to
+     * a router (like Pipeline).
+     *
+     * Example multi-hop swap: WETH -> DAI -> USDC
+     *
+     * 1. Using a router without {shift}:
+     *  WETH.transfer(sender=0xUSER, recipient=0xROUTER)                     [1]
+     *  Call the router, which performs:
+     *      Well1.swapFrom(fromToken=WETH, toToken=DAI, recipient=0xROUTER)
+     *          WETH.transfer(sender=0xROUTER, recipient=Well1)              [2]
+     *          DAI.transfer(sender=Well1, recipient=0xROUTER)               [3]
+     *      Well2.swapFrom(fromToken=DAI, toToken=USDC, recipient=0xROUTER)
+     *          DAI.transfer(sender=0xROUTER, recipient=Well2)               [4]
+     *          USDC.transfer(sender=Well2, recipient=0xROUTER)              [5]
+     *  USDC.transfer(sender=0xROUTER, recipient=0xUSER)                     [6]
+     *
+     *  Note: this could be optimized by configuring the router to deliver
+     *  tokens from the last swap directly to the user.
+     *
+     * 2. Using a router with {shift}:
+     *  WETH.transfer(sender=0xUSER, recipient=Well1)                        [1]
+     *  Call the router, which performs:
+     *      Well1.shift(tokenOut=DAI, recipient=Well2)
+     *          DAI.transfer(sender=Well1, recipient=Well2)                  [2]
+     *      Well2.shift(tokenOut=USDC, recipient=0xUSER)
+     *          USDC.transfer(sender=Well2, recipient=0xUSER)                [3]
      */
-    function _executeSwap(
-        IERC20 fromToken,
-        IERC20 toToken,
-        uint amountIn,
-        uint amountOut,
+    function shift(
+        IERC20 tokenOut,
+        uint minAmountOut,
         address recipient
-    ) internal {
-        fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
-        toToken.safeTransfer(recipient, amountOut);
-        emit Swap(fromToken, toToken, amountIn, amountOut, recipient);
+    ) external nonReentrant returns (uint amountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = new uint[](_tokens.length);
+
+        // Use the balances of the pool instead of the stored reserves.
+        // If there is a change in token balances relative to the currently
+        // stored reserves, the extra tokens can be shifted into `tokenOut`.
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+        uint j = _getJ(_tokens, tokenOut);
+        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
+
+        if (amountOut >= minAmountOut) {
+            tokenOut.safeTransfer(recipient, amountOut);
+            reserves[j] -= amountOut;
+            _setReserves(_tokens, reserves);
+            emit Shift(reserves, tokenOut, amountOut, recipient);
+        } else {
+            revert SlippageOut(amountOut, minAmountOut);
+        }
+    }
+
+    function getShiftOut(IERC20 tokenOut) external view returns (uint amountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint[] memory reserves = new uint[](_tokens.length);
+        for (uint i; i < _tokens.length; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+
+        uint j = _getJ(_tokens, tokenOut);
+        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
     }
 
     //////////////////// ADD LIQUIDITY ////////////////////
@@ -340,6 +423,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         emit AddLiquidity(tokenAmountsIn, lpAmountOut, recipient);
     }
 
+    /**
+     * @dev Assumes that no tokens involved incur a fee on transfer.
+     */
     function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint[] memory reserves = _getReserves(_tokens.length);
@@ -505,80 +591,6 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         }
     }
 
-    /**
-     * @dev When using Wells for a multi-step swap, gas costs can be reduced by
-     * "shifting" tokens from one Well to another rather than returning them to
-     * a router (like Pipeline).
-     *
-     * Example multi-hop swap: WETH -> DAI -> USDC
-     * -------------------------------------------------------------------------
-     *
-     * 1. Using a router without {shift}:
-     *
-     *  WETH.transfer(sender=0xUSER, recipient=0xROUTER)                     [1]
-     *  Call the router, which performs:
-     *      Well1.swapFrom(fromToken=WETH, toToken=DAI, recipient=0xROUTER)
-     *          WETH.transfer(sender=0xROUTER, recipient=Well1)              [2]
-     *          DAI.transfer(sender=Well1, recipient=0xROUTER)               [3]
-     *      Well2.swapFrom(fromToken=DAI, toToken=USDC, recipient=0xROUTER)
-     *          DAI.transfer(sender=0xROUTER, recipient=Well2)               [4]
-     *          USDC.transfer(sender=Well2, recipient=0xROUTER)              [5]
-     *  USDC.transfer(sender=0xROUTER, recipient=0xUSER)                     [6]
-     *
-     *  Note: this could be optimized by configuring the router to deliver
-     *  tokens from the last swap directly to the user.
-     *
-     * 2. Using a router with {shift}:
-     *
-     *  WETH.transfer(sender=0xUSER, recipient=Well1)                        [1]
-     *  Call the router, which performs:
-     *      Well1.shift(tokenOut=DAI, recipient=Well2)
-     *          DAI.transfer(sender=Well1, recipient=Well2)                  [2]
-     *      Well2.shift(tokenOut=USDC, recipient=0xUSER)
-     *          USDC.transfer(sender=Well2, recipient=0xUSER)                [3]
-     *
-     * -------------------------------------------------------------------------
-     *
-     * FIXME: check fee on transfer behavior after merge
-     */
-    function shift(
-        IERC20 tokenOut,
-        uint minAmountOut,
-        address recipient
-    ) external nonReentrant returns (uint amountOut) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory reserves = new uint[](_tokens.length);
-
-        // Use the balances of the pool instead of the stored reserves.
-        // If there is a change in token balances relative to the currently
-        // stored reserves, the extra tokens can be shifted into `tokenOut`.
-        for (uint i; i < _tokens.length; ++i) {
-            reserves[i] = _tokens[i].balanceOf(address(this));
-        }
-        uint j = _getJ(_tokens, tokenOut);
-        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
-
-        if (amountOut >= minAmountOut) {
-            tokenOut.safeTransfer(recipient, amountOut);
-            reserves[j] -= amountOut;
-            _setReserves(_tokens, reserves);
-            emit Shift(reserves, tokenOut, amountOut, recipient);
-        } else {
-            revert SlippageOut(amountOut, minAmountOut);
-        }
-    }
-
-    function getShiftOut(IERC20 tokenOut) external view returns (uint amountOut) {
-        IERC20[] memory _tokens = tokens();
-        uint[] memory reserves = new uint[](_tokens.length);
-        for (uint i; i < _tokens.length; ++i) {
-            reserves[i] = _tokens[i].balanceOf(address(this));
-        }
-
-        uint j = _getJ(_tokens, tokenOut);
-        amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
-    }
-
     function getReserves() external view returns (uint[] memory reserves) {
         reserves = _getReserves(numberOfTokens());
     }
@@ -596,7 +608,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      */
     function _setReserves(IERC20[] memory _tokens, uint[] memory reserves) internal {
         for (uint i; i < reserves.length; ++i) {
-            if (reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves(); // FIXME: reserve of zero breaks the Pump
+            if (reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves();
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }

@@ -136,8 +136,9 @@ interface IWell {
     function wellData() external view returns (bytes memory);
 
     /**
-     * @notice Returns the Aquifer that a Well was bored in.
+     * @notice Returns the Aquifer that created this Well.
      * @dev Wells can be permissionlessly bored in an Aquifer.
+     *
      * Aquifers stores the implementation that was used to bore the Well.
      */
     function aquifer() external view returns (address);
@@ -178,15 +179,14 @@ interface IWell {
     ) external returns (uint amountOut);
 
     /**
-     * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports
-     * fee on transfer tokens.
+     * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports fee on transfer tokens.
      * @param fromToken The token to swap from
      * @param toToken The token to swap to
      * @param amountIn The amount of `fromToken` to spend
-     * @param minAmountOut The minimum amount of `toToken` to receive
+     * @param minAmountOut The minimum amount of `toToken` to take from the Well. Note that if `toToken` charges a fee on transfer, `recipient` will receive less than this amount.
      * @param recipient The address to receive `toToken`
      * @param deadline The timestamp after which this operation is invalid
-     * @return amountOut The amount of `toToken` received
+     * @return amountOut The amount of `toToken` transferred from the Well. Note that if `toToken` charges a fee on transfer, `recipient` may receive less than this amount.
      * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
      */
     function swapFromFeeOnTransfer(
@@ -236,6 +236,27 @@ interface IWell {
      * @return amountIn The amount of `fromToken` that must be spent
      */
     function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn);
+
+    //////////////////// SHIFT ////////////////////
+
+    /**
+     * @notice Shifts excess tokens held by the Well into `tokenOut` and delivers to `recipient`.
+     * @param tokenOut The token to shift into
+     * @param minAmountOut The minimum amount of `tokenOut` to receive
+     * @param recipient The address to receive the token
+     * @return amountOut The amount of `tokenOut` received
+     * @dev Gas optimization: we leave the responsibility of checking a transaction
+     * deadline to a wrapper contract like {Pipeline} to prevent repeated deadline
+     * checks on each hop of a multi-step transaction.
+     */
+    function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
+
+    /**
+     * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
+     * @param tokenOut The token to shift into
+     * @return amountOut The amount of `tokenOut` received
+     */
+    function getShiftOut(IERC20 tokenOut) external returns (uint amountOut);
 
     //////////////////// ADD LIQUIDITY ////////////////////
 
@@ -370,22 +391,6 @@ interface IWell {
      * @return skimAmounts The amount of each token skimmed
      */
     function skim(address recipient) external returns (uint[] memory skimAmounts);
-
-    /**
-     * @notice Shifts excess tokens held by the Well into `tokenOut` and delivers to `recipient`.
-     * @param tokenOut The token to shift into
-     * @param minAmountOut The minimum amount of `tokenOut` to receive
-     * @param recipient The address to receive the token
-     * @return amountOut The amount of `tokenOut` received
-     */
-    function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
-
-    /**
-     * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
-     * @param tokenOut The token to shift into
-     * @return amountOut The amount of `tokenOut` received
-     */
-    function getShiftOut(IERC20 tokenOut) external returns (uint amountOut);
 
     /**
      * @notice Gets the reserves of each token held by the Well.
