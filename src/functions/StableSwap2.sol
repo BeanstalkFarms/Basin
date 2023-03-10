@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 
 import "src/interfaces/IWellFunction.sol";
 import "src/libraries/LibMath.sol";
+import "forge-std/console.sol";
 
 /**
  * @author Publius
@@ -48,14 +49,24 @@ contract StableSwap2 is IWellFunction {
         uint lpTokenSupply,
         bytes calldata
     ) external view override returns (uint reserve) {
-        uint round = 1e10;
+        uint round;
+        if (lpTokenSupply < 1e20) {
+            round = lpTokenSupply.nthRoot(3);
+        } else if (lpTokenSupply < 1e24) {
+            round = 1e7;
+        } else if (lpTokenSupply < 1e28) {
+            round = 1e9;
+        } else if (lpTokenSupply < 1e32) {
+            round = 1e12;
+        } else if (lpTokenSupply < 1e36) {
+            round = 1e15;
+        } else {
+            round = 1e18;
+        }
         uint r = ((lpTokenSupply / round / 2) ** (a + 1)) * 2;
 
-        uint x0 = (lpTokenSupply /
-            uint256(1e18).nthRoot(a + 1) -
-            reserves[j == 1 ? 0 : 1]) / round;
-        x0 = 3000000000000;
-        reserve = _get_y(x0, reserves[j == 1 ? 0 : 1] / round, r) * round;
+        uint y = reserves[j == 1 ? 0 : 1] / round;
+        reserve = _get_y(y, y, r) * round;
     }
 
     function name() external pure override returns (string memory) {
@@ -66,23 +77,30 @@ contract StableSwap2 is IWellFunction {
         return "SS";
     }
 
-    function _f(uint x0, uint y) internal view returns (uint) {
-        return (y * (x0 ** a) + (y ** a) * x0) * 1e18;
+    function _f(uint x0, uint y, uint d) internal view returns (uint) {
+        uint dsqrt1 = d.sqrt();
+        uint dsqrt2 = d / dsqrt1;
+        return
+            (((y * (x0 ** (a - 1))) / dsqrt1) * x0) /
+            dsqrt2 +
+            (((x0 * (y ** (a - 1))) / dsqrt1) * y) /
+            dsqrt2;
     }
 
     function _d(uint x0, uint y) internal view returns (uint) {
-        return (a * y * (x0 ** (a - 1)) + y ** a) * 1e18;
+        return a * y * (x0 ** (a - 1)) + y ** a;
     }
 
     function _get_y(uint x, uint y, uint r) internal view returns (uint) {
         for (uint i = 0; i < 255; i++) {
             uint x_prev = x;
-            uint k = _f(x, y);
-            if (k < r) {
-                uint dx = (r - k) / _d(x, y);
+            uint d = _d(x, y);
+            uint k = _f(x, y, d);
+            if (k < r / 1e18 / d) {
+                uint dx = (r / 1e18 / d - k);
                 x = x + dx;
             } else {
-                uint dx = (k - r) / _d(x, y);
+                uint dx = (k - r / 1e18 / d);
                 x = x - dx;
             }
             if (x > x_prev) {
