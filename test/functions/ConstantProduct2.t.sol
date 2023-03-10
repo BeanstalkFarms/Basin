@@ -1,28 +1,26 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "test/TestHelper.sol";
+import {console, TestHelper} from "test/TestHelper.sol";
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
-import "src/functions/ConstantProduct2.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
 contract ConstantProduct2Test is WellFunctionHelper {
     /// State A: Same decimals
     uint STATE_A_B0 = 10 * 1e18;
     uint STATE_A_B1 = 10 * 1e18;
-    uint STATE_A_LP = 20 * 1e27;
+    uint STATE_A_LP = 10 * 1e24;
 
     /// State B: Different decimals
     uint STATE_B_B0 = 1 * 1e18;
     uint STATE_B_B1 = 1250 * 1e6;
-    uint STATE_B_LP = 70710678118654752440084;
+    uint STATE_B_LP = 35_355_339_059_327_376_220;
 
     /// State C: Similar decimals
     uint STATE_C_B0 = 20 * 1e18;
-    uint STATE_C_B1 = 31250000000000000000; // 3.125e19
-    uint STATE_C_LP = 50 * 1e27;
+    uint STATE_C_B1 = 31_250_000_000_000_000_000; // 3.125e19
+    uint STATE_C_LP = 25 * 1e24;
 
     //////////// SETUP ////////////
 
@@ -53,7 +51,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
             STATE_A_LP // sqrt(10e18 * 10e18) * 2
         );
     }
-    
+
     /// @dev calcLpTokenSupply: diff decimals
     function test_getLpTokenSupply_diffDecimals() public {
         uint[] memory reserves = new uint[](2);
@@ -84,14 +82,11 @@ contract ConstantProduct2Test is WellFunctionHelper {
         // find reserves[1]
         reserves[0] = STATE_A_B0;
         reserves[1] = 0;
-        assertEq(
-            _function.calcReserve(reserves, 1, STATE_A_LP, _data),
-            STATE_A_B1
-        );
+        assertEq(_function.calcReserve(reserves, 1, STATE_A_LP, _data), STATE_A_B1);
 
         /// STATE C
         // find reserves[1]
-        reserves[0] = STATE_C_B0; 
+        reserves[0] = STATE_C_B0;
         reserves[1] = 0;
         assertEq(
             _function.calcReserve(reserves, 1, STATE_C_LP, _data),
@@ -122,4 +117,25 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
+    function test_fuzz_constantProduct(uint x, uint y) public {
+        uint[] memory reserves = new uint[](2);
+        bytes memory _data = new bytes(0);
+        // TODO - relax assumption
+        reserves[0] = bound(x, 1, 1e32);
+        reserves[1] = bound(y, 1, 1e32);
+        uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
+        console.log("lpTokenSupply", lpTokenSupply);
+        uint reserve0 = _function.calcReserve(reserves, 0, lpTokenSupply, _data);
+        uint reserve1 = _function.calcReserve(reserves, 1, lpTokenSupply, _data);
+        if (reserves[0] < 1e12) {
+            assertApproxEqAbs(reserve0, reserves[0], 2);
+        } else {
+            assertApproxEqRel(reserve0, reserves[0], 2e6);
+        }
+        if (reserves[1] < 1e12) {
+            assertApproxEqAbs(reserve1, reserves[1], 2);
+        } else {
+            assertApproxEqRel(reserve1, reserves[1], 2e6);
+        }
+    }
 }

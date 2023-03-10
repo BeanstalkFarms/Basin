@@ -1,0 +1,36 @@
+{
+  "name": "wells",
+  "version": "1.0.0",
+  "description": "A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "t": ". ./script/bin/env.sh; forge t -vvv",
+    "deploy:local": ". ./script/bin/env.sh; ./script/bin/deploy-local.sh",
+    "compare": "forge snapshot --match-path test/integration/IntegrationTestGasComparisons.sol --snap .dex-comparisons",
+    "compare:check": "yarn compare --check",
+    "compare:csv": "node ./script/dex-comparisons.js",
+    "test": "forge t -vvv --ffi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeanstalkFarms/Wells.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BeanstalkFarms/Wells/issues"
+  },
+  "homepage": "https://github.com/BeanstalkFarms/Wells#readme",
+  "devDependencies": {
+    "husky": "8.0.3"
+  },
+  "lint-staged": {
+    "*.sol": "forge fmt"
+  }
+}
