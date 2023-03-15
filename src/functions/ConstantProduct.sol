@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.17;
 
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {ProportionalLPToken} from "src/functions/ProportionalLPToken.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
@@ -17,7 +17,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `b_i` is the reserve at index `i`
  *  `n` is the number of tokens in the Well
  */
-contract ConstantProduct is IWellFunction {
+contract ConstantProduct is ProportionalLPToken {
     using LibMath for uint;
 
     /// @dev `s = π(b_i)^(1/n) * n`

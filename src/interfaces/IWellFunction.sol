@@ -38,6 +38,21 @@ interface IWellFunction {
     ) external view returns (uint lpTokenSupply);
 
     /**
+     * @notice Calculates the amount of tokens underlying a given amount of LP tokens.
+     * @param lpTokenAmount The amount of LP tokens
+     * @param reserves A list of token reserves
+     * @param lpTokenSupply The supply of LP tokens
+     * @param data Well function data provided on every call
+     * @return underlyingAmounts The amount of tokens underlying the LP tokens
+     */
+    function calcLPTokenUnderlying(
+        uint lpTokenAmount,
+        uint[] memory reserves,
+        uint lpTokenSupply,
+        bytes calldata data
+    ) external view returns (uint[] memory underlyingAmounts);
+
+    /**
      * @notice Returns the name of the Well function.
      * @dev Used in Well building.
      */

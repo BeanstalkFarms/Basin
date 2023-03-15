@@ -449,8 +449,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
         tokenAmountsOut = new uint[](_tokens.length);
         _burn(msg.sender, lpAmountIn);
+        tokenAmountsOut = _calcLPTokenUnderlying(wellFunction(), lpAmountIn, reserves, lpTokenSupply);
         for (uint i; i < _tokens.length; ++i) {
-            tokenAmountsOut[i] = (lpAmountIn * reserves[i]) / lpTokenSupply;
             if (tokenAmountsOut[i] < minTokenAmountsOut[i]) {
                 revert SlippageOut(tokenAmountsOut[i], minTokenAmountsOut[i]);
             }
@@ -467,10 +467,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint[] memory reserves = _getReserves(_tokens.length);
         uint lpTokenSupply = totalSupply();
 
-        tokenAmountsOut = new uint[](_tokens.length);
-        for (uint i; i < _tokens.length; ++i) {
-            tokenAmountsOut[i] = (lpAmountIn * reserves[i]) / lpTokenSupply;
-        }
+        tokenAmountsOut = _calcLPTokenUnderlying(wellFunction(), lpAmountIn, reserves, lpTokenSupply);
     }
 
     //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
@@ -668,6 +665,24 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint lpTokenSupply
     ) internal view returns (uint reserve) {
         reserve = IWellFunction(_wellFunction.target).calcReserve(reserves, j, lpTokenSupply, _wellFunction.data);
+    }
+
+    /**
+     * @dev Calculates the amount of tokens that underly a given amount of LP tokens
+     * Wraps {IWellFunction.calcLPTokenAmount}.
+     *
+     * Used to determine the how many tokens to send to a user when they remove LP.
+     *
+     * The Well function is passed as a parameter to minimize gas in instances
+     * where it is called multiple times in one transaction.
+     */
+    function _calcLPTokenUnderlying(
+        Call memory _wellFunction,
+        uint lpTokenAmount,
+        uint[] memory reserves,
+        uint lpTokenSupply
+    ) internal view returns (uint[] memory tokenAmounts) {
+        tokenAmounts = IWellFunction(_wellFunction.target).calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, _wellFunction.data);
     }
 
     //////////////////// INTERNAL: WELL TOKEN INDEXING ////////////////////

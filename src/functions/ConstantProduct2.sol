@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.17;
 
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
@@ -16,7 +16,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  */
-contract ConstantProduct2 is IWellFunction {
+contract ConstantProduct2 is ProportionalLPToken2 {
     using LibMath for uint;
 
     uint constant EXP_PRECISION = 1e12;
