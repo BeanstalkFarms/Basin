@@ -38,7 +38,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external view override returns (uint reserve) {
+    ) external pure override returns (uint reserve) {
         // Note: potential optimization is to use unchecked math here
         reserve = lpTokenSupply ** 2 / EXP_PRECISION;
         reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
@@ -58,9 +58,10 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint j,
         uint[] calldata ratios,
         bytes calldata
-    ) external view override returns (uint reserve) {
+    ) external pure override returns (uint reserve) {
         uint i = j == 1 ? 0 : 1;
-        reserve = ((reserves[i] * reserves[j] * ratios[j]).roundedDiv(ratios[i])).sqrt();
+        // use 512 muldiv for last mul to avoid overflow
+        reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
     }
 
     function calcReserveAtRatioLiquidity(

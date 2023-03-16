@@ -65,8 +65,8 @@ contract BeanstalkConstantProduct2Test is TestHelper {
     ) public {
 
         for (uint i = 0; i < 2; ++i) {
-            // TODO: Relax assumption -> Check bounds on Eth/usd uniswap price.
-            reserves[i] = bound(reserves[i], 1e6, 1e18);
+            // TODO: Upper bound is limited by constant product 2
+            reserves[i] = bound(reserves[i], 1e6, 1e32);
             ratios[i] = bound(ratios[i], 1e6, 1e18);
         }
 
