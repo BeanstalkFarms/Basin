@@ -313,4 +313,18 @@ abstract contract TestHelper is Test, WellDeployer {
         snapshot.well = getBalances(address(well), well);
         snapshot.reserves = well.getReserves();
     }
+
+    function uint2ToUintN(uint[2] memory input) internal pure returns (uint[] memory out) {
+        out = new uint[](input.length);
+        for (uint i = 0; i < input.length; i++) {
+            out[i] = input[i];
+        }
+    }
+
+    function numDigits(uint number) internal returns (uint digits) {
+        while (number > 9) {
+            number /= 10;
+            digits++;
+        }
+    }
 }

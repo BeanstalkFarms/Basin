@@ -2,8 +2,11 @@
 
 pragma solidity ^0.8.17;
 
+import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
+
+import {console} from "forge-std/console.sol";
 
 /**
  * @author Publius
@@ -16,7 +19,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  */
-contract ConstantProduct2 is ProportionalLPToken2 {
+contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     using LibMath for uint;
 
     uint constant EXP_PRECISION = 1e12;
@@ -35,7 +38,7 @@ contract ConstantProduct2 is ProportionalLPToken2 {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external pure override returns (uint reserve) {
+    ) external view override returns (uint reserve) {
         // Note: potential optimization is to use unchecked math here
         reserve = lpTokenSupply ** 2 / EXP_PRECISION;
         reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
@@ -47,5 +50,26 @@ contract ConstantProduct2 is ProportionalLPToken2 {
 
     function symbol() external pure override returns (string memory) {
         return "CP";
+    }
+
+    // TODO: change to pure
+    function calcReserveAtRatioSwap(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external view override returns (uint reserve) {
+        uint i = j == 1 ? 0 : 1;
+        reserve = ((reserves[i] * reserves[j] * ratios[j]).roundedDiv(ratios[i])).sqrt();
+    }
+
+    function calcReserveAtRatioLiquidity(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external pure override returns (uint reserve) {
+        uint i = j == 1 ? 0 : 1;
+        reserve = (reserves[i] * ratios[j]).roundedDiv(ratios[i]);
     }
 }

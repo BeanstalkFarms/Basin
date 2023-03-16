@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.17;
 
+import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken} from "src/functions/ProportionalLPToken.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
@@ -17,7 +18,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `b_i` is the reserve at index `i`
  *  `n` is the number of tokens in the Well
  */
-contract ConstantProduct is ProportionalLPToken {
+contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
     using LibMath for uint;
 
     /// @dev `s = π(b_i)^(1/n) * n`
@@ -57,5 +58,34 @@ contract ConstantProduct is ProportionalLPToken {
         for (uint i = 1; i < length; ++i) {
             pX = pX * xs[i];
         }
+    }
+
+    function calcReserveAtRatioSwap(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external pure override returns (uint reserve) {
+        uint sumRatio = 0;
+        for (uint i = 0; i < reserves.length; ++i) {
+            if (i != j) sumRatio += ratios[i];
+        }
+        sumRatio /= reserves.length-1;
+        reserve = _prodX(reserves) * ratios[j] / sumRatio;
+        reserve = reserve.nthRoot(reserves.length);
+    }
+
+    function calcReserveAtRatioLiquidity(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external pure override returns (uint reserve) {
+        for (uint i = 0; i < reserves.length; ++i) {
+            if (i != j) {
+                reserve += ratios[j] * reserves[i] / ratios[i];
+            }
+        }
+        reserve /= reserves.length-1;
     }
 }

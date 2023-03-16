@@ -9,26 +9,26 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 contract MockEmptyFunction is IWellFunction {
 
     function calcReserve(
-        uint256[] memory reserves,
-        uint256 j,
-        uint256 lpTokenSupply,
-        bytes calldata data
+        uint256[] memory,
+        uint256,
+        uint256,
+        bytes calldata
     ) external pure returns (uint d) {
         return 1;
     }
 
     function calcLpTokenSupply(
-        uint256[] memory reserves,
-        bytes calldata data
+        uint256[] memory,
+        bytes calldata
     ) external pure returns (uint xj) {
         return 1;
     }
 
     function calcLPTokenUnderlying(
-        uint256 lpTokenAmount,
-        uint256[] memory reserves,
-        uint256 lpTokenSupply,
-        bytes calldata data
+        uint256,
+        uint256[] memory,
+        uint256,
+        bytes calldata
     ) external pure returns (uint[] memory underlyingAmounts) {
         return underlyingAmounts;
     }
