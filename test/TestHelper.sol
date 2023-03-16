@@ -70,6 +70,10 @@ abstract contract TestHelper is Test, WellDeployer {
         setupWell(n, deployWellFunction(), deployPumps(2));
     }
 
+    function setupWell(uint n, Call[] memory _pumps) internal {
+        setupWell(n, deployWellFunction(), _pumps);
+    }
+
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
         setupWell(_wellFunction, _pumps, deployMockTokens(n));
     }
