@@ -2,18 +2,19 @@
 pragma solidity ^0.8.17;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 
-/// @dev Tests the {ConstantProduct2} Well function directly.
-contract BeanstalkConstantProduct2SwapTest is TestHelper {
+/// @dev Tests the {ConstantProduct} Well function directly.
+/// TODO: Implement tests with 3+ tokens.
+contract BeanstalkConstantProductSwapTest is TestHelper {
 
     IBeanstalkWellFunction _f;
 
     //////////// SETUP ////////////
 
     function setUp() public {
-        _f = new ConstantProduct2();
+        _f = new ConstantProduct();
     }
 
     function test_calcReserveAtRatioSwap_equal_equal() public {
@@ -83,7 +84,8 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
 
         for (uint i = 0; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
-            reserves[i] = bound(reserves[i], 1e6, 1e32);
+            // TODO Increase limit of ConstantProductN
+            reserves[i] = bound(reserves[i], 1e6, 1e20);
             ratios[i] = bound(ratios[i], 1e6, 1e18);
         }
 

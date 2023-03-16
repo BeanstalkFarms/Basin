@@ -52,7 +52,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         return "CP";
     }
 
-    // TODO: change to pure
+    /// @dev `b_j = (b_0 * b_1 * r_j / r_i)^(1/2)`
     function calcReserveAtRatioSwap(
         uint[] calldata reserves,
         uint j,
@@ -64,6 +64,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
     }
 
+    /// @dev `b_j = b_i * r_j / r_i`
     function calcReserveAtRatioLiquidity(
         uint[] calldata reserves,
         uint j,
