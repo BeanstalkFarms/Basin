@@ -37,8 +37,8 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         reserves[0] = 50;
         reserves[1] = 100;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098521;
-        ratios[1] = 12984712098521;
+        ratios[0] = 12_984_712_098_521;
+        ratios[1] = 12_984_712_098_521;
 
         uint reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, new bytes(0));
@@ -64,17 +64,17 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public {
         uint[] memory reserves = new uint[](2);
-        reserves[0] = 500000000;
-        reserves[1] = 100000000;
+        reserves[0] = 500_000_000;
+        reserves[1] = 100_000_000;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098520;
-        ratios[1] = 12984712098;
+        ratios[0] = 1_298_4712_098_520;
+        ratios[1] = 12_984_712_098;
 
         uint reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, new bytes(0));
 
-        assertEq(reserve0, 100000000004);
-        assertApproxEqAbs(reserve1, 500000, 1);
+        assertEq(reserve0, 100_000_000_004);
+        assertApproxEqAbs(reserve1, 500_000, 1);
     }
 
     function test_calcReserveAtRatioLiquidity_fuzz(
@@ -97,7 +97,9 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         }
 
         // Precision is set to the minimum number of digits of the reserves out.
-        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1]) ? numDigits(reservesOut[1]) : numDigits(reservesOut[0]);
+        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1])
+            ? numDigits(reservesOut[1])
+            : numDigits(reservesOut[0]);
 
         // Check ratio of each `reserveOut` to `reserve` with the ratio of `ratios`.
         // If inequality doesn't hold, then reserves[1] will be zero

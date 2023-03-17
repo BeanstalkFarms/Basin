@@ -137,24 +137,24 @@ library LibMath {
         }
     }
 
-    /// @notice Calculates floor(a×b÷denominator) with full precision. Throws if result overflows a uint256 or denominator == 0
+    /// @notice Calculates floor(a×b÷denominator) with full precision. Throws if result overflows a uint or denominator == 0
     /// @param a The multiplicand
     /// @param b The multiplier
     /// @param denominator The divisor
     /// @return result The 256-bit result
     /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv
     function mulDiv(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
+        uint a,
+        uint b,
+        uint denominator
+    ) internal pure returns (uint result) {
         // 512-bit multiply [prod1 prod0] = a * b
         // Compute the product mod 2**256 and mod 2**256 - 1
         // then use the Chinese Remainder Theorem to reconstruct
         // the 512 bit result. The result is stored in two 256
         // variables such that product = prod1 * 2**256 + prod0
-        uint256 prod0; // Least significant 256 bits of the product
-        uint256 prod1; // Most significant 256 bits of the product
+        uint prod0; // Least significant 256 bits of the product
+        uint prod1; // Most significant 256 bits of the product
         assembly {
             let mm := mulmod(a, b, not(0))
             prod0 := mul(a, b)
@@ -180,7 +180,7 @@ library LibMath {
 
         // Make division exact by subtracting the remainder from [prod1 prod0]
         // Compute remainder using mulmod
-        uint256 remainder;
+        uint remainder;
         assembly {
             remainder := mulmod(a, b, denominator)
         }
@@ -194,7 +194,7 @@ library LibMath {
         // Compute largest power of two divisor of denominator.
         // Always >= 1.
         unchecked {
-            uint256 twos = (type(uint256).max - denominator + 1) & denominator;
+            uint twos = (type(uint).max - denominator + 1) & denominator;
             // Divide denominator by power of two
             assembly {
                 denominator := div(denominator, twos)
@@ -217,7 +217,7 @@ library LibMath {
             // modulo 2**256 such that denominator * inv = 1 mod 2**256.
             // Compute the inverse by starting with a seed that is correct
             // correct for four bits. That is, denominator * inv = 1 mod 2**4
-            uint256 inv = (3 * denominator) ^ 2;
+            uint inv = (3 * denominator) ^ 2;
             // Now use Newton-Raphson iteration to improve the precision.
             // Thanks to Hensel's lifting lemma, this also works in modular
             // arithmetic, doubling the correct bits in each step.
