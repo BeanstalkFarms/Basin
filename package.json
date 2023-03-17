@@ -36,7 +36,7 @@
     "url": "https://github.com/BeanstalkFarms/Wells/issues"
   },
   "homepage": "https://github.com/BeanstalkFarms/Wells#readme",
-  "devDependencies": {
+  "dependencies": {
     "husky": "8.0.3"
   },
   "lint-staged": {

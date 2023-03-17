@@ -321,7 +321,7 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function numDigits(uint number) internal returns (uint digits) {
+    function numDigits(uint number) internal pure returns (uint digits) {
         while (number > 9) {
             number /= 10;
             digits++;

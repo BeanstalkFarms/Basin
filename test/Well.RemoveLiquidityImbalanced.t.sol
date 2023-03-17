@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, ConstantProduct2, Balances} from "test/TestHelper.sol";
-import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellRemoveLiquidityImbalancedTest is TestHelper {
     event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
@@ -36,12 +36,12 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
         uint maxLpAmountIn = 5 * 1e24;
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
     }
 
     function test_removeLiquidityImbalanced_revertIf_expired() public {
-        vm.expectRevert(IWell.Expired.selector);
+        vm.expectRevert(IWellErrors.Expired.selector);
         well.removeLiquidityImbalanced(0, new uint[](2), user, block.timestamp - 1);
     }
 

@@ -94,7 +94,6 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         uint[] memory reservesOut = new uint[](2);
         for (uint i = 0; i < 2; ++i) {
             reservesOut[i] = _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), new bytes(0));
-            uint lpTokenSupplyOut = _f.calcLpTokenSupply(reservesOut, new bytes(0));
         }
 
         // Precision is set to the minimum number of digits of the reserves out.

@@ -5,7 +5,7 @@ import {MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, W
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap incur
@@ -30,7 +30,7 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         uint minAmountOut = 500 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn - _getFee(amountIn));
 
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
