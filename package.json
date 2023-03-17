@@ -1,12 +1,20 @@
 {
-  "name": "wells",
-  "version": "1.0.0",
+  "name": "@beanstalk/wells",
+  "version": "0.3.0",
   "description": "A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.",
   "main": "index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
+  "files": [
+    "/src",
+    "/lib",
+    "/script",
+    "/out",
+    "!/out/*.t.sol",
+    "README.md"
+  ],
   "scripts": {
     "prepare": "husky install",
     "t": ". ./script/bin/env.sh; forge t -vvv",
@@ -16,6 +24,7 @@
     "compare:csv": "node ./script/dex-comparisons.js",
     "test": "forge t -vvv --ffi"
   },
+  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BeanstalkFarms/Wells.git"
