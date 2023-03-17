@@ -12,5 +12,5 @@ interface IInstantaneousPump {
      * @param well The address of the Well
      * @return reserves The instantaneous balanecs tracked by the Pump
      */
-    function readInstantaneousReserves(address well) external view returns (uint[] memory reserves);
+    function readInstantaneousReserves(address well, bytes memory data) external view returns (uint[] memory reserves);
 }

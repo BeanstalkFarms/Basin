@@ -13,7 +13,7 @@ interface IPump {
     /**
      * @notice Updates the Pump with the given reserves.
      * @param reserves The previous reserves of the tokens in the Well.
-     * @param data Pump data provided on every call
+     * @param data data specific to the Well
      * @dev Pumps are updated every time a user swaps, adds liquidity, or
      * removes liquidity from a Well.
      */
