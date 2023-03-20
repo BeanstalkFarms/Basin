@@ -30,8 +30,8 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     function test_metadata() public {
-        assertEq(_function.name(), "Constant Product");
-        assertEq(_function.symbol(), "CP");
+        assertEq(_function.name(), "Constant Product 2");
+        assertEq(_function.symbol(), "CP2");
     }
 
     //////////// LP TOKEN SUPPLY ////////////

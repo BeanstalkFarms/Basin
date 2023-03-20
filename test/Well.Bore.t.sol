@@ -59,11 +59,11 @@ contract WellBoreTest is TestHelper {
     //////////// ERC20 LP Token ////////////
 
     function test_name() public {
-        assertEq(well.name(), "TOKEN0:TOKEN1:TOKEN2:TOKEN3 Constant Product Well");
+        assertEq(well.name(), "TOKEN0:TOKEN1:TOKEN2:TOKEN3 Constant Product 2 Well");
     }
 
     function test_symbol() public {
-        assertEq(well.symbol(), "TOKEN0TOKEN1TOKEN2TOKEN3CPw");
+        assertEq(well.symbol(), "TOKEN0TOKEN1TOKEN2TOKEN3CP2w");
     }
 
     function test_decimals() public {

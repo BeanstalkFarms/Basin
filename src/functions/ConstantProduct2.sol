@@ -6,10 +6,10 @@ import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
+ * @title ConstantProduct2
  * @author Publius
- * @title Gas efficient Constant Product pricing function for Wells with 2 tokens.
- *
- * Constant Product Wells with 2 tokens use the formula:
+ * @notice Gas efficient Constant Product pricing function for Wells with 2 tokens.
+ * @dev Constant Product Wells with 2 tokens use the formula:
  *  `b_0 * b_1 = s^2`
  *
  * Where:
@@ -42,10 +42,10 @@ contract ConstantProduct2 is ProportionalLPToken2 {
     }
 
     function name() external pure override returns (string memory) {
-        return "Constant Product";
+        return "Constant Product 2";
     }
 
     function symbol() external pure override returns (string memory) {
-        return "CP";
+        return "CP2";
     }
 }

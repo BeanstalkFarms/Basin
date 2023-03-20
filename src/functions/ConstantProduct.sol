@@ -6,10 +6,10 @@ import {ProportionalLPToken} from "src/functions/ProportionalLPToken.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
+ * @title ConstantProduct
  * @author Publius
- * @title Constant Product pricing function for Wells with 2 tokens
- *
- * Constant Product Wells use the formula:
+ * @notice Constant product pricing function for Wells with N tokens.
+ * @dev Constant Product Wells use the formula:
  *  `π(b_i) = (s / n)^n`
  *
  * Where:
