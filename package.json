@@ -1,6 +1,6 @@
 {
   "name": "@beanstalk/wells",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.",
   "main": "index.js",
   "directories": {
