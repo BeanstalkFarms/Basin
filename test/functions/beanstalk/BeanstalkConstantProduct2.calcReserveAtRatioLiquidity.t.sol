@@ -108,7 +108,8 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
                 precision
             );
         } else {
-            assertEq(reservesOut[0], 0);
+            // Because `roundedDiv` is used. It could round up to 1.
+            assertApproxEqAbs(reservesOut[0], 0, 1, "reservesOut[0] should be zero");
         }
 
         // If inequality doesn't hold, then reserves[1] will be zero
@@ -120,7 +121,8 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
                 precision
             );
         } else {
-            assertEq(reservesOut[1], 0);
+            // Because `roundedDiv` is used. It could round up to 1.
+            assertApproxEqAbs(reservesOut[1], 0, 1, "reservesOut[1] should be zero");
         }
     }
 }
