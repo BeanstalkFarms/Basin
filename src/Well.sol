@@ -682,7 +682,9 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint[] memory reserves,
         uint lpTokenSupply
     ) internal view returns (uint[] memory tokenAmounts) {
-        tokenAmounts = IWellFunction(_wellFunction.target).calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, _wellFunction.data);
+        tokenAmounts = IWellFunction(_wellFunction.target).calcLPTokenUnderlying(
+            lpTokenAmount, reserves, lpTokenSupply, _wellFunction.data
+        );
     }
 
     //////////////////// INTERNAL: WELL TOKEN INDEXING ////////////////////
