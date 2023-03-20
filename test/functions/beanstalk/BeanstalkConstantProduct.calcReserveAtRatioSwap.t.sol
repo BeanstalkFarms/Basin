@@ -8,7 +8,6 @@ import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol"
 /// @dev Tests the {ConstantProduct} Well function directly.
 /// TODO: Implement tests with 3+ tokens.
 contract BeanstalkConstantProductSwapTest is TestHelper {
-
     IBeanstalkWellFunction _f;
 
     //////////// SETUP ////////////
@@ -37,8 +36,8 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
         reserves[0] = 50;
         reserves[1] = 100;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098521;
-        ratios[1] = 12984712098521;
+        ratios[0] = 12_984_712_098_521;
+        ratios[1] = 12_984_712_098_521;
 
         uint reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, new bytes(0));
@@ -67,8 +66,8 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
         reserves[0] = 50;
         reserves[1] = 100;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098520;
-        ratios[1] = 12984712098;
+        ratios[0] = 12_984_712_098_520;
+        ratios[1] = 12_984_712_098;
 
         uint reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, new bytes(0));
