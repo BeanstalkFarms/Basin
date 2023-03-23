@@ -16,7 +16,7 @@ interface IWellFunction {
      * @param reserves A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided.
      * @param j The index of the reserve to solve for
      * @param lpTokenSupply The supply of LP tokens
-     * @param data Well function data provided on every call
+     * @param data Extra Well function data provided on every call
      * @return reserve The resulting reserve at the jth index
      */
     function calcReserve(
@@ -29,7 +29,7 @@ interface IWellFunction {
     /**
      * @notice Gets the LP token supply given a list of reserves.
      * @param reserves A list of token reserves
-     * @param data Well function data provided on every call
+     * @param data Extra Well function data provided on every call
      * @return lpTokenSupply The resulting supply of LP tokens
      */
     function calcLpTokenSupply(
@@ -38,12 +38,12 @@ interface IWellFunction {
     ) external view returns (uint lpTokenSupply);
 
     /**
-     * @notice Calculates the amount of tokens underlying a given amount of LP tokens.
-     * @param lpTokenAmount The amount of LP tokens
+     * @notice Calculates the amount of each reserve token underlying a given amount of LP tokens.
+     * @param lpTokenAmount An amount of LP tokens
      * @param reserves A list of token reserves
-     * @param lpTokenSupply The supply of LP tokens
-     * @param data Well function data provided on every call
-     * @return underlyingAmounts The amount of tokens underlying the LP tokens
+     * @param lpTokenSupply The current supply of LP tokens
+     * @param data Extra Well function data provided on every call
+     * @return underlyingAmounts The amount of each reserve token that underlies the LP tokens
      */
     function calcLPTokenUnderlying(
         uint lpTokenAmount,
@@ -54,13 +54,11 @@ interface IWellFunction {
 
     /**
      * @notice Returns the name of the Well function.
-     * @dev Used in Well building.
      */
     function name() external view returns (string memory);
 
     /**
      * @notice Returns the symbol of the Well function.
-     * @dev Used in Well building.
      */
     function symbol() external view returns (string memory);
 }
