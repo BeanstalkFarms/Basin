@@ -85,4 +85,29 @@ library LibBytes16 {
             }
         }
     }
+
+    /**
+     * @dev Pack a `bytes16[]` array into `bytes` for cheap storage
+     */
+    function packBytes16(bytes16[] memory byteArray) internal pure returns (bytes memory packedBytes) {
+        for (uint i; i < byteArray.length; ++i) {
+            packedBytes = abi.encodePacked(packedBytes, byteArray[i]);
+        }
+    }
+
+    /**
+     * @dev Unpack `bytes` into a `bytes16[]`.
+     */
+    function unpackBytes16(bytes calldata packedBytes) internal pure returns (bytes16[] memory byteArray) {
+        uint n = packedBytes.length / 16;
+        byteArray = new bytes16[](n);
+        for (uint i; i < packedBytes.length; i += 16) {
+            assembly {
+                mstore(
+                    add(add(byteArray, 32), mul(i,2)),
+                    calldataload(add(packedBytes.offset, i))
+                )
+            }
+        }
+    }
 }

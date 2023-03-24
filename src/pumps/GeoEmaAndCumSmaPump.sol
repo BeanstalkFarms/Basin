@@ -29,6 +29,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
+    using LibBytes16 for bytes;
+    using LibBytes16 for bytes16[];
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint;
 
@@ -253,7 +255,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     function readCumulativeReserves(address well, bytes memory) public view returns (bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
-        cumulativeReserves = abi.encode(byteCumulativeReserves);
+        cumulativeReserves = byteCumulativeReserves.packBytes16();
     }
 
     function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
@@ -282,7 +284,8 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes memory
     ) public view returns (uint[] memory twaReserves, bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
-        bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
+        bytes16[] memory byteStartCumulativeReserves = startCumulativeReserves.unpackBytes16();
+
         twaReserves = new uint[](byteCumulativeReserves.length);
 
         // Overflow is desired on `startTimestamp`, so SafeCast is not used.
@@ -293,7 +296,7 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
             twaReserves[i] =
                 (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2ToUInt();
         }
-        cumulativeReserves = abi.encode(byteCumulativeReserves);
+        cumulativeReserves = byteCumulativeReserves.packBytes16();
     }
 
     //////////////////// HELPERS ////////////////////

@@ -5,7 +5,7 @@ import {console, TestHelper} from "test/TestHelper.sol";
 import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
-
+import {MockBytes16} from "mocks/utils/MockBytes16.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
@@ -14,6 +14,7 @@ contract PumpUpdateTest is TestHelper {
 
     GeoEmaAndCumSmaPump pump;
     MockReserveWell mWell;
+    MockBytes16 m;
     uint[] b = new uint[](2);
 
     uint constant BLOCK_TIME = 12;
@@ -34,6 +35,7 @@ contract PumpUpdateTest is TestHelper {
         b[0] = 1e6;
         b[1] = 2e6;
         mWell.update(address(pump), b, new bytes(0));
+        m = new MockBytes16();
     }
 
     function test_initialized() public prank(user) {
@@ -59,7 +61,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(lastCumulativeReserves[0], bytes16(0));
         assertEq(lastCumulativeReserves[1], bytes16(0));
 
-        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), new bytes(0)), (bytes16[]));
+        bytes16[] memory cumulativeReserves = m.unpackBytes16(pump.readCumulativeReserves(address(mWell), new bytes(0)));
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
@@ -91,7 +93,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(lastCumulativeReserves[0], bytes16(0));
         assertEq(lastCumulativeReserves[1], bytes16(0));
 
-        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), new bytes(0)), (bytes16[]));
+        bytes16[] memory cumulativeReserves = m.unpackBytes16(pump.readCumulativeReserves(address(mWell), new bytes(0)));
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
@@ -129,7 +131,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(lastCumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(lastCumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
 
-        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), new bytes(0)), (bytes16[]));
+        bytes16[] memory cumulativeReserves = m.unpackBytes16(pump.readCumulativeReserves(address(mWell), new bytes(0)));
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
 
@@ -139,7 +141,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(twaReserves[0], 1.5e6, 1);
         assertApproxEqAbs(twaReserves[1], 1e6, 1);
 
-        cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
+        cumulativeReserves = m.unpackBytes16(twaCumulativeReservesBytes);
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
     }
@@ -158,7 +160,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(emaReserves[0], 1_337_697);
         assertEq(emaReserves[1], 1_216_241);
 
-        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), new bytes(0)), (bytes16[]));
+        bytes16[] memory cumulativeReserves = m.unpackBytes16(pump.readCumulativeReserves(address(mWell), new bytes(0)));
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
 
@@ -168,7 +170,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(twaReserves[0], 1.5e6, 1);
         assertApproxEqAbs(twaReserves[1], 1e6, 1);
 
-        cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
+        cumulativeReserves = m.unpackBytes16(twaCumulativeReservesBytes);
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1.5e6, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1e6, 1);
     }
@@ -214,7 +216,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(lastCumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
         assertApproxEqAbs(lastCumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
-        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), new bytes(0)), (bytes16[]));
+        bytes16[] memory cumulativeReserves = m.unpackBytes16(pump.readCumulativeReserves(address(mWell), new bytes(0)));
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
@@ -224,7 +226,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(twaReserves[0], 1_224_744, 1);
         assertApproxEqAbs(twaReserves[1], 1_224_744, 1);
 
-        cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
+        cumulativeReserves = m.unpackBytes16(twaCumulativeReservesBytes);
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
 
@@ -234,7 +236,7 @@ contract PumpUpdateTest is TestHelper {
         assertApproxEqAbs(twaReserves[0], 1e6, 1);
         assertApproxEqAbs(twaReserves[1], 1.5e6, 1);
 
-        cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
+        cumulativeReserves = m.unpackBytes16(twaCumulativeReservesBytes);
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_224_744, 1);
     }
