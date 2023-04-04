@@ -49,8 +49,16 @@ contract StableSwap2 is IWellFunction {
         bytes calldata
     ) external view override returns (uint reserve) {
         uint round;
-        if (lpTokenSupply < 1e20) {
-            round = lpTokenSupply.nthRoot(3);
+        if (lpTokenSupply < 1e9) {
+            round = 1e2;
+        } else if (lpTokenSupply < 1e12) {
+            round = 1e3;
+        } else if (lpTokenSupply < 1e15) {
+            round = 1e4;
+        } else if (lpTokenSupply < 1e18) {
+            round = 1e5;
+        } else if (lpTokenSupply < 1e21) {
+            round = 1e6;
         } else if (lpTokenSupply < 1e24) {
             round = 1e7;
         } else if (lpTokenSupply < 1e28) {
@@ -95,11 +103,11 @@ contract StableSwap2 is IWellFunction {
             uint x_prev = x;
             uint d = _d(x, y);
             uint k = _f(x, y, d);
-            if (k < r / 1e18 / d) {
-                uint dx = (r / 1e18 / d - k);
+            if (k < r / EXP_PRECISION / d) {
+                uint dx = (r / EXP_PRECISION / d - k);
                 x = x + dx;
             } else {
-                uint dx = (k - r / 1e18 / d);
+                uint dx = (k - r / EXP_PRECISION / d);
                 x = x - dx;
             }
             if (x > x_prev) {
