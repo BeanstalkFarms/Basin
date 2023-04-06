@@ -5,6 +5,7 @@ import {console, TestHelper} from "test/TestHelper.sol";
 import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
+import {IPumpErrors} from "src/interfaces/pumps/IPumpErrors.sol";
 
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
@@ -63,7 +64,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
-        vm.expectRevert("Well: No time passed");
+        vm.expectRevert(IPumpErrors.NoTimePassed.selector);
         pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp, new bytes(0));
     }
 
@@ -95,7 +96,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
-        vm.expectRevert("Well: No time passed");
+        vm.expectRevert(IPumpErrors.NoTimePassed.selector);
         pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp, new bytes(0));
     }
 
