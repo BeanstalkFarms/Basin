@@ -57,6 +57,7 @@ contract WellSwapToTest is SwapHelper {
         well.swapTo(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
     }
 
+    /// @dev tests assume 2 tokens in future we can extend for multiple tokens
     function testFuzz_swapTo(uint amountOut) public prank(user) {
         // User has 1000 of each token
         // Given current liquidity, swapping 1000 of one token gives 500 of the other
@@ -67,7 +68,6 @@ contract WellSwapToTest is SwapHelper {
         Balances memory wellBalancesBefore = getBalances(address(well), well);
 
         // Decrease reserve of token 1 by `amountOut` which is paid to user
-        // FIXME: refactor for N tokens
         uint[] memory calcBalances = new uint[](wellBalancesBefore.tokens.length);
         calcBalances[0] = wellBalancesBefore.tokens[0];
         calcBalances[1] = wellBalancesBefore.tokens[1] - amountOut;
