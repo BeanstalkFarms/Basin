@@ -5,11 +5,7 @@ pragma solidity ^0.8.17;
 /**
  * @title Lib Math contains math operations
  */
-import {SafeMath} from "oz/utils/math/SafeMath.sol";
-
 library LibMath {
-    error PRBMath_MulDiv_Overflow(uint x, uint y, uint denominator);
-
     /**
      * @param a numerator
      * @param b denominator
