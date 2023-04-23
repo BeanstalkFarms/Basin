@@ -44,7 +44,7 @@ library LibMath {
             if (n == 16) return sqrt(sqrt(sqrt(sqrt(a))));
         }
         // The scale factor is a crude way to turn everything into integer calcs.
-        // Actually do ((10 ^ n) * x) ^ (1/n)
+        // Actually do ((10 ^ n) * a) ^ (1/n)
         uint a0 = (10 ** n) * a;
 
         uint xNew = 10;
@@ -65,7 +65,7 @@ library LibMath {
     /**
      * @notice computes the square root of a given number
      * @param a The number to compute the square root of
-     * @return z The square root of x
+     * @return z The square root of a
      * @dev
      * This function is based on the Babylonian method of computing square roots
      * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
@@ -78,15 +78,15 @@ library LibMath {
             // This segment is to get a reasonable initial estimate for the Babylonian method.
             // If the initial estimate is bad, the number of correct bits increases ~linearly
             // each iteration instead of ~quadratically.
-            // The idea is to get z*z*y within a small factor of x.
+            // The idea is to get z*z*y within a small factor of a.
             // More iterations here gets y in a tighter range. Currently, we will have
             // y in [256, 256*2^16). We ensure y>= 256 so that the relative difference
-            // between y and y+1 is small. If x < 256 this is not possible, but those cases
+            // between y and y+1 is small. If a < 256 this is not possible, but those cases
             // are easy enough to verify exhaustively.
             z := 181 // The 'correct' value is 1, but this saves a multiply later
             let y := a
             // Note that we check y>= 2^(k + 8) but shift right by k bits each branch,
-            // this is to ensure that if x >= 256, then y >= 256.
+            // this is to ensure that if a >= 256, then y >= 256.
             if iszero(lt(y, 0x10000000000000000000000000000000000)) {
                 y := shr(128, y)
                 z := shl(64, z)
@@ -103,13 +103,13 @@ library LibMath {
                 y := shr(16, y)
                 z := shl(8, z)
             }
-            // Now, z*z*y <= x < z*z*(y+1), and y <= 2^(16+8),
-            // and either y >= 256, or x < 256.
-            // Correctness can be checked exhaustively for x < 256, so we assume y >= 256.
-            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of x, or about 20bps.
+            // Now, z*z*y <= a < z*z*(y+1), and y <= 2^(16+8),
+            // and either y >= 256, or a < 256.
+            // Correctness can be checked exhaustively for a < 256, so we assume y >= 256.
+            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of a, or about 20bps.
 
-            // The estimate sqrt(x) = (181/1024) * (x+1) is off by a factor of ~2.83 both when x=1
-            // and when x = 256 or 1/256. In the worst case, this needs seven Babylonian iterations.
+            // The estimate sqrt(a) = (181/1024) * (a+1) is off by a factor of ~2.83 both when a=1
+            // and when a = 256 or 1/256. In the worst case, this needs seven Babylonian iterations.
             z := shr(18, mul(z, add(y, 65536))) // A multiply is saved from the initial z := 181
 
             // Run the Babylonian method seven times. This should be enough given initial estimate.
@@ -123,9 +123,9 @@ library LibMath {
             z := shr(1, add(z, div(a, z)))
 
             // See https://en.wikipedia.org/wiki/Integer_square_root#Using_only_integer_division.
-            // If x+1 is a perfect square, the Babylonian method cycles between
-            // floor(sqrt(x)) and ceil(sqrt(x)). This check ensures we return floor.
-            // The solmate implementation assigns zRoundDown := div(x, z) first, but
+            // If a+1 is a perfect square, the Babylonian method cycles between
+            // floor(sqrt(a)) and ceil(sqrt(a)). This check ensures we return floor.
+            // The solmate implementation assigns zRoundDown := div(a, z) first, but
             // since this case is rare, we choose to save gas on the assignment and
             // repeat division in the rare case.
             // If you don't care whether floor or ceil is returned, you can skip this.
