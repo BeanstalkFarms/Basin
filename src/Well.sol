@@ -84,14 +84,14 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         if (numberOfPumps() == 0) return _pumps;
 
         _pumps = new Call[](numberOfPumps());
-        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32 + wellFunctionDataLength();
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
 
         uint pumpDataLength;
         for (uint i = 0; i < _pumps.length; i++) {
             _pumps[i].target = _getArgAddress(dataLoc);
-            dataLoc += 20;
+            dataLoc += PACKED_ADDRESS;
             pumpDataLength = _getArgUint256(dataLoc);
-            dataLoc += 32;
+            dataLoc += ONE_WORD;
             _pumps[i].data = _getArgBytes(dataLoc, pumpDataLength);
             dataLoc += pumpDataLength;
         }
@@ -159,10 +159,10 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
      * @dev Provided as an optimization in the case where {numberOfPumps} returns 1.
      */
     function firstPump() public pure returns (Call memory _pump) {
-        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32 + wellFunctionDataLength();
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
         _pump.target = _getArgAddress(dataLoc);
-        uint pumpDataLength = _getArgUint256(dataLoc + 20);
-        _pump.data = _getArgBytes(dataLoc + 52, pumpDataLength);
+        uint pumpDataLength = _getArgUint256(dataLoc + PACKED_ADDRESS);
+        _pump.data = _getArgBytes(dataLoc + ONE_WORD + PACKED_ADDRESS, pumpDataLength);
     }
 
     //////////////////// SWAP: FROM ////////////////////
