@@ -6,8 +6,6 @@ import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol"
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
-import {console} from "forge-std/console.sol";
-
 /**
  * @author Publius
  * @title Gas efficient Constant Product pricing function for Wells with 2 tokens.
