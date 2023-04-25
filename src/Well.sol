@@ -22,6 +22,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     using SafeERC20 for IERC20;
     using SafeCast for uint;
 
+    uint constant ONE_WORD = 32;
+    uint constant PACKED_ADDRESS = 20;
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
     function init(string memory name, string memory symbol) public initializer {
@@ -62,11 +64,11 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     /// ==============================================================
 
     uint constant LOC_AQUIFER_ADDR = 0;
-    uint constant LOC_TOKENS_COUNT = LOC_AQUIFER_ADDR + 20;
-    uint constant LOC_WELL_FUNCTION_ADDR = LOC_TOKENS_COUNT + 32;
-    uint constant LOC_WELL_FUNCTION_DATA_LENGTH = LOC_WELL_FUNCTION_ADDR + 20;
-    uint constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + 32;
-    uint constant LOC_VARIABLE = LOC_PUMPS_COUNT + 32;
+    uint constant LOC_TOKENS_COUNT = LOC_AQUIFER_ADDR + PACKED_ADDRESS;
+    uint constant LOC_WELL_FUNCTION_ADDR = LOC_TOKENS_COUNT + ONE_WORD;
+    uint constant LOC_WELL_FUNCTION_DATA_LENGTH = LOC_WELL_FUNCTION_ADDR + PACKED_ADDRESS;
+    uint constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + ONE_WORD;
+    uint constant LOC_VARIABLE = LOC_PUMPS_COUNT + ONE_WORD;
 
     function tokens() public pure returns (IERC20[] memory ts) {
         ts = _getArgIERC20Array(LOC_VARIABLE, numberOfTokens());
@@ -74,7 +76,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     function wellFunction() public pure returns (Call memory _wellFunction) {
         _wellFunction.target = wellFunctionAddress();
-        uint dataLoc = LOC_VARIABLE + numberOfTokens() * 32;
+        uint dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD;
         _wellFunction.data = _getArgBytes(dataLoc, wellFunctionDataLength());
     }
 
