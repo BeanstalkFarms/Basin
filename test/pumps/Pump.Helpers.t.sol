@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {simCapReserve50Percent, from18, to18} from "test/pumps/PumpHelpers.sol";
+import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
+import {console, TestHelper} from "test/TestHelper.sol";
+
+contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
+    uint[] testArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    constructor()
+        GeoEmaAndCumSmaPump(
+            from18(0.5e18), // cap reserves if changed +/- 50% per block
+            from18(0.5e18), // cap reserves if changed +/- 50% per block
+            12, // EVM block time
+            from18(0.9994445987e18) // geometric EMA constant
+        )
+    {}
+
+    function test_getSlotForAddress() public {
+        address addr = address(0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79);
+        bytes32 bytesAddress = getSlotForAddress(addr);
+
+        assertEq(bytesAddress, 0xa755a670aaf1fecef2bea56115e65e03f7722a79000000000000000000000000);
+    }
+
+    function test_getDeltaTimeStamp() public {
+        vm.warp(200);
+        uint40 providedBlock = 100;
+        uint40 expectedDelta = 100;
+
+        uint delta = getDeltaTimestamp(providedBlock);
+
+        assertEq(delta, expectedDelta);
+    }
+}
