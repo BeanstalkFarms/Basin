@@ -1,4 +1,6 @@
-# Wells
+<img src="https://user-images.githubusercontent.com/28496268/236340348-d8d28a8c-5e7b-41c5-a0f1-88e417328d1c.png" alt="Basin logo" align="right" width="120" />
+
+# Basin
 
 A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.
 
