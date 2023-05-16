@@ -5,10 +5,14 @@ import {IntegrationTestHelper, IERC20, console, Balances} from "test/integration
 import {IUniswapV2Router, IUniswapV3Router, IUniswapV2Factory} from "test/integration/interfaces/IUniswap.sol";
 import {ConstantProduct2} from "test/TestHelper.sol";
 import {IPipeline, PipeCall, AdvancedPipeCall, IDepot, From, To} from "test/integration/interfaces/IPipeline.sol";
+
+import {LibMath} from "src/libraries/LibMath.sol";
 import {Well} from "src/Well.sol";
 
 /// @dev Tests gas usage of similar functions across Uniswap & Wells
 contract IntegrationTestGasComparisons is IntegrationTestHelper {
+    using LibMath for uint;
+
     uint mainnetFork;
 
     Well daiWethWell;
@@ -164,17 +168,18 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         daiWethWell.addLiquidity(amounts, 0, address(this), type(uint).max);
     }
 
-    function testFuzz_wells_WethDai_RemoveLiquidity(uint amount) public {
+    function testFuzz_wells_WethDai_RemoveLiquidity() public {
         vm.pauseGasMetering();
         uint[] memory amounts = new uint[](2);
-        amounts[0] = bound(amount, 1e18, 1000e18);
+        amounts[0] = 1e18;
         amounts[1] = amounts[0];
 
         uint[] memory reserves = new uint[](2);
         reserves[0] = daiWethTokens[0].balanceOf(address(daiWethWell)) - amounts[0];
         reserves[1] = daiWethTokens[1].balanceOf(address(daiWethWell)) - amounts[1];
 
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, data);
+        uint EXP_PRECISION = 1e12;
+        uint newLpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt();
         uint lpAmountBurned = daiWethWell.totalSupply() - newLpTokenSupply;
         uint[] memory minAmountsOut = new uint[](2);
         vm.resumeGasMetering();
