@@ -87,8 +87,9 @@ library LibBytes {
         // Shortcut: two reserves can be quickly unpacked from one slot
         if (n == 2) {
             assembly {
-                mstore(add(reserves, 32), shr(128, sload(slot)))
-                mstore(add(reserves, 64), shr(128, shl(128, sload(slot))))
+                // Change: first value is read from the lower-order aligned position.
+                mstore(add(reserves, 32), shl(128, sload(slot)))
+                mstore(add(reserves, 64), shr(128, sload(slot)))
             }
             return reserves;
         }
@@ -101,15 +102,17 @@ library LibBytes {
             iByte = (i - 1) / 2 * 32;
             if (i % 2 == 1) {
                 assembly {
+                    // Change: first value is read from the lower-order aligned position.
                     mstore(
                         // store at index i * 32; i = 0 is skipped by loop
                         add(reserves, mul(i, 32)),
-                        shr(128, sload(add(slot, iByte)))
+                        shl(128, sload(add(slot, iByte)))
                     )
                 }
             } else {
                 assembly {
-                    mstore(add(reserves, mul(i, 32)), shr(128, shl(128, sload(add(slot, iByte)))))
+                    // Change: first value is read from the lower-order aligned position.
+                    mstore(add(reserves, mul(i, 32)), shr(128, sload(add(slot, iByte))))
                 }
             }
         }
