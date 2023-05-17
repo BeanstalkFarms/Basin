@@ -44,6 +44,9 @@ interface IWellFunction {
      * @param lpTokenSupply The current supply of LP tokens
      * @param data Extra Well function data provided on every call
      * @return underlyingAmounts The amount of each reserve token that underlies the LP tokens
+     * @dev The constraint totalSupply() <= calcLPTokenSupply(...) must be held in the case where
+     * `lpTokenAmount` LP tokens are burned in exchanged for `underlyingAmounts`. If the constraint
+     * does not hold, then the Well Function is invalid.
      */
     function calcLPTokenUnderlying(
         uint lpTokenAmount,
