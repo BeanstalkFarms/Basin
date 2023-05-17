@@ -96,6 +96,11 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amounts, user, type(uint).max);
         afterRemoveLiquidity(before, action);
+
+        assertLe(
+            well.totalSupply(),
+            ConstantProduct2(wellFunction.target).calcLpTokenSupply(well.getReserves(), wellFunction.data)
+        );
     }
 
     /// @dev Fuzz test: UNEQUAL token reserves, BALANCED removal
