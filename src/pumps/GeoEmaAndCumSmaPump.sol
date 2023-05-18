@@ -3,6 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
+import {IPumpErrors} from "src/interfaces/pumps/IPumpErrors.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
@@ -25,7 +26,7 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
+contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
@@ -52,7 +53,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
      */
     constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint _blockTime, bytes16 _A) {
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
-        require(_maxPercentDecrease < ABDKMathQuad.ONE);
+        if (_maxPercentDecrease >= ABDKMathQuad.ONE) {
+            revert InvalidConstructorArgument(_maxPercentDecrease);
+        }
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         BLOCK_TIME = _blockTime;
         A = _A;
@@ -154,8 +157,11 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
     function readLastReserves(address well) public view returns (uint[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
-        (,, bytes16[] memory bytesReserves) = slot.readLastReserves();
-        reserves = new uint[](bytesReserves.length);
+        (uint8 n,, bytes16[] memory bytesReserves) = slot.readLastReserves();
+        if (n == 0) {
+            revert NotInitialized();
+        }
+        reserves = new uint[](n);
         uint length = reserves.length;
         for (uint i = 0; i < length; ++i) {
             reserves[i] = bytesReserves[i].pow_2ToUInt();
@@ -204,6 +210,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function readLastInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
+        if (n == 0) {
+            revert NotInitialized();
+        }
         uint offset = getSlotsOffset(n);
         assembly {
             slot := add(slot, offset)
@@ -220,6 +229,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes32 slot = getSlotForAddress(well);
         uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        if (n == 0) {
+            revert NotInitialized();
+        }
         uint offset = getSlotsOffset(n);
         assembly {
             slot := add(slot, offset)
@@ -245,6 +257,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
     function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
         bytes32 slot = getSlotForAddress(well);
         uint8 n = slot.readN();
+        if (n == 0) {
+            revert NotInitialized();
+        }
         uint offset = getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
@@ -261,6 +276,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
         bytes32 slot = getSlotForAddress(well);
         uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        if (n == 0) {
+            revert NotInitialized();
+        }
         uint offset = getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
@@ -288,7 +306,9 @@ contract GeoEmaAndCumSmaPump is IPump, IInstantaneousPump, ICumulativePump {
 
         // Overflow is desired on `startTimestamp`, so SafeCast is not used.
         bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt();
-        require(deltaTimestamp != bytes16(0), "Well: No time passed");
+        if (deltaTimestamp == bytes16(0)) {
+            revert NoTimePassed();
+        }
         for (uint i = 0; i < byteCumulativeReserves.length; ++i) {
             // Currently, there is no support for overflow.
             twaReserves[i] =
