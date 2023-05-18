@@ -40,7 +40,7 @@ library LibBytes {
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
             require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
-                sstore(slot, add(shl(128, mload(add(reserves, 32))), shr(128, shl(128, mload(add(reserves, 64))))))
+                sstore(slot, add(shr(128, shl(128, mload(add(reserves, 32)))), shl(128, mload(add(reserves, 64)))))
             }
         } else {
             uint maxI = reserves.length / 2; // number of fully-packed slots
@@ -53,8 +53,8 @@ library LibBytes {
                     sstore(
                         add(slot, mul(i, 32)),
                         add(
-                            shl(128, mload(add(reserves, add(iByte, 32)))),
-                            shr(128, shl(128, mload(add(reserves, add(iByte, 64)))))
+                            shr(128, shl(128, mload(add(reserves, add(iByte, 32))))),
+                            shl(128, mload(add(reserves, add(iByte, 64))))
                         )
                     )
                 }
@@ -67,7 +67,7 @@ library LibBytes {
                 assembly {
                     sstore(
                         add(slot, mul(maxI, 32)),
-                        add(shl(128, mload(add(reserves, add(iByte, 32)))), shr(128, shl(128, sload(add(slot, maxI)))))
+                        add(shr(128, shl(128, mload(add(reserves, add(iByte, 32))))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
                     )
                 }
             }
@@ -84,8 +84,8 @@ library LibBytes {
         // Shortcut: two reserves can be quickly unpacked from one slot
         if (n == 2) {
             assembly {
-                mstore(add(reserves, 32), shr(128, sload(slot)))
-                mstore(add(reserves, 64), shr(128, shl(128, sload(slot))))
+                mstore(add(reserves, 32), shr(128, shl(128, sload(slot))))
+                mstore(add(reserves, 64), shr(128, sload(slot)))
             }
             return reserves;
         }
@@ -101,12 +101,12 @@ library LibBytes {
                     mstore(
                         // store at index i * 32; i = 0 is skipped by loop
                         add(reserves, mul(i, 32)),
-                        shr(128, sload(add(slot, iByte)))
+                        shr(128, shl(128, sload(add(slot, iByte))))
                     )
                 }
             } else {
                 assembly {
-                    mstore(add(reserves, mul(i, 32)), shr(128, shl(128, sload(add(slot, iByte)))))
+                    mstore(add(reserves, mul(i, 32)), shr(128, sload(add(slot, iByte))))
                 }
             }
         }
