@@ -348,7 +348,6 @@ interface IWell {
      * @param tokenOut The underlying token to receive
      * @return tokenAmountOut The amount of `tokenOut` to receive
      *
-     * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,
