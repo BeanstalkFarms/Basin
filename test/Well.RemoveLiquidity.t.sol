@@ -111,7 +111,6 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
         well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
-        vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidity` call
         vm.startPrank(user);
