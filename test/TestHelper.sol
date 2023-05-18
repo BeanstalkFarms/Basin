@@ -67,7 +67,7 @@ abstract contract TestHelper is Test, WellDeployer {
     uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
-        setupWell(n, deployWellFunction(), deployPumps(2));
+        setupWell(n, deployWellFunction(), deployPumps(1));
     }
 
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {

@@ -24,6 +24,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
 
     uint constant ONE_WORD = 32;
     uint constant PACKED_ADDRESS = 20;
+    uint constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
     bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
 
     function init(string memory name, string memory symbol) public initializer {
@@ -162,7 +163,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         uint dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
         _pump.target = _getArgAddress(dataLoc);
         uint pumpDataLength = _getArgUint256(dataLoc + PACKED_ADDRESS);
-        _pump.data = _getArgBytes(dataLoc + ONE_WORD + PACKED_ADDRESS, pumpDataLength);
+        _pump.data = _getArgBytes(dataLoc + ONE_WORD_PLUS_PACKED_ADDRESS, pumpDataLength);
     }
 
     //////////////////// SWAP: FROM ////////////////////
