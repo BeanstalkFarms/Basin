@@ -40,7 +40,7 @@ library LibBytes {
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
             require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
-                sstore(slot, add(shr(128, shl(128, mload(add(reserves, 32)))), shl(128, mload(add(reserves, 64)))))
+                sstore(slot, add(mload(add(reserves, 32)), shl(128, mload(add(reserves, 64)))))
             }
         } else {
             uint maxI = reserves.length / 2; // number of fully-packed slots
@@ -53,7 +53,7 @@ library LibBytes {
                     sstore(
                         add(slot, mul(i, 32)),
                         add(
-                            shr(128, shl(128, mload(add(reserves, add(iByte, 32))))),
+                            mload(add(reserves, add(iByte, 32))),
                             shl(128, mload(add(reserves, add(iByte, 64))))
                         )
                     )
@@ -67,7 +67,7 @@ library LibBytes {
                 assembly {
                     sstore(
                         add(slot, mul(maxI, 32)),
-                        add(shr(128, shl(128, mload(add(reserves, add(iByte, 32))))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
+                        add(mload(add(reserves, add(iByte, 32))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
                     )
                 }
             }
