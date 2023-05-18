@@ -118,6 +118,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         _tokens = tokens();
         _wellFunction = wellFunction();
         _pumps = pumps();
+        _wellData = wellData();
         _aquifer = aquifer();
     }
 

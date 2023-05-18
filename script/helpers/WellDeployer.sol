@@ -7,6 +7,15 @@ import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 
 abstract contract WellDeployer {
+    /**
+     * @notice Encode the Well's immutable data, and deploys the well.
+     * @param _aquifer The address of the Aquifer which will deploy this Well.
+     * @param _wellImplementation The address of the Well implementation.
+     * @param _tokens A list of ERC20 tokens supported by the Well.
+     * @param _wellFunction A single Call struct representing a call to the Well Function.
+     * @param _pumps An array of Call structs representings calls to Pumps.
+     * @param _salt The salt to deploy the Well with (`bytes32(0)` for none). See {LibClone}.
+     */
     function encodeAndBoreWell(
         address _aquifer,
         address _wellImplementation,

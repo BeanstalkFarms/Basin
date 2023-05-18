@@ -120,7 +120,6 @@ contract ConstantProduct2Test is WellFunctionHelper {
     function test_fuzz_constantProduct(uint x, uint y) public {
         uint[] memory reserves = new uint[](2);
         bytes memory _data = new bytes(0);
-        // TODO - relax assumption
         reserves[0] = bound(x, 1, 1e32);
         reserves[1] = bound(y, 1, 1e32);
         uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
