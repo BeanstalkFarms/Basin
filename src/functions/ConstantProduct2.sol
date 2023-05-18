@@ -2,26 +2,49 @@
 
 pragma solidity ^0.8.17;
 
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
+ * @title ConstantProduct2
  * @author Publius
- * @title Gas efficient Constant Product pricing function for Wells with 2 tokens.
- *
- * Constant Product Wells with 2 tokens use the formula:
+ * @notice Gas efficient Constant Product pricing function for Wells with 2 tokens.
+ * @dev Constant Product Wells with 2 tokens use the formula:
  *  `b_0 * b_1 = s^2`
  *
  * Where:
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  */
-contract ConstantProduct2 is IWellFunction {
+contract ConstantProduct2 is ProportionalLPToken2 {
     using LibMath for uint;
 
     uint constant EXP_PRECISION = 1e12;
 
-    /// @dev `s = (b_0 * b_1)^(1/2)`
+    /**
+     * @dev `s = (b_0 * b_1)^(1/2)`
+     *
+     * When does this function overflow?
+     * ---------------------------------
+     *
+     * Let N be the length of the reserves array, and P be the precision multiplier
+     * defined in `EXP_PRECISION`.
+     *
+     * Assuming all tokens in reserves are at their maximum value simultaneously,
+     * this function will overflow when:
+     *
+     *  (10^X)^N * P >= MAX_UINT256 (~10^77)
+     *  10^(X*N) >= 10^77/P
+     *  (X*N)*ln(10) >= 77*ln(10) - ln(P)
+     *
+     *  ∴ X >= (1/N) * (77 - ln(P)/ln(10))
+     *
+     * ConstantProduct2 sets the constraints `N = 2` and `EXP_PRECISION = 1e12`,
+     * resulting in an upper bound of X = 32.5.
+     *
+     * In other words, {calcLpTokenSupply} overflows if all reserves are simultaneously
+     * >= 10^32.5, or about 100 trillion if tokens are measured to 18 decimal precision.
+     */
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
@@ -42,10 +65,10 @@ contract ConstantProduct2 is IWellFunction {
     }
 
     function name() external pure override returns (string memory) {
-        return "Constant Product";
+        return "Constant Product 2";
     }
 
     function symbol() external pure override returns (string memory) {
-        return "CP";
+        return "CP2";
     }
 }

@@ -3,7 +3,9 @@
 pragma solidity =0.8.17;
 
 /**
- * @title Cumulative Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
+ * @title ICumulativePump
+ * @notice Provides an interface for Pumps which calculate time-weighted average
+ * reserves through the use of a cumulative reserve.
  */
 interface ICumulativePump {
     /**

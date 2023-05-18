@@ -33,6 +33,15 @@ contract MockFunctionBad is IWellFunction {
         return 1000;
     }
 
+    function calcLPTokenUnderlying(
+        uint256,
+        uint256[] memory,
+        uint256,
+        bytes calldata
+    ) external pure returns (uint[] memory underlyingAmounts) {
+        return underlyingAmounts;
+    }
+
     function name() external override pure returns (string memory) {}
 
     function symbol() external override pure returns (string memory) {}

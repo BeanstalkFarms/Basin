@@ -22,6 +22,9 @@ contract ConstantProduct2Test is WellFunctionHelper {
     uint STATE_C_B1 = 31_250_000_000_000_000_000; // 3.125e19
     uint STATE_C_LP = 25 * 1e24;
 
+    /// @dev See {calcLpTokenSupply}.
+    uint MAX_RESERVE = 1e32;
+
     //////////// SETUP ////////////
 
     function setUp() public {
@@ -30,19 +33,19 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     function test_metadata() public {
-        assertEq(_function.name(), "Constant Product");
-        assertEq(_function.symbol(), "CP");
+        assertEq(_function.name(), "Constant Product 2");
+        assertEq(_function.symbol(), "CP2");
     }
 
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev reverts when trying to calculate lp token supply with < 2 reserves
-    function test_getLpTokenSupply_minBalancesLength() public {
-        check_getLpTokenSupply_minBalancesLength(2);
+    function test_calcLpTokenSupply_minBalancesLength() public {
+        check_calcLpTokenSupply_minBalancesLength(2);
     }
 
     /// @dev calcLpTokenSupply: same decimals, manual calc for 2 equal reserves
-    function test_getLpTokenSupply_sameDecimals() public {
+    function test_calcLpTokenSupply_sameDecimals() public {
         uint[] memory reserves = new uint[](2);
         reserves[0] = STATE_A_B0;
         reserves[1] = STATE_A_B1;
@@ -53,7 +56,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     /// @dev calcLpTokenSupply: diff decimals
-    function test_getLpTokenSupply_diffDecimals() public {
+    function test_calcLpTokenSupply_diffDecimals() public {
         uint[] memory reserves = new uint[](2);
         reserves[0] = STATE_B_B0; // ex. 1 WETH
         reserves[1] = STATE_B_B1; // ex. 1250 BEAN
@@ -63,11 +66,11 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    //////////// BALANCES ////////////
+    //////////// RESERVES ////////////
 
-    /// @dev getBalance: same decimals, both positions
+    /// @dev calcReserve: same decimals, both positions
     /// Matches example in {testLpTokenSupplySameDecimals}.
-    function test_getBalance_sameDecimals() public {
+    function test_calcReserve_sameDecimals() public {
         uint[] memory reserves = new uint[](2);
 
         /// STATE A
@@ -94,9 +97,9 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    /// @dev getBalance: diff decimals, both positions
+    /// @dev calcReserve: diff decimals, both positions
     /// Matches example in {testLpTokenSupplyDiffDecimals}.
-    function test_getBalance_diffDecimals() public {
+    function test_calcReserve_diffDecimals() public {
         uint[] memory reserves = new uint[](2);
 
         /// STATE B
@@ -117,15 +120,33 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    function test_fuzz_constantProduct(uint x, uint y) public {
+    //////////// LP TOKEN SUPPLY ////////////
+
+    /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
+    function testFuzz_calcLpTokenSupply(uint[2] memory _reserves) public {
+        uint[] memory reserves = new uint[](2);
+        reserves[0] = bound(_reserves[0], 1, MAX_RESERVE);
+        reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
+        uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
+        uint[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, "");
+        for (uint i = 0; i < reserves.length; ++i) {
+            assertEq(reserves[i], underlying[i], "reserves mismatch");
+        }
+    }
+
+    //////////// FUZZ ////////////
+
+    function testFuzz_constantProduct2(uint x, uint y) public {
         uint[] memory reserves = new uint[](2);
         bytes memory _data = new bytes(0);
-        reserves[0] = bound(x, 1, 1e32);
-        reserves[1] = bound(y, 1, 1e32);
+
+        reserves[0] = bound(x, 1, MAX_RESERVE);
+        reserves[1] = bound(y, 1, MAX_RESERVE);
+
         uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
-        console.log("lpTokenSupply", lpTokenSupply);
         uint reserve0 = _function.calcReserve(reserves, 0, lpTokenSupply, _data);
         uint reserve1 = _function.calcReserve(reserves, 1, lpTokenSupply, _data);
+
         if (reserves[0] < 1e12) {
             assertApproxEqAbs(reserve0, reserves[0], 2);
         } else {
