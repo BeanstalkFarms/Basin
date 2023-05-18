@@ -59,7 +59,7 @@ library LibBytes16 {
         if (n == 2) {
             assembly {
                 mstore(add(reserves, 32), sload(slot))
-                mstore(add(reserves, 64), shl(128, sload(slot))) // TODO: Check if byte shift is necessary
+                mstore(add(reserves, 64), shl(128, sload(slot)))
             }
             return reserves;
         }
