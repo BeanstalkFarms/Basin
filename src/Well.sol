@@ -629,11 +629,19 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         // gas optimization: avoid looping if there is only one pump
         if (numberOfPumps() == 1) {
             Call memory _pump = firstPump();
-            IPump(_pump.target).update(reserves, _pump.data);
+            // Don't revert if the update call fails.
+            try IPump(_pump.target).update(reserves, _pump.data) {
+            } catch {
+                // ignore reversion. If an external shutoff mechanism is added to a Pump, it could be called here.
+            }
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
-                IPump(_pumps[i].target).update(reserves, _pumps[i].data);
+                // Don't revert if the update call fails.
+                try IPump(_pumps[i].target).update(reserves, _pumps[i].data) {
+                } catch {
+                    // ignore reversion. If an external shutoff mechanism is added to a Pump, it could be called here.
+                }
             }
         }
     }
