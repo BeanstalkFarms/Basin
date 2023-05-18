@@ -67,7 +67,11 @@ abstract contract TestHelper is Test, WellDeployer {
     uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
-        setupWell(n, deployWellFunction(), deployPumps(2));
+        setupWell(n, deployWellFunction(), deployPumps(1));
+    }
+
+    function setupWell(uint n, Call[] memory _pumps) internal {
+        setupWell(n, deployWellFunction(), _pumps);
     }
 
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
@@ -218,7 +222,7 @@ abstract contract TestHelper is Test, WellDeployer {
     //////////// Balance Helpers ////////////
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
-    /// FIXME: uses global tokens but not global well
+    /// @dev uses global tokens but not global well
     function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
         uint[] memory tokenBalances = new uint[](tokens.length);
         for (uint i = 0; i < tokenBalances.length; ++i) {

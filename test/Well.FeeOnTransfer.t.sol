@@ -3,7 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} from "test/TestHelper.sol";
-import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 
 /**

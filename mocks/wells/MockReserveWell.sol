@@ -11,6 +11,10 @@ contract MockReserveWell {
 
     uint[] reserves;
 
+    constructor() {
+        reserves = new uint[](2);
+    }
+
     function setReserves(uint[] memory _reserves) public {
         reserves = _reserves;
     }
@@ -20,7 +24,7 @@ contract MockReserveWell {
     }
 
     function update(address pump, uint[] calldata _reserves, bytes calldata data) external {
-        IPump(pump).update(_reserves, data);
+        IPump(pump).update(reserves, data);
         setReserves(_reserves);
     }
 }

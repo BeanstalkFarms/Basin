@@ -137,6 +137,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         // Skip {_capReserve} since we have no prior reference
 
         for (uint i = 0; i < length; ++i) {
+            if (reserves[i] == 0) return;
             byteReserves[i] = reserves[i].fromUIntToLog2();
         }
 
