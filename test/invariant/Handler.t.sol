@@ -3,7 +3,8 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
-import {ConstantProduct2, IWellFunction} from "src/functions/ConstantProduct2.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {Well} from "src/Well.sol";
