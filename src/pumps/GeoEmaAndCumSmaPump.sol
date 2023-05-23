@@ -68,7 +68,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         Reserves memory b;
 
         // All reserves are stored starting at the msg.sender address slot in storage.
-        bytes32 slot = getSlotForAddress(msg.sender);
+        bytes32 slot = _getSlotForAddress(msg.sender);
 
         // Read: Last Timestamp & Last Reserves
         (, b.lastTimestamp, b.lastReserves) = slot.readLastReserves();
@@ -81,7 +81,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
 
         // Read: Cumulative & EMA Reserves
         // Start at the slot after `b.lastReserves`
-        uint numSlots = getSlotsOffset(length);
+        uint numSlots = _getSlotsOffset(length);
         assembly {
             slot := add(slot, numSlots)
         }
@@ -96,7 +96,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         bytes16 blocksPassed;
         // Isolate in brackets to prevent stack too deep errors
         {
-            uint deltaTimestamp = getDeltaTimestamp(b.lastTimestamp);
+            uint deltaTimestamp = _getDeltaTimestamp(b.lastTimestamp);
             aN = A.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
             // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
@@ -146,7 +146,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
 
         // Write: EMA Reserves
         // Start at the slot after `byteReserves`
-        uint numSlots = getSlotsOffset(byteReserves.length);
+        uint numSlots = _getSlotsOffset(byteReserves.length);
         assembly {
             slot := add(slot, numSlots)
         }
@@ -156,7 +156,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
     //////////////////// LAST RESERVES ////////////////////
 
     function readLastReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = getSlotForAddress(well);
+        bytes32 slot = _getSlotForAddress(well);
         (uint8 n,, bytes16[] memory bytesReserves) = slot.readLastReserves();
         if (n == 0) {
             revert NotInitialized();
@@ -208,12 +208,12 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
     //////////////////// EMA RESERVES ////////////////////
 
     function readLastInstantaneousReserves(address well) public view returns (uint[] memory reserves) {
-        bytes32 slot = getSlotForAddress(well);
+        bytes32 slot = _getSlotForAddress(well);
         uint8 n = slot.readN();
         if (n == 0) {
             revert NotInitialized();
         }
-        uint offset = getSlotsOffset(n);
+        uint offset = _getSlotsOffset(n);
         assembly {
             slot := add(slot, offset)
         }
@@ -226,18 +226,18 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
     }
 
     function readInstantaneousReserves(address well, bytes memory) public view returns (uint[] memory emaReserves) {
-        bytes32 slot = getSlotForAddress(well);
+        bytes32 slot = _getSlotForAddress(well);
         uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         if (n == 0) {
             revert NotInitialized();
         }
-        uint offset = getSlotsOffset(n);
+        uint offset = _getSlotsOffset(n);
         assembly {
             slot := add(slot, offset)
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(n);
-        uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
+        uint deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         bytes16 aN = A.powu(deltaTimestamp);
         emaReserves = new uint[](n);
@@ -255,12 +255,12 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
      * @notice Read the latest cumulative reserves of `well`.
      */
     function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
-        bytes32 slot = getSlotForAddress(well);
+        bytes32 slot = _getSlotForAddress(well);
         uint8 n = slot.readN();
         if (n == 0) {
             revert NotInitialized();
         }
-        uint offset = getSlotsOffset(n) << 1;
+        uint offset = _getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
         }
@@ -273,18 +273,18 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
     }
 
     function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
-        bytes32 slot = getSlotForAddress(well);
+        bytes32 slot = _getSlotForAddress(well);
         uint[] memory reserves = IWell(well).getReserves();
         (uint8 n, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
         if (n == 0) {
             revert NotInitialized();
         }
-        uint offset = getSlotsOffset(n) << 1;
+        uint offset = _getSlotsOffset(n) << 1;
         assembly {
             slot := add(slot, offset)
         }
         cumulativeReserves = slot.readBytes16(n);
-        uint deltaTimestamp = getDeltaTimestamp(lastTimestamp);
+        uint deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         // Currently, there is so support for overflow.
@@ -305,7 +305,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         twaReserves = new uint[](byteCumulativeReserves.length);
 
         // Overflow is desired on `startTimestamp`, so SafeCast is not used.
-        bytes16 deltaTimestamp = getDeltaTimestamp(uint40(startTimestamp)).fromUInt();
+        bytes16 deltaTimestamp = _getDeltaTimestamp(uint40(startTimestamp)).fromUInt();
         if (deltaTimestamp == bytes16(0)) {
             revert NoTimePassed();
         }
@@ -322,21 +322,21 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
-    function getSlotForAddress(address addressValue) internal pure returns (bytes32) {
+    function _getSlotForAddress(address addressValue) internal pure returns (bytes32) {
         return bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
     }
 
     /**
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
-    function getSlotsOffset(uint n) internal pure returns (uint) {
+    function _getSlotsOffset(uint n) internal pure returns (uint) {
         return ((n - 1) / 2 + 1) << 5; // Maybe change to n * 32?
     }
 
     /**
      * @dev Get the delta between the current and provided timestamp as a `uint256`.
      */
-    function getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint) {
+    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint) {
         return uint(uint40(block.timestamp) - lastTimestamp);
     }
 }
