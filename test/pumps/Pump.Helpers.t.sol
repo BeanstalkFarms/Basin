@@ -21,7 +21,7 @@ contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
 
     function test_getSlotForAddress() public {
         address addr = address(0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79);
-        bytes32 bytesAddress = getSlotForAddress(addr);
+        bytes32 bytesAddress = _getSlotForAddress(addr);
 
         assertEq(bytesAddress, 0xa755a670aaf1fecef2bea56115e65e03f7722a79000000000000000000000000);
     }
@@ -31,14 +31,14 @@ contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
         uint40 providedBlock = 100;
         uint40 expectedDelta = 100;
 
-        uint delta = getDeltaTimestamp(providedBlock);
+        uint delta = _getDeltaTimestamp(providedBlock);
 
         assertEq(delta, expectedDelta);
     }
 
     function test_getSlotOffset() public {
         for (uint i = 0; i < testCasesInput.length; i++) {
-            assertEq(getSlotsOffset(testCasesInput[i]), testCasesOutput[i]);
+            assertEq(_getSlotsOffset(testCasesInput[i]), testCasesOutput[i]);
         }
     }
 }
