@@ -9,7 +9,7 @@ contract LibEmaBytesTest is TestHelper {
     using LibLastReserveBytes for bytes32;
 
     uint constant NUM_RESERVES_MAX = 8;
-    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
+    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot") - 1;
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testEmaFuzz_storeAndRead(
