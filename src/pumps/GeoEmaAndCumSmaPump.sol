@@ -53,11 +53,17 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
      */
     constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint _blockTime, bytes16 _A) {
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
-        if (_maxPercentDecrease >= ABDKMathQuad.ONE) {
-            revert InvalidConstructorArgument(_maxPercentDecrease);
+        // _maxPercentDecrease <= 100%
+        if (_maxPercentDecrease > ABDKMathQuad.ONE) {
+            revert InvalidMaxPercentDecreaseArgument(_maxPercentDecrease);
         }
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         BLOCK_TIME = _blockTime;
+
+        // A <= 1
+        if (_A > ABDKMathQuad.ONE) {
+            revert InvalidAArgument(_A);
+        }
         A = _A;
     }
 
