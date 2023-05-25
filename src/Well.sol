@@ -25,7 +25,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     uint constant ONE_WORD = 32;
     uint constant PACKED_ADDRESS = 20;
     uint constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
-    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
+    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint(keccak256("reserves.storage.slot")) - 1);
 
     function init(string memory name, string memory symbol) public initializer {
         __ERC20Permit_init(name);

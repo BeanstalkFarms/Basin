@@ -10,7 +10,7 @@ import {LibBytes16} from "src/libraries/LibBytes16.sol";
 
 contract LibBytes16Test is TestHelper {
     uint constant NUM_RESERVES_MAX = 8;
-    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot") - 1;
+    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint(keccak256("reserves.storage.slot")) - 1);
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testFuzz_storeAndReadBytes16(uint n, bytes16[8] memory _reserves) public {
