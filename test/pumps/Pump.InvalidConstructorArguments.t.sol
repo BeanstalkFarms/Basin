@@ -25,7 +25,7 @@ contract PumpInvalidConstructorArguments is TestHelper {
         );
     }
 
-        function test_invalid_a_argument_error() public {
+    function test_invalid_a_argument_error() public {
         vm.expectRevert(abi.encodeWithSelector(IPumpErrors.InvalidAArgument.selector, from18(1.01e18)));
         pump = new GeoEmaAndCumSmaPump(
             from18(0.5e18),

@@ -52,10 +52,7 @@ library LibBytes {
                 assembly {
                     sstore(
                         add(slot, mul(i, 32)),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shl(128, mload(add(reserves, add(iByte, 64))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shl(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
