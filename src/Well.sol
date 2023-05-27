@@ -30,6 +30,15 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     function init(string memory name, string memory symbol) public initializer {
         __ERC20Permit_init(name);
         __ERC20_init(name, symbol);
+
+        IERC20[] memory _tokens = tokens();
+        for (uint i; i < _tokens.length-1; ++i) {
+            for (uint j = i + 1; j < _tokens.length; ++j) {
+                if (_tokens[i] == _tokens[j]) {
+                    revert DuplicateTokens(_tokens[i]);
+                }
+            }
+        }
     }
 
     //////////////////// WELL DEFINITION ////////////////////
