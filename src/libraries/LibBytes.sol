@@ -61,7 +61,8 @@ library LibBytes {
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            if (reserves.length % 2 == 1) {
+            // Equivalent to "i % 2 == 1", but cheaper.
+            if (reserves.length & 1 == 1) {
                 require(reserves[reserves.length - 1] <= type(uint128).max, "ByteStorage: too large");
                 iByte = maxI * 64;
                 assembly {
@@ -96,7 +97,8 @@ library LibBytes {
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
             iByte = (i - 1) / 2 * 32;
-            if (i % 2 == 1) {
+            // Equivalent to "i % 2 == 1", but cheaper.
+            if (i & 1 == 1) {
                 assembly {
                     mstore(
                         // store at index i * 32; i = 0 is skipped by loop
