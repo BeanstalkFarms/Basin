@@ -60,7 +60,7 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         BLOCK_TIME = _blockTime;
 
-        // _alpha <= 1
+        // ALPHA <= 1
         if (_alpha > ABDKMathQuad.ONE) {
             revert InvalidAArgument(_alpha);
         }
