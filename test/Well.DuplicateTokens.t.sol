@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {console, Aquifer, IERC20, TestHelper} from "test/TestHelper.sol";
 import {LibWellConstructor} from "src/libraries/LibWellConstructor.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IAquifer} from "src/interfaces/IAquifer.sol";
 
 contract WellDuplicateTokens is TestHelper {
     function test_fail_on_duplicate_tokens() public {
@@ -17,7 +18,7 @@ contract WellDuplicateTokens is TestHelper {
         (bytes memory immutableData, bytes memory initData) =
             LibWellConstructor.encodeWellDeploymentData(address(aquifer), tokens, wellFunction, pumps);
 
-        vm.expectRevert(abi.encodeWithSelector(Aquifer.InitFailed.selector, ""));
+        vm.expectRevert(abi.encodeWithSelector(IAquifer.InitFailed.selector, ""));
         Aquifer(aquifer).boreWell(wellImplementation, immutableData, initData, bytes32(0));
     }
 }
