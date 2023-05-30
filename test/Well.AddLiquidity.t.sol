@@ -82,6 +82,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         // Adds to the Well's reserves
         assertEq(wellBalance.tokens[0], initialLiquidity + amounts[0], "incorrect token0 well amt");
         assertEq(wellBalance.tokens[1], initialLiquidity + amounts[1], "incorrect token1 well amt");
+        checkInvariant(address(well));
     }
 
     function test_addLiquidity_oneSided() public prank(user) {
@@ -99,6 +100,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, well.getAddLiquidityOut(amounts), user, type(uint).max);
         afterAddLiquidity(before, action);
+        checkInvariant(address(well));
     }
 
     /// @dev Adding and removing liquidity in sequence should return the Well to its previous state
@@ -129,6 +131,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         (beforeRemove, actionRemove) = beforeRemoveLiquidity(actionRemove);
         well.removeLiquidity(lpAmountOut, amounts, user, type(uint).max);
         afterRemoveLiquidity(beforeRemove, actionRemove);
+        checkInvariant(address(well));
     }
 
     /// @dev Adding zero liquidity emits empty event but doesn't change reserves
@@ -146,6 +149,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, liquidity, user, type(uint).max);
         afterAddLiquidity(before, action);
+        checkInvariant(address(well));
     }
 
     /// @dev Two-token fuzz test adding liquidity in any ratio
@@ -166,5 +170,6 @@ contract WellAddLiquidityTest is LiquidityHelper {
         (before, action) = beforeAddLiquidity(action);
         well.addLiquidity(amounts, well.getAddLiquidityOut(amounts), user, type(uint).max);
         afterAddLiquidity(before, action);
+        checkInvariant(address(well));
     }
 }

@@ -17,6 +17,7 @@ interface IWellFunction {
      * @param lpTokenSupply The supply of LP tokens
      * @param data Extra Well function data provided on every call
      * @return reserve The resulting reserve at the jth index
+     * @dev Should round up to ensure that Well reserves are marginally higher to enforce calcLpTokenSupply(...) >= totalSupply()
      */
     function calcReserve(
         uint[] memory reserves,
@@ -30,6 +31,7 @@ interface IWellFunction {
      * @param reserves A list of token reserves
      * @param data Extra Well function data provided on every call
      * @return lpTokenSupply The resulting supply of LP tokens
+     * @dev Should round down to ensure so that the Well Token supply is marignally lower to enforce calcLpTokenSupply(...) >= totalSupply()
      */
     function calcLpTokenSupply(
         uint[] memory reserves,

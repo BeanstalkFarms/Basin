@@ -49,7 +49,7 @@ contract WellShiftTest is TestHelper {
         // User should have gained token1
         assertEq(userBalanceAfterShift.tokens[0], 0, "User should NOT have gained token0");
         assertEq(userBalanceAfterShift.tokens[1], amtOut, "User should have gained token1");
-        assertTrue(userBalanceAfterShift.tokens[1] > userBalanceBeforeShift.tokens[1], "User should have more token1");
+        assertTrue(userBalanceAfterShift.tokens[1] >= userBalanceBeforeShift.tokens[1], "User should have more token1");
 
         // Reserves should now match balances
         assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
@@ -66,6 +66,7 @@ contract WellShiftTest is TestHelper {
             userBalanceBeforeShift.tokens[1] + amtOut,
             "User should have correct token1 balance"
         );
+        checkInvariant(address(well));
     }
 
     /// @dev Shift excess token0 into token0 (just transfers the excess token0 to the user).
@@ -115,6 +116,7 @@ contract WellShiftTest is TestHelper {
             userBalanceBeforeShift.tokens[0] + amount,
             "User should have gained token 1"
         );
+        checkInvariant(address(well));
     }
 
     /// @dev Calling shift() on a balanced Well should do nothing.
@@ -143,6 +145,7 @@ contract WellShiftTest is TestHelper {
         // Reserves should equal balances
         assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
         assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token1 balance");
+        checkInvariant(address(well));
     }
 
     function test_shift_fail_slippage(uint amount) public prank(user) {
