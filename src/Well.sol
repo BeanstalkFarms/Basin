@@ -602,6 +602,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     function getReserves() external view returns (uint[] memory reserves) {
+        // Use the same error as `ReentrancyGuardUpgradeable` instead of using a custom error for consistency.
+        require(!_reentrancyGuardEntered(), "ReentrancyGuard: reentrant call");
         reserves = _getReserves(numberOfTokens());
     }
 
