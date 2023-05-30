@@ -37,6 +37,11 @@ interface IWell {
     error InvalidReserves();
 
     /**
+     * @notice Thrown when a Well is bored with duplicate tokens.
+     */
+    error DuplicateTokens(IERC20 token);
+
+    /**
      * @notice Thrown if an operation is executed after the provided `deadline` has passed.
      */
     error Expired();

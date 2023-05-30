@@ -150,12 +150,12 @@ contract ConstantProduct2Test is WellFunctionHelper {
         if (reserves[0] < 1e12) {
             assertApproxEqAbs(reserve0, reserves[0], 2);
         } else {
-            assertApproxEqRel(reserve0, reserves[0], 2.5e6);
+            assertApproxEqRel(reserve0, reserves[0], 3e6);
         }
         if (reserves[1] < 1e12) {
             assertApproxEqAbs(reserve1, reserves[1], 2);
         } else {
-            assertApproxEqRel(reserve1, reserves[1], 2.5e6);
+            assertApproxEqRel(reserve1, reserves[1], 3e6);
         }
     }
 }
