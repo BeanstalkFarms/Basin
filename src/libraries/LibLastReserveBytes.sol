@@ -10,9 +10,9 @@ pragma solidity ^0.8.17;
  * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
  */
 library LibLastReserveBytes {
-    function readN(bytes32 slot) internal view returns (uint8 n) {
+    function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
         assembly {
-            n := shr(248, sload(slot))
+            _numberOfReserves := shr(248, sload(slot))
         }
     }
 
