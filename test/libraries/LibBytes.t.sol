@@ -26,6 +26,21 @@ contract LibBytesTest is TestHelper {
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }
+    
+    function testStoreAndRead() public {
+        uint n = 2;
+        uint[] memory reserves = new uint[](n);
+        for (uint i = 0; i < n; i++) {
+            reserves[i] = i * 100 + 1;
+        }
+        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
+
+        // Re-read reserves and compare
+        uint[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
+        for (uint i = 0; i < reserves2.length; i++) {
+            assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
+        }
+    }
 
     /// @dev Test every size of reserves array and every position for overflow
     /// All reserves besides `reserves[j]` are zero.

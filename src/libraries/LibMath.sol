@@ -17,7 +17,8 @@ library LibMath {
      * https://github.com/cryptoticket/openzeppelin-solidity/blob/04e62a7a1ece4832bee411ca5de024d2ce0b15e6/contracts/math/RoundedDivMath.sol#L31
      */
     function roundedDiv(uint a, uint b) internal pure returns (uint) {
-        uint halfB = (b % 2 == 0) ? (b / 2) : (b / 2 + 1);
+        // Equivalent to "b % 2 == 0" but cheaper.
+        uint halfB = (b & 1 == 0) ? (b / 2) : (b / 2 + 1);
         return (a % b >= halfB) ? (a / b + 1) : (a / b);
     }
 
@@ -37,7 +38,8 @@ library LibMath {
     function nthRoot(uint a, uint n) internal pure returns (uint root) {
         assert(n > 1);
         if (a == 0) return 0;
-        if (n % 2 == 0) {
+        // Equivalent to "i % 2 == 0" but cheaper.
+        if (n & 1 == 0) {
             if (n == 2) return sqrt(a); // shortcut for square root
             if (n == 4) return sqrt(sqrt(a));
             if (n == 8) return sqrt(sqrt(sqrt(a)));
