@@ -321,6 +321,9 @@ abstract contract TestHelper is Test, WellDeployer {
     function checkInvariant(address _well) internal {
         uint[] memory _reserves = IWell(_well).getReserves();
         Call memory _wellFunction = IWell(_well).wellFunction();
-        assertLe(IERC20(_well).totalSupply(), IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data));
+        assertLe(
+            IERC20(_well).totalSupply(),
+            IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data)
+        );
     }
 }

@@ -113,9 +113,11 @@ contract LibMathTest is TestHelper {
         }
 
         uint a_guess;
-        unchecked { a_guess = c * b; }
+        unchecked {
+            a_guess = c * b;
+        }
         if (a_guess == a) {
-            assertEq(c , a / b);
+            assertEq(c, a / b);
         } else {
             assertEq(c, a / b + 1);
         }
