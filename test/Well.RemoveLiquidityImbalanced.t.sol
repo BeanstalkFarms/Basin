@@ -70,6 +70,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Well's reserve of underlying tokens decreases
         assertEq(wellBalanceAfter.tokens[0], 1500 * 1e18, "Incorrect token0 well reserve");
         assertEq(wellBalanceAfter.tokens[1], 19_494 * 1e17, "Incorrect token1 well reserve");
+        checkInvariant(address(well));
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
@@ -127,6 +128,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
             (initialLiquidity + addedLiquidity) - amounts[1],
             "Incorrect token1 well reserve"
         );
+        checkInvariant(address(well));
     }
 
     /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
@@ -184,5 +186,6 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Well's reserve of underlying tokens decreases
         assertEq(wellBalanceAfter.tokens[0], wellBalanceBefore.tokens[0] - amounts[0], "Incorrect token0 well reserve");
         assertEq(wellBalanceAfter.tokens[1], wellBalanceBefore.tokens[1] - amounts[1], "Incorrect token1 well reserve");
+        checkInvariant(address(well));
     }
 }

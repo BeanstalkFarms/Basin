@@ -10,7 +10,7 @@ import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Users} from "test/helpers/Users.sol";
 
-import {Well, Call, IERC20} from "src/Well.sol";
+import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
@@ -316,5 +316,11 @@ abstract contract TestHelper is Test, WellDeployer {
         snapshot.user = getBalances(user, well);
         snapshot.well = getBalances(address(well), well);
         snapshot.reserves = well.getReserves();
+    }
+
+    function checkInvariant(address _well) internal {
+        uint[] memory _reserves = IWell(_well).getReserves();
+        Call memory _wellFunction = IWell(_well).wellFunction();
+        assertLe(IERC20(_well).totalSupply(), IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data));
     }
 }
