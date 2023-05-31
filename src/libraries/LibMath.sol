@@ -6,7 +6,6 @@ pragma solidity ^0.8.17;
  * @title Lib Math contains math operations
  */
 library LibMath {
-
     /**
      * @param a numerator
      * @param b denominator

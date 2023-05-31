@@ -112,17 +112,12 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
         for (uint i; i < numberOfReserves; ++i) {
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
             pumpState.lastReserves[i] = _capReserve(
-                pumpState.lastReserves[i],
-                (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(),
-                blocksPassed
+                pumpState.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), blocksPassed
             );
-            pumpState.emaReserves[i] = pumpState
-                .lastReserves[i]
-                .mul((ABDKMathQuad.ONE.sub(alphaN)))
-                .add(pumpState.emaReserves[i].mul(alphaN));
-            pumpState.cumulativeReserves[i] = pumpState
-                .cumulativeReserves[i]
-                .add(pumpState.lastReserves[i].mul(deltaTimestampBytes));
+            pumpState.emaReserves[i] =
+                pumpState.lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
+            pumpState.cumulativeReserves[i] =
+                pumpState.cumulativeReserves[i].add(pumpState.lastReserves[i].mul(deltaTimestampBytes));
         }
 
         // Write: Cumulative & EMA Reserves

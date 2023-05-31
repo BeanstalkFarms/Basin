@@ -26,7 +26,7 @@ contract LibBytesTest is TestHelper {
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }
-    
+
     function testStoreAndRead() public {
         uint n = 2;
         uint[] memory reserves = new uint[](n);

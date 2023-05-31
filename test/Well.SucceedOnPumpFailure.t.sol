@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {TestHelper, Balances, Call} from "test/TestHelper.sol";
 import {MockFailPump} from "mocks/pumps/MockFailPump.sol";
 
-
 contract WellSucceedOnPumpFailure is TestHelper {
     MockFailPump _pump;
 
@@ -26,7 +25,6 @@ contract WellSucceedOnPumpFailure is TestHelper {
         setupWell(2, pumps);
         // Check that the add liquidity call succeeded during well setup.
         assertGt(well.totalSupply(), 0);
-
     }
 
     // Check that the Well doesn't fail if m of n pumps fail
