@@ -8,7 +8,6 @@ import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol"
 /// @dev Tests the {ConstantProduct} Well function directly.
 /// TODO: Implement tests with 3+ tokens.
 contract BeanstalkConstantProductLiquidityTest is TestHelper {
-
     IBeanstalkWellFunction _f;
 
     //////////// SETUP ////////////
@@ -67,7 +66,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         reserves[0] = 500_000_000;
         reserves[1] = 100_000_000;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 1_298_4712_098_520;
+        ratios[0] = 12_984_712_098_520;
         ratios[1] = 12_984_712_098;
 
         uint reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, new bytes(0));
@@ -77,11 +76,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         assertApproxEqAbs(reserve1, 500_000, 1);
     }
 
-    function test_calcReserveAtRatioLiquidity_fuzz(
-        uint[2] memory reserves,
-        uint[2] memory ratios
-    ) public {
-
+    function test_calcReserveAtRatioLiquidity_fuzz(uint[2] memory reserves, uint[2] memory ratios) public {
         for (uint i = 0; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
             reserves[i] = bound(reserves[i], 1e6, 1e32);
@@ -93,7 +88,8 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
 
         uint[] memory reservesOut = new uint[](2);
         for (uint i = 0; i < 2; ++i) {
-            reservesOut[i] = _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), new bytes(0));
+            reservesOut[i] =
+                _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), new bytes(0));
         }
 
         // Precision is set to the minimum number of digits of the reserves out.
@@ -104,24 +100,14 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         // Check ratio of each `reserveOut` to `reserve` with the ratio of `ratios`.
         // If inequality doesn't hold, then reserves[1] will be zero
         if (ratios[0] * reserves[1] >= ratios[1]) {
-            assertApproxEqRelN(
-                reservesOut[0] * ratios[1],
-                ratios[0] * reserves[1],
-                1,
-                precision
-            );
+            assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reserves[1], 1, precision);
         } else {
             assertEq(reservesOut[0], 0);
         }
 
         // If inequality doesn't hold, then reserves[1] will be zero
         if (reserves[0] * ratios[1] >= ratios[0]) {
-            assertApproxEqRelN(
-                reserves[0] * ratios[1],
-                ratios[0] * reservesOut[1],
-                1,
-                precision
-            );
+            assertApproxEqRelN(reserves[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
         } else {
             assertEq(reservesOut[1], 0);
         }

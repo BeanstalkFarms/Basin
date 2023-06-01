@@ -76,11 +76,7 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
         assertEq(reserve1, 2);
     }
 
-    function test_calcReserveAtRatioSwap_fuzz(
-        uint[2] memory reserves,
-        uint[2] memory ratios
-    ) public {
-
+    function test_calcReserveAtRatioSwap_fuzz(uint[2] memory reserves, uint[2] memory ratios) public {
         for (uint i = 0; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
             // TODO Increase limit of ConstantProductN
@@ -100,17 +96,14 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
         uint lpTokenSupplyOut = _f.calcLpTokenSupply(reservesOut, new bytes(0));
 
         // Precision is set to the minimum number of digits of the reserves out.
-        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1]) ? numDigits(reservesOut[1]) : numDigits(reservesOut[0]);
+        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1])
+            ? numDigits(reservesOut[1])
+            : numDigits(reservesOut[0]);
 
         // Check LP Token Supply after = lp token supply before.
         assertApproxEqRelN(lpTokenSupplyOut, lpTokenSupply, 1, precision);
 
         // Check ratio of `reservesOut` = ratio of `ratios`.
-        assertApproxEqRelN(
-            reservesOut[0] * ratios[1],
-            ratios[0] * reservesOut[1],
-            1,
-            precision
-        );
+        assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
     }
 }

@@ -140,11 +140,7 @@ library LibMath {
     /// @param denominator The divisor
     /// @return result The 256-bit result
     /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv
-    function mulDiv(
-        uint a,
-        uint b,
-        uint denominator
-    ) internal pure returns (uint result) {
+    function mulDiv(uint a, uint b, uint denominator) internal pure returns (uint result) {
         // 512-bit multiply [prod1 prod0] = a * b
         // Compute the product mod 2**256 and mod 2**256 - 1
         // then use the Chinese Remainder Theorem to reconstruct

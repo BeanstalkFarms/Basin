@@ -7,7 +7,6 @@ import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol"
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
 contract BeanstalkConstantProduct2SwapTest is TestHelper {
-
     IBeanstalkWellFunction _f;
 
     //////////// SETUP ////////////
@@ -32,14 +31,13 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
     }
 
     function testA() public {
-
         uint[] memory reserves = new uint[](2);
-        reserves[0] = 800000000000;
-        reserves[1] = 1000000000000000000000;
+        reserves[0] = 800_000_000_000;
+        reserves[1] = 1_000_000_000_000_000_000_000;
 
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 1000000;
-        ratios[1] = 1000000000000000;
+        ratios[0] = 1_000_000;
+        ratios[1] = 1_000_000_000_000_000;
 
         uint oldLiquidity = _f.calcLpTokenSupply(reserves, new bytes(0));
 
@@ -50,7 +48,6 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
 
         console.log(oldLiquidity);
         console.log(newLiquidity);
-
     }
 
     function test_calcReserveAtRatioSwap_equal_diff() public {
@@ -58,8 +55,8 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         reserves[0] = 50;
         reserves[1] = 100;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098521;
-        ratios[1] = 12984712098521;
+        ratios[0] = 12_984_712_098_521;
+        ratios[1] = 12_984_712_098_521;
 
         uint reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, new bytes(0));
@@ -88,8 +85,8 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         reserves[0] = 50;
         reserves[1] = 100;
         uint[] memory ratios = new uint[](2);
-        ratios[0] = 12984712098520;
-        ratios[1] = 12984712098;
+        ratios[0] = 12_984_712_098_520;
+        ratios[1] = 12_984_712_098;
 
         uint reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, new bytes(0));
         uint reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, new bytes(0));
@@ -98,11 +95,7 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         assertEq(reserve1, 2);
     }
 
-    function test_calcReserveAtRatioSwap_fuzz(
-        uint[2] memory reserves,
-        uint[2] memory ratios
-    ) public {
-
+    function test_calcReserveAtRatioSwap_fuzz(uint[2] memory reserves, uint[2] memory ratios) public {
         for (uint i = 0; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
             reserves[i] = bound(reserves[i], 1e6, 1e32);
@@ -121,17 +114,14 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         uint lpTokenSupplyOut = _f.calcLpTokenSupply(reservesOut, new bytes(0));
 
         // Precision is set to the minimum number of digits of the reserves out.
-        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1]) ? numDigits(reservesOut[1]) : numDigits(reservesOut[0]);
+        uint precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1])
+            ? numDigits(reservesOut[1])
+            : numDigits(reservesOut[0]);
 
         // Check LP Token Supply after = lp token supply before.
         assertApproxEqRelN(lpTokenSupplyOut, lpTokenSupply, 1, precision);
 
         // Check ratio of `reservesOut` = ratio of `ratios`.
-        assertApproxEqRelN(
-            reservesOut[0] * ratios[1],
-            ratios[0] * reservesOut[1],
-            1,
-            precision
-        );
+        assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
     }
 }

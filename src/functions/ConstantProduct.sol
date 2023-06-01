@@ -71,7 +71,7 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         for (uint i = 0; i < reserves.length; ++i) {
             if (i != j) sumRatio += ratios[i];
         }
-        sumRatio /= reserves.length-1;
+        sumRatio /= reserves.length - 1;
         reserve = _prodX(reserves) * ratios[j] / sumRatio;
         reserve = reserve.nthRoot(reserves.length);
     }
@@ -88,6 +88,6 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
                 reserve += ratios[j] * reserves[i] / ratios[i];
             }
         }
-        reserve /= reserves.length-1;
+        reserve /= reserves.length - 1;
     }
 }
