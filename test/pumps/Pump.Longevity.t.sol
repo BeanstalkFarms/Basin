@@ -49,8 +49,6 @@ contract PumpLongevityTest is TestHelper {
             mWell.update(address(pump), balances, new bytes(0));
         }
 
-        // TODO: Add tests revolving around a subsequent update.
-
         // uint[] memory lastReserves = pump.readLastReserves(address(mWell));
         // uint[] memory currentReserves = pump.readInstantaneousReserves(address(mWell));
         // bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(address(mWell));

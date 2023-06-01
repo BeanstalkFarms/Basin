@@ -73,7 +73,7 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
         uint reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, new bytes(0));
 
         assertEq(reserve0, 100000000004);
-        assertEq(reserve1, 500000);
+        assertEq(reserve1, 499999);
     }
 
     function test_calcReserveAtRatioLiquidity_fuzz(

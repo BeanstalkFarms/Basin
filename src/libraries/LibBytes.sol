@@ -40,7 +40,7 @@ library LibBytes {
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
             require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
             assembly {
-                sstore(slot, add(shl(128, mload(add(reserves, 32))), shr(128, shl(128, mload(add(reserves, 64))))))
+                sstore(slot, add(mload(add(reserves, 32)), shl(128, mload(add(reserves, 64)))))
             }
         } else {
             uint maxI = reserves.length / 2; // number of fully-packed slots
@@ -52,22 +52,20 @@ library LibBytes {
                 assembly {
                     sstore(
                         add(slot, mul(i, 32)),
-                        add(
-                            shl(128, mload(add(reserves, add(iByte, 32)))),
-                            shr(128, shl(128, mload(add(reserves, add(iByte, 64)))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shl(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            if (reserves.length % 2 == 1) {
+            // Equivalent to "i % 2 == 1", but cheaper.
+            if (reserves.length & 1 == 1) {
                 require(reserves[reserves.length - 1] <= type(uint128).max, "ByteStorage: too large");
                 iByte = maxI * 64;
                 assembly {
                     sstore(
                         add(slot, mul(maxI, 32)),
-                        add(shl(128, mload(add(reserves, add(iByte, 32)))), shr(128, shl(128, sload(add(slot, maxI)))))
+                        add(mload(add(reserves, add(iByte, 32))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
                     )
                 }
             }
@@ -84,8 +82,8 @@ library LibBytes {
         // Shortcut: two reserves can be quickly unpacked from one slot
         if (n == 2) {
             assembly {
-                mstore(add(reserves, 32), shr(128, sload(slot)))
-                mstore(add(reserves, 64), shr(128, shl(128, sload(slot))))
+                mstore(add(reserves, 32), shr(128, shl(128, sload(slot))))
+                mstore(add(reserves, 64), shr(128, sload(slot)))
             }
             return reserves;
         }
@@ -96,17 +94,18 @@ library LibBytes {
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
             iByte = (i - 1) / 2 * 32;
-            if (i % 2 == 1) {
+            // Equivalent to "i % 2 == 1", but cheaper.
+            if (i & 1 == 1) {
                 assembly {
                     mstore(
                         // store at index i * 32; i = 0 is skipped by loop
                         add(reserves, mul(i, 32)),
-                        shr(128, sload(add(slot, iByte)))
+                        shr(128, shl(128, sload(add(slot, iByte))))
                     )
                 }
             } else {
                 assembly {
-                    mstore(add(reserves, mul(i, 32)), shr(128, shl(128, sload(add(slot, iByte)))))
+                    mstore(add(reserves, mul(i, 32)), shr(128, sload(add(slot, iByte))))
                 }
             }
         }

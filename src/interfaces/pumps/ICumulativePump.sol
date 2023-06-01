@@ -4,7 +4,9 @@ pragma solidity >=0.7.0;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title Cumulative Pumps provide an Oracle for time weighted average reserves through the use of a cumulative reserve.
+ * @title ICumulativePump
+ * @notice Provides an interface for Pumps which calculate time-weighted average
+ * reserves through the use of a cumulative reserve.
  */
 interface ICumulativePump {
     /**
@@ -13,7 +15,10 @@ interface ICumulativePump {
      * @param data data specific to the Well
      * @return cumulativeReserves The cumulative reserves from the Pump
      */
-    function readCumulativeReserves(address well, bytes memory data) external view returns (bytes memory cumulativeReserves);
+    function readCumulativeReserves(
+        address well,
+        bytes memory data
+    ) external view returns (bytes memory cumulativeReserves);
 
     /**
      * @notice Reads the current cumulative reserves from the Pump

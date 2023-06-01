@@ -10,7 +10,7 @@ import {MockPump} from "mocks/pumps/MockPump.sol";
 
 import {Users} from "test/helpers/Users.sol";
 
-import {Well, Call, IERC20} from "src/Well.sol";
+import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
@@ -67,7 +67,11 @@ abstract contract TestHelper is Test, WellDeployer {
     uint public constant initialLiquidity = 1000 * 1e18;
 
     function setupWell(uint n) internal {
-        setupWell(n, deployWellFunction(), deployPumps(2));
+        setupWell(n, deployWellFunction(), deployPumps(1));
+    }
+
+    function setupWell(uint n, Call[] memory _pumps) internal {
+        setupWell(n, deployWellFunction(), _pumps);
     }
 
     function setupWell(uint n, Call memory _wellFunction, Call[] memory _pumps) internal {
@@ -218,7 +222,7 @@ abstract contract TestHelper is Test, WellDeployer {
     //////////// Balance Helpers ////////////
 
     /// @dev get `account` balance of each token, lp token, total lp token supply
-    /// FIXME: uses global tokens but not global well
+    /// @dev uses global tokens but not global well
     function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
         uint[] memory tokenBalances = new uint[](tokens.length);
         for (uint i = 0; i < tokenBalances.length; ++i) {
@@ -326,5 +330,14 @@ abstract contract TestHelper is Test, WellDeployer {
             number /= 10;
             digits++;
         }
+    }
+
+    function checkInvariant(address _well) internal {
+        uint[] memory _reserves = IWell(_well).getReserves();
+        Call memory _wellFunction = IWell(_well).wellFunction();
+        assertLe(
+            IERC20(_well).totalSupply(),
+            IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data)
+        );
     }
 }

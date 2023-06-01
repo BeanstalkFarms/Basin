@@ -73,6 +73,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
+        checkInvariant(address(well));
     }
 
     /// @dev Fuzz test: EQUAL token reserves, BALANCED removal
@@ -96,6 +97,12 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountIn, amounts, user, type(uint).max);
         afterRemoveLiquidity(before, action);
+
+        assertLe(
+            well.totalSupply(),
+            ConstantProduct2(wellFunction.target).calcLpTokenSupply(well.getReserves(), wellFunction.data)
+        );
+        checkInvariant(address(well));
     }
 
     /// @dev Fuzz test: UNEQUAL token reserves, BALANCED removal
@@ -111,7 +118,6 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
         well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
-        vm.stopPrank();
 
         // `user` has LP tokens and will perform a `removeLiquidity` call
         vm.startPrank(user);
@@ -130,5 +136,6 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
         (before, action) = beforeRemoveLiquidity(action);
         well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user, type(uint).max);
         afterRemoveLiquidity(before, action);
+        checkInvariant(address(well));
     }
 }

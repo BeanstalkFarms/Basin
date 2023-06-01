@@ -10,9 +10,9 @@ pragma solidity ^0.8.17;
  * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
  */
 library LibLastReserveBytes {
-    function readN(bytes32 slot) internal view returns (uint8 n) {
+    function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
         assembly {
-            n := shr(248, sload(slot))
+            _numberOfReserves := shr(248, sload(slot))
         }
     }
 
@@ -49,7 +49,8 @@ library LibLastReserveBytes {
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            if (reserves.length % 2 == 1) {
+            // Equivalent to "i % 2 == 1" but cheaper.
+            if (reserves.length & 1 == 1) {
                 iByte = maxI * 64;
                 assembly {
                     sstore(
@@ -94,7 +95,8 @@ library LibLastReserveBytes {
                 // i        3 4 5 6
                 // iByte    1 1 2 2
                 iByte = (i - 1) / 2 * 32;
-                if (i % 2 == 1) {
+                // Equivalent to "i % 2 == 1" but cheaper.
+                if (i & 1 == 1) {
                     assembly {
                         mstore(
                             // store at index i * 32; i = 0 is skipped by loop

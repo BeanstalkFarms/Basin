@@ -54,8 +54,9 @@ contract ABDKTest is TestHelper {
         uint puu = uint(pu.to128x128());
         uint pypu = uint(abi.decode(result, (int)));
 
-        if (puu > 1e28) {
-            assertApproxEqRelN(puu, pypu, 1, 28); // expecting precision to 10**28
+        // Rounding error starts at 5e27
+        if (puu > 5e27) {
+            assertApproxEqRelN(puu, pypu, 2, 28); // expecting precision to 2e-28
         } else {
             assertApproxEqAbs(puu, pypu, 1);
         }

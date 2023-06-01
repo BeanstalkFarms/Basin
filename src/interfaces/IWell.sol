@@ -121,7 +121,8 @@ interface IWell {
     function aquifer() external view returns (address);
 
     /**
-     * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.
+     * @notice Returns the tokens, Well Function, Pumps and Well Data associated
+     * with the Well as well as the Aquifer that deployed the Well.
      */
     function well()
         external
@@ -131,7 +132,7 @@ interface IWell {
             Call memory _wellFunction,
             Call[] memory _pumps,
             bytes memory _wellData,
-            address aquifer
+            address _aquifer
         );
 
     //////////////////// SWAP: FROM ////////////////////
@@ -325,7 +326,6 @@ interface IWell {
      * @param tokenOut The underlying token to receive
      * @return tokenAmountOut The amount of `tokenOut` to receive
      *
-     * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
         uint lpAmountIn,

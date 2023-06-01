@@ -9,7 +9,7 @@ contract LibEmaBytesTest is TestHelper {
     using LibLastReserveBytes for bytes32;
 
     uint constant NUM_RESERVES_MAX = 8;
-    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
+    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint(keccak256("reserves.storage.slot")) - 1);
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testEmaFuzz_storeAndRead(
@@ -28,7 +28,7 @@ contract LibEmaBytesTest is TestHelper {
 
         // Re-read reserves and compare
         (uint8 _n, uint40 _lastTimestamp, bytes16[] memory reserves2) = RESERVES_STORAGE_SLOT.readLastReserves();
-        uint8 __n = RESERVES_STORAGE_SLOT.readN();
+        uint8 __n = RESERVES_STORAGE_SLOT.readNumberOfReserves();
         assertEq(__n, n, "ByteStorage: n mismatch");
         assertEq(_n, n, "ByteStorage: n mismatch");
         assertEq(_lastTimestamp, lastTimestamp, "ByteStorage: lastTimestamp mismatch");

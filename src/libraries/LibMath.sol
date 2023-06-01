@@ -5,24 +5,15 @@ pragma solidity ^0.8.17;
 /**
  * @title Lib Math contains math operations
  */
-import {SafeMath} from "oz/utils/math/SafeMath.sol";
-
 library LibMath {
-    error PRBMath_MulDiv_Overflow(uint x, uint y, uint denominator);
-
     /**
      * @param a numerator
      * @param b denominator
-     * @dev Division, round to nearest integer (AKA round-half-up).
-     *
-     * Skip explicit checks for division by zero as Solidity will natively revert.
-     *
-     * Implementation:
-     * https://github.com/cryptoticket/openzeppelin-solidity/blob/04e62a7a1ece4832bee411ca5de024d2ce0b15e6/contracts/math/RoundedDivMath.sol#L31
+     * @dev Division, rounded up
      */
-    function roundedDiv(uint a, uint b) internal pure returns (uint) {
-        uint halfB = (b % 2 == 0) ? (b / 2) : (b / 2 + 1);
-        return (a % b >= halfB) ? (a / b + 1) : (a / b);
+    function roundUpDiv(uint a, uint b) internal pure returns (uint) {
+        if (a == 0) return 0;
+        return (a - 1) / b + 1;
     }
 
     /**
@@ -41,14 +32,15 @@ library LibMath {
     function nthRoot(uint a, uint n) internal pure returns (uint root) {
         assert(n > 1);
         if (a == 0) return 0;
-        if (n % 2 == 0) {
+        // Equivalent to "i % 2 == 0" but cheaper.
+        if (n & 1 == 0) {
             if (n == 2) return sqrt(a); // shortcut for square root
             if (n == 4) return sqrt(sqrt(a));
             if (n == 8) return sqrt(sqrt(sqrt(a)));
             if (n == 16) return sqrt(sqrt(sqrt(sqrt(a))));
         }
         // The scale factor is a crude way to turn everything into integer calcs.
-        // Actually do ((10 ^ n) * x) ^ (1/n)
+        // Actually do ((10 ^ n) * a) ^ (1/n)
         uint a0 = (10 ** n) * a;
 
         uint xNew = 10;
@@ -69,7 +61,7 @@ library LibMath {
     /**
      * @notice computes the square root of a given number
      * @param a The number to compute the square root of
-     * @return z The square root of x
+     * @return z The square root of a
      * @dev
      * This function is based on the Babylonian method of computing square roots
      * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
@@ -78,19 +70,17 @@ library LibMath {
      */
 
     function sqrt(uint a) internal pure returns (uint z) {
+        /// @solidity memory-safe-assembly
         assembly {
-            // This segment is to get a reasonable initial estimate for the Babylonian method.
-            // If the initial estimate is bad, the number of correct bits increases ~linearly
-            // each iteration instead of ~quadratically.
-            // The idea is to get z*z*y within a small factor of x.
-            // More iterations here gets y in a tighter range. Currently, we will have
-            // y in [256, 256*2^16). We ensure y>= 256 so that the relative difference
-            // between y and y+1 is small. If x < 256 this is not possible, but those cases
-            // are easy enough to verify exhaustively.
-            z := 181 // The 'correct' value is 1, but this saves a multiply later
-            let y := a
-            // Note that we check y>= 2^(k + 8) but shift right by k bits each branch,
-            // this is to ensure that if x >= 256, then y >= 256.
+            let y := a // We start y at a, which will help us make our initial estimate.
+
+            z := 181 // The "correct" value is 1, but this saves a multiplication later.
+
+            // This segment is to get a reasonable initial estimate for the Babylonian method. With a bad
+            // start, the correct # of bits increases ~linearly each iteration instead of ~quadratically.
+
+            // We check y >= 2^(k + 8) but shift right by k bits
+            // each branch to ensure that if a >= 256, then y >= 256.
             if iszero(lt(y, 0x10000000000000000000000000000000000)) {
                 y := shr(128, y)
                 z := shl(64, z)
@@ -107,17 +97,26 @@ library LibMath {
                 y := shr(16, y)
                 z := shl(8, z)
             }
-            // Now, z*z*y <= x < z*z*(y+1), and y <= 2^(16+8),
-            // and either y >= 256, or x < 256.
-            // Correctness can be checked exhaustively for x < 256, so we assume y >= 256.
-            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of x, or about 20bps.
 
-            // The estimate sqrt(x) = (181/1024) * (x+1) is off by a factor of ~2.83 both when x=1
-            // and when x = 256 or 1/256. In the worst case, this needs seven Babylonian iterations.
-            z := shr(18, mul(z, add(y, 65536))) // A multiply is saved from the initial z := 181
+            // Goal was to get z*z*y within a small factor of a. More iterations could
+            // get y in a tighter range. Currently, we will have y in [256, 256*2^16).
+            // We ensured y >= 256 so that the relative difference between y and y+1 is small.
+            // That's not possible if a < 256 but we can just verify those cases exhaustively.
 
-            // Run the Babylonian method seven times. This should be enough given initial estimate.
-            // Possibly with a quadratic/cubic polynomial above we could get 4-6.
+            // Now, z*z*y <= a < z*z*(y+1), and y <= 2^(16+8), and either y >= 256, or a < 256.
+            // Correctness can be checked exhaustively for a < 256, so we assume y >= 256.
+            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of sqrt(a), or about 20bps.
+
+            // For s in the range [1/256, 256], the estimate f(s) = (181/1024) * (s+1) is in the range
+            // (1/2.84 * sqrt(s), 2.84 * sqrt(s)), with largest error when s = 1 and when s = 256 or 1/256.
+
+            // Since y is in [256, 256*2^16), let a = y/65536, so that a is in [1/256, 256). Then we can estimate
+            // sqrt(y) using sqrt(65536) * 181/1024 * (a + 1) = 181/4 * (y + 65536)/65536 = 181 * (y + 65536)/2^18.
+
+            // There is no overflow risk here since y < 2^136 after the first branch above.
+            z := shr(18, mul(z, add(y, 65536))) // A mul() is saved from starting z at 181.
+
+            // Given the worst case multiplicative error of 2.84 above, 7 iterations should be enough.
             z := shr(1, add(z, div(a, z)))
             z := shr(1, add(z, div(a, z)))
             z := shr(1, add(z, div(a, z)))
@@ -126,14 +125,12 @@ library LibMath {
             z := shr(1, add(z, div(a, z)))
             z := shr(1, add(z, div(a, z)))
 
-            // See https://en.wikipedia.org/wiki/Integer_square_root#Using_only_integer_division.
-            // If x+1 is a perfect square, the Babylonian method cycles between
-            // floor(sqrt(x)) and ceil(sqrt(x)). This check ensures we return floor.
-            // The solmate implementation assigns zRoundDown := div(x, z) first, but
-            // since this case is rare, we choose to save gas on the assignment and
-            // repeat division in the rare case.
-            // If you don't care whether floor or ceil is returned, you can skip this.
-            if lt(div(a, z), z) { z := div(a, z) }
+            // If a+1 is a perfect square, the Babylonian method cycles between
+            // floor(sqrt(a)) and ceil(sqrt(a)). This statement ensures we return floor.
+            // See: https://en.wikipedia.org/wiki/Integer_square_root#Using_only_integer_division
+            // Since the ceil is rare, we save gas on the assignment and repeat division in the rare case.
+            // If you don't care whether the floor or ceil square root is returned, you can remove this statement.
+            z := sub(z, lt(div(a, z), z))
         }
     }
 

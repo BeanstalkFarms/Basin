@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.17;
 
+import {IERC20} from "oz/token/ERC20/IERC20.sol";
+
 /**
  * @title IWellErrors contains all Well errors.
  * @dev The errors are separated into a different interface so that the {IWell} interface compiles in older Solidity versions (<0.8.4).
@@ -26,6 +28,11 @@ interface IWellErrors {
      * @notice Thrown if this operation would cause an incorrect change in Well reserves.
      */
     error InvalidReserves();
+
+    /**
+     * @notice Thrown when a Well is bored with duplicate tokens.
+     */
+    error DuplicateTokens(IERC20 token);
 
     /**
      * @notice Thrown if an operation is executed after the provided `deadline` has passed.
