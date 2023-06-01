@@ -7,7 +7,7 @@ import {LibBytes} from "src/libraries/LibBytes.sol";
 
 contract LibBytesTest is TestHelper {
     uint constant NUM_RESERVES_MAX = 8;
-    bytes32 constant RESERVES_STORAGE_SLOT = keccak256("reserves.storage.slot");
+    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint(keccak256("reserves.storage.slot")) - 1);
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testFuzz_storeAndRead(uint n, uint128[8] memory _reserves) public {
@@ -17,6 +17,21 @@ contract LibBytesTest is TestHelper {
         uint[] memory reserves = new uint[](n);
         for (uint i = 0; i < n; i++) {
             reserves[i] = uint(_reserves[i]);
+        }
+        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
+
+        // Re-read reserves and compare
+        uint[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
+        for (uint i = 0; i < reserves2.length; i++) {
+            assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
+        }
+    }
+    
+    function testStoreAndRead() public {
+        uint n = 2;
+        uint[] memory reserves = new uint[](n);
+        for (uint i = 0; i < n; i++) {
+            reserves[i] = i * 100 + 1;
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
 

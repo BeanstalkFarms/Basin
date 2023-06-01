@@ -27,7 +27,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
     constructor() ReentrancyGuard() {}
 
     /**
-     * @dev see {IAquifer.boreWell}
+     * @dev
      * Use `salt == 0` to deploy a new Well with `create`
      * Use `salt > 0` to deploy a new Well with `create2`
      */
@@ -83,9 +83,6 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         );
     }
 
-    /**
-     * @dev see {IAquifer.wellImplementation}
-     */
     function wellImplementation(address well) external view returns (address implementation) {
         return wellImplementations[well];
     }
