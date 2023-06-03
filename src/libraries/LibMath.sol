@@ -9,17 +9,11 @@ library LibMath {
     /**
      * @param a numerator
      * @param b denominator
-     * @dev Division, round to nearest integer (AKA round-half-up).
-     *
-     * Skip explicit checks for division by zero as Solidity will natively revert.
-     *
-     * Implementation:
-     * https://github.com/cryptoticket/openzeppelin-solidity/blob/04e62a7a1ece4832bee411ca5de024d2ce0b15e6/contracts/math/RoundedDivMath.sol#L31
+     * @dev Division, rounded up
      */
-    function roundedDiv(uint a, uint b) internal pure returns (uint) {
-        // Equivalent to "b % 2 == 0" but cheaper.
-        uint halfB = (b & 1 == 0) ? (b / 2) : (b / 2 + 1);
-        return (a % b >= halfB) ? (a / b + 1) : (a / b);
+    function roundUpDiv(uint a, uint b) internal pure returns (uint) {
+        if (a == 0) return 0;
+        return (a - 1) / b + 1;
     }
 
     /**

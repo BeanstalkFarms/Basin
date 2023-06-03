@@ -14,7 +14,10 @@ interface ICumulativePump {
      * @param data data specific to the Well
      * @return cumulativeReserves The cumulative reserves from the Pump
      */
-    function readCumulativeReserves(address well, bytes memory data) external view returns (bytes memory cumulativeReserves);
+    function readCumulativeReserves(
+        address well,
+        bytes memory data
+    ) external view returns (bytes memory cumulativeReserves);
 
     /**
      * @notice Reads the current cumulative reserves from the Pump

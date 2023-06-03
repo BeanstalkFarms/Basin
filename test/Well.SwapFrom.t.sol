@@ -74,6 +74,7 @@ contract WellSwapFromTest is SwapHelper {
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
         act.wellSends = well.swapFrom(tokens[0], tokens[1], amountIn, 0, user, type(uint).max);
         afterSwapFrom(bef, act);
+        checkInvariant(address(well));
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
@@ -82,5 +83,6 @@ contract WellSwapFromTest is SwapHelper {
         uint token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user, type(uint).max);
         uint token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user, type(uint).max);
         assertEq(token0Out, token0AmtIn);
+        checkInvariant(address(well));
     }
 }

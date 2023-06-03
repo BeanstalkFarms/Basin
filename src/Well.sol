@@ -32,7 +32,7 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         __ERC20_init(name, symbol);
 
         IERC20[] memory _tokens = tokens();
-        for (uint i; i < _tokens.length-1; ++i) {
+        for (uint i; i < _tokens.length - 1; ++i) {
             for (uint j = i + 1; j < _tokens.length; ++j) {
                 if (_tokens[i] == _tokens[j]) {
                     revert DuplicateTokens(_tokens[i]);
@@ -602,6 +602,8 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
     }
 
     function getReserves() external view returns (uint[] memory reserves) {
+        // Use the same error as `ReentrancyGuardUpgradeable` instead of using a custom error for consistency.
+        require(!_reentrancyGuardEntered(), "ReentrancyGuard: reentrant call");
         reserves = _getReserves(numberOfTokens());
     }
 
@@ -640,16 +642,16 @@ contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, Clon
         if (numberOfPumps() == 1) {
             Call memory _pump = firstPump();
             // Don't revert if the update call fails.
-            try IPump(_pump.target).update(reserves, _pump.data) {
-            } catch {
+            try IPump(_pump.target).update(reserves, _pump.data) {}
+            catch {
                 // ignore reversion. If an external shutoff mechanism is added to a Pump, it could be called here.
             }
         } else {
             Call[] memory _pumps = pumps();
             for (uint i; i < _pumps.length; ++i) {
                 // Don't revert if the update call fails.
-                try IPump(_pumps[i].target).update(reserves, _pumps[i].data) {
-                } catch {
+                try IPump(_pumps[i].target).update(reserves, _pumps[i].data) {}
+                catch {
                     // ignore reversion. If an external shutoff mechanism is added to a Pump, it could be called here.
                 }
             }

@@ -94,6 +94,7 @@ contract WellSwapToTest is SwapHelper {
             wellBalancesAfter.tokens[0], wellBalancesBefore.tokens[0] + calcAmountIn, "Incorrect token0 well reserve"
         );
         assertEq(wellBalancesAfter.tokens[1], wellBalancesBefore.tokens[1] - amountOut, "Incorrect token1 well reserve");
+        checkInvariant(address(well));
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
@@ -103,5 +104,6 @@ contract WellSwapToTest is SwapHelper {
         uint token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut, user, type(uint).max);
         uint token0In = well.swapTo(tokens[1], tokens[0], 1000e18, token1In, user, type(uint).max);
         assertEq(token0In, token0AmtOut);
+        checkInvariant(address(well));
     }
 }

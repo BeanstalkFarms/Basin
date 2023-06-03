@@ -53,6 +53,7 @@ contract ConstantProduct2 is ProportionalLPToken2 {
     }
 
     /// @dev `b_j = s^2 / b_{i | i != j}`
+    /// @dev rounds up
     function calcReserve(
         uint[] calldata reserves,
         uint j,
@@ -61,7 +62,7 @@ contract ConstantProduct2 is ProportionalLPToken2 {
     ) external pure override returns (uint reserve) {
         // Note: potential optimization is to use unchecked math here
         reserve = lpTokenSupply ** 2 / EXP_PRECISION;
-        reserve = LibMath.roundedDiv(reserve, reserves[j == 1 ? 0 : 1]);
+        reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1]);
     }
 
     function name() external pure override returns (string memory) {

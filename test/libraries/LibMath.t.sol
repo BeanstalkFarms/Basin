@@ -84,17 +84,42 @@ contract LibMathTest is TestHelper {
     }
 
     ///
-    function test_roundedDiv_revertIf_denomIsZero() public {
+    function test_roundUpDiv_revertIf_denomIsZero() public {
         vm.expectRevert();
-        LibMath.roundedDiv(1, 0);
+        LibMath.roundUpDiv(1, 0);
     }
 
-    function test_roundedDiv() public {
-        assertEq(LibMath.roundedDiv(1, 3), 0);
-        assertEq(LibMath.roundedDiv(1, 2), 1);
-        assertEq(LibMath.roundedDiv(2, 3), 1);
-        assertEq(LibMath.roundedDiv(2, 2), 1);
-        assertEq(LibMath.roundedDiv(3, 2), 2);
-        assertEq(LibMath.roundedDiv(5, 4), 1);
+    function test_roundUpDiv() public {
+        assertEq(LibMath.roundUpDiv(1, 3), 1);
+        assertEq(LibMath.roundUpDiv(1, 2), 1);
+        assertEq(LibMath.roundUpDiv(2, 3), 1);
+        assertEq(LibMath.roundUpDiv(2, 2), 1);
+        assertEq(LibMath.roundUpDiv(3, 2), 2);
+        assertEq(LibMath.roundUpDiv(5, 4), 2);
+    }
+
+    function test_fuzz_roundUpDiv(uint a, uint b) public {
+        if (a > 0 && b == 0) {
+            vm.expectRevert();
+            LibMath.roundUpDiv(a, b);
+            return;
+        }
+
+        uint c = LibMath.roundUpDiv(a, b);
+
+        if (a == 0) {
+            assertEq(c, 0);
+            return;
+        }
+
+        uint a_guess;
+        unchecked {
+            a_guess = c * b;
+        }
+        if (a_guess == a) {
+            assertEq(c, a / b);
+        } else {
+            assertEq(c, a / b + 1);
+        }
     }
 }
