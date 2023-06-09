@@ -34,6 +34,6 @@ tab_width = 4
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 
 [invariant]
-runs = 4
-depth = 2048
+runs = 50
+depth = 500
 fail_on_revert = true

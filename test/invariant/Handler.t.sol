@@ -15,6 +15,9 @@ import {EnumerableSet} from "oz/utils/structs/EnumerableSet.sol";
 /// @dev The handler is the set of valid actions that can be performed during an invariant test run.
 /// @dev These include adding and removing liquidity, transfers, swaps, shifts, etc.
 contract Handler is Test {
+
+    uint constant EXP_PRECISION = 1e12;
+
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// @dev The deployed well to interact with
@@ -67,9 +70,11 @@ contract Handler is Test {
 
     /// @dev swapFrom
     function swapFrom(uint addressSeed, uint tokenInIndex, uint amountIn) public {
+        console.log("----------------------------------");
+        console.log("Swap From");
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token index
         tokenInIndex = bound(tokenInIndex, 0, 1);
         uint tokenOutIndex = tokenInIndex == 0 ? 1 : 0;
@@ -87,14 +92,18 @@ contract Handler is Test {
         s_well.swapFrom(
             mockTokens[tokenInIndex], mockTokens[tokenOutIndex], amountIn, minAmountOut, msgSender, block.timestamp
         );
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev swapFromFeeOnTransfer - This won't actually take a fee on transfer, because in the current
     /// setup, we use non-fee taking tokens.
     function swapFromFeeOnTransfer(uint addressSeed, uint tokenInIndex, uint amountIn) public {
+        console.log("----------------------------------");
+        console.log("Swap From Fee On Transfer");
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token index
         tokenInIndex = bound(tokenInIndex, 0, 1);
         uint tokenOutIndex = tokenInIndex == 0 ? 1 : 0;
@@ -112,14 +121,18 @@ contract Handler is Test {
         s_well.swapFromFeeOnTransfer(
             mockTokens[tokenInIndex], mockTokens[tokenOutIndex], amountIn, minAmountOut, msgSender, block.timestamp
         );
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev swapTo
     function swapTo(uint addressSeed, uint tokenOutIndex, uint amountOut) public {
+        console.log("----------------------------------");
+        console.log("Swap To");
         s_swapToCalls++;
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token index
         tokenOutIndex = bound(tokenOutIndex, 0, 1);
         uint tokenInIndex = tokenOutIndex == 0 ? 1 : 0;
@@ -130,6 +143,7 @@ contract Handler is Test {
         IERC20[] memory mockTokens = s_well.tokens();
         // get amount in
         try s_well.getSwapIn(mockTokens[tokenInIndex], mockTokens[tokenOutIndex], amountOut) returns (uint amountIn) {
+            if (amountIn > type(uint128).max) return;
             // mint the correct amount in to the sender
             MockToken(address(mockTokens[tokenInIndex])).mint(msgSender, amountIn);
             // approve the well
@@ -141,13 +155,17 @@ contract Handler is Test {
         } catch {
             s_swapToFails++;
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev shift
     function shift(uint addressSeed) public {
+        console.log("----------------------------------");
+        console.log("Shift");
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         IERC20[] memory mockTokens = s_well.tokens();
         for (uint i = 0; i < mockTokens.length; i++) {
             s_getShiftOutCalls++;
@@ -166,16 +184,23 @@ contract Handler is Test {
                 s_getShiftOutFails++;
             }
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev addLiquidity
     function addLiquidity(uint addressSeed, uint token0AmountIn, uint token1AmountIn) public {
+        console.log("----------------------------------");
+        console.log("Add Liquidity");
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token amounts
-        token0AmountIn = bound(token0AmountIn, 1, type(uint96).max);
-        token1AmountIn = bound(token1AmountIn, 1, type(uint96).max);
+
+        uint[] memory reserves = s_well.getReserves();
+        token0AmountIn = bound(token0AmountIn, 1, getMaxAddLiquidity(reserves));
+        reserves[0] += token0AmountIn;
+        token1AmountIn = bound(token1AmountIn, 1, getMaxAddLiquidity(reserves));
 
         uint[] memory tokenAmountsIn = new uint[](2);
         tokenAmountsIn[0] = token0AmountIn;
@@ -194,17 +219,23 @@ contract Handler is Test {
         assertGe(lpAmountOut, minLpAmountOut);
         // add the LP to the set
         s_LPs.add(msgSender);
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev addLiquidityFeeOnTransfer - This won't actually take a fee on transfer, because in the current
     /// setup, we use non-fee taking tokens.
     function addLiquidityFeeOnTransfer(uint addressSeed, uint token0AmountIn, uint token1AmountIn) public {
+        console.log("----------------------------------");
+        console.log("Add Liquidity Fee on Transfer");
         // bound address seed
         address msgSender = _seedToAddress(addressSeed);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token amounts
-        token0AmountIn = bound(token0AmountIn, 1, type(uint96).max);
-        token1AmountIn = bound(token1AmountIn, 1, type(uint96).max);
+        uint[] memory reserves = s_well.getReserves();
+        token0AmountIn = bound(token0AmountIn, 1, getMaxAddLiquidity(reserves));
+        reserves[0] += token0AmountIn;
+        token1AmountIn = bound(token1AmountIn, 1, getMaxAddLiquidity(reserves));
 
         uint[] memory tokenAmountsIn = new uint[](2);
         tokenAmountsIn[0] = token0AmountIn;
@@ -224,16 +255,20 @@ contract Handler is Test {
 
         // add the LP to the set
         s_LPs.add(msgSender);
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev removeLiquidity
     function removeLiquidity(uint addressIndex, uint lpAmountIn) public {
+        console.log("----------------------------------");
+        console.log("Remove Liquidity");
         if (s_LPs.length() == 0) {
             return;
         }
         // bound address index
         address msgSender = _indexToLpAddress(addressIndex);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound lp amount
         lpAmountIn = bound(lpAmountIn, 0, s_well.balanceOf(msgSender));
 
@@ -249,17 +284,21 @@ contract Handler is Test {
         if (s_well.balanceOf(msgSender) == 0) {
             s_LPs.remove(msgSender);
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev removeLiquidityOneToken
     function removeLiquidityOneToken(uint addressIndex, uint tokenIndex, uint lpAmountIn) public {
+        console.log("----------------------------------");
+        console.log("remove Liquidity One Token");
         if (s_LPs.length() == 0) {
             return;
         }
         s_removeLiquidityOneTokenCalls++;
         // bound address index
         address msgSender = _indexToLpAddress(addressIndex);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token index
         tokenIndex = bound(tokenIndex, 0, 1);
         IERC20 token = s_well.tokens()[tokenIndex];
@@ -276,17 +315,21 @@ contract Handler is Test {
         } catch {
             s_removeLiquidityOneTokenFails++;
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev removeLiquidityImbalanced
     function removeLiquidityImbalanced(uint addressIndex, uint token0AmountOut, uint token1AmountOut) public {
+        console.log("----------------------------------");
+        console.log("Remove Liquidity Imbalanced");
         if (s_LPs.length() == 0) {
             return;
         }
         s_removeLiquidityImbalancedCalls++;
         // bound address index
         address msgSender = _indexToLpAddress(addressIndex);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         // bound token amounts
         token0AmountOut = bound(token0AmountOut, 0, type(uint96).max);
         token1AmountOut = bound(token1AmountOut, 0, type(uint96).max);
@@ -308,16 +351,24 @@ contract Handler is Test {
         if (s_well.balanceOf(msgSender) == 0) {
             s_LPs.remove(msgSender);
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev sync
     function sync() public {
+        console.log("----------------------------------");
+        console.log("Sync");
         s_well.sync();
+        printWellTokenValues();
     }
 
     /// @dev skim
     function skim() public {
+        console.log("----------------------------------");
+        console.log("Skim");
         s_well.skim(address(this));
+        printWellTokenValues();
     }
 
     // IERC20
@@ -325,12 +376,14 @@ contract Handler is Test {
 
     /// @dev transfer
     function transferLP(uint addressFromIndex, uint addressToSeed, uint amount) public {
+        console.log("----------------------------------");
+        console.log("Transfer LP");
         if (s_LPs.length() == 0) {
             return;
         }
         // bound address seeds
         address msgSender = _indexToLpAddress(addressFromIndex);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         address addressTo = _seedToAddress(addressToSeed);
 
         // bound amount
@@ -348,16 +401,20 @@ contract Handler is Test {
         if (s_well.balanceOf(msgSender) == 0) {
             s_LPs.remove(msgSender);
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev approve
     function approveLP(uint addressFromIndex, uint addressToSeed, uint amount) public {
+        console.log("----------------------------------");
+        console.log("Approve LP");
         if (s_LPs.length() == 0) {
             return;
         }
         // bound address seeds
         address msgSender = _indexToLpAddress(addressFromIndex);
-        changePrank(msgSender);
+        vm.startPrank(msgSender);
         address addressTo = _seedToAddress(addressToSeed);
 
         // bound amount
@@ -369,17 +426,21 @@ contract Handler is Test {
         // add to ghost variables
         s_approvedBy.add(msgSender);
         s_approvedTo[msgSender].add(addressTo);
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev transferFrom
     function transferFromLP(uint addressApprovedByIndex, uint addressApprovedToIndex, uint amount) public {
+        console.log("----------------------------------");
+        console.log("Transfer From LP");
         if (s_approvedBy.length() == 0) {
             return;
         }
         // bound address indices
         address approvedBy = _indexToApprovedByAddress(addressApprovedByIndex);
         address approvedTo = _indexToApprovedToAddress(approvedBy, addressApprovedToIndex);
-        changePrank(approvedTo);
+        vm.startPrank(approvedTo);
 
         // bound amount to between 0 and whichever is lower between the allowance and the balance of the approvedBy.
         uint allowance = s_well.allowance(approvedBy, approvedTo);
@@ -398,6 +459,8 @@ contract Handler is Test {
         if (!s_LPs.contains(approvedTo) && s_well.balanceOf(approvedTo) > 0) {
             s_LPs.add(approvedTo);
         }
+        vm.stopPrank();
+        printWellTokenValues();
     }
 
     /// @dev Prints a call summary of calls and reverts to certain actions
@@ -443,5 +506,26 @@ contract Handler is Test {
     function _indexToApprovedToAddress(address approvedBy, uint addressIndex) internal view returns (address) {
         EnumerableSet.AddressSet storage approvedTo = s_approvedTo[approvedBy];
         return approvedTo.at(bound(addressIndex, 0, approvedTo.length() - 1));
+    }
+
+    function printWellTokenValues() internal view {
+        uint functionCalc = IWellFunction(s_well.wellFunction().target).calcLpTokenSupply(s_well.getReserves(), s_well.wellFunction().data);
+        console.log("Token Supply: %s", s_well.totalSupply());
+        console.log("Expec Supply: %s", functionCalc);
+
+        IERC20[] memory mockTokens = s_well.tokens();
+        console.log("Well token0 balance: %s", mockTokens[0].balanceOf(address(s_well)));
+        console.log("Well token1 balance: %s", mockTokens[1].balanceOf(address(s_well)));
+
+        uint[] memory reserves = s_well.getReserves();
+        console.log("Reserve0: %s", reserves[0]);
+        console.log("Reserve1: %s", reserves[1]);
+    }
+
+
+    function getMaxAddLiquidity(uint[] memory reserves) internal pure returns (uint max) {
+        if (reserves[0] == 0 || reserves[1] == 0) return type(uint96).max;
+        max = type(uint256).max / (reserves[0] * reserves[1] * EXP_PRECISION);
+        if (max > type(uint96).max) max = type(uint96).max;
     }
 }
