@@ -61,8 +61,8 @@ contract ConstantProduct2 is ProportionalLPToken2 {
         bytes calldata
     ) external pure override returns (uint reserve) {
         // Note: potential optimization is to use unchecked math here
-        reserve = lpTokenSupply ** 2 / EXP_PRECISION;
-        reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1]);
+        reserve = lpTokenSupply ** 2;
+        reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1] * EXP_PRECISION);
     }
 
     function name() external pure override returns (string memory) {
