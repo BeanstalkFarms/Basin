@@ -16,6 +16,7 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
+import {Math} from "oz/utils/math/Math.sol";
 import {stdMath} from "forge-std/StdMath.sol";
 
 /// @dev Helper struct for quickly loading user / well token balances
@@ -39,6 +40,7 @@ struct Snapshot {
 }
 
 abstract contract TestHelper is Test, WellDeployer {
+    using Math for uint;
     using Strings for uint;
 
     // Errors are mirrored from IWell
@@ -289,6 +291,14 @@ abstract contract TestHelper is Test, WellDeployer {
     function assertApproxEqRelN(
         uint a,
         uint b,
+        uint precision
+    ) internal virtual {
+        assertApproxEqRelN(a,b,1,precision);
+    }
+
+    function assertApproxEqRelN(
+        uint a,
+        uint b,
         uint maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
         uint precision
     ) internal virtual {
@@ -325,5 +335,13 @@ abstract contract TestHelper is Test, WellDeployer {
             IERC20(_well).totalSupply(),
             IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data)
         );
+    }
+
+    function getPrecisionForReserves(uint[] memory reserves) internal pure returns (uint precision) {
+        precision = type(uint).max;
+        for (uint i; i < reserves.length; ++i) {
+            uint logReserve = reserves[i].log10();
+            if (logReserve < precision) precision = logReserve;
+        }
     }
 }
