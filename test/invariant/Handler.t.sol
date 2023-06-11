@@ -15,7 +15,6 @@ import {EnumerableSet} from "oz/utils/structs/EnumerableSet.sol";
 /// @dev The handler is the set of valid actions that can be performed during an invariant test run.
 /// @dev These include adding and removing liquidity, transfers, swaps, shifts, etc.
 contract Handler is Test {
-
     uint constant EXP_PRECISION = 1e12;
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -509,7 +508,9 @@ contract Handler is Test {
     }
 
     function printWellTokenValues() internal view {
-        uint functionCalc = IWellFunction(s_well.wellFunction().target).calcLpTokenSupply(s_well.getReserves(), s_well.wellFunction().data);
+        uint functionCalc = IWellFunction(s_well.wellFunction().target).calcLpTokenSupply(
+            s_well.getReserves(), s_well.wellFunction().data
+        );
         console.log("Token Supply: %s", s_well.totalSupply());
         console.log("Expec Supply: %s", functionCalc);
 
@@ -522,10 +523,9 @@ contract Handler is Test {
         console.log("Reserve1: %s", reserves[1]);
     }
 
-
     function getMaxAddLiquidity(uint[] memory reserves) internal pure returns (uint max) {
         if (reserves[0] == 0 || reserves[1] == 0) return type(uint96).max;
-        max = type(uint256).max / (reserves[0] * reserves[1] * EXP_PRECISION);
+        max = type(uint).max / (reserves[0] * reserves[1] * EXP_PRECISION);
         if (max > type(uint96).max) max = type(uint96).max;
     }
 }

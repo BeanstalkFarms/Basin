@@ -288,12 +288,8 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function assertApproxEqRelN(
-        uint a,
-        uint b,
-        uint precision
-    ) internal virtual {
-        assertApproxEqRelN(a,b,1,precision);
+    function assertApproxEqRelN(uint a, uint b, uint precision) internal virtual {
+        assertApproxEqRelN(a, b, 1, precision);
     }
 
     function assertApproxEqRelN(

@@ -31,4 +31,4 @@ However, this architecture shifts much of the attack surface area to the Well's 
 
 The Wells architecture aims to outline a simple interface for composable AMMs and leave the process of evaluating a given Well's trustworthiness as the responsibility of the user. To this end, future work may focus on development of on-chain Well registries and factories which create or highlight Wells composed of known components.
 
-An example factory implementation is provided in [{Auger}](/src/Auger.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
+An example factory implementation is provided in [{Aquifer}](/src/Auquifer.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
