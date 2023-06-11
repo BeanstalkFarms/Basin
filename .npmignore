@@ -1,0 +1,24 @@
+# Compiler files
+cache/
+
+# Ignores development broadcast logs
+/broadcast
+
+# Dotenv file
+.env
+
+# Ignore generated CSV with DEX gas comparisons
+.dex-comparisons.csv
+
+# Other
+node_modules
+stash
+lcov.info
+.DS_Store
+test/output/
+
+
+# Npm ignored files
+test
+.github
+.husky
