@@ -4,9 +4,10 @@ pragma solidity ^0.8.17;
 
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
+import {SafeMath} from "oz/utils/math/SafeMath.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
  * developed by solidly. 
  * 
@@ -20,56 +21,66 @@ import {LibMath} from "src/libraries/LibMath.sol";
  */
 contract StableSwap is ProportionalLPToken2 {
     using LibMath for uint;
+    using SafeMath for uint;
 
-    uint constant EXP_PRECISION = 1e12;
     uint constant A_PRECISION = 100;
 
-    // A paramater
-    uint constant A = 1;
+    // A parameter
+    uint public immutable a;
     // 2 token Pool. 
     uint constant N = 2;
     // Ann is used everywhere `shrug` 
-    uint constant Ann = A * N;
+    // uint256 constant Ann = A * N * A_PRECISION;
 
+    constructor(uint _a) {
+      a = _a;
+    }
     /**
      * D invariant calculation in non-overflowing integer operations iteratively
      * A * sum(x_i) * n**n + D = A * D * n**n + D**(n+1) / (n**n * prod(x_i))
      * 
      * Converging solution:
      * D[j+1] = (4 * A * sum(b_i) - (D[j] ** 3) / (4 * prod(b_i))) / (4 * A - 1)
-     * D[2] = (4 * A * sum(b_i) - (D[1] ** 3) / (4 * prod(b_i))) / (4 * A - 1)
      */
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata
-    ) external pure override returns (uint d) {
-        uint256 s = 0; 
-        uint256 Dprev = 0;
-
-        s = reserves[0] + reserves[1];
-        if(s == 0) return 0;
-        d = s;
-
+    ) external view override returns (uint lpTokenSupply) {
+        uint256 sumReserves = reserves[0] + reserves[1];
+        uint256 prevD;
+        if(sumReserves == 0) return 0;
+       
+        lpTokenSupply = sumReserves;
+        uint256 Ann = a * N * N * A_PRECISION;
         // wtf is this bullshit
-        for(uint i; i < 255; i++){
-            uint256 d_p = d;
-            for(uint j; j < N; j++){
+        for(uint i = 0; i < 255; i++){
+            uint256 dP = lpTokenSupply;
+            for(uint j = 0; j < N; j++){
                 // If division by 0, this will be borked: only withdrawal will work. And that is good
-                d_p = d_p * d / (reserves[j] * N);
+                dP = dP.mul(lpTokenSupply).div(reserves[j].mul(N));
             }
-            Dprev = d;
-            d = (Ann * s / A_PRECISION + d_p * N) * 
-                d / (
-                    (Ann - A_PRECISION) * d / 
-                    A_PRECISION + (N + 1) * d_p
+            prevD = lpTokenSupply;
+            lpTokenSupply = Ann
+                .mul(sumReserves)
+                .div(A_PRECISION)
+                .add(dP.mul(N))
+                .mul(lpTokenSupply)
+                .div(
+                    Ann
+                        .sub(A_PRECISION)
+                        .mul(lpTokenSupply)
+                        .div(A_PRECISION)
+                        .add(N.add(1).mul(dP))
                 );
+
             // Equality with the precision of 1
-            if (d > Dprev){
-                if(d - Dprev <= 1) return d;
+            
+            if (lpTokenSupply > prevD){
+                if(lpTokenSupply - prevD <= 1) return lpTokenSupply;
             }
             else {
-                if(Dprev - d <= 1) return d;
-            }       
+                if(prevD - lpTokenSupply <= 1) return lpTokenSupply;
+            }
         }
     }
 
@@ -85,42 +96,55 @@ contract StableSwap is ProportionalLPToken2 {
         uint j,
         uint lpTokenSupply,
         bytes calldata
-    ) external pure override returns (uint reserve) {
+    ) external view override returns (uint reserve) {
         require(j < N);
         uint256 c = lpTokenSupply;
-        uint256 s;
+        uint256 sumReserves;
         uint256 _x;
         uint256 y_prev; 
+        uint256 Ann = a * N * N * A_PRECISION;
 
 
         for(uint i; i < N; ++i){
             if(i != j){
-                _x = reserves[j];
+                _x = reserves[i];
             } else {
                 continue;
             }
-            s +=_x;
-            c = c * lpTokenSupply / (_x * N);
+            sumReserves = sumReserves.add(_x);
+            c = c.mul(lpTokenSupply).div(_x.mul(N));
         }
-        c = c * lpTokenSupply * A /(Ann * N);
-        uint256 b = s + lpTokenSupply * A_PRECISION / Ann;
+        c = c.mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
+        uint256 b = 
+            sumReserves.add(
+                lpTokenSupply.mul(A_PRECISION).div(Ann)
+            );
         reserve = lpTokenSupply;
 
         for(uint i; i < 255; ++i){
             y_prev = reserve;
-            reserve = (reserve*reserve + c) / (2 * reserve + b - lpTokenSupply);
+            reserve = 
+                reserve
+                    .mul(reserve)
+                    .add(c)
+                    .div(
+                        reserve
+                            .mul(2)
+                            .add(b)
+                            .sub(lpTokenSupply)
+                        );
             // Equality with the precision of 1
             if(reserve > y_prev){
-                if(reserve - y_prev <= 1) return reserve;
+                if(reserve.sub(y_prev) <= 1) return reserve;
             } else {
-                if(y_prev - reserve <= 1) return reserve;
+                if(y_prev.sub(reserve) <= 1) return reserve;
             }
         }
         revert("did not find convergence");        
     }
 
     function name() external pure override returns (string memory) {
-        return "Stableswap";
+        return "StableSwap";
     }
 
     function symbol() external pure override returns (string memory) {
