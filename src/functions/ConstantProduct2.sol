@@ -98,4 +98,4 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint i = j == 1 ? 0 : 1;
         reserve = reserves[i] * ratios[j] / ratios[i];
     }
-}\
+}
