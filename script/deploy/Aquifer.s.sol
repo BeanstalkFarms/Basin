@@ -10,7 +10,7 @@ contract DeployAquifer is Script {
     function run() external {
         uint deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        Aquifer aquifer = new Aquifer();
+        // Aquifer aquifer = new Aquifer();
         vm.stopBroadcast();
     }
 }

@@ -45,5 +45,5 @@ interface IBeanstalkWellFunction is IWellFunction {
         uint j,
         uint[] calldata ratios,
         bytes calldata data
-    ) external pure returns (uint reserve);
+    ) external view returns (uint reserve);
 }

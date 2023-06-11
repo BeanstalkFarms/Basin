@@ -30,26 +30,6 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         assertEq(reserve1, 100);
     }
 
-    function testA() public {
-        uint[] memory reserves = new uint[](2);
-        reserves[0] = 800_000_000_000;
-        reserves[1] = 1_000_000_000_000_000_000_000;
-
-        uint[] memory ratios = new uint[](2);
-        ratios[0] = 1_000_000;
-        ratios[1] = 1_000_000_000_000_000;
-
-        uint oldLiquidity = _f.calcLpTokenSupply(reserves, new bytes(0));
-
-        reserves[0] = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, new bytes(0));
-        console.log(reserves[0]);
-
-        uint newLiquidity = _f.calcLpTokenSupply(reserves, new bytes(0));
-
-        console.log(oldLiquidity);
-        console.log(newLiquidity);
-    }
-
     function test_calcReserveAtRatioSwap_equal_diff() public {
         uint[] memory reserves = new uint[](2);
         reserves[0] = 50;

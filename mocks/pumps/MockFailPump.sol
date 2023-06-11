@@ -11,7 +11,7 @@ import "src/interfaces/pumps/IPump.sol";
  * @title Mock Pump with a failing update function
  */
 contract MockFailPump is IPump {
-    function update(uint[] calldata, bytes calldata data) external {
+    function update(uint[] calldata, bytes calldata) external pure {
         revert();
     }
 }
