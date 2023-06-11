@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.17;
 
+import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
@@ -16,7 +17,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  */
-contract ConstantProduct2 is ProportionalLPToken2 {
+contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     using LibMath for uint;
 
     uint constant EXP_PRECISION = 1e12;
@@ -61,8 +62,8 @@ contract ConstantProduct2 is ProportionalLPToken2 {
         bytes calldata
     ) external pure override returns (uint reserve) {
         // Note: potential optimization is to use unchecked math here
-        reserve = lpTokenSupply ** 2;
-        reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1] * EXP_PRECISION);
+        reserve = lpTokenSupply ** 2 / EXP_PRECISION;
+        reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1]);
     }
 
     function name() external pure override returns (string memory) {
@@ -71,5 +72,30 @@ contract ConstantProduct2 is ProportionalLPToken2 {
 
     function symbol() external pure override returns (string memory) {
         return "CP2";
+    }
+
+    /// @dev `b_j = (b_0 * b_1 * r_j / r_i)^(1/2)`
+    /// Note: Always rounds down
+    function calcReserveAtRatioSwap(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external pure override returns (uint reserve) {
+        uint i = j == 1 ? 0 : 1;
+        // use 512 muldiv for last mul to avoid overflow
+        reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
+    }
+
+    /// @dev `b_j = b_i * r_j / r_i`
+    /// Note: Always rounds down
+    function calcReserveAtRatioLiquidity(
+        uint[] calldata reserves,
+        uint j,
+        uint[] calldata ratios,
+        bytes calldata
+    ) external pure override returns (uint reserve) {
+        uint i = j == 1 ? 0 : 1;
+        reserve = reserves[i] * ratios[j] / ratios[i];
     }
 }

@@ -81,6 +81,10 @@ contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulat
 
         // If the last timestamp is 0, then the pump has never been used before.
         if (pumpState.lastTimestamp == 0) {
+            for (uint i; i < numberOfReserves; ++i) {
+                // If a reserve is 0, then the pump cannot be initialized.
+                if (reserves[i] == 0) return;
+            }
             _init(slot, uint40(block.timestamp), reserves);
             return;
         }
