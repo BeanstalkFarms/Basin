@@ -197,6 +197,16 @@ abstract contract TestHelper is Test, WellDeployer {
         _wellFunction.data = new bytes(0);
     }
 
+    function deployWellFunction(address _target) internal returns (Call memory _wellFunction) {
+        _wellFunction.target = _target;
+        _wellFunction.data = new bytes(0);
+    }
+
+    function deployWellFunction(address _target, bytes memory _data) internal returns (Call memory _wellFunction) {
+        _wellFunction.target = _target;
+        _wellFunction.data = _data;
+    }
+
     function deployPumps(uint n) internal returns (Call[] memory _pumps) {
         _pumps = new Call[](n);
         for (uint i = 0; i < n; i++) {

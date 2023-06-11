@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
-import {StableSwap} from "src/functions/StableSwap.sol";
+import {StableSwap2} from "src/functions/StableSwap2.sol";
 
 /// @dev Tests the {StableSwap} Well function directly.
 contract StableSwapTest is WellFunctionHelper {
@@ -43,13 +43,13 @@ contract StableSwapTest is WellFunctionHelper {
     //////////// SETUP ////////////
 
     function setUp() public {
-        _function = new StableSwap(10);
-        _data = "";
+        _function = new StableSwap2();
+        _data = abi.encode(StableSwap2.WellFunctionData(10,1,1));
     }
 
     function test_metadata() public {
         assertEq(_function.name(), "StableSwap");
-        assertEq(_function.symbol(), "SS");
+        assertEq(_function.symbol(), "SS2");
     }
 
     //////////// LP TOKEN SUPPLY ////////////
@@ -145,11 +145,9 @@ contract StableSwapTest is WellFunctionHelper {
         uint[] memory reserves = new uint[](2);
         reserves[0] = bound(_reserves[0], 1e18, MAX_RESERVE);
         reserves[1] = bound(_reserves[1], 1e18, MAX_RESERVE);
+        
         uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
-        console.log("lpTokenSupply: ", lpTokenSupply);
-        uint[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, "");
-        console.log("underlying1: ", underlying[0]);
-        console.log("underlying0: ", underlying[1]);
+        uint[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, _data);
         for (uint i = 0; i < reserves.length; ++i) {
             assertEq(reserves[i], underlying[i], "reserves mismatch");
         }
@@ -157,9 +155,9 @@ contract StableSwapTest is WellFunctionHelper {
 
     //////////// FUZZ ////////////
 
-    function testFuzz_constantProduct2(uint x, uint y) public {
+    function testFuzz_stableSwap(uint x, uint y) public {
         uint[] memory reserves = new uint[](2);
-        bytes memory _data = new bytes(0);
+        bytes memory _data = abi.encode(StableSwap2.WellFunctionData(10,1,1));
 
         reserves[0] = bound(x, 1e18, MAX_RESERVE);
         reserves[1] = bound(y, 1e18, MAX_RESERVE);
@@ -170,19 +168,13 @@ contract StableSwapTest is WellFunctionHelper {
 
         if (reserves[0] < 1e12) {
             assertApproxEqAbs(reserve0, reserves[0], 1);
-            // assertApproxEqRel(reserve0, reserves[0], 3e6);
-            console.log("check1");
         } else {
             assertApproxEqRel(reserve0, reserves[0], 3e6);
-            console.log("check2");
         }
         if (reserves[1] < 1e12) {
             assertApproxEqAbs(reserve1, reserves[1], 1);
-            // assertApproxEqRel(reserve0, reserves[0], 3e6);
-            console.log("check3");
         } else {
             assertApproxEqRel(reserve1, reserves[1], 3e6);
-            console.log("check4");
         }
     }
 }
