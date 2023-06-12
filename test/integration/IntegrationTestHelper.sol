@@ -57,16 +57,16 @@ abstract contract IntegrationTestHelper is TestHelper {
     }
 
     /// @dev mint mock tokens to each recipient
-    function mintTokens(IERC20[] memory _tokens, address recipient, uint amount) internal {
-        for (uint i = 0; i < _tokens.length; i++) {
+    function mintTokens(IERC20[] memory _tokens, address recipient, uint256 amount) internal {
+        for (uint256 i = 0; i < _tokens.length; i++) {
             deal(address(_tokens[i]), recipient, amount);
         }
     }
 
     /// @dev approve `spender` to use `owner` tokens
     function approveMaxTokens(IERC20[] memory _tokens, address owner, address spender) internal prank(owner) {
-        for (uint i = 0; i < _tokens.length; i++) {
-            _tokens[i].approve(spender, type(uint).max);
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            _tokens[i].approve(spender, type(uint256).max);
         }
     }
 
@@ -74,14 +74,14 @@ abstract contract IntegrationTestHelper is TestHelper {
     function addLiquidityEqualAmount(
         IERC20[] memory _tokens,
         address from,
-        uint amount,
+        uint256 amount,
         Well _well
     ) internal prank(from) {
-        uint[] memory amounts = new uint[](_tokens.length);
-        for (uint i = 0; i < _tokens.length; i++) {
+        uint256[] memory amounts = new uint256[](_tokens.length);
+        for (uint256 i = 0; i < _tokens.length; i++) {
             amounts[i] = amount;
         }
-        _well.addLiquidity(amounts, 0, from, type(uint).max);
+        _well.addLiquidity(amounts, 0, from, type(uint256).max);
     }
 
     enum ClipboardType {
@@ -102,14 +102,14 @@ abstract contract IntegrationTestHelper is TestHelper {
     // into calldata
     function clipboardHelper(
         bool useEther,
-        uint amount,
+        uint256 amount,
         ClipboardType _type,
-        uint returnDataIndex,
-        uint copyIndex,
-        uint pasteIndex
+        uint256 returnDataIndex,
+        uint256 copyIndex,
+        uint256 pasteIndex
     ) internal pure returns (bytes memory stuff) {
-        uint clipboardData;
-        clipboardData = clipboardData | uint(_type) << 248;
+        uint256 clipboardData;
+        clipboardData = clipboardData | uint256(_type) << 248;
 
         clipboardData = clipboardData | returnDataIndex << 160 | (copyIndex * 32) + 32 << 80 | (pasteIndex * 32) + 36;
         if (useEther) {

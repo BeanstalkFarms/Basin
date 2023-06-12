@@ -16,12 +16,12 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  *  `userReceives` < `wellSends`
  */
 struct SwapAction {
-    uint i; // input token index
-    uint j; // output token index
-    uint userSpends;
-    uint wellReceives;
-    uint wellSends;
-    uint userReceives;
+    uint256 i; // input token index
+    uint256 j; // output token index
+    uint256 userSpends;
+    uint256 wellReceives;
+    uint256 wellSends;
+    uint256 userReceives;
 }
 
 /**
@@ -30,11 +30,15 @@ struct SwapAction {
  * NOTE: Uses globals inherited from TestHelper.
  */
 contract SwapHelper is TestHelper {
-    event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
-    event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
+    event AddLiquidity(uint256[] amounts, uint256 lpAmountOut, address recipient);
+    event Swap(IERC20 fromToken, IERC20 toToken, uint256 amountIn, uint256 amountOut, address recipient);
 
     /// @dev Default Swap behavior assuming zero fee on transfer
-    function beforeSwapFrom(uint i, uint j, uint amountIn) internal returns (Snapshot memory, SwapAction memory) {
+    function beforeSwapFrom(
+        uint256 i,
+        uint256 j,
+        uint256 amountIn
+    ) internal returns (Snapshot memory, SwapAction memory) {
         SwapAction memory act;
 
         act.i = i;
@@ -58,8 +62,8 @@ contract SwapHelper is TestHelper {
 
     function afterSwapFrom(Snapshot memory bef, SwapAction memory act) public {
         Snapshot memory aft = _newSnapshot();
-        uint i = act.i;
-        uint j = act.j;
+        uint256 i = act.i;
+        uint256 j = act.j;
 
         // Check balances accounting
         assertEq(bef.user.tokens[i] - aft.user.tokens[i], act.userSpends, "Incorrect token[i] User balance");
@@ -68,12 +72,12 @@ contract SwapHelper is TestHelper {
         assertEq(aft.user.tokens[j] - bef.user.tokens[j], act.userReceives, "Incorrect token[j] User balance");
 
         // Check that reserves were updated
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         assertEq(aft.reserves[i], bef.reserves[i] + act.wellReceives, "Incorrect token[i] Well reserve");
         assertEq(aft.reserves[j], bef.reserves[i] - act.wellSends, "Incorrect token[i] Well reserve");
 
         // Check that no other balances or reserves were changed
-        for (uint k = 0; k < reserves.length; ++k) {
+        for (uint256 k = 0; k < reserves.length; ++k) {
             if (k == i || k == j) continue;
             assertEq(aft.well.tokens[k], bef.well.tokens[k], "token[k] Well balance changed unexpectedly");
             assertEq(aft.reserves[k], bef.reserves[k], "token[k] Well reserve changed unexpectedly");

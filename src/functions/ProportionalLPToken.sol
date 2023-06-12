@@ -13,13 +13,13 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  */
 abstract contract ProportionalLPToken is IWellFunction {
     function calcLPTokenUnderlying(
-        uint lpTokenAmount,
-        uint[] calldata reserves,
-        uint lpTokenSupply,
+        uint256 lpTokenAmount,
+        uint256[] calldata reserves,
+        uint256 lpTokenSupply,
         bytes calldata
-    ) external pure returns (uint[] memory underlyingAmounts) {
-        underlyingAmounts = new uint[](reserves.length);
-        for (uint i; i < reserves.length; ++i) {
+    ) external pure returns (uint256[] memory underlyingAmounts) {
+        underlyingAmounts = new uint256[](reserves.length);
+        for (uint256 i; i < reserves.length; ++i) {
             underlyingAmounts[i] = lpTokenAmount * reserves[i] / lpTokenSupply;
         }
     }

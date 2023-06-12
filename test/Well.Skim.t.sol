@@ -15,7 +15,7 @@ contract WellSkimTest is TestHelper {
         assertEq(wellBalance.tokens[1], 1000e18);
     }
 
-    function testFuzz_skim(uint[2] calldata amounts) public prank(user) {
+    function testFuzz_skim(uint256[2] calldata amounts) public prank(user) {
         vm.assume(amounts[0] <= 800e18);
         vm.assume(amounts[1] <= 800e18);
 
@@ -30,7 +30,7 @@ contract WellSkimTest is TestHelper {
 
         // Get a user with a fresh address (no ERC20 tokens)
         address _user = users.getNextUserAddress();
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
 
         // Verify that the user has no tokens
         Balances memory userBalanceBeforeSkim = getBalances(_user, well);

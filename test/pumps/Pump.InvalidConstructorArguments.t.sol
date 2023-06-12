@@ -13,7 +13,7 @@ import {console, TestHelper} from "test/TestHelper.sol";
 contract PumpInvalidConstructorArguments is TestHelper {
     GeoEmaAndCumSmaPump pump;
     MockReserveWell mWell;
-    uint[] b = new uint[](2);
+    uint256[] b = new uint256[](2);
 
     function test_invalid_max_percent_decrease_argument_error() public {
         vm.expectRevert(abi.encodeWithSelector(IPumpErrors.InvalidMaxPercentDecreaseArgument.selector, from18(1.01e18)));

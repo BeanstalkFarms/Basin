@@ -36,9 +36,9 @@ library LibLastReserveBytes {
             // slot := add(slot, 32)
         }
         if (n > 2) {
-            uint maxI = n / 2; // number of fully-packed slots
-            uint iByte; // byte offset of the current reserve
-            for (uint i = 1; i < maxI; ++i) {
+            uint256 maxI = n / 2; // number of fully-packed slots
+            uint256 iByte; // byte offset of the current reserve
+            for (uint256 i = 1; i < maxI; ++i) {
                 iByte = i * 64;
                 assembly {
                     sstore(
@@ -89,8 +89,8 @@ library LibLastReserveBytes {
         }
 
         if (n > 2) {
-            uint iByte;
-            for (uint i = 3; i <= n; ++i) {
+            uint256 iByte;
+            for (uint256 i = 3; i <= n; ++i) {
                 // `iByte` is the byte position for the current slot:
                 // i        3 4 5 6
                 // iByte    1 1 2 2

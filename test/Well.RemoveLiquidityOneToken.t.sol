@@ -5,10 +5,10 @@ import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.so
 import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityOneTokenTest is TestHelper {
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
+    event RemoveLiquidityOneToken(uint256 lpAmountIn, IERC20 tokenOut, uint256 tokenAmountOut, address recipient);
 
     ConstantProduct2 cp;
-    uint constant addedLiquidity = 1000 * 1e18;
+    uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -20,18 +20,18 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityOneTokenOut() public {
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(500 * 1e24, tokens[0]);
+        uint256 amountOut = well.getRemoveLiquidityOneTokenOut(500 * 1e24, tokens[0]);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
     function test_removeLiquidityOneToken_revertIf_amountOutTooLow() public prank(user) {
-        uint lpAmountIn = 500 * 1e15;
-        uint minTokenAmountOut = 876 * 1e18; // too high
-        uint amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
+        uint256 lpAmountIn = 500 * 1e15;
+        uint256 minTokenAmountOut = 876 * 1e18; // too high
+        uint256 amountOut = well.getRemoveLiquidityOneTokenOut(lpAmountIn, tokens[0]);
 
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minTokenAmountOut));
-        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint256).max);
     }
 
     function test_removeLiquidityOneToken_revertIf_expired() public {
@@ -41,13 +41,14 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Base case
     function test_removeLiquidityOneToken() public prank(user) {
-        uint lpAmountIn = 500 * 1e24;
-        uint minTokenAmountOut = 875 * 1e18;
+        uint256 lpAmountIn = 500 * 1e24;
+        uint256 minTokenAmountOut = 875 * 1e18;
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user);
 
-        uint amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint).max);
+        uint256 amountOut =
+            well.removeLiquidityOneToken(lpAmountIn, tokens[0], minTokenAmountOut, user, type(uint256).max);
 
         Balances memory userBalance = getBalances(user, well);
         Balances memory wellBalance = getBalances(address(well), well);
@@ -71,35 +72,35 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
     /// The Well contains equal reserves of all underlying tokens before execution.
-    function testFuzz_removeLiquidityOneToken(uint a0) public prank(user) {
+    function testFuzz_removeLiquidityOneToken(uint256 a0) public prank(user) {
         // Assume we're removing tokens[0]
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(a0, 1e6, 750e18);
         amounts[1] = 0;
 
         Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
-        uint userLpBalance = userBalanceBeforeRemoveLiquidity.lp;
+        uint256 userLpBalance = userBalanceBeforeRemoveLiquidity.lp;
 
         // Find the LP amount that should be burned given the fuzzed
         // amounts. Works even though only amounts[0] is set.
-        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
+        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
 
         // Calculate change in Well reserves after removing liquidity
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - amounts[0];
         reserves[1] = wellBalanceBeforeRemoveLiquidity.tokens[1] - amounts[1]; // should stay the same
 
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
-        uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
+        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0], user);
-        well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user, type(uint).max); // no minimum out
+        well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user, type(uint256).max); // no minimum out
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);

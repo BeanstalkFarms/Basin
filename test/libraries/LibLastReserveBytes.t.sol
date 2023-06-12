@@ -8,8 +8,8 @@ import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 contract LibEmaBytesTest is TestHelper {
     using LibLastReserveBytes for bytes32;
 
-    uint constant NUM_RESERVES_MAX = 8;
-    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint(keccak256("reserves.storage.slot")) - 1);
+    uint256 constant NUM_RESERVES_MAX = 8;
+    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testEmaFuzz_storeAndRead(
@@ -21,7 +21,7 @@ contract LibEmaBytesTest is TestHelper {
 
         // Use the first `n` reserves. Cast uint104 reserves -> uint256
         bytes16[] memory reserves = new bytes16[](n);
-        for (uint i = 0; i < n; i++) {
+        for (uint256 i = 0; i < n; i++) {
             reserves[i] = bytes16(_reserves[i]) << 24;
         }
         RESERVES_STORAGE_SLOT.storeLastReserves(lastTimestamp, reserves);
@@ -32,7 +32,7 @@ contract LibEmaBytesTest is TestHelper {
         assertEq(__n, n, "ByteStorage: n mismatch");
         assertEq(_n, n, "ByteStorage: n mismatch");
         assertEq(_lastTimestamp, lastTimestamp, "ByteStorage: lastTimestamp mismatch");
-        for (uint i = 0; i < reserves2.length; i++) {
+        for (uint256 i = 0; i < reserves2.length; i++) {
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }

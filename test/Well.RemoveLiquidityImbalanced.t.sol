@@ -5,14 +5,14 @@ import {TestHelper, ConstantProduct2, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 
 contract WellRemoveLiquidityImbalancedTest is TestHelper {
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
+    event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
-    uint[] tokenAmountsOut;
-    uint requiredLpAmountIn;
+    uint256[] tokenAmountsOut;
+    uint256 requiredLpAmountIn;
 
     // Setup
     ConstantProduct2 cp;
-    uint constant addedLiquidity = 1000 * 1e18;
+    uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
         cp = new ConstantProduct2();
@@ -29,32 +29,32 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityImbalancedIn() public {
-        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
+        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
         assertEq(lpAmountIn, requiredLpAmountIn);
     }
 
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
-        uint maxLpAmountIn = 5 * 1e24;
+        uint256 maxLpAmountIn = 5 * 1e24;
         vm.expectRevert(abi.encodeWithSelector(IWell.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint256).max);
     }
 
     function test_removeLiquidityImbalanced_revertIf_expired() public {
         vm.expectRevert(IWell.Expired.selector);
-        well.removeLiquidityImbalanced(0, new uint[](2), user, block.timestamp - 1);
+        well.removeLiquidityImbalanced(0, new uint256[](2), user, block.timestamp - 1);
     }
 
     /// @dev Base case
     function test_removeLiquidityImbalanced() public prank(user) {
         Balances memory userBalanceBefore = getBalances(user, well);
 
-        uint initialLpAmount = userBalanceBefore.lp;
-        uint maxLpAmountIn = requiredLpAmountIn;
+        uint256 initialLpAmount = userBalanceBefore.lp;
+        uint256 maxLpAmountIn = requiredLpAmountIn;
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLpAmountIn, tokenAmountsOut, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint).max);
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint256).max);
 
         Balances memory userBalanceAfter = getBalances(user, well);
         Balances memory wellBalanceAfter = getBalances(address(well), well);
@@ -75,34 +75,34 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
     /// The Well contains equal reserves of all underlying tokens before execution.
-    function testFuzz_removeLiquidityImbalanced(uint a0, uint a1) public prank(user) {
+    function testFuzz_removeLiquidityImbalanced(uint256 a0, uint256 a1) public prank(user) {
         // Setup amounts of liquidity to remove
         // NOTE: amounts may or may not be equal
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(a0, 0, 750e18);
         amounts[1] = bound(a1, 0, 750e18);
 
         Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
         Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
         // Calculate change in Well reserves after removing liquidity
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - amounts[0];
         reserves[1] = wellBalanceBeforeRemoveLiquidity.tokens[1] - amounts[1];
 
         // lpAmountIn should be <= umaxLpAmountIn
-        uint maxLpAmountIn = userBalanceBeforeRemoveLiquidity.lp;
-        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
+        uint256 maxLpAmountIn = userBalanceBeforeRemoveLiquidity.lp;
+        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
-        uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
+        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove all of `user`'s liquidity and deliver them the tokens
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint256).max);
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
@@ -134,18 +134,18 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
     /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias`
     /// before liquidity is removed by `user`.
-    function testFuzz_removeLiquidityImbalanced_withSwap(uint a0, uint imbalanceBias) public {
+    function testFuzz_removeLiquidityImbalanced_withSwap(uint256 a0, uint256 imbalanceBias) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts[0] is bounded at 1 to prevent slippage overflow
         // failure, bug fix in progress
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(a0, 1, 950e18);
         amounts[1] = amounts[0];
         imbalanceBias = bound(imbalanceBias, 0, 40e18);
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint).max);
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint256).max);
 
         // `user` has LP tokens and will perform a `removeLiquidityImbalanced` call
         vm.startPrank(user);
@@ -154,24 +154,24 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         Balances memory userBalanceBefore = getBalances(user, well);
 
         // Calculate change in Well reserves after removing liquidity
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = wellBalanceBefore.tokens[0] - amounts[0];
         reserves[1] = wellBalanceBefore.tokens[1] - amounts[1];
 
         // lpAmountIn should be <= user's LP balance
-        uint lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
+        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(amounts);
 
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
-        uint lpAmountBurned = well.totalSupply() - newLpTokenSupply;
+        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove some of `user`'s liquidity and deliver them the tokens
-        uint maxLpAmountIn = userBalanceBefore.lp;
+        uint256 maxLpAmountIn = userBalanceBefore.lp;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint).max);
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint256).max);
 
         Balances memory wellBalanceAfter = getBalances(address(well), well);
         Balances memory userBalanceAfter = getBalances(user, well);

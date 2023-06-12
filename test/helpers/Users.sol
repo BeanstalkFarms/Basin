@@ -10,16 +10,16 @@ contract Users is Test {
 
     function getNextUserAddress() external returns (address) {
         //bytes32 to address conversion
-        address user = address(uint160(uint(nextUser)));
+        address user = address(uint160(uint256(nextUser)));
         nextUser = keccak256(abi.encodePacked(nextUser));
         vm.deal(user, 100 ether);
         return user;
     }
 
     //create users with 100 ether balance
-    function createUsers(uint userNum) external returns (address[] memory) {
+    function createUsers(uint256 userNum) external returns (address[] memory) {
         address[] memory users = new address[](userNum);
-        for (uint i = 0; i < userNum; i++) {
+        for (uint256 i = 0; i < userNum; i++) {
             address user = this.getNextUserAddress();
             users[i] = user;
         }
@@ -27,8 +27,8 @@ contract Users is Test {
     }
 
     //move block.number forward by a given number of blocks
-    function mineBlocks(uint numBlocks) external {
-        uint targetBlock = block.number + numBlocks;
+    function mineBlocks(uint256 numBlocks) external {
+        uint256 targetBlock = block.number + numBlocks;
         vm.roll(targetBlock);
     }
 }

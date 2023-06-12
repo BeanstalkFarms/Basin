@@ -24,8 +24,8 @@ fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
 [fmt]
 ignore = ["src/libraries/LibClone.sol", "src/utils/Clone.sol", "src/libraries/ABDKMathQuad.sol"]
-int_types = "short"
-line_length = 120
+int_types = "long"
+line_length = 120 
 multiline_func_header = "params_first"
 number_underscore = "thousands"
 override_spacing = false
