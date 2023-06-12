@@ -14,7 +14,7 @@ contract WellSucceedOnPumpFailure is TestHelper {
     // Check that the pump function fails as expected
     function test_fail() public {
         vm.expectRevert();
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         _pump.update(amounts, new bytes(0));
     }
 

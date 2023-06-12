@@ -45,7 +45,7 @@ contract AquiferTest is TestHelper {
 
         // Shared clone data
         salt             = bytes32("Wells");
-        immutableData    = abi.encodePacked(uint(6074));
+        immutableData    = abi.encodePacked(uint256(6074));
         initFunctionCall = abi.encodeWithSignature("init(string,string)", "MockWell", "mWELL");
     }
 
@@ -69,7 +69,7 @@ contract AquiferTest is TestHelper {
         ));
 
         _checkWell(mockWell, true);
-        assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
+        assertEq(uint256(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
         assertEq(address(mockWell), destination, "deployment address mismatch");
     }
 
@@ -86,7 +86,7 @@ contract AquiferTest is TestHelper {
         ));
 
         _checkWell(mockWell, true);
-        assertEq(uint(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
+        assertEq(uint256(6074), mockWell.immutableDataFromClone(), "clone failed to set immutable data");
     }
 
     /// @dev Bore a Well with salt, no immutable data.

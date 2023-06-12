@@ -13,7 +13,7 @@ import {from18} from "test/pumps/PumpHelpers.sol";
 contract PumpNotInitialized is TestHelper {
     GeoEmaAndCumSmaPump pump;
     MockReserveWell mWell;
-    uint[] b = new uint[](2);
+    uint256[] b = new uint256[](2);
 
     function setUp() public {
         mWell = new MockReserveWell();
@@ -24,7 +24,7 @@ contract PumpNotInitialized is TestHelper {
             12,
             from18(0.9e18)
         );
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
         mWell.setReserves(reserves);
     }
 

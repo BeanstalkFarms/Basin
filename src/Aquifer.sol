@@ -17,7 +17,7 @@ import {LibClone} from "src/libraries/LibClone.sol";
  * @dev Aquifer deploys Wells by cloning a pre-deployed Well implementation.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
-    using SafeCast for uint;
+    using SafeCast for uint256;
     using LibClone for address;
 
     // A mapping of Well address to the Well implementation addresses

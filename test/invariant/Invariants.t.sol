@@ -58,11 +58,11 @@ contract Invariants is LiquidityHelper {
 
     /// @dev The total supply calculated by the well function should equal the totalSupply of the well
     function invariant_totalSupplyMatchesFunctionCalc() public {
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
 
-        uint functionCalc = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
+        uint256 functionCalc = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
 
-        uint precision = getPrecisionForReserves(reserves);
+        uint256 precision = getPrecisionForReserves(reserves);
         // Future TODO: fix for precision 0
         if (precision == 0) return;
 
@@ -71,14 +71,14 @@ contract Invariants is LiquidityHelper {
 
     /// @dev The reserves calculated by the well function should equal the reserves of the well
     function invariant_reservesMatchFunctionCalcReserve() public {
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
 
-        uint reserve0 =
+        uint256 reserve0 =
             IWellFunction(wellFunction.target).calcReserve(reserves, 0, well.totalSupply(), wellFunction.data);
-        uint reserve1 =
+        uint256 reserve1 =
             IWellFunction(wellFunction.target).calcReserve(reserves, 1, well.totalSupply(), wellFunction.data);
 
-        uint precision = getPrecisionForReserves(reserves);
+        uint256 precision = getPrecisionForReserves(reserves);
         // Future TODO: fix for precision 0
         if (precision == 0) return;
 
@@ -89,14 +89,14 @@ contract Invariants is LiquidityHelper {
     /// @dev The token0 balance of the well should be greater than or equal to the reserve0
     function invariant_token0WellBalanceAndReserves() public {
         IERC20[] memory mockTokens = well.tokens();
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         assertGe(mockTokens[0].balanceOf(address(well)), reserves[0]);
     }
 
     /// @dev The token1 balance of the well should be greater than or equal to the reserve1
     function invariant_token1WellBalanceAndReserves() public {
         IERC20[] memory mockTokens = well.tokens();
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         assertGe(mockTokens[1].balanceOf(address(well)), reserves[1]);
     }
 

@@ -24,11 +24,11 @@ interface IBeanstalkWellFunction is IWellFunction {
      * @return reserve The resulting reserve at the jth index
      */
     function calcReserveAtRatioSwap(
-        uint[] calldata reserves,
-        uint j,
-        uint[] calldata ratios,
+        uint256[] calldata reserves,
+        uint256 j,
+        uint256[] calldata ratios,
         bytes calldata data
-    ) external view returns (uint reserve);
+    ) external view returns (uint256 reserve);
 
     /**
      * @notice Calculates the `j` reserve such that `π_{i | i != j} (d reserves_j / d reserves_i) = π_{i | i != j}(ratios_j / ratios_i)`.
@@ -41,9 +41,9 @@ interface IBeanstalkWellFunction is IWellFunction {
      * @return reserve The resulting reserve at the jth index
      */
     function calcReserveAtRatioLiquidity(
-        uint[] calldata reserves,
-        uint j,
-        uint[] calldata ratios,
+        uint256[] calldata reserves,
+        uint256 j,
+        uint256[] calldata ratios,
         bytes calldata data
-    ) external view returns (uint reserve);
+    ) external view returns (uint256 reserve);
 }

@@ -13,12 +13,12 @@ interface IWellErrors {
     /**
      * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
      */
-    error SlippageOut(uint amountOut, uint minAmountOut);
+    error SlippageOut(uint256 amountOut, uint256 minAmountOut);
 
     /**
      * @notice Thrown when an operation would require more tokens than `maxAmountIn`.
      */
-    error SlippageIn(uint amountIn, uint maxAmountIn);
+    error SlippageIn(uint256 amountIn, uint256 maxAmountIn);
 
     /**
      * @notice Thrown if one or more tokens used in the operation are not supported by the Well.

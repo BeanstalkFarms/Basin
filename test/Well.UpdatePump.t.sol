@@ -11,13 +11,13 @@ contract WellUpdatePumpTest is TestHelper {
 
     function test_updatePump(uint8 numPumps, bytes[8] memory pumpBytes) public {
         vm.assume(numPumps <= 8);
-        for (uint i = 0; i < numPumps; i++) {
+        for (uint256 i = 0; i < numPumps; i++) {
             vm.assume(pumpBytes[i].length <= 8 * 32);
         }
 
         // Create `numPumps` Call structs
         Call[] memory pumps = new Call[](numPumps);
-        for (uint i = 0; i < numPumps; i++) {
+        for (uint256 i = 0; i < numPumps; i++) {
             pumps[i].target = address(new MockPump());
             pumps[i].data = pumpBytes[i];
         }
@@ -30,11 +30,11 @@ contract WellUpdatePumpTest is TestHelper {
 
         // Perform an action on the Well to initialize pumps
         vm.prank(user);
-        well.swapFrom(tokens[0], tokens[1], 1e18, 1, user, type(uint).max);
+        well.swapFrom(tokens[0], tokens[1], 1e18, 1, user, type(uint256).max);
 
         // During update(), MockPump sets a public storage var `lastData` equal
         // to Call.data.
-        for (uint i = 0; i < numPumps; i++) {
+        for (uint256 i = 0; i < numPumps; i++) {
             assertEq(pumps[i].data, MockPump(pumps[i].target).lastData());
         }
     }

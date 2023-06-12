@@ -16,5 +16,5 @@ interface IPump {
      * @dev Pumps are updated every time a user swaps, adds liquidity, or
      * removes liquidity from a Well.
      */
-    function update(uint[] calldata reserves, bytes calldata data) external;
+    function update(uint256[] calldata reserves, bytes calldata data) external;
 }

@@ -75,14 +75,14 @@ contract WellBoreTest is TestHelper {
     /// @dev Fuzz different combinations of Well configuration data and check
     /// that the Aquifer deploys everything correctly.
     function testFuzz_bore(
-        uint numberOfPumps,
+        uint256 numberOfPumps,
         bytes[4] memory pumpData,
         bytes memory wellFunctionBytes,
-        uint nTokens
+        uint256 nTokens
     ) public {
         // Constraints
         numberOfPumps = bound(numberOfPumps, 0, 4);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpData[i].length <= 4 * 32);
         }
         vm.assume(wellFunctionBytes.length <= 4 * 32);
@@ -96,7 +96,7 @@ contract WellBoreTest is TestHelper {
 
         // Etch the MockPump at each `target`
         Call[] memory pumps = new Call[](numberOfPumps);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             pumps[i].target = address(new MockPump());
             pumps[i].data = pumpData[i];
         }
@@ -113,7 +113,7 @@ contract WellBoreTest is TestHelper {
             assertEq(_well.firstPump(), pumps[0], "pump mismatch");
         }
 
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i], pumps[i], "pump mismatch");
         }
 

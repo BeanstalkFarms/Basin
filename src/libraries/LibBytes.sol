@@ -18,8 +18,8 @@ library LibBytes {
     /**
      * @dev Read the `i`th 32-byte chunk from `data`.
      */
-    function getBytes32FromBytes(bytes memory data, uint i) internal pure returns (bytes32 _bytes) {
-        uint index = i * 32;
+    function getBytes32FromBytes(bytes memory data, uint256 i) internal pure returns (bytes32 _bytes) {
+        uint256 index = i * 32;
         if (index > data.length) {
             _bytes = ZERO_BYTES;
         } else {
@@ -34,7 +34,7 @@ library LibBytes {
      * Balances are passed as an uint256[], but values must be <= max uint128
      * to allow for packing into a single storage slot.
      */
-    function storeUint128(bytes32 slot, uint[] memory reserves) internal {
+    function storeUint128(bytes32 slot, uint256[] memory reserves) internal {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
             require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
@@ -43,9 +43,9 @@ library LibBytes {
                 sstore(slot, add(mload(add(reserves, 32)), shl(128, mload(add(reserves, 64)))))
             }
         } else {
-            uint maxI = reserves.length / 2; // number of fully-packed slots
-            uint iByte; // byte offset of the current reserve
-            for (uint i; i < maxI; ++i) {
+            uint256 maxI = reserves.length / 2; // number of fully-packed slots
+            uint256 iByte; // byte offset of the current reserve
+            for (uint256 i; i < maxI; ++i) {
                 require(reserves[2 * i] <= type(uint128).max, "ByteStorage: too large");
                 require(reserves[2 * i + 1] <= type(uint128).max, "ByteStorage: too large");
                 iByte = i * 64;
@@ -75,7 +75,7 @@ library LibBytes {
     /**
      * @dev Read `n` packed uint128 reserves at storage position `slot`.
      */
-    function readUint128(bytes32 slot, uint n) internal view returns (uint[] memory reserves) {
+    function readUint128(bytes32 slot, uint256 n) internal view returns (uint256[] memory reserves) {
         // Initialize array with length `n`, fill it in via assembly
         reserves = new uint256[](n);
 
@@ -88,8 +88,8 @@ library LibBytes {
             return reserves;
         }
 
-        uint iByte;
-        for (uint i = 1; i <= n; ++i) {
+        uint256 iByte;
+        for (uint256 i = 1; i <= n; ++i) {
             // `iByte` is the byte position for the current slot:
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
