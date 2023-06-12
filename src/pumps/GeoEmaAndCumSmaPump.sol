@@ -3,7 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
-import {IPumpErrors} from "src/interfaces/pumps/IPumpErrors.sol";
+import {IGeoEmaAndCumSmaPumpErrors} from "src/interfaces/pumps/IGeoEmaAndCumSmaPumpErrors.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
@@ -26,7 +26,7 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-contract GeoEmaAndCumSmaPump is IPump, IPumpErrors, IInstantaneousPump, ICumulativePump {
+contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;

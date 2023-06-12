@@ -5,6 +5,7 @@ pragma solidity ^0.8.17;
 import {TestHelper, IERC20, Call, Balances, MockTokenFeeOnTransfer} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 /**
  * @dev Functions that increase the Well's reserves without accounting for fees
@@ -23,7 +24,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint minAmountOut = 500 * 1e18;
         uint amountIn = 1000 * 1e18;
 
-        vm.expectRevert(IWell.InvalidReserves.selector);
+        vm.expectRevert(IWellErrors.InvalidReserves.selector);
         well.swapTo(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
@@ -31,7 +32,7 @@ contract WellFeeOnTransferTest is TestHelper {
         uint minAmountOut = 500 * 1e18;
         uint amountIn = 1000 * 1e18;
 
-        vm.expectRevert(IWell.InvalidReserves.selector);
+        vm.expectRevert(IWellErrors.InvalidReserves.selector);
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
@@ -43,7 +44,7 @@ contract WellFeeOnTransferTest is TestHelper {
         }
         uint lpAmountOut = 1000 * 1e24;
 
-        vm.expectRevert(IWell.InvalidReserves.selector);
+        vm.expectRevert(IWellErrors.InvalidReserves.selector);
         well.addLiquidity(amounts, lpAmountOut, user, type(uint).max);
     }
 }
