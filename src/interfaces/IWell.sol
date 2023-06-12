@@ -17,36 +17,6 @@ struct Call {
  */
 interface IWell {
     /**
-     * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
-     */
-    error SlippageOut(uint256 amountOut, uint256 minAmountOut);
-
-    /**
-     * @notice Thrown when an operation would require more tokens than `maxAmountIn`.
-     */
-    error SlippageIn(uint256 amountIn, uint256 maxAmountIn);
-
-    /**
-     * @notice Thrown if one or more tokens used in the operation are not supported by the Well.
-     */
-    error InvalidTokens();
-
-    /**
-     * @notice Thrown if this operation would cause an incorrect change in Well reserves.
-     */
-    error InvalidReserves();
-
-    /**
-     * @notice Thrown when a Well is bored with duplicate tokens.
-     */
-    error DuplicateTokens(IERC20 token);
-
-    /**
-     * @notice Thrown if an operation is executed after the provided `deadline` has passed.
-     */
-    error Expired();
-
-    /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
      * @param toToken The token swapped to

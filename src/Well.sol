@@ -7,6 +7,7 @@ import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensio
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {LibBytes} from "src/libraries/LibBytes.sol";
@@ -18,7 +19,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  */
-contract Well is ERC20PermitUpgradeable, IWell, ReentrancyGuardUpgradeable, ClonePlus {
+contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
 
