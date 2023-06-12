@@ -7,7 +7,7 @@ pragma solidity ^0.8.17;
 import {console, TestHelper} from "test/TestHelper.sol";
 import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
-import {IPumpErrors} from "src/interfaces/pumps/IPumpErrors.sol";
+import {IGeoEmaAndCumSmaPumpErrors} from "src/interfaces/pumps/IGeoEmaAndCumSmaPumpErrors.sol";
 import {from18} from "test/pumps/PumpHelpers.sol";
 
 contract PumpNotInitialized is TestHelper {
@@ -29,32 +29,32 @@ contract PumpNotInitialized is TestHelper {
     }
 
     function test_not_initialized_last_cumulative_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readLastCumulativeReserves(address(mWell));
     }
 
     function test_not_initialized_cumulative_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readCumulativeReserves(address(mWell), new bytes(0));
     }
 
     function test_not_initialized_last_instantaneous_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readLastInstantaneousReserves(address(mWell));
     }
 
     function test_not_initialized_instantaneous_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readInstantaneousReserves(address(mWell), new bytes(0));
     }
 
     function test_not_initialized_last_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readLastReserves(address(mWell));
     }
 
     function test_not_initialized_twa_reserves() public {
-        vm.expectRevert(IPumpErrors.NotInitialized.selector);
+        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NotInitialized.selector);
         pump.readTwaReserves(address(mWell), new bytes(0), 0, new bytes(0));
     }
 }

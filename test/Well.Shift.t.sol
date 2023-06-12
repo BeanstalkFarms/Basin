@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellShiftTest is TestHelper {
     event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
@@ -158,7 +159,7 @@ contract WellShiftTest is TestHelper {
         assertEq(wellBalanceBeforeShift.tokens[1], 1000e18, "Well should have NOT have received token1");
 
         uint amountOut = well.getShiftOut(tokens[1]);
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, type(uint).max));
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, amountOut, type(uint).max));
         well.shift(tokens[1], type(uint).max, user);
     }
 }

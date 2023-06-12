@@ -6,6 +6,7 @@ import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 /**
  * @dev Tests {swapFromFeeOnTransfer} when tokens involved in the swap DO NOT
@@ -22,7 +23,7 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
         uint minAmountOut = 501 * 1e18; // actual: 500
         uint amountOut = 500 * 1e18;
 
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
@@ -30,13 +31,13 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     function testFuzz_swapFromFeeOnTransferNoFee_revertIf_sameToken(uint128 amountIn) public prank(user) {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
-        vm.expectRevert(IWell.InvalidTokens.selector);
+        vm.expectRevert(IWellErrors.InvalidTokens.selector);
         well.swapFromFeeOnTransfer(tokens[0], tokens[0], amountIn, 0, user, type(uint).max);
     }
 
     /// @dev Note: this covers the case where there is a fee as well
     function test_swapFromFeeOnTransferNoFee_revertIf_expired() public {
-        vm.expectRevert(IWell.Expired.selector);
+        vm.expectRevert(IWellErrors.Expired.selector);
         well.swapFromFeeOnTransfer(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
     }
 
