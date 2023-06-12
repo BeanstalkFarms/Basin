@@ -4,8 +4,8 @@ pragma solidity =0.8.17;
 
 /**
  * @title IGeoEmaAndCumSmaPumpErrors defines the errors for the GeoEmaAndCumSmaPump.
- * @dev Because not all Pumps may share the same errors, the errors are defined in a
- * seperate interface.
+ * @dev The errors are separated into a different interface as not all Pump
+ * implementations may share the same errors.
  */
 interface IGeoEmaAndCumSmaPumpErrors {
     error NotInitialized();

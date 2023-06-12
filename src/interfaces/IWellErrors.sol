@@ -6,7 +6,8 @@ import {IERC20} from "oz/token/ERC20/IERC20.sol";
 
 /**
  * @title IWellErrors defines all Well errors.
- * @dev The errors are separated into a different interface as not all Wells may share the same errors.
+ * @dev The errors are separated into a different interface as not all Well
+ * implementations may share the same errors.
  */
 interface IWellErrors {
     /**
