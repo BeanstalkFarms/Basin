@@ -42,8 +42,8 @@ contract WellInternalTest is Well, Test {
         }
 
         // Check all combinations of tokens
-        for (uint256 i = 0; i < n; ++i) {
-            for (uint256 j = 0; j < n; ++j) {
+        for (uint256 i; i < n; ++i) {
+            for (uint256 j; j < n; ++j) {
                 if (i == j) {
                     vm.expectRevert(InvalidTokens.selector);
                 }

@@ -58,14 +58,14 @@ abstract contract IntegrationTestHelper is TestHelper {
 
     /// @dev mint mock tokens to each recipient
     function mintTokens(IERC20[] memory _tokens, address recipient, uint256 amount) internal {
-        for (uint256 i = 0; i < _tokens.length; i++) {
+        for (uint256 i; i < _tokens.length; i++) {
             deal(address(_tokens[i]), recipient, amount);
         }
     }
 
     /// @dev approve `spender` to use `owner` tokens
     function approveMaxTokens(IERC20[] memory _tokens, address owner, address spender) internal prank(owner) {
-        for (uint256 i = 0; i < _tokens.length; i++) {
+        for (uint256 i; i < _tokens.length; i++) {
             _tokens[i].approve(spender, type(uint256).max);
         }
     }
@@ -78,7 +78,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         Well _well
     ) internal prank(from) {
         uint256[] memory amounts = new uint256[](_tokens.length);
-        for (uint256 i = 0; i < _tokens.length; i++) {
+        for (uint256 i; i < _tokens.length; i++) {
             amounts[i] = amount;
         }
         _well.addLiquidity(amounts, 0, from, type(uint256).max);

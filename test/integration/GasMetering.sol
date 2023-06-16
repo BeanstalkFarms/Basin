@@ -13,7 +13,7 @@ contract TestGasMetering is Test {
         vm.pauseGasMetering();
         uint256 start1 = gasleft();
         {
-            for (uint256 i = 0; i < 10; i++) {
+            for (uint256 i; i < 10; i++) {
                 uint256 gasnow = gasleft();
                 assertEq(gasnow, start1);
             }
@@ -25,7 +25,7 @@ contract TestGasMetering is Test {
         uint256 start2 = gasleft();
         {
             uint256 hold2 = gasleft();
-            for (uint256 i = 0; i < 10; i++) {
+            for (uint256 i; i < 10; i++) {
                 uint256 gasnow = gasleft();
                 assertTrue(gasnow < start2);
                 assertTrue(gasnow < hold2);

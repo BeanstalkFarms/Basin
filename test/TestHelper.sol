@@ -83,7 +83,7 @@ abstract contract TestHelper is Test, WellDeployer {
     function setupWell(Call memory _wellFunction, Call[] memory _pumps, IERC20[] memory _tokens) internal {
         tokens = _tokens;
         wellFunction = _wellFunction;
-        for (uint256 i = 0; i < _pumps.length; i++) {
+        for (uint256 i; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
         }
 
@@ -130,7 +130,7 @@ abstract contract TestHelper is Test, WellDeployer {
     /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokens(uint256 n) internal returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             _tokens[i] = deployMockToken(i);
         }
     }
@@ -148,7 +148,7 @@ abstract contract TestHelper is Test, WellDeployer {
     /// @dev deploy `n` mock ERC20 tokens and sort by address
     function deployMockTokensFeeOnTransfer(uint256 n) internal returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             _tokens[i] = deployMockTokenFeeOnTransfer(i);
         }
     }
@@ -165,21 +165,21 @@ abstract contract TestHelper is Test, WellDeployer {
 
     /// @dev mint mock tokens to each recipient
     function mintTokens(address recipient, uint256 amount) internal {
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             MockToken(address(tokens[i])).mint(recipient, amount);
         }
     }
 
     /// @dev mint mock tokens to each recipient in different amounts
     function mintTokens(address recipient, uint256[] memory amounts) internal {
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             MockToken(address(tokens[i])).mint(recipient, amounts[i]);
         }
     }
 
     /// @dev approve `spender` to use `owner` tokens
     function approveMaxTokens(address owner, address spender) internal prank(owner) {
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             tokens[i].approve(spender, type(uint256).max);
         }
     }
@@ -201,7 +201,7 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function deployPumps(uint256 n) internal returns (Call[] memory _pumps) {
         _pumps = new Call[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             _pumps[i].target = address(new MockPump());
             _pumps[i].data = new bytes(i);
         }
@@ -215,7 +215,7 @@ abstract contract TestHelper is Test, WellDeployer {
     /// @dev add the same `amount` of liquidity for all underlying tokens
     function addLiquidityEqualAmount(address from, uint256 amount) internal prank(from) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = amount;
         }
         well.addLiquidity(amounts, 0, from, type(uint256).max);
@@ -227,7 +227,7 @@ abstract contract TestHelper is Test, WellDeployer {
     /// @dev uses global tokens but not global well
     function getBalances(address account, Well _well) internal view returns (Balances memory balances) {
         uint256[] memory tokenBalances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokenBalances.length; ++i) {
+        for (uint256 i; i < tokenBalances.length; ++i) {
             tokenBalances[i] = tokens[i].balanceOf(account);
         }
         balances.tokens = tokenBalances;
@@ -263,7 +263,7 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
-        for (uint256 i = 0; i < a.length; i++) {
+        for (uint256 i; i < a.length; i++) {
             assertEq(a[i], b[i], err); // uses the prev overload
         }
     }
@@ -283,7 +283,7 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function assertEq(Call[] memory a, Call[] memory b, string memory err) internal {
         assertEq(a.length, b.length, err);
-        for (uint256 i = 0; i < a.length; i++) {
+        for (uint256 i; i < a.length; i++) {
             assertEq(a[i], b[i], err); // uses the prev overload
         }
     }
@@ -343,7 +343,7 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function uint2ToUintN(uint256[2] memory input) internal pure returns (uint256[] memory out) {
         out = new uint256[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
+        for (uint256 i; i < input.length; i++) {
             out[i] = input[i];
         }
     }

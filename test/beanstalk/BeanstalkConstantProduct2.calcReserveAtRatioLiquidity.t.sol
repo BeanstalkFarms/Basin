@@ -76,7 +76,7 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
     }
 
     function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public {
-        for (uint256 i = 0; i < 2; ++i) {
+        for (uint256 i; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
             reserves[i] = bound(reserves[i], 1e6, 1e32);
             ratios[i] = bound(ratios[i], 1e6, 1e18);
@@ -86,7 +86,7 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
         console.log(lpTokenSupply);
 
         uint256[] memory reservesOut = new uint256[](2);
-        for (uint256 i = 0; i < 2; ++i) {
+        for (uint256 i; i < 2; ++i) {
             reservesOut[i] =
                 _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), new bytes(0));
         }

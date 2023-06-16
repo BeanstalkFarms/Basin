@@ -15,14 +15,14 @@ contract LibBytesTest is TestHelper {
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         uint256[] memory reserves = new uint256[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             reserves[i] = uint256(_reserves[i]);
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
 
         // Re-read reserves and compare
         uint256[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
-        for (uint256 i = 0; i < reserves2.length; i++) {
+        for (uint256 i; i < reserves2.length; i++) {
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }
@@ -30,14 +30,14 @@ contract LibBytesTest is TestHelper {
     function testStoreAndRead() public {
         uint256 n = 2;
         uint256[] memory reserves = new uint256[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             reserves[i] = i * 100 + 1;
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
 
         // Re-read reserves and compare
         uint256[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
-        for (uint256 i = 0; i < reserves2.length; i++) {
+        for (uint256 i; i < reserves2.length; i++) {
             assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
         }
     }
@@ -46,7 +46,7 @@ contract LibBytesTest is TestHelper {
     /// All reserves besides `reserves[j]` are zero.
     function test_storeUint128_overflow() public {
         for (uint256 n = 1; n < NUM_RESERVES_MAX; ++n) {
-            for (uint256 j = 0; j < n; ++j) {
+            for (uint256 j; j < n; ++j) {
                 //
                 uint256[] memory reserves = new uint256[](n);
                 reserves[j] = uint256(type(uint128).max) + 10;
@@ -65,7 +65,7 @@ contract LibBytesTest is TestHelper {
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         uint256[] memory reserves = new uint256[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             reserves[i] = uint256(_reserves[i]);
         }
 

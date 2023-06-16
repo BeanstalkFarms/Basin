@@ -22,7 +22,7 @@ contract ConstantProductTest is WellFunctionHelper {
         vm.assume(n < 16);
         vm.assume(n >= 2);
         uint256[] memory reserves = new uint256[](n);
-        for (uint256 i = 0; i < n; ++i) {
+        for (uint256 i; i < n; ++i) {
             reserves[i] = 1;
         }
         assertEq(_function.calcLpTokenSupply(reserves, _data), 1 * n);

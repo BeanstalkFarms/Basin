@@ -23,7 +23,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
     /// currently, liquidity is added in {TestHelper} and above
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(tokens[i].balanceOf(address(well)), initialLiquidity + addedLiquidity, "incorrect token reserve");
         }
         assertEq(well.totalSupply(), 2000 * 1e24, "incorrect totalSupply");
@@ -33,7 +33,7 @@ contract WellRemoveLiquidityTest is LiquidityHelper {
     /// since the tokens in the Well are balanced, user receives equal amounts
     function test_getRemoveLiquidityOut() public {
         uint256[] memory amountsOut = well.getRemoveLiquidityOut(1000 * 1e24);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(amountsOut[i], 1000 * 1e18, "incorrect getRemoveLiquidityOut");
         }
     }

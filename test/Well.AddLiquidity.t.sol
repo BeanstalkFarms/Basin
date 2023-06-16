@@ -17,7 +17,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
         IERC20[] memory tokens = well.tokens();
         Balances memory userBalance = getBalances(user, well);
         Balances memory wellBalance = getBalances(address(well), well);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(userBalance.tokens[i], initialLiquidity, "incorrect user token reserve");
             assertEq(wellBalance.tokens[i], initialLiquidity, "incorrect well token reserve");
         }
@@ -27,7 +27,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
     /// up by sqrt(ConstantProduct2.EXP_PRECISION)
     function test_getAddLiquidityOut_equalAmounts() public {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = well.getAddLiquidityOut(amounts);
@@ -45,7 +45,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
 
     function test_addLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = well.getAddLiquidityOut(amounts);
@@ -61,7 +61,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
 
     function test_addLiquidity_balanced() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = 1000 * 1e24;
@@ -106,7 +106,7 @@ contract WellAddLiquidityTest is LiquidityHelper {
     /// @dev Adding and removing liquidity in sequence should return the Well to its previous state
     function test_addAndRemoveLiquidity() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = 1000 * 1e24;

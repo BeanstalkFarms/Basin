@@ -21,7 +21,7 @@ abstract contract WellFunctionHelper is TestHelper {
 
     /// @dev require at least `n` reserves to be passed to `calcLpTokenSupply`
     function check_calcLpTokenSupply_minBalancesLength(uint256 n) public {
-        for (uint256 i = 0; i < n; ++i) {
+        for (uint256 i; i < n; ++i) {
             vm.expectRevert(stdError.indexOOBError); // "Index out of bounds"
             _function.calcLpTokenSupply(new uint256[](i), _data);
         }

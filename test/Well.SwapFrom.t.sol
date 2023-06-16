@@ -40,7 +40,7 @@ contract WellSwapFromTest is SwapHelper {
         assertEq(wellBalances.tokens[0], 0, "bad assumption: wellBalances.tokens[0] != 0");
         assertEq(wellBalances.tokens[1], 0, "bad assumption: wellBalances.tokens[1] != 0");
 
-        for (uint256 j = 0; j < tokens.length; ++j) {
+        for (uint256 j; j < tokens.length; ++j) {
             if (j != i) {
                 vm.expectRevert(); // underflow
                 badWell.getSwapOut(tokens[i], tokens[j], amountIn);

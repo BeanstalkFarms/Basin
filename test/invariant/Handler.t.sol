@@ -167,7 +167,7 @@ contract Handler is Test {
         address msgSender = _seedToAddress(addressSeed);
         vm.startPrank(msgSender);
         IERC20[] memory mockTokens = s_well.tokens();
-        for (uint256 i = 0; i < mockTokens.length; i++) {
+        for (uint256 i; i < mockTokens.length; i++) {
             s_getShiftOutCalls++;
             try s_well.getShiftOut(mockTokens[i]) returns (uint256 amountOut) {
                 if (amountOut > 0) {
@@ -207,7 +207,7 @@ contract Handler is Test {
         tokenAmountsIn[1] = token1AmountIn;
         // mint tokens to the sender
         IERC20[] memory mockTokens = s_well.tokens();
-        for (uint256 i = 0; i < mockTokens.length; i++) {
+        for (uint256 i; i < mockTokens.length; i++) {
             MockToken(address(mockTokens[i])).mint(msgSender, tokenAmountsIn[i]);
             // approve the well
             mockTokens[i].approve(address(s_well), tokenAmountsIn[i]);
@@ -242,7 +242,7 @@ contract Handler is Test {
         tokenAmountsIn[1] = token1AmountIn;
         // mint tokens to the sender
         IERC20[] memory mockTokens = s_well.tokens();
-        for (uint256 i = 0; i < mockTokens.length; i++) {
+        for (uint256 i; i < mockTokens.length; i++) {
             MockToken(address(mockTokens[i])).mint(msgSender, tokenAmountsIn[i]);
             // approve the well
             mockTokens[i].approve(address(s_well), tokenAmountsIn[i]);
