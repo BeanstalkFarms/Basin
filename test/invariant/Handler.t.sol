@@ -489,8 +489,16 @@ contract Handler is Test {
     // helpers
 
     /// @dev Convert a seed to an address
-    function _seedToAddress(uint256 addressSeed) internal view returns (address) {
-        return address(uint160(bound(addressSeed, 1, type(uint160).max)));
+    function _seedToAddress(uint256 addressSeed) internal view returns (address seedAddress) {
+        uint160 boundInt = uint160(bound(addressSeed, 1, type(uint160).max));
+        seedAddress = address(boundInt);
+        if (seedAddress == address(s_well)) {
+            uint160 newAddressSeed;
+            unchecked {
+                newAddressSeed = boundInt + 1;
+            }
+            seedAddress = _seedToAddress(uint256(newAddressSeed));
+        }
     }
 
     /// @dev Convert an index to an existing LP address
