@@ -55,7 +55,7 @@ contract LiquidityHelper is TestHelper {
         Snapshot memory beforeSnapshot = _newSnapshot();
 
         uint256[] memory amountToTransfer = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amountToTransfer[i] = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
         }
 
@@ -72,12 +72,12 @@ contract LiquidityHelper is TestHelper {
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp + action.lpAmountOut);
 
         // Check that the user token balances decremented by the correct amount
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.user.tokens[i], beforeSnapshot.user.tokens[i] - action.amounts[i]);
         }
 
         // Check that the well balances incremented by the correct amount
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             uint256 valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + valueToAdd);
         }
@@ -116,12 +116,12 @@ contract LiquidityHelper is TestHelper {
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp - action.lpAmountIn);
 
         // Check that the user token balances incremented by the correct amount
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.user.tokens[i], beforeSnapshot.user.tokens[i] + action.amounts[i]);
         }
 
         // Check that the well balances decremented by the correct amount
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] - action.amounts[i]);
         }
     }
@@ -132,7 +132,7 @@ contract LiquidityHelper is TestHelper {
     ) internal view returns (uint256[] memory) {
         uint256[] memory amountAfterFees = new uint256[](tokens.length);
 
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = amounts[i] - fees[i];
         }
 

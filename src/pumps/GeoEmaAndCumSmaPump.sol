@@ -149,7 +149,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
 
         // Skip {_capReserve} since we have no prior reference
 
-        for (uint256 i = 0; i < numberOfReserves; ++i) {
+        for (uint256 i; i < numberOfReserves; ++i) {
             if (reserves[i] == 0) return;
             byteReserves[i] = reserves[i].fromUIntToLog2();
         }
@@ -175,7 +175,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
             revert NotInitialized();
         }
         reserves = new uint256[](numberOfReserves);
-        for (uint256 i = 0; i < numberOfReserves; ++i) {
+        for (uint256 i; i < numberOfReserves; ++i) {
             reserves[i] = bytesReserves[i].pow_2ToUInt();
         }
     }
@@ -231,7 +231,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
         }
         bytes16[] memory byteReserves = slot.readBytes16(numberOfReserves);
         reserves = new uint256[](numberOfReserves);
-        for (uint256 i = 0; i < numberOfReserves; ++i) {
+        for (uint256 i; i < numberOfReserves; ++i) {
             reserves[i] = byteReserves[i].pow_2ToUInt();
         }
     }
@@ -252,7 +252,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         emaReserves = new uint256[](numberOfReserves);
-        for (uint256 i = 0; i < numberOfReserves; ++i) {
+        for (uint256 i; i < numberOfReserves; ++i) {
             lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
             emaReserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(lastEmaReserves[i].mul(alphaN)).pow_2ToUInt();
@@ -298,7 +298,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
         bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
         // Currently, there is so support for overflow.
-        for (uint256 i = 0; i < cumulativeReserves.length; ++i) {
+        for (uint256 i; i < cumulativeReserves.length; ++i) {
             lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
             cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
         }
@@ -319,7 +319,7 @@ contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneou
         if (deltaTimestamp == bytes16(0)) {
             revert NoTimePassed();
         }
-        for (uint256 i = 0; i < byteCumulativeReserves.length; ++i) {
+        for (uint256 i; i < byteCumulativeReserves.length; ++i) {
             // Currently, there is no support for overflow.
             twaReserves[i] =
                 (byteCumulativeReserves[i].sub(byteStartCumulativeReserves[i])).div(deltaTimestamp).pow_2ToUInt();

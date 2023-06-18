@@ -15,7 +15,7 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
 
     function test_addLiquidityFeeOnTransferWithFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
 
@@ -34,7 +34,7 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
     function test_addLiquidityFeeOnTransferWithFee_equalAmounts() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
         uint256[] memory feeAmounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
             feeAmounts[i] = amounts[i] * (1e18 - 1e16) / 1e18;
         }

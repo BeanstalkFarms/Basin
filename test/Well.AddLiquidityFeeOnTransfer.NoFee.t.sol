@@ -13,7 +13,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
     function test_addLiquidityFeeOnTransferNoFee_revertIf_minAmountOutTooHigh() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
 
@@ -30,7 +30,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
 
     function test_addLiquidityFeeOnTransferNoFee_equalAmounts() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = well.getAddLiquidityOut(amounts);
@@ -74,7 +74,7 @@ contract WellAddLiquidityFeeOnTransferNoFeeTest is LiquidityHelper {
     /// result in net zero change
     function test_addLiquidityFeeOnTransferNoFeeAndRemoveLiquidity() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = 1000 * 1e24;

@@ -68,7 +68,7 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         bytes calldata
     ) external pure override returns (uint256 reserve) {
         uint256 sumRatio = 0;
-        for (uint256 i = 0; i < reserves.length; ++i) {
+        for (uint256 i; i < reserves.length; ++i) {
             if (i != j) sumRatio += ratios[i];
         }
         sumRatio /= reserves.length - 1;
@@ -83,7 +83,7 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         uint256[] calldata ratios,
         bytes calldata
     ) external pure override returns (uint256 reserve) {
-        for (uint256 i = 0; i < reserves.length; ++i) {
+        for (uint256 i; i < reserves.length; ++i) {
             if (i != j) {
                 reserve += ratios[j] * reserves[i] / ratios[i];
             }

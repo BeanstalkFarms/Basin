@@ -37,7 +37,7 @@ contract LibMathTest is TestHelper {
         // every even nth root: 2 4 8 16
         for (uint256 i = 1; i <= 4; ++i) {
             uint256 v = a;
-            for (uint256 j = 0; j < i; ++j) {
+            for (uint256 j; j < i; ++j) {
                 v = LibMath.sqrt(v);
             }
             assertEq(LibMath.nthRoot(a, 2 ** i), v, "nthRoot != nth sqrt");

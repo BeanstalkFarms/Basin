@@ -129,7 +129,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
         uint256 lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
         uint256[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, "");
-        for (uint256 i = 0; i < reserves.length; ++i) {
+        for (uint256 i; i < reserves.length; ++i) {
             assertEq(reserves[i], underlying[i], "reserves mismatch");
         }
     }

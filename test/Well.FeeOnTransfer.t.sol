@@ -39,7 +39,7 @@ contract WellFeeOnTransferTest is TestHelper {
     function test_addLiquidity_feeOnTransfer() public prank(user) {
         uint256[] memory amounts = new uint256[](tokens.length);
 
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = 1000 * 1e24;

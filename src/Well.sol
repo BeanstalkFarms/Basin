@@ -98,7 +98,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
 
         uint256 pumpDataLength;
-        for (uint256 i = 0; i < _pumps.length; i++) {
+        for (uint256 i; i < _pumps.length; i++) {
             _pumps[i].target = _getArgAddress(dataLoc);
             dataLoc += PACKED_ADDRESS;
             pumpDataLength = _getArgUint256(dataLoc);

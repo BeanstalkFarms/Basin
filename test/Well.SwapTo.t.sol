@@ -25,7 +25,7 @@ contract WellSwapToTest is SwapHelper {
         vm.assume(i < _tokens.length);
 
         // Swap token `i` -> all other tokens
-        for (uint256 j = 0; j < _tokens.length; ++j) {
+        for (uint256 j; j < _tokens.length; ++j) {
             if (j != i) {
                 // Request to buy more of {_tokens[j]} than the Well has.
                 // There is no input amount that could complete this Swap.

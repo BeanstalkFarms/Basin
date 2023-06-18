@@ -77,7 +77,7 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
     }
 
     function test_calcReserveAtRatioSwap_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public {
-        for (uint256 i = 0; i < 2; ++i) {
+        for (uint256 i; i < 2; ++i) {
             // TODO: Upper bound is limited by constant product 2
             // TODO Increase limit of ConstantProductN
             reserves[i] = bound(reserves[i], 1e6, 1e20);
@@ -88,7 +88,7 @@ contract BeanstalkConstantProductSwapTest is TestHelper {
         console.log(lpTokenSupply);
 
         uint256[] memory reservesOut = new uint256[](2);
-        for (uint256 i = 0; i < 2; ++i) {
+        for (uint256 i; i < 2; ++i) {
             reservesOut[i] = _f.calcReserveAtRatioSwap(uint2ToUintN(reserves), i, uint2ToUintN(ratios), new bytes(0));
         }
 

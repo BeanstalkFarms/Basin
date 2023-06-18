@@ -37,7 +37,7 @@ contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
     }
 
     function test_getSlotOffset() public {
-        for (uint256 i = 0; i < testCasesInput.length; i++) {
+        for (uint256 i; i < testCasesInput.length; i++) {
             assertEq(_getSlotsOffset(testCasesInput[i]), testCasesOutput[i]);
         }
     }

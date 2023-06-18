@@ -48,7 +48,7 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
         uint40 timeIncrease
     ) public prank(user) {
         n = uint8(bound(n, 1, 8));
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             initReserves[i] = bound(initReserves[i], 1e6, type(uint128).max);
             reserves[i] = bound(reserves[i], 1e6, type(uint128).max);
         }
@@ -56,11 +56,11 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
 
         // Start by updating the Pump with the initial reserves. Also initializes the Pump.
         uint256[] memory updateReserves = new uint256[](n);
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             updateReserves[i] = initReserves[i];
         }
         mWell.update(address(pump), updateReserves, new bytes(0));
-        for (uint256 i = 0; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             updateReserves[i] = reserves[i];
         }
         mWell.update(address(pump), updateReserves, new bytes(0));
