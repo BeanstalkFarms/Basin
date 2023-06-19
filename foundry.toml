@@ -24,7 +24,7 @@ fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
 [fmt]
 ignore = ["src/libraries/LibClone.sol", "src/utils/Clone.sol", "src/libraries/ABDKMathQuad.sol"]
-int_types = "short"
+int_types = "long"
 line_length = 120
 multiline_func_header = "params_first"
 number_underscore = "thousands"
@@ -34,6 +34,6 @@ tab_width = 4
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 
 [invariant]
-runs = 4
-depth = 2048
+runs = 50
+depth = 500
 fail_on_revert = true

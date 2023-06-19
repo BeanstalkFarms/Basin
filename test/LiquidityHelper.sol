@@ -9,9 +9,9 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * @dev Stores the expected change in balance for User & Well throughout adding liquidity.
  */
 struct AddLiquidityAction {
-    uint[] amounts;
-    uint[] fees;
-    uint lpAmountOut;
+    uint256[] amounts;
+    uint256[] fees;
+    uint256 lpAmountOut;
     address recipient;
 }
 
@@ -19,9 +19,9 @@ struct AddLiquidityAction {
  * @dev Stores the expected change in balance for User & Well throughout remove liquidity.
  */
 struct RemoveLiquidityAction {
-    uint[] amounts;
-    uint[] fees;
-    uint lpAmountIn;
+    uint256[] amounts;
+    uint256[] fees;
+    uint256 lpAmountIn;
     address recipient;
 }
 
@@ -31,12 +31,12 @@ struct RemoveLiquidityAction {
  * NOTE: Uses globals inherited from TestHelper.
  */
 contract LiquidityHelper is TestHelper {
-    event AddLiquidity(uint[] amounts, uint lpAmountOut, address recipient);
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
+    event AddLiquidity(uint256[] amounts, uint256 lpAmountOut, address recipient);
+    event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
     function beforeAddLiquidity(
-        uint[] memory amounts,
-        uint lpAmountOut,
+        uint256[] memory amounts,
+        uint256 lpAmountOut,
         address recipient
     ) internal returns (Snapshot memory, AddLiquidityAction memory) {
         AddLiquidityAction memory action;
@@ -54,8 +54,8 @@ contract LiquidityHelper is TestHelper {
     {
         Snapshot memory beforeSnapshot = _newSnapshot();
 
-        uint[] memory amountToTransfer = new uint[](tokens.length);
-        for (uint i = 0; i < tokens.length; i++) {
+        uint256[] memory amountToTransfer = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
             amountToTransfer[i] = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
         }
 
@@ -72,20 +72,20 @@ contract LiquidityHelper is TestHelper {
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp + action.lpAmountOut);
 
         // Check that the user token balances decremented by the correct amount
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.user.tokens[i], beforeSnapshot.user.tokens[i] - action.amounts[i]);
         }
 
         // Check that the well balances incremented by the correct amount
-        for (uint i = 0; i < tokens.length; i++) {
-            uint valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
+        for (uint256 i; i < tokens.length; i++) {
+            uint256 valueToAdd = action.fees[i] > 0 ? action.fees[i] : action.amounts[i];
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] + valueToAdd);
         }
     }
 
     function beforeRemoveLiquidity(
-        uint lpAmountIn,
-        uint[] memory amounts,
+        uint256 lpAmountIn,
+        uint256[] memory amounts,
         address recipient
     ) internal returns (Snapshot memory, RemoveLiquidityAction memory) {
         RemoveLiquidityAction memory action;
@@ -116,20 +116,23 @@ contract LiquidityHelper is TestHelper {
         assertEq(afterSnapshot.user.lp, beforeSnapshot.user.lp - action.lpAmountIn);
 
         // Check that the user token balances incremented by the correct amount
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.user.tokens[i], beforeSnapshot.user.tokens[i] + action.amounts[i]);
         }
 
         // Check that the well balances decremented by the correct amount
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             assertEq(afterSnapshot.well.tokens[i], beforeSnapshot.well.tokens[i] - action.amounts[i]);
         }
     }
 
-    function _amountAferFees(uint[] memory amounts, uint[] memory fees) internal view returns (uint[] memory) {
-        uint[] memory amountAfterFees = new uint[](tokens.length);
+    function _amountAferFees(
+        uint256[] memory amounts,
+        uint256[] memory fees
+    ) internal view returns (uint256[] memory) {
+        uint256[] memory amountAfterFees = new uint256[](tokens.length);
 
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = amounts[i] - fees[i];
         }
 

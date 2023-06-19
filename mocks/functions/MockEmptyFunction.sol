@@ -1,30 +1,30 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ */
 
 pragma solidity ^0.8.17;
 
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 
 contract MockEmptyFunction is IWellFunction {
-
-    function calcReserve(
-        uint256[] memory reserves,
-        uint256 j,
-        uint256 lpTokenSupply,
-        bytes calldata data
-    ) external pure returns (uint d) {
+    function calcReserve(uint256[] memory, uint256, uint256, bytes calldata) external pure returns (uint256 d) {
         return 1;
     }
 
-    function calcLpTokenSupply(
-        uint256[] memory reserves,
-        bytes calldata data
-    ) external pure returns (uint xj) {
+    function calcLpTokenSupply(uint256[] memory, bytes calldata) external pure returns (uint256 xj) {
         return 1;
     }
 
-    function name() external override pure returns (string memory) {}
+    function calcLPTokenUnderlying(
+        uint256,
+        uint256[] memory,
+        uint256,
+        bytes calldata
+    ) external pure returns (uint256[] memory underlyingAmounts) {
+        return underlyingAmounts;
+    }
 
-    function symbol() external override pure returns (string memory) {}
+    function name() external pure override returns (string memory) {}
+
+    function symbol() external pure override returns (string memory) {}
 }

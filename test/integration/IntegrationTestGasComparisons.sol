@@ -5,11 +5,14 @@ import {IntegrationTestHelper, IERC20, console, Balances} from "test/integration
 import {IUniswapV2Router, IUniswapV3Router, IUniswapV2Factory} from "test/integration/interfaces/IUniswap.sol";
 import {ConstantProduct2} from "test/TestHelper.sol";
 import {IPipeline, PipeCall, AdvancedPipeCall, IDepot, From, To} from "test/integration/interfaces/IPipeline.sol";
+import {LibMath} from "src/libraries/LibMath.sol";
 import {Well} from "src/Well.sol";
 
 /// @dev Tests gas usage of similar functions across Uniswap & Wells
 contract IntegrationTestGasComparisons is IntegrationTestHelper {
-    uint mainnetFork;
+    using LibMath for uint256;
+
+    uint256 mainnetFork;
 
     Well daiWethWell;
     Well daiUsdcWell;
@@ -62,19 +65,19 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     ////////// Wells
 
-    function testFuzz_wells_WethDai_Swap(uint amountIn) public {
+    function testFuzz_wells_WethDai_Swap(uint256 amountIn) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, daiWethTokens[1].balanceOf(address(this)));
         vm.resumeGasMetering();
 
-        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this), type(uint).max);
+        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this), type(uint256).max);
     }
 
-    function testFuzz_wells_WethDaiUsdc_Swap(uint amountIn) public {
+    function testFuzz_wells_WethDaiUsdc_Swap(uint256 amountIn) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, 1000e18);
 
-        WETH.approve(address(depot), type(uint).max);
+        WETH.approve(address(depot), type(uint256).max);
 
         // any user can approve pipeline for an arbritary set of assets.
         // this means that most users do not need to approve pipeline,
@@ -89,11 +92,11 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
         // Approve DAI:WETH Well to use pipeline's WETH
         _prePipeCall[0].target = address(WETH);
-        _prePipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint).max);
+        _prePipeCall[0].data = abi.encodeWithSelector(WETH.approve.selector, address(daiWethWell), type(uint256).max);
 
         // Approve DAI:USDC Well to use pipeline's DAI
         _prePipeCall[1].target = address(DAI);
-        _prePipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint).max);
+        _prePipeCall[1].data = abi.encodeWithSelector(DAI.approve.selector, address(daiUsdcWell), type(uint256).max);
 
         pipeline.multiPipe(_prePipeCall);
 
@@ -104,7 +107,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         _pipeCall[0].callData = abi.encodeWithSelector(
             Well.swapFrom.selector, daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(pipeline)
         );
-        _pipeCall[0].clipboard = abi.encodePacked(uint(0));
+        _pipeCall[0].clipboard = abi.encodePacked(uint256(0));
 
         // Swap DAI for USDC
         _pipeCall[1].target = address(daiUsdcWell);
@@ -122,11 +125,11 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         depot.farm(_farmCalls);
     }
 
-    function testFuzz_wells_WethDaiUsdc_Shift(uint amountIn) public {
+    function testFuzz_wells_WethDaiUsdc_Shift(uint256 amountIn) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, 1000e18);
 
-        WETH.approve(address(depot), type(uint).max);
+        WETH.approve(address(depot), type(uint256).max);
 
         // unlike swap test (previous test), no tokens are sent back to pipeline.
         // this means that pipeline does not prior approvals.
@@ -136,12 +139,12 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         // Shift excess tokens into DAI; deliver to the DAI:USDC Well
         _pipeCall[0].target = address(daiWethWell);
         _pipeCall[0].callData = abi.encodeWithSelector(Well.shift.selector, DAI, 0, address(daiUsdcWell));
-        _pipeCall[0].clipboard = abi.encodePacked(uint(0));
+        _pipeCall[0].clipboard = abi.encodePacked(uint256(0));
 
         // Shift excess tokens into USDC; deliver to the user
         _pipeCall[1].target = address(daiUsdcWell);
         _pipeCall[1].callData = abi.encodeWithSelector(Well.shift.selector, daiUsdcTokens[1], 0, address(this));
-        _pipeCall[1].clipboard = abi.encodePacked(uint(0));
+        _pipeCall[1].clipboard = abi.encodePacked(uint256(0));
 
         // Send WETH directly to the DAI:WETH Well, then perform the Pipe calls above.
         bytes[] memory _farmCalls = new bytes[](2);
@@ -154,37 +157,38 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         depot.farm(_farmCalls);
     }
 
-    function testFuzz_wells_WethDai_AddLiquidity(uint amount) public {
+    function testFuzz_wells_WethDai_AddLiquidity(uint256 amount) public {
         vm.pauseGasMetering();
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(amount, 1e18, 1000e18);
         amounts[1] = bound(amount, 1e18, 1000e18);
         vm.resumeGasMetering();
 
-        daiWethWell.addLiquidity(amounts, 0, address(this), type(uint).max);
+        daiWethWell.addLiquidity(amounts, 0, address(this), type(uint256).max);
     }
 
-    function testFuzz_wells_WethDai_RemoveLiquidity(uint amount) public {
+    function testFuzz_wells_WethDai_RemoveLiquidity(uint256 amount) public {
         vm.pauseGasMetering();
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(amount, 1e18, 1000e18);
         amounts[1] = amounts[0];
 
-        uint[] memory reserves = new uint[](2);
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = daiWethTokens[0].balanceOf(address(daiWethWell)) - amounts[0];
         reserves[1] = daiWethTokens[1].balanceOf(address(daiWethWell)) - amounts[1];
 
-        uint newLpTokenSupply = cp.calcLpTokenSupply(reserves, data);
-        uint lpAmountBurned = daiWethWell.totalSupply() - newLpTokenSupply;
-        uint[] memory minAmountsOut = new uint[](2);
+        uint256 EXP_PRECISION = 1e12;
+        uint256 newLpTokenSupply = (reserves[0] * reserves[1] * EXP_PRECISION).sqrt();
+        uint256 lpAmountBurned = daiWethWell.totalSupply() - newLpTokenSupply;
+        uint256[] memory minAmountsOut = new uint256[](2);
         vm.resumeGasMetering();
 
-        daiWethWell.removeLiquidity(lpAmountBurned, minAmountsOut, address(this), type(uint).max);
+        daiWethWell.removeLiquidity(lpAmountBurned, minAmountsOut, address(this), type(uint256).max);
     }
 
     ////////// Uniswap V2
 
-    function testFuzz_uniswapV2_WethDai_Swap(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_Swap(uint256 amount) public {
         vm.pauseGasMetering();
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
@@ -199,7 +203,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDaiUsdc_Swap(uint amount) public {
+    function testFuzz_uniswapV2_WethDaiUsdc_Swap(uint256 amount) public {
         vm.pauseGasMetering();
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
@@ -215,7 +219,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDai_AddLiquidity(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_AddLiquidity(uint256 amount) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
@@ -224,15 +228,15 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDai_RemoveLiquidity(uint amount) public {
+    function testFuzz_uniswapV2_WethDai_RemoveLiquidity(uint256 amount) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
 
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
         address pair = uniV2Factory.getPair(address(WETH), address(DAI));
-        uint liquidity = IERC20(pair).balanceOf(address(this));
-        IERC20(pair).approve(address(uniV2Router), type(uint).max);
+        uint256 liquidity = IERC20(pair).balanceOf(address(this));
+        IERC20(pair).approve(address(uniV2Router), type(uint256).max);
 
         vm.resumeGasMetering();
 
@@ -241,7 +245,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     ////////// Uniswap V3
 
-    function testFuzz_uniswapV3_WethDai_Swap(uint amount) public {
+    function testFuzz_uniswapV3_WethDai_Swap(uint256 amount) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
@@ -260,7 +264,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV3Router.exactInputSingle(params);
     }
 
-    function testFuzz_uniswapV3_WethDaiUsdc_Swap(uint amount) public {
+    function testFuzz_uniswapV3_WethDaiUsdc_Swap(uint256 amount) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
@@ -280,25 +284,29 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
     //////////////////// SETUP HELPERS ////////////////////
 
     /// @dev Approve the `router` to swap Test contract's tokens.
-    function _uniSetupHelper(uint amount, address router) private {
+    function _uniSetupHelper(uint256 amount, address router) private {
         deal(address(WETH), address(this), amount * 2);
         deal(address(DAI), address(this), amount * 2);
-        WETH.approve(router, type(uint).max);
-        DAI.approve(router, type(uint).max);
+        WETH.approve(router, type(uint256).max);
+        DAI.approve(router, type(uint256).max);
     }
 
     /// @dev Perform a few swaps on the provided Well to proper initialization.
     function _wellsInitializedHelper() private {
         // DAI -> WETH
-        daiWethWell.swapFrom(daiWethTokens[0], daiWethTokens[1], 1000 * 1e18, 500 * 1e18, address(this), type(uint).max);
+        daiWethWell.swapFrom(
+            daiWethTokens[0], daiWethTokens[1], 1000 * 1e18, 500 * 1e18, address(this), type(uint256).max
+        );
 
         // WETH -> DAI
         vm.warp(block.timestamp + 1);
-        daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this), type(uint).max);
+        daiWethWell.swapFrom(
+            daiWethTokens[1], daiWethTokens[0], 500 * 1e18, 500 * 1e18, address(this), type(uint256).max
+        );
     }
 }
 
 interface IWETH is IERC20 {
     function deposit() external payable;
-    function withdraw(uint amount) external;
+    function withdraw(uint256 amount) external;
 }

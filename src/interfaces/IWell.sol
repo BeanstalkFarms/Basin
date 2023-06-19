@@ -17,31 +17,6 @@ struct Call {
  */
 interface IWell {
     /**
-     * @notice Thrown when an operation would deliver fewer tokens than `minAmountOut`.
-     */
-    error SlippageOut(uint amountOut, uint minAmountOut);
-
-    /**
-     * @notice Thrown when an operation would require more tokens than `maxAmountIn`.
-     */
-    error SlippageIn(uint amountIn, uint maxAmountIn);
-
-    /**
-     * @notice Thrown if one or more tokens used in the operation are not supported by the Well.
-     */
-    error InvalidTokens();
-
-    /**
-     * @notice Thrown if this operation would cause an incorrect change in Well reserves.
-     */
-    error InvalidReserves();
-
-    /**
-     * @notice Thrown if an operation is executed after the provided `deadline` has passed.
-     */
-    error Expired();
-
-    /**
      * @notice Emitted when a Swap occurs.
      * @param fromToken The token swapped from
      * @param toToken The token swapped to
@@ -49,7 +24,7 @@ interface IWell {
      * @param amountOut The amount of `toToken` transferred out of the Well
      * @param recipient The address to receive `toToken`
      */
-    event Swap(IERC20 fromToken, IERC20 toToken, uint amountIn, uint amountOut, address recipient);
+    event Swap(IERC20 fromToken, IERC20 toToken, uint256 amountIn, uint256 amountOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is added to the Well.
@@ -57,7 +32,7 @@ interface IWell {
      * @param lpAmountOut The amount of LP tokens minted
      * @param recipient The address to receive the LP tokens
      */
-    event AddLiquidity(uint[] tokenAmountsIn, uint lpAmountOut, address recipient);
+    event AddLiquidity(uint256[] tokenAmountsIn, uint256 lpAmountOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is removed from the Well as multiple underlying tokens.
@@ -66,7 +41,7 @@ interface IWell {
      * @param recipient The address to receive the underlying tokens
      * @dev Gas cost scales with `n` tokens.
      */
-    event RemoveLiquidity(uint lpAmountIn, uint[] tokenAmountsOut, address recipient);
+    event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
     /**
      * @notice Emitted when liquidity is removed from the Well as a single underlying token.
@@ -78,7 +53,7 @@ interface IWell {
      * saves gas, since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
      * for each token in the Well.
      */
-    event RemoveLiquidityOneToken(uint lpAmountIn, IERC20 tokenOut, uint tokenAmountOut, address recipient);
+    event RemoveLiquidityOneToken(uint256 lpAmountIn, IERC20 tokenOut, uint256 tokenAmountOut, address recipient);
 
     /**
      * @notice Emitted when a Shift occurs.
@@ -87,13 +62,13 @@ interface IWell {
      * @param minAmountOut The minimum amount of `toToken` transferred out of the Well
      * @param recipient The address to receive `toToken`
      */
-    event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
+    event Shift(uint256[] reserves, IERC20 toToken, uint256 minAmountOut, address recipient);
 
     /**
      * @notice Emitted when a Sync occurs.
      * @param reserves The ending reserves after a sync
      */
-    event Sync(uint[] reserves);
+    event Sync(uint256[] reserves);
 
     //////////////////// WELL DEFINITION ////////////////////
 
@@ -144,7 +119,8 @@ interface IWell {
     function aquifer() external view returns (address);
 
     /**
-     * @notice Returns the tokens, Well function, Pump and Well Data associated with this Well.
+     * @notice Returns the tokens, Well Function, Pumps and Well Data associated
+     * with the Well as well as the Aquifer that deployed the Well.
      */
     function well()
         external
@@ -154,7 +130,7 @@ interface IWell {
             Call memory _wellFunction,
             Call[] memory _pumps,
             bytes memory _wellData,
-            address aquifer
+            address _aquifer
         );
 
     //////////////////// SWAP: FROM ////////////////////
@@ -172,11 +148,11 @@ interface IWell {
     function swapFrom(
         IERC20 fromToken,
         IERC20 toToken,
-        uint amountIn,
-        uint minAmountOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint amountOut);
+        uint256 deadline
+    ) external returns (uint256 amountOut);
 
     /**
      * @notice Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports fee on transfer tokens.
@@ -192,11 +168,11 @@ interface IWell {
     function swapFromFeeOnTransfer(
         IERC20 fromToken,
         IERC20 toToken,
-        uint amountIn,
-        uint minAmountOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint amountOut);
+        uint256 deadline
+    ) external returns (uint256 amountOut);
 
     /**
      * @notice Gets the amount of one token received for swapping an amount of another token.
@@ -205,7 +181,7 @@ interface IWell {
      * @param amountIn The amount of `fromToken` to spend
      * @return amountOut The amount of `toToken` to receive
      */
-    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint amountIn) external view returns (uint amountOut);
+    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint256 amountIn) external view returns (uint256 amountOut);
 
     //////////////////// SWAP: TO ////////////////////
 
@@ -222,11 +198,11 @@ interface IWell {
     function swapTo(
         IERC20 fromToken,
         IERC20 toToken,
-        uint maxAmountIn,
-        uint amountOut,
+        uint256 maxAmountIn,
+        uint256 amountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint amountIn);
+        uint256 deadline
+    ) external returns (uint256 amountIn);
 
     /**
      * @notice Gets the amount of one token that must be spent to receive an amount of another token during a swap.
@@ -235,7 +211,7 @@ interface IWell {
      * @param amountOut The amount of `toToken` desired
      * @return amountIn The amount of `fromToken` that must be spent
      */
-    function getSwapIn(IERC20 fromToken, IERC20 toToken, uint amountOut) external view returns (uint amountIn);
+    function getSwapIn(IERC20 fromToken, IERC20 toToken, uint256 amountOut) external view returns (uint256 amountIn);
 
     //////////////////// SHIFT ////////////////////
 
@@ -249,14 +225,14 @@ interface IWell {
      * deadline to a wrapper contract like {Pipeline} to prevent repeated deadline
      * checks on each hop of a multi-step transaction.
      */
-    function shift(IERC20 tokenOut, uint minAmountOut, address recipient) external returns (uint amountOut);
+    function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
 
     /**
      * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
      * @param tokenOut The token to shift into
      * @return amountOut The amount of `tokenOut` received
      */
-    function getShiftOut(IERC20 tokenOut) external returns (uint amountOut);
+    function getShiftOut(IERC20 tokenOut) external returns (uint256 amountOut);
 
     //////////////////// ADD LIQUIDITY ////////////////////
 
@@ -269,11 +245,11 @@ interface IWell {
      * @return lpAmountOut The amount of LP tokens received
      */
     function addLiquidity(
-        uint[] memory tokenAmountsIn,
-        uint minLpAmountOut,
+        uint256[] memory tokenAmountsIn,
+        uint256 minLpAmountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint lpAmountOut);
+        uint256 deadline
+    ) external returns (uint256 lpAmountOut);
 
     /**
      * @notice Adds liquidity to the Well as multiple tokens in any ratio and supports
@@ -286,18 +262,18 @@ interface IWell {
      * @dev Can also be used for tokens without a fee on transfer, but is less gas efficient.
      */
     function addLiquidityFeeOnTransfer(
-        uint[] memory tokenAmountsIn,
-        uint minLpAmountOut,
+        uint256[] memory tokenAmountsIn,
+        uint256 minLpAmountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint lpAmountOut);
+        uint256 deadline
+    ) external returns (uint256 lpAmountOut);
 
     /**
      * @notice Gets the amount of LP tokens received from adding liquidity as multiple tokens in any ratio.
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @return lpAmountOut The amount of LP tokens to receive
      */
-    function getAddLiquidityOut(uint[] memory tokenAmountsIn) external view returns (uint lpAmountOut);
+    function getAddLiquidityOut(uint256[] memory tokenAmountsIn) external view returns (uint256 lpAmountOut);
 
     //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
@@ -310,18 +286,18 @@ interface IWell {
      * @return tokenAmountsOut The amount of each underlying token received
      */
     function removeLiquidity(
-        uint lpAmountIn,
-        uint[] calldata minTokenAmountsOut,
+        uint256 lpAmountIn,
+        uint256[] calldata minTokenAmountsOut,
         address recipient,
-        uint deadline
-    ) external returns (uint[] memory tokenAmountsOut);
+        uint256 deadline
+    ) external returns (uint256[] memory tokenAmountsOut);
 
     /**
      * @notice Gets the amount of each underlying token received from removing liquidity in a balanced ratio.
      * @param lpAmountIn The amount of LP tokens to burn
      * @return tokenAmountsOut The amount of each underlying token to receive
      */
-    function getRemoveLiquidityOut(uint lpAmountIn) external view returns (uint[] memory tokenAmountsOut);
+    function getRemoveLiquidityOut(uint256 lpAmountIn) external view returns (uint256[] memory tokenAmountsOut);
 
     //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
@@ -335,12 +311,12 @@ interface IWell {
      * @return tokenAmountOut The amount of `tokenOut` received
      */
     function removeLiquidityOneToken(
-        uint lpAmountIn,
+        uint256 lpAmountIn,
         IERC20 tokenOut,
-        uint minTokenAmountOut,
+        uint256 minTokenAmountOut,
         address recipient,
-        uint deadline
-    ) external returns (uint tokenAmountOut);
+        uint256 deadline
+    ) external returns (uint256 tokenAmountOut);
 
     /**
      * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
@@ -348,12 +324,11 @@ interface IWell {
      * @param tokenOut The underlying token to receive
      * @return tokenAmountOut The amount of `tokenOut` to receive
      *
-     * FIXME: ordering
      */
     function getRemoveLiquidityOneTokenOut(
-        uint lpAmountIn,
+        uint256 lpAmountIn,
         IERC20 tokenOut
-    ) external view returns (uint tokenAmountOut);
+    ) external view returns (uint256 tokenAmountOut);
 
     //////////////////// REMOVE LIQUIDITY: IMBALANCED ////////////////////
 
@@ -365,18 +340,21 @@ interface IWell {
      * @return lpAmountIn The amount of LP tokens burned
      */
     function removeLiquidityImbalanced(
-        uint maxLpAmountIn,
-        uint[] calldata tokenAmountsOut,
+        uint256 maxLpAmountIn,
+        uint256[] calldata tokenAmountsOut,
         address recipient,
-        uint deadline
-    ) external returns (uint lpAmountIn);
+        uint256 deadline
+    ) external returns (uint256 lpAmountIn);
 
     /**
      * @notice Gets the amount of LP tokens to burn from removing liquidity as multiple underlying tokens in any ratio.
      * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
      * @return lpAmountIn The amount of LP tokens to burn
      */
-    function getRemoveLiquidityImbalancedIn(uint[] calldata tokenAmountsOut) external view returns (uint lpAmountIn);
+    function getRemoveLiquidityImbalancedIn(uint256[] calldata tokenAmountsOut)
+        external
+        view
+        returns (uint256 lpAmountIn);
 
     //////////////////// RESERVES ////////////////////
 
@@ -390,10 +368,10 @@ interface IWell {
      * @param recipient The address to send the tokens
      * @return skimAmounts The amount of each token skimmed
      */
-    function skim(address recipient) external returns (uint[] memory skimAmounts);
+    function skim(address recipient) external returns (uint256[] memory skimAmounts);
 
     /**
      * @notice Gets the reserves of each token held by the Well.
      */
-    function getReserves() external view returns (uint[] memory reserves);
+    function getReserves() external view returns (uint256[] memory reserves);
 }

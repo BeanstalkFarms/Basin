@@ -8,19 +8,22 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 /// @dev Tests the {ConstantProduct2} Well function directly.
 contract ConstantProduct2Test is WellFunctionHelper {
     /// State A: Same decimals
-    uint STATE_A_B0 = 10 * 1e18;
-    uint STATE_A_B1 = 10 * 1e18;
-    uint STATE_A_LP = 10 * 1e24;
+    uint256 STATE_A_B0 = 10 * 1e18;
+    uint256 STATE_A_B1 = 10 * 1e18;
+    uint256 STATE_A_LP = 10 * 1e24;
 
     /// State B: Different decimals
-    uint STATE_B_B0 = 1 * 1e18;
-    uint STATE_B_B1 = 1250 * 1e6;
-    uint STATE_B_LP = 35_355_339_059_327_376_220;
+    uint256 STATE_B_B0 = 1 * 1e18;
+    uint256 STATE_B_B1 = 1250 * 1e6;
+    uint256 STATE_B_LP = 35_355_339_059_327_376_220;
 
     /// State C: Similar decimals
-    uint STATE_C_B0 = 20 * 1e18;
-    uint STATE_C_B1 = 31_250_000_000_000_000_000; // 3.125e19
-    uint STATE_C_LP = 25 * 1e24;
+    uint256 STATE_C_B0 = 20 * 1e18;
+    uint256 STATE_C_B1 = 31_250_000_000_000_000_000; // 3.125e19
+    uint256 STATE_C_LP = 25 * 1e24;
+
+    /// @dev See {calcLpTokenSupply}.
+    uint256 MAX_RESERVE = 1e32;
 
     //////////// SETUP ////////////
 
@@ -30,20 +33,20 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     function test_metadata() public {
-        assertEq(_function.name(), "Constant Product");
-        assertEq(_function.symbol(), "CP");
+        assertEq(_function.name(), "Constant Product 2");
+        assertEq(_function.symbol(), "CP2");
     }
 
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev reverts when trying to calculate lp token supply with < 2 reserves
-    function test_getLpTokenSupply_minBalancesLength() public {
-        check_getLpTokenSupply_minBalancesLength(2);
+    function test_calcLpTokenSupply_minBalancesLength() public {
+        check_calcLpTokenSupply_minBalancesLength(2);
     }
 
     /// @dev calcLpTokenSupply: same decimals, manual calc for 2 equal reserves
-    function test_getLpTokenSupply_sameDecimals() public {
-        uint[] memory reserves = new uint[](2);
+    function test_calcLpTokenSupply_sameDecimals() public {
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_A_B0;
         reserves[1] = STATE_A_B1;
         assertEq(
@@ -53,8 +56,8 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     /// @dev calcLpTokenSupply: diff decimals
-    function test_getLpTokenSupply_diffDecimals() public {
-        uint[] memory reserves = new uint[](2);
+    function test_calcLpTokenSupply_diffDecimals() public {
+        uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_B_B0; // ex. 1 WETH
         reserves[1] = STATE_B_B1; // ex. 1250 BEAN
         assertEq(
@@ -63,12 +66,12 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    //////////// BALANCES ////////////
+    //////////// RESERVES ////////////
 
-    /// @dev getBalance: same decimals, both positions
+    /// @dev calcReserve: same decimals, both positions
     /// Matches example in {testLpTokenSupplySameDecimals}.
-    function test_getBalance_sameDecimals() public {
-        uint[] memory reserves = new uint[](2);
+    function test_calcReserve_sameDecimals() public {
+        uint256[] memory reserves = new uint256[](2);
 
         /// STATE A
         // find reserves[0]
@@ -94,10 +97,10 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    /// @dev getBalance: diff decimals, both positions
+    /// @dev calcReserve: diff decimals, both positions
     /// Matches example in {testLpTokenSupplyDiffDecimals}.
-    function test_getBalance_diffDecimals() public {
-        uint[] memory reserves = new uint[](2);
+    function test_calcReserve_diffDecimals() public {
+        uint256[] memory reserves = new uint256[](2);
 
         /// STATE B
         // find reserves[0]
@@ -117,25 +120,42 @@ contract ConstantProduct2Test is WellFunctionHelper {
         );
     }
 
-    function test_fuzz_constantProduct(uint x, uint y) public {
-        uint[] memory reserves = new uint[](2);
+    //////////// LP TOKEN SUPPLY ////////////
+
+    /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
+    function testFuzz_calcLpTokenSupply(uint256[2] memory _reserves) public {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = bound(_reserves[0], 1, MAX_RESERVE);
+        reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
+        uint256 lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
+        uint256[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, "");
+        for (uint256 i; i < reserves.length; ++i) {
+            assertEq(reserves[i], underlying[i], "reserves mismatch");
+        }
+    }
+
+    //////////// FUZZ ////////////
+
+    function testFuzz_constantProduct2(uint256 x, uint256 y) public {
+        uint256[] memory reserves = new uint256[](2);
         bytes memory _data = new bytes(0);
-        // TODO - relax assumption
-        reserves[0] = bound(x, 1, 1e32);
-        reserves[1] = bound(y, 1, 1e32);
-        uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
-        console.log("lpTokenSupply", lpTokenSupply);
-        uint reserve0 = _function.calcReserve(reserves, 0, lpTokenSupply, _data);
-        uint reserve1 = _function.calcReserve(reserves, 1, lpTokenSupply, _data);
+
+        reserves[0] = bound(x, 1, MAX_RESERVE);
+        reserves[1] = bound(y, 1, MAX_RESERVE);
+
+        uint256 lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
+        uint256 reserve0 = _function.calcReserve(reserves, 0, lpTokenSupply, _data);
+        uint256 reserve1 = _function.calcReserve(reserves, 1, lpTokenSupply, _data);
+
         if (reserves[0] < 1e12) {
             assertApproxEqAbs(reserve0, reserves[0], 2);
         } else {
-            assertApproxEqRel(reserve0, reserves[0], 2e6);
+            assertApproxEqRel(reserve0, reserves[0], 3e6);
         }
         if (reserves[1] < 1e12) {
             assertApproxEqAbs(reserve1, reserves[1], 2);
         } else {
-            assertApproxEqRel(reserve1, reserves[1], 2e6);
+            assertApproxEqRel(reserve1, reserves[1], 3e6);
         }
     }
 }

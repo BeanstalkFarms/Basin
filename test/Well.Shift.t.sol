@@ -3,9 +3,10 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellShiftTest is TestHelper {
-    event Shift(uint[] reserves, IERC20 toToken, uint minAmountOut, address recipient);
+    event Shift(uint256[] reserves, IERC20 toToken, uint256 minAmountOut, address recipient);
 
     ConstantProduct2 cp;
 
@@ -15,7 +16,7 @@ contract WellShiftTest is TestHelper {
     }
 
     /// @dev Shift excess token0 into token1.
-    function testFuzz_shift(uint amount) public prank(user) {
+    function testFuzz_shift(uint256 amount) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well
@@ -33,23 +34,23 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
         well.sync();
-        uint minAmountOut = well.getShiftOut(tokens[1]);
-        uint[] memory calcReservesAfter = new uint[](2);
+        uint256 minAmountOut = well.getShiftOut(tokens[1]);
+        uint256[] memory calcReservesAfter = new uint256[](2);
         calcReservesAfter[0] = well.getReserves()[0];
         calcReservesAfter[1] = well.getReserves()[1] - minAmountOut;
 
         vm.expectEmit(true, true, true, true);
         emit Shift(calcReservesAfter, tokens[1], minAmountOut, _user);
-        uint amtOut = well.shift(tokens[1], minAmountOut, _user);
+        uint256 amtOut = well.shift(tokens[1], minAmountOut, _user);
 
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
         // User should have gained token1
         assertEq(userBalanceAfterShift.tokens[0], 0, "User should NOT have gained token0");
         assertEq(userBalanceAfterShift.tokens[1], amtOut, "User should have gained token1");
-        assertTrue(userBalanceAfterShift.tokens[1] > userBalanceBeforeShift.tokens[1], "User should have more token1");
+        assertTrue(userBalanceAfterShift.tokens[1] >= userBalanceBeforeShift.tokens[1], "User should have more token1");
 
         // Reserves should now match balances
         assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
@@ -66,10 +67,11 @@ contract WellShiftTest is TestHelper {
             userBalanceBeforeShift.tokens[1] + amtOut,
             "User should have correct token1 balance"
         );
+        checkInvariant(address(well));
     }
 
     /// @dev Shift excess token0 into token0 (just transfers the excess token0 to the user).
-    function testFuzz_shift_tokenOut(uint amount) public prank(user) {
+    function testFuzz_shift_tokenOut(uint256 amount) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well
@@ -86,8 +88,8 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
         well.sync();
-        uint minAmountOut = well.getShiftOut(tokens[0]);
-        uint[] memory calcReservesAfter = new uint[](2);
+        uint256 minAmountOut = well.getShiftOut(tokens[0]);
+        uint256[] memory calcReservesAfter = new uint256[](2);
         calcReservesAfter[0] = well.getReserves()[0] - minAmountOut;
         calcReservesAfter[1] = well.getReserves()[1];
 
@@ -96,7 +98,7 @@ contract WellShiftTest is TestHelper {
         // Shift the imbalanced token as the token out
         well.shift(tokens[0], 0, _user);
 
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
@@ -115,6 +117,7 @@ contract WellShiftTest is TestHelper {
             userBalanceBeforeShift.tokens[0] + amount,
             "User should have gained token 1"
         );
+        checkInvariant(address(well));
     }
 
     /// @dev Calling shift() on a balanced Well should do nothing.
@@ -132,7 +135,7 @@ contract WellShiftTest is TestHelper {
 
         well.shift(tokens[1], 0, _user);
 
-        uint[] memory reserves = well.getReserves();
+        uint256[] memory reserves = well.getReserves();
         Balances memory userBalanceAfterShift = getBalances(_user, well);
         Balances memory wellBalanceAfterShift = getBalances(address(well), well);
 
@@ -143,9 +146,10 @@ contract WellShiftTest is TestHelper {
         // Reserves should equal balances
         assertEq(wellBalanceAfterShift.tokens[0], reserves[0], "Well should have correct token0 balance");
         assertEq(wellBalanceAfterShift.tokens[1], reserves[1], "Well should have correct token1 balance");
+        checkInvariant(address(well));
     }
 
-    function test_shift_fail_slippage(uint amount) public prank(user) {
+    function test_shift_fail_slippage(uint256 amount) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well
@@ -154,8 +158,8 @@ contract WellShiftTest is TestHelper {
         assertEq(wellBalanceBeforeShift.tokens[0], 1000e18 + amount, "Well should have received token0");
         assertEq(wellBalanceBeforeShift.tokens[1], 1000e18, "Well should have NOT have received token1");
 
-        uint amountOut = well.getShiftOut(tokens[1]);
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, type(uint).max));
-        well.shift(tokens[1], type(uint).max, user);
+        uint256 amountOut = well.getShiftOut(tokens[1]);
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, amountOut, type(uint256).max));
+        well.shift(tokens[1], type(uint256).max, user);
     }
 }

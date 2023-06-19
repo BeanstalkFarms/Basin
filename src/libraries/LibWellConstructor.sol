@@ -32,9 +32,6 @@ library LibWellConstructor {
      * Arbitrary-length bytes are applied to the end of the encoded bytes array
      * for easy reading of statically-sized data.
      * 
-     * FIXME: if this is expected to be called statically, we might provide some
-     * common-sense checks, for example enforcing that there are no duplicate
-     * tokens in `_tokens`.
      */
     function encodeWellImmutableData(
         address _aquifer,
@@ -43,7 +40,7 @@ library LibWellConstructor {
         Call[] memory _pumps
     ) internal pure returns (bytes memory immutableData) {
         bytes memory packedPumps;
-        for (uint i; i < _pumps.length; ++i) {
+        for (uint256 i; i < _pumps.length; ++i) {
             packedPumps = abi.encodePacked(
                 packedPumps,            // previously packed pumps
                 _pumps[i].target,       // pump address
@@ -73,7 +70,7 @@ library LibWellConstructor {
     ) public view returns (bytes memory initFunctionCall) {
         string memory name = LibContractInfo.getSymbol(address(_tokens[0]));
         string memory symbol = name;
-        for (uint i = 1; i < _tokens.length; ++i) {
+        for (uint256 i = 1; i < _tokens.length; ++i) {
             name = string.concat(name, ":", LibContractInfo.getSymbol(address(_tokens[i])));
             symbol = string.concat(symbol, LibContractInfo.getSymbol(address(_tokens[i])));
         }

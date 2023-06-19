@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ */
 
 pragma solidity ^0.8.17;
 
@@ -10,7 +12,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
 import {Call, IERC20} from "src/Well.sol";
 
 /**
- * @title MockStaticWell 
+ * @title MockStaticWell
  * @author Silo Chad
  * @notice Simplified Well implementation which stores configuration in immutable
  * storage during construction.
@@ -75,18 +77,18 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
     function wellData() public view returns (bytes memory) {
         return bytes32ToBytes(WELL_DATA);
     }
-    
-    /// @dev Read a uint off the front of immutable storage applied during Clone.
+
+    /// @dev Read a uint256 off the front of immutable storage applied during Clone.
     /// Since the immutable variables defined above are instantiated during
     /// construction, their length is included in the offset; i.e., immutable
     /// vars added using Clone begin at index 0. See {Clone._getImmutableArgsOffset}.
-    function immutableDataFromClone() public pure returns (uint) {
+    function immutableDataFromClone() public pure returns (uint256) {
         return _getArgUint256(0);
     }
 
     /// @dev Inefficient way to convert bytes32 back to bytes without padding
     function bytes32ToBytes(bytes32 data) internal pure returns (bytes memory) {
-        uint i = 0;
+        uint256 i = 0;
         while (i < 32 && uint8(data[i]) != 0) {
             ++i;
         }

@@ -14,11 +14,11 @@ import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.s
 
 contract PumpLongevityTest is TestHelper {
     using ABDKMathQuad for bytes16;
-    using ABDKMathQuad for uint;
+    using ABDKMathQuad for uint256;
 
     GeoEmaAndCumSmaPump pump;
     MockReserveWell mWell;
-    uint[] b = new uint[](2);
+    uint256[] b = new uint256[](2);
 
     constructor() {}
 
@@ -35,33 +35,31 @@ contract PumpLongevityTest is TestHelper {
 
     function testIterate() public prank(user) {
         bytes32 seed = bytes32(0);
-        uint n = 2;
-        uint[] memory balances;
+        uint256 n = 2;
+        uint256[] memory balances;
         uint40 timeStep;
-        uint timestamp = block.timestamp;
-        for (uint i; i < 30_000; ++i) {
+        uint256 timestamp = block.timestamp;
+        for (uint256 i; i < 30_000; ++i) {
             (balances, timeStep, seed) = generateRandomUpdate(n, seed);
             // console.log("Time Step: ", timeStep);
-            // for (uint j; j < n; ++j) {
+            // for (uint256 j; j < n; ++j) {
             //     console.log("Balance", j, balances[j]);
             // }
             increaseTime(timeStep);
             mWell.update(address(pump), balances, new bytes(0));
         }
 
-        // TODO: Add tests revolving around a subsequent update.
-
-        // uint[] memory lastReserves = pump.readLastReserves(address(mWell));
-        // uint[] memory currentReserves = pump.readInstantaneousReserves(address(mWell));
+        // uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        // uint256[] memory currentReserves = pump.readInstantaneousReserves(address(mWell));
         // bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(address(mWell));
 
-        // for (uint i; i < n; ++i) {
+        // for (uint256 i; i < n; ++i) {
         //     console.log("Reserve", i, balances[i]);
         //     console.log("Last Reserve", i, lastReserves[i]);
         //     console.log("Current Reserve", i, currentReserves[i]);
         //     console.logBytes16(lastCumulativeReserves[i]);
         // }
-        uint deltaTimestamp = block.timestamp - timestamp;
+        uint256 deltaTimestamp = block.timestamp - timestamp;
         console.log("Time passed:", deltaTimestamp / 60 / 60 / 24 / 365, "years");
     }
 }
