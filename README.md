@@ -1,6 +1,29 @@
-<img src="https://user-images.githubusercontent.com/28496268/236340348-d8d28a8c-5e7b-41c5-a0f1-88e417328d1c.png" alt="Basin logo" align="right" width="120" />
+<img src="https://github.com/BeanstalkFarms/Beanstalk-Brand-Assets/blob/main/basin/basin(green)-512x512.png" alt="Basin logo" align="right" width="120" />
 
 # Basin
+
+Code Version: `DRAFT` <br>
+Whitepaper Version: `DRAFT`
+
+## About
+
+Basin is a permissionless fiat stablecoin protocol built on Ethereum.
+
+- [Audits](#repository)
+- [Documentation](#documentation)
+    - [Motivation](#motivation)
+- [License](#license)
+
+## Audits
+
+* [Cyfrin Basin Audit](https://basin.exchange/cyfrin-basin-audit.pdf)
+* [Halborn Basin Audit](https://basin.exchange/halborn-basin-audit.pdf)
+
+## Documentation
+
+A draft of the Basin whitepaper is available [here](https://basin.exchange/basin.pdf).
+
+A draft of the Multi Flow Pump whitepaper (GeoEmaAndCumSmaPump) is available [here](https://basin.exchange/multi-flow-pump.pdf).
 
 A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.
 
@@ -23,7 +46,7 @@ Including a Pump is optional.
 
 Each Well implements ERC-20, ERC-2612 and the [{IWell}](/src/interfaces/IWell.sol) interface.
 
-## Motivation
+### Motivation
 
 Allowing composability of the pricing function and oracle at the Well level is a deliberate design decision with significant implications. 
 
@@ -34,3 +57,7 @@ However, this architecture shifts much of the attack surface area to the Well's 
 The Wells architecture aims to outline a simple interface for composable AMMs and leave the process of evaluating a given Well's trustworthiness as the responsibility of the user. To this end, future work may focus on development of on-chain Well registries and factories which create or highlight Wells composed of known components.
 
 An example factory implementation is provided in [{Aquifer}](/src/Auquifer.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
+
+## License
+
+[MIT](https://github.com/BeanstalkFarms/Basin/blob/master/LICENSE.txt)
