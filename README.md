@@ -7,7 +7,7 @@ Whitepaper Version: `DRAFT`
 
 ## About
 
-Basin is a permissionless fiat stablecoin protocol built on Ethereum.
+Basin is a composable EVM-native decentralized exchange protocol.
 
 - [Audits](#repository)
 - [Documentation](#documentation)
