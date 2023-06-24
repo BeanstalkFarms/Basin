@@ -13,6 +13,7 @@ import {Users} from "test/helpers/Users.sol";
 import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {StableSwap2} from "src/functions/StableSwap2.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
@@ -125,6 +126,51 @@ abstract contract TestHelper is Test, WellDeployer {
         user2 = _user[1];
     }
 
+    function setUpStableSwapWell(uint256 a) internal { 
+        setUpStableSwapWell(a, deployPumps(1), deployMockTokens(2));
+    }
+
+    function setUpStableSwapWell(
+        uint256 a, 
+        Call[] memory _pumps, 
+        IERC20[] memory _tokens
+    ) internal {
+        // encode wellFunction Data
+        bytes memory wellFunctionData = abi.encode(
+            a,
+            _tokens[0], 
+            _tokens[1]
+        );
+        Call memory _wellFunction = Call(
+            address(new StableSwap2()), 
+            wellFunctionData
+        );
+        tokens = _tokens;
+        wellFunction = _wellFunction;
+        for (uint i = 0; i < _pumps.length; i++) {
+            pumps.push(_pumps[i]);
+        }
+
+        initUser();
+
+        wellImplementation = deployWellImplementation();
+        aquifer = new Aquifer();
+        well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
+
+        // Mint mock tokens to user
+        mintTokens(user, initialLiquidity);
+        mintTokens(user2, initialLiquidity);
+        approveMaxTokens(user, address(well));
+        approveMaxTokens(user2, address(well));
+
+        // Mint mock tokens to TestHelper
+        mintTokens(address(this), initialLiquidity);
+        approveMaxTokens(address(this), address(well));
+
+        // Add initial liquidity from TestHelper
+        addLiquidityEqualAmount(address(this), initialLiquidity);
+    }
+
     //////////// Test Tokens ////////////
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
@@ -199,12 +245,12 @@ abstract contract TestHelper is Test, WellDeployer {
         _wellFunction.data = new bytes(0);
     }
 
-    function deployWellFunction(address _target) internal returns (Call memory _wellFunction) {
+    function deployWellFunction(address _target) internal pure returns (Call memory _wellFunction) {
         _wellFunction.target = _target;
         _wellFunction.data = new bytes(0);
     }
 
-    function deployWellFunction(address _target, bytes memory _data) internal returns (Call memory _wellFunction) {
+    function deployWellFunction(address _target, bytes memory _data) internal pure returns (Call memory _wellFunction) {
         _wellFunction.target = _target;
         _wellFunction.data = _data;
     }
@@ -339,10 +385,19 @@ abstract contract TestHelper is Test, WellDeployer {
         Call memory _wellFunction = IWell(_well).wellFunction();
         assertLe(
             IERC20(_well).totalSupply(),
-            IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data)
+            IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data),
+            'totalSupply() is greater than calcLpTokenSupply()'
         );
     }
 
+    function checkStableSwapInvariant(address _well) internal {
+        uint[] memory _reserves = IWell(_well).getReserves();
+        Call memory _wellFunction = IWell(_well).wellFunction();
+        assertApproxEqAbs(
+            IERC20(_well).totalSupply(),
+            IWellFunction(_wellFunction.target).calcLpTokenSupply(_reserves, _wellFunction.data),
+            2);
+    }
     function getPrecisionForReserves(uint256[] memory reserves) internal pure returns (uint256 precision) {
         precision = type(uint256).max;
         for (uint256 i; i < reserves.length; ++i) {
