@@ -6,6 +6,8 @@ import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
 import {MockFunctionBad} from "mocks/functions/MockFunctionBad.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
+import {IWellErrors} from "src/interfaces/IWellErrors.sol";
+
 
 contract WellSwapFromStableSwapTest is SwapHelper {
     function setUp() public {
@@ -49,7 +51,7 @@ contract WellSwapFromStableSwapTest is SwapHelper {
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapFrom_revertIf_sameToken() public prank(user) {
-        vm.expectRevert(IWell.InvalidTokens.selector);
+        vm.expectRevert(IWellErrors.InvalidTokens.selector);
         well.swapFrom(tokens[0], tokens[0], 100 * 1e18, 0, user, type(uint).max);
     }
 
@@ -57,14 +59,14 @@ contract WellSwapFromStableSwapTest is SwapHelper {
     function test_swapFrom_revertIf_minAmountOutTooHigh() public prank(user) {
         uint amountIn = 10 * 1e18;
         uint amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn);
-        uint minAmountOut = amountOut + 1e18; // actual: 500
+        uint minAmountOut = amountOut + 1e18;
 
-        vm.expectRevert(abi.encodeWithSelector(IWell.SlippageOut.selector, amountOut, minAmountOut));
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, amountOut, minAmountOut));
         well.swapFrom(tokens[0], tokens[1], amountIn, minAmountOut, user, type(uint).max);
     }
 
     function test_swapFrom_revertIf_expired() public {
-        vm.expectRevert(IWell.Expired.selector);
+        vm.expectRevert(IWellErrors.Expired.selector);
         well.swapFrom(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
     }
 
