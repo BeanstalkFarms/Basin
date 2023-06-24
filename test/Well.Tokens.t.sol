@@ -24,7 +24,7 @@ contract WellInternalTest is Well, Test {
     }
 
     function test_getIJ() public {
-        (uint i, uint j) = _getIJ(_tokens, token0, token1);
+        (uint256 i, uint256 j) = _getIJ(_tokens, token0, token1);
         assertEq(i, 0);
         assertEq(j, 1);
 
@@ -33,21 +33,21 @@ contract WellInternalTest is Well, Test {
         assertEq(j, 0);
     }
 
-    function testFuzz_getIJ(uint n) public {
+    function testFuzz_getIJ(uint256 n) public {
         n = bound(n, 2, 16);
 
         _tokens = new IERC20[](n);
-        for (uint i = 1; i <= n; ++i) {
+        for (uint256 i = 1; i <= n; ++i) {
             _tokens[i - 1] = IERC20(address(uint160(i)));
         }
 
         // Check all combinations of tokens
-        for (uint i = 0; i < n; ++i) {
-            for (uint j = 0; j < n; ++j) {
+        for (uint256 i; i < n; ++i) {
+            for (uint256 j; j < n; ++j) {
                 if (i == j) {
                     vm.expectRevert(InvalidTokens.selector);
                 }
-                (uint i_, uint j_) = _getIJ(_tokens, _tokens[i], _tokens[j]);
+                (uint256 i_, uint256 j_) = _getIJ(_tokens, _tokens[i], _tokens[j]);
                 if (i != j) {
                     assertEq(i_, i, "i");
                     assertEq(j_, j, "j");
@@ -75,10 +75,10 @@ contract WellInternalTest is Well, Test {
     }
 
     function test_getJ() public {
-        uint i = _getJ(_tokens, token0);
+        uint256 i = _getJ(_tokens, token0);
         assertEq(i, 0);
 
-        uint j = _getJ(_tokens, token1);
+        uint256 j = _getJ(_tokens, token1);
         assertEq(j, 1);
     }
 

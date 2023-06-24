@@ -31,7 +31,7 @@ interface ICumulativePump {
     function readTwaReserves(
         address well,
         bytes calldata startCumulativeReserves,
-        uint startTimestamp,
+        uint256 startTimestamp,
         bytes memory data
-    ) external view returns (uint[] memory twaReserves, bytes memory cumulativeReserves);
+    ) external view returns (uint256[] memory twaReserves, bytes memory cumulativeReserves);
 }

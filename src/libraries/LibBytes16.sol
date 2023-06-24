@@ -23,9 +23,9 @@ library LibBytes16 {
                 sstore(slot, add(mload(add(reserves, 32)), shr(128, mload(add(reserves, 64)))))
             }
         } else {
-            uint maxI = reserves.length / 2; // number of fully-packed slots
-            uint iByte; // byte offset of the current reserve
-            for (uint i; i < maxI; ++i) {
+            uint256 maxI = reserves.length / 2; // number of fully-packed slots
+            uint256 iByte; // byte offset of the current reserve
+            for (uint256 i; i < maxI; ++i) {
                 iByte = i * 64;
                 assembly {
                     sstore(
@@ -52,7 +52,7 @@ library LibBytes16 {
     /**
      * @dev Read `n` packed uint128 reserves at storage position `slot`.
      */
-    function readBytes16(bytes32 slot, uint n) internal view returns (bytes16[] memory reserves) {
+    function readBytes16(bytes32 slot, uint256 n) internal view returns (bytes16[] memory reserves) {
         // Initialize array with length `n`, fill it in via assembly
         reserves = new bytes16[](n);
 
@@ -65,8 +65,8 @@ library LibBytes16 {
             return reserves;
         }
 
-        uint iByte;
-        for (uint i = 1; i <= n; ++i) {
+        uint256 iByte;
+        for (uint256 i = 1; i <= n; ++i) {
             // `iByte` is the byte position for the current slot:
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2

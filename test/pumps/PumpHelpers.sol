@@ -4,29 +4,33 @@ pragma solidity >=0.8.0;
 import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {console} from "forge-std/Test.sol";
 
-uint constant MAX_128 = 2 ** 128;
-uint constant MAX_E18 = 1e18;
+uint256 constant MAX_128 = 2 ** 128;
+uint256 constant MAX_E18 = 1e18;
 
-function from18(uint a) pure returns (bytes16 result) {
-    return ABDKMathQuad.from128x128(int(a * MAX_128 / MAX_E18));
+function from18(uint256 a) pure returns (bytes16 result) {
+    return ABDKMathQuad.from128x128(int256(a * MAX_128 / MAX_E18));
 }
 
-function to18(bytes16 a) pure returns (uint result) {
-    return uint(ABDKMathQuad.to128x128(a)) * MAX_E18 / MAX_128;
+function to18(bytes16 a) pure returns (uint256 result) {
+    return uint256(ABDKMathQuad.to128x128(a)) * MAX_E18 / MAX_128;
 }
 
-function simCapReserve50Percent(uint lastReserve, uint reserve, uint blocks) view returns (uint cappedReserve) {
-    uint limitReserve = lastReserve * 1e18;
+function simCapReserve50Percent(
+    uint256 lastReserve,
+    uint256 reserve,
+    uint256 blocks
+) view returns (uint256 cappedReserve) {
+    uint256 limitReserve = lastReserve * 1e18;
 
-    uint multiplier = lastReserve < reserve ? 1.5e6 : 0.5e6;
+    uint256 multiplier = lastReserve < reserve ? 1.5e6 : 0.5e6;
 
-    uint tempReserve;
-    for (uint i; i < blocks; ++i) {
+    uint256 tempReserve;
+    for (uint256 i; i < blocks; ++i) {
         unchecked {
             tempReserve = limitReserve * multiplier / 1e6;
         }
         if (lastReserve < reserve && tempReserve < limitReserve) {
-            limitReserve = type(uint).max;
+            limitReserve = type(uint256).max;
             break;
         }
         limitReserve = tempReserve;
@@ -42,15 +46,15 @@ function simCapReserve50Percent(uint lastReserve, uint reserve, uint blocks) vie
 }
 
 function generateRandomUpdate(
-    uint n,
+    uint256 n,
     bytes32 seed
-) pure returns (uint[] memory balances, uint40 timeIncrease, bytes32 newSeed) {
-    balances = new uint[](n);
+) pure returns (uint256[] memory balances, uint40 timeIncrease, bytes32 newSeed) {
+    balances = new uint256[](n);
     seed = stepSeed(seed);
-    timeIncrease = uint40(uint(seed)) % 50_000_000;
-    for (uint i; i < n; ++i) {
+    timeIncrease = uint40(uint256(seed)) % 50_000_000;
+    for (uint256 i; i < n; ++i) {
         seed = stepSeed(seed);
-        balances[i] = uint(uint128(uint(seed))); // case to uint128
+        balances[i] = uint256(uint128(uint256(seed))); // case to uint128
     }
     newSeed = seed;
 }

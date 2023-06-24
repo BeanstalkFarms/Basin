@@ -5,6 +5,8 @@ pragma solidity ^0.8.17;
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 import {SafeMath} from "oz/utils/math/SafeMath.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+
 /**
  * @author Publius, Brean
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
@@ -22,31 +24,38 @@ contract StableSwap2 is IWellFunction {
     using LibMath for uint;
     using SafeMath for uint;
 
-   
-
-    // A parameter,
-    // uint public immutable a;
-    // uint public immutable Ann;
-
     // 2 token Pool. 
     uint constant N = 2;
+
+    // A precision
     uint constant A_PRECISION = 100;
+    
+    // Precision that all pools tokens will be converted to.
+    uint constant POOL_PRECISION_DECIMALS = 18;
+
+    // Maximum A parameter. 
+    uint constant MAX_A = 10000 * A_PRECISION;
+
+    // Errors
+    error InvalidAParameter(uint256);
+    error InvalidTokens();
+    error InvalidTokenDecimals(uint256);
 
     /**
      * This Well function requires 3 parameters from wellFunctionData:
-     * 1: A parameter
-     * 2: tkn0Scalar
-     * 3: tkn1Scalar
+     * 1: A parameter 
+     * 2: tkn0 address
+     * 3: tkn1 address
      * 
      * @dev The StableSwap curve assumes that both tokens use the same decimals (max 1e18).
-     * TKNX_SCALAR scales up the decimals if needed to 1e18.
+     * tkn0 and tkn1 is used to call decimals() on the tokens to scale to 1e18.
      * For example, USDC and BEAN has 6 decimals (TKX_SCALAR = 1e12),
      * while DAI has 18 decimals (TKX_SCALAR = 1).
      */
     struct WellFunctionData {
         uint256 a; // A parameter
-        uint256 tkn0Scalar;
-        uint256 tkn1Scalar;
+        address tkn0;
+        address tkn1;
     }
 
     /**
@@ -59,19 +68,24 @@ contract StableSwap2 is IWellFunction {
     function calcLpTokenSupply(
         uint[] calldata reserves,
         bytes calldata _wellFunctionData
-    ) external pure override returns (uint lpTokenSupply) {
-        (WellFunctionData memory wfd, uint256 Ann) = decodeWellFunctionData(_wellFunctionData);
-        uint256 sumReserves = reserves[0] + reserves[1];
+    ) external view override returns (uint lpTokenSupply) {
+        (
+            , 
+            uint256 Ann,
+            uint256[2] memory precisionMultipliers
+        ) = verifyWellFunctionData(_wellFunctionData);
+
+        
+        uint256 sumReserves = reserves[0] * precisionMultipliers[0] + reserves[1] * precisionMultipliers[1];
         if(sumReserves == 0) return 0;
-       
         lpTokenSupply = sumReserves;
 
         // wtf is this bullshit
         for(uint i = 0; i < 255; i++){
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
-            dP = dP.mul(lpTokenSupply).div(reserves[0].mul(wfd.tkn0Scalar).mul(N));
-            dP = dP.mul(lpTokenSupply).div(reserves[1].mul(wfd.tkn1Scalar).mul(N));
+            dP = dP.mul(lpTokenSupply).div(reserves[0].mul(precisionMultipliers[0]).mul(N));
+            dP = dP.mul(lpTokenSupply).div(reserves[1].mul(precisionMultipliers[1]).mul(N));
             uint256 prevReserves = lpTokenSupply;
             lpTokenSupply = Ann
                 .mul(sumReserves)
@@ -107,14 +121,17 @@ contract StableSwap2 is IWellFunction {
         uint j,
         uint lpTokenSupply,
         bytes calldata _wellFunctionData
-    ) external pure override returns (uint reserve) {
-        (WellFunctionData memory wfd, uint256 Ann) = decodeWellFunctionData(_wellFunctionData);
+    ) external view override returns (uint reserve) {
+        (
+            , 
+            uint256 Ann,
+            uint256[2] memory precisionMultipliers
+        ) = verifyWellFunctionData(_wellFunctionData);
         require(j < N);
         uint256 c = lpTokenSupply;
         uint256 sumReserves;
         uint256 prevReserve; 
-
-        sumReserves = j == 0 ? reserves[1].mul(wfd.tkn1Scalar) : reserves[0].mul(wfd.tkn0Scalar);
+        sumReserves = j == 0 ? reserves[1].mul(precisionMultipliers[1]) : reserves[0].mul(precisionMultipliers[0]);
         c = c.mul(lpTokenSupply).div(sumReserves.mul(N));
         c = c.mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
         uint256 b = 
@@ -160,11 +177,15 @@ contract StableSwap2 is IWellFunction {
         uint lpTokenSupply,
         bytes calldata _wellFunctionData
     ) external view returns (uint[] memory underlyingAmounts) {
-        (WellFunctionData memory wfd, ) = decodeWellFunctionData(_wellFunctionData);
+        (  
+            , 
+            ,
+            uint256[2] memory precisionMultipliers
+        ) = verifyWellFunctionData(_wellFunctionData);
         underlyingAmounts = new uint[](2);
         // overflow cannot occur as lpTokenAmount could not be calculated.
-        underlyingAmounts[0] = lpTokenAmount * reserves[0] * wfd.tkn0Scalar / lpTokenSupply;
-        underlyingAmounts[1] = lpTokenAmount * reserves[1] * wfd.tkn1Scalar  / lpTokenSupply;
+        underlyingAmounts[0] = lpTokenAmount * reserves[0].mul(precisionMultipliers[0]) / lpTokenSupply;
+        underlyingAmounts[1] = lpTokenAmount * reserves[1].mul(precisionMultipliers[1]) / lpTokenSupply;
     }
 
     function name() external pure override returns (string memory) {
@@ -175,8 +196,21 @@ contract StableSwap2 is IWellFunction {
         return "SS2";
     }
 
-    function decodeWellFunctionData(bytes memory data) public pure returns (WellFunctionData memory wfd, uint256 Ann){
-        wfd = abi.decode(data, (WellFunctionData));
-        Ann = wfd.a * N * N * A_PRECISION;
+    function verifyWellFunctionData(
+        bytes memory data
+    ) public view returns (
+        uint256 a, 
+        uint256 Ann,
+        uint256[2] memory precisionMultipliers
+    ){
+        WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
+        a = wfd.a;
+        if (a == 0) revert InvalidAParameter(a);
+        if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
+        if(IERC20(wfd.tkn0).decimals() > 18) revert InvalidTokenDecimals(IERC20(wfd.tkn0).decimals()); 
+        Ann = a * N * N * A_PRECISION;
+        precisionMultipliers[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn0).decimals()));
+        precisionMultipliers[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn1).decimals()));
     }
+
 }

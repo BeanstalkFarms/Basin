@@ -7,8 +7,8 @@ import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {console, TestHelper} from "test/TestHelper.sol";
 
 contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
-    uint[5] testCasesInput = [1, 2, 3, 4, 5];
-    uint[5] testCasesOutput = [32, 32, 64, 64, 96];
+    uint256[5] testCasesInput = [1, 2, 3, 4, 5];
+    uint256[5] testCasesOutput = [32, 32, 64, 64, 96];
 
     constructor()
         GeoEmaAndCumSmaPump(
@@ -31,13 +31,13 @@ contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
         uint40 providedBlock = 100;
         uint40 expectedDelta = 100;
 
-        uint delta = _getDeltaTimestamp(providedBlock);
+        uint256 delta = _getDeltaTimestamp(providedBlock);
 
         assertEq(delta, expectedDelta);
     }
 
     function test_getSlotOffset() public {
-        for (uint i = 0; i < testCasesInput.length; i++) {
+        for (uint256 i; i < testCasesInput.length; i++) {
             assertEq(_getSlotsOffset(testCasesInput[i]), testCasesOutput[i]);
         }
     }

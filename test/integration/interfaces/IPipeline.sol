@@ -43,12 +43,18 @@ interface IPipeline {
 interface IDepot {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
-        uint value
+        uint256 value
     ) external payable returns (bytes[] memory results);
 
     function farm(bytes[] calldata data) external payable returns (bytes[] memory results);
 
-    function transferToken(IERC20 token, address recipient, uint amount, From fromMode, To toMode) external payable;
+    function transferToken(
+        IERC20 token,
+        address recipient,
+        uint256 amount,
+        From fromMode,
+        To toMode
+    ) external payable;
 }
 
 enum From {
@@ -68,7 +74,7 @@ interface IBeanstalk {
         IERC20 token,
         address sender,
         address recipient,
-        uint amount,
+        uint256 amount,
         To toMode
     ) external payable;
 
@@ -76,8 +82,8 @@ interface IBeanstalk {
         address owner,
         address spender,
         address token,
-        uint value,
-        uint deadline,
+        uint256 value,
+        uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
@@ -88,23 +94,23 @@ interface IBeanstalk {
         address recipient,
         address token,
         uint32 season,
-        uint amount
-    ) external payable returns (uint bdv);
+        uint256 amount
+    ) external payable returns (uint256 bdv);
 
     function transferDeposits(
         address sender,
         address recipient,
         address token,
         uint32[] calldata seasons,
-        uint[] calldata amounts
-    ) external payable returns (uint[] memory bdvs);
+        uint256[] calldata amounts
+    ) external payable returns (uint256[] memory bdvs);
 
     function permitDeposits(
         address owner,
         address spender,
         address[] calldata tokens,
-        uint[] calldata values,
-        uint deadline,
+        uint256[] calldata values,
+        uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
@@ -114,8 +120,8 @@ interface IBeanstalk {
         address owner,
         address spender,
         address token,
-        uint value,
-        uint deadline,
+        uint256 value,
+        uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s

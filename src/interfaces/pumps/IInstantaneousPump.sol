@@ -14,5 +14,5 @@ interface IInstantaneousPump {
     function readInstantaneousReserves(
         address well,
         bytes memory data
-    ) external view returns (uint[] memory reserves);
+    ) external view returns (uint256[] memory reserves);
 }

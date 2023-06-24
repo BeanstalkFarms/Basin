@@ -7,7 +7,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
 contract LibMathTest is TestHelper {
     // Wells permit up to  16 tokens. Currently, `nthRoot` is only used
     // with `a = reserves.length` which is constrained to `2 <= a <= 16`.
-    uint MAX_NTH_ROOT = 16;
+    uint256 MAX_NTH_ROOT = 16;
 
     function setUp() public {}
 
@@ -17,7 +17,7 @@ contract LibMathTest is TestHelper {
 
     /// @dev zero cases for all
     function test_nthRoot_zero() public {
-        for (uint n = 2; n <= MAX_NTH_ROOT; ++n) {
+        for (uint256 n = 2; n <= MAX_NTH_ROOT; ++n) {
             assertEq(LibMath.nthRoot(0, n), 0);
         }
     }
@@ -27,17 +27,17 @@ contract LibMathTest is TestHelper {
         assertEq(LibMath.nthRoot(4, 2), LibMath.sqrt(4));
     }
 
-    function testFuzz_nthRoot_sqrtMatch(uint a) public {
-        vm.assume(a < type(uint).max);
+    function testFuzz_nthRoot_sqrtMatch(uint256 a) public {
+        vm.assume(a < type(uint256).max);
         assertEq(LibMath.nthRoot(a, 2), LibMath.sqrt(a));
     }
 
     /// @dev for all even roots, nthRoot exactly matches `n` sqrt iterations
-    function testFuzz_nthRoot_sqrtMatchAll(uint a) public {
+    function testFuzz_nthRoot_sqrtMatchAll(uint256 a) public {
         // every even nth root: 2 4 8 16
-        for (uint i = 1; i <= 4; ++i) {
-            uint v = a;
-            for (uint j = 0; j < i; ++j) {
+        for (uint256 i = 1; i <= 4; ++i) {
+            uint256 v = a;
+            for (uint256 j; j < i; ++j) {
                 v = LibMath.sqrt(v);
             }
             assertEq(LibMath.nthRoot(a, 2 ** i), v, "nthRoot != nth sqrt");
@@ -98,21 +98,21 @@ contract LibMathTest is TestHelper {
         assertEq(LibMath.roundUpDiv(5, 4), 2);
     }
 
-    function test_fuzz_roundUpDiv(uint a, uint b) public {
+    function test_fuzz_roundUpDiv(uint256 a, uint256 b) public {
         if (a > 0 && b == 0) {
             vm.expectRevert();
             LibMath.roundUpDiv(a, b);
             return;
         }
 
-        uint c = LibMath.roundUpDiv(a, b);
+        uint256 c = LibMath.roundUpDiv(a, b);
 
         if (a == 0) {
             assertEq(c, 0);
             return;
         }
 
-        uint a_guess;
+        uint256 a_guess;
         unchecked {
             a_guess = c * b;
         }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {console, TestHelper} from "test/TestHelper.sol";
+import {console, TestHelper, IERC20} from "test/TestHelper.sol";
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
 import {StableSwap2} from "src/functions/StableSwap2.sol";
 
@@ -38,13 +38,23 @@ contract StableSwapTest is WellFunctionHelper {
     uint STATE_C_B1 = 2_221_929_790_566_403_172_822_276_028; // 2.221e19
 
     /// @dev See {calcLpTokenSupply}.
-    uint MAX_RESERVE = 6e31;
+    uint MAX_RESERVE = 1e32;
+    
 
     //////////// SETUP ////////////
 
     function setUp() public {
+        IERC20[] memory _tokens = deployMockTokens(2);
+        tokens = _tokens;
         _function = new StableSwap2();
-        _data = abi.encode(StableSwap2.WellFunctionData(10,1,1));
+        
+        _data = abi.encode(
+            StableSwap2.WellFunctionData(
+                10,
+                address(_tokens[0]),
+                address(_tokens[1])
+            )
+        );
     }
 
     function test_metadata() public {
@@ -143,8 +153,8 @@ contract StableSwapTest is WellFunctionHelper {
     /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
     function testFuzz_calcLpTokenSupply(uint[2] memory _reserves) public {
         uint[] memory reserves = new uint[](2);
-        reserves[0] = bound(_reserves[0], 1e18, MAX_RESERVE);
-        reserves[1] = bound(_reserves[1], 1e18, MAX_RESERVE);
+        reserves[0] = bound(_reserves[0], 10e18, MAX_RESERVE);
+        reserves[1] = bound(_reserves[1], 10e18, MAX_RESERVE);
         
         uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
         uint[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, _data);
@@ -155,12 +165,20 @@ contract StableSwapTest is WellFunctionHelper {
 
     //////////// FUZZ ////////////
 
-    function testFuzz_stableSwap(uint x, uint y) public {
+    function testFuzz_stableSwap(uint x, uint y, uint a) public {
         uint[] memory reserves = new uint[](2);
-        bytes memory _data = abi.encode(StableSwap2.WellFunctionData(10,1,1));
+        reserves[0] = bound(x, 10e18, MAX_RESERVE);
+        reserves[1] = bound(y, 10e18, MAX_RESERVE);
+        a = bound(a, 1, 1000000);
 
-        reserves[0] = bound(x, 1e18, MAX_RESERVE);
-        reserves[1] = bound(y, 1e18, MAX_RESERVE);
+
+        _data = abi.encode(
+            StableSwap2.WellFunctionData(
+                a,
+                address(tokens[0]),
+                address(tokens[1])
+            )
+        );
 
         uint lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
         uint reserve0 = _function.calcReserve(reserves, 0, lpTokenSupply, _data);

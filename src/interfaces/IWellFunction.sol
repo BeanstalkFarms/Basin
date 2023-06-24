@@ -20,11 +20,11 @@ interface IWellFunction {
      * @dev Should round up to ensure that Well reserves are marginally higher to enforce calcLpTokenSupply(...) >= totalSupply()
      */
     function calcReserve(
-        uint[] memory reserves,
-        uint j,
-        uint lpTokenSupply,
+        uint256[] memory reserves,
+        uint256 j,
+        uint256 lpTokenSupply,
         bytes calldata data
-    ) external view returns (uint reserve);
+    ) external view returns (uint256 reserve);
 
     /**
      * @notice Gets the LP token supply given a list of reserves.
@@ -34,9 +34,9 @@ interface IWellFunction {
      * @dev Should round down to ensure so that the Well Token supply is marignally lower to enforce calcLpTokenSupply(...) >= totalSupply()
      */
     function calcLpTokenSupply(
-        uint[] memory reserves,
+        uint256[] memory reserves,
         bytes calldata data
-    ) external view returns (uint lpTokenSupply);
+    ) external view returns (uint256 lpTokenSupply);
 
     /**
      * @notice Calculates the amount of each reserve token underlying a given amount of LP tokens.
@@ -50,11 +50,11 @@ interface IWellFunction {
      * does not hold, then the Well Function is invalid.
      */
     function calcLPTokenUnderlying(
-        uint lpTokenAmount,
-        uint[] memory reserves,
-        uint lpTokenSupply,
+        uint256 lpTokenAmount,
+        uint256[] memory reserves,
+        uint256 lpTokenSupply,
         bytes calldata data
-    ) external view returns (uint[] memory underlyingAmounts);
+    ) external view returns (uint256[] memory underlyingAmounts);
 
     /**
      * @notice Returns the name of the Well function.

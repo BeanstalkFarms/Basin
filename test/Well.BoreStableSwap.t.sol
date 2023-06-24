@@ -8,19 +8,8 @@ import {StableSwap2} from "src/functions/StableSwap2.sol";
 contract WellBoreStableSwapTest is TestHelper {
     /// @dev Bore a 2-token Well with StableSwap2 & several pumps.
     function setUp() public {
-        setupWell(
-            2, // 2 tokens
-            deployWellFunction(
-                address(new StableSwap2()),
-                abi.encode(StableSwap2.WellFunctionData(
-                    10, // A parameter
-                    1,  // TKN0SCALAR
-                    1   // TKN1SCALAR
-                ))
-                ),
-            deployPumps(1)
-        );
-
+        // setup a StableSwap Well with an A parameter of 10.
+        setUpStableSwapWell(10);
         // Well.sol doesn't use wellData, so it should always return empty bytes
         wellData = new bytes(0);
     }
@@ -88,19 +77,24 @@ contract WellBoreStableSwapTest is TestHelper {
     function testFuzz_bore(
         uint numberOfPumps,
         bytes[4] memory pumpData,
-        bytes memory wellFunctionBytes,
-        uint nTokens
+        uint nTokens,
+        uint a
     ) public {
         // Constraints
         numberOfPumps = bound(numberOfPumps, 0, 4);
         for (uint i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpData[i].length <= 4 * 32);
         }
-        vm.assume(wellFunctionBytes.length <= 4 * 32);
         nTokens = bound(nTokens, 2, tokens.length);
 
+        vm.assume(a > 0);
         // Get the first `nTokens` mock tokens
         IERC20[] memory wellTokens = getTokens(nTokens);
+        bytes memory wellFunctionBytes = abi.encode(
+            a, 
+            address(wellTokens[0]),
+            address(wellTokens[1])
+        );
 
         // Deploy a Well Function
         wellFunction = Call(address(new StableSwap2()), wellFunctionBytes);

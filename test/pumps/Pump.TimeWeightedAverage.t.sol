@@ -14,9 +14,9 @@ contract PumpTimeWeightedAverageTest is TestHelper {
 
     GeoEmaAndCumSmaPump pump;
     MockReserveWell mWell;
-    uint[] b = new uint[](2);
+    uint256[] b = new uint256[](2);
 
-    uint constant BLOCK_TIME = 12;
+    uint256 constant BLOCK_TIME = 12;
 
     /// @dev for this test, `user` = a Well that's calling the Pump
     function setUp() public {
@@ -36,7 +36,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
         mWell.update(address(pump), b, new bytes(0));
         mWell.update(address(pump), b, new bytes(0));
 
-        uint[] memory checkReserves = mWell.getReserves();
+        uint256[] memory checkReserves = mWell.getReserves();
         assertEq(checkReserves[0], b[0]);
         assertEq(checkReserves[1], b[1]);
     }
@@ -45,15 +45,15 @@ contract PumpTimeWeightedAverageTest is TestHelper {
         increaseTime(12);
 
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), "");
-        uint startTimestamp = block.timestamp;
+        uint256 startTimestamp = block.timestamp;
 
-        uint[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
 
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
 
         increaseTime(120);
-        uint[] memory twaReserves;
+        uint256[] memory twaReserves;
 
         (twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp, "");
 

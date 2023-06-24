@@ -14,31 +14,31 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
     }
 
     function test_addLiquidityFeeOnTransferWithFee_revertIf_minAmountOutTooHigh() public prank(user) {
-        uint[] memory amounts = new uint[](tokens.length);
-        for (uint i = 0; i < tokens.length; i++) {
+        uint256[] memory amounts = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
 
         // expected amount is 1000 * 1e24, actual will be 990 * 1e24
-        uint lpAmountOut = 990 * 1e24;
+        uint256 lpAmountOut = 990 * 1e24;
 
         vm.expectRevert(abi.encodeWithSelector(SlippageOut.selector, lpAmountOut, lpAmountOut + 1));
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint).max);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut + 1, user, type(uint256).max);
     }
 
     function test_addLiquidityFeeOnTransferWithFee_revertIf_expired() public {
         vm.expectRevert(Expired.selector);
-        well.addLiquidityFeeOnTransfer(new uint[](tokens.length), 0, user, block.timestamp - 1);
+        well.addLiquidityFeeOnTransfer(new uint256[](tokens.length), 0, user, block.timestamp - 1);
     }
 
     function test_addLiquidityFeeOnTransferWithFee_equalAmounts() public prank(user) {
-        uint[] memory amounts = new uint[](tokens.length);
-        uint[] memory feeAmounts = new uint[](tokens.length);
-        for (uint i = 0; i < tokens.length; i++) {
+        uint256[] memory amounts = new uint256[](tokens.length);
+        uint256[] memory feeAmounts = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
             feeAmounts[i] = amounts[i] * (1e18 - 1e16) / 1e18;
         }
-        uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
+        uint256 lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
@@ -48,21 +48,21 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
         action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint256).max);
         afterAddLiquidity(before, action);
     }
 
     function test_addLiquidityFeeOnTransferWithFee_oneToken() public prank(user) {
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;
 
-        uint[] memory feeAmounts = new uint[](2);
+        uint256[] memory feeAmounts = new uint256[](2);
         feeAmounts[0] = amounts[0] * (1e18 - 1e16) / 1e18;
         feeAmounts[1] = 0;
 
-        uint amountOut = 4_937_809_021_035_888_301_202_075;
-        uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
+        uint256 amountOut = 4_937_809_021_035_888_301_202_075;
+        uint256 lpAmountOut = well.getAddLiquidityOut(feeAmounts);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
@@ -74,13 +74,13 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
         assertEq(amountOut, lpAmountOut);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint256).max);
         afterAddLiquidity(before, action);
     }
 
     /// @dev Adding zero liquidity emits empty event but doesn't change reserves
     function test_addLiquidityFeeOnTransferWithFee_zeroChange() public prank(user) {
-        uint[] memory amounts = new uint[](tokens.length);
+        uint256[] memory amounts = new uint256[](tokens.length);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
@@ -88,34 +88,34 @@ contract WellAddLiquidityFeeOnTransferWithFeeTest is LiquidityHelper {
         action.amounts = amounts;
         action.lpAmountOut = 0;
         action.recipient = user;
-        action.fees = new uint[](tokens.length);
+        action.fees = new uint256[](tokens.length);
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, 0, user, type(uint).max);
+        well.addLiquidityFeeOnTransfer(amounts, 0, user, type(uint256).max);
         afterAddLiquidity(before, action);
     }
 
     /// @dev Two-token fuzz test adding liquidity in any ratio
-    function testFuzz_addLiquidityFeeOnTransferWithFee(uint x, uint y) public prank(user) {
+    function testFuzz_addLiquidityFeeOnTransferWithFee(uint256 x, uint256 y) public prank(user) {
         // amounts to add as liquidity
-        uint[] memory amounts = new uint[](2);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(x, 0, 1000e18);
         amounts[1] = bound(y, 0, 1000e18);
 
-        uint[] memory feeAmounts = new uint[](2);
+        uint256[] memory feeAmounts = new uint256[](2);
         feeAmounts[0] = amounts[0] - (amounts[0] * 1e16 / 1e18);
         feeAmounts[1] = amounts[1] - (amounts[1] * 1e16 / 1e18);
 
         Snapshot memory before;
         AddLiquidityAction memory action;
-        uint lpAmountOut = well.getAddLiquidityOut(feeAmounts);
+        uint256 lpAmountOut = well.getAddLiquidityOut(feeAmounts);
         action.amounts = amounts;
         action.lpAmountOut = lpAmountOut;
         action.recipient = user;
         action.fees = feeAmounts;
 
         (before, action) = beforeAddLiquidity(action);
-        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint).max);
+        well.addLiquidityFeeOnTransfer(amounts, lpAmountOut, user, type(uint256).max);
         afterAddLiquidity(before, action);
     }
 }
