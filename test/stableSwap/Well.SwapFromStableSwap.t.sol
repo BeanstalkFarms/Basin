@@ -11,7 +11,7 @@ import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellSwapFromStableSwapTest is SwapHelper {
     function setUp() public {
-        setUpStableSwapWell(10);
+        setupStableSwapWell(10);
     }
 
     function test_getSwapOut() public {

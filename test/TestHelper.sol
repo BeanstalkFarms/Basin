@@ -126,11 +126,11 @@ abstract contract TestHelper is Test, WellDeployer {
         user2 = _user[1];
     }
 
-    function setUpStableSwapWell(uint256 a) internal { 
-        setUpStableSwapWell(a, deployPumps(1), deployMockTokens(2));
+    function setupStableSwapWell(uint256 a) internal { 
+        setupStableSwapWell(a, deployPumps(1), deployMockTokens(2));
     }
 
-    function setUpStableSwapWell(
+    function setupStableSwapWell(
         uint256 a, 
         Call[] memory _pumps, 
         IERC20[] memory _tokens

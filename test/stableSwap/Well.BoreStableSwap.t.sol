@@ -9,7 +9,7 @@ contract WellBoreStableSwapTest is TestHelper {
     /// @dev Bore a 2-token Well with StableSwap2 & several pumps.
     function setUp() public {
         // setup a StableSwap Well with an A parameter of 10.
-        setUpStableSwapWell(10);
+        setupStableSwapWell(10);
         // Well.sol doesn't use wellData, so it should always return empty bytes
         wellData = new bytes(0);
     }
