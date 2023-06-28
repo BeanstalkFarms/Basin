@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
 
@@ -12,7 +12,7 @@ import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.s
 contract PumpTimeWeightedAverageTest is TestHelper {
     using ABDKMathQuad for bytes16;
 
-    GeoEmaAndCumSmaPump pump;
+    MultiFlowPump pump;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
@@ -22,7 +22,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new GeoEmaAndCumSmaPump(
+        pump = new MultiFlowPump(
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // block time

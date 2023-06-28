@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
 import {simCapReserve50Percent, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {console, TestHelper} from "test/TestHelper.sol";
 
-contract PumpHelpersTest is TestHelper, GeoEmaAndCumSmaPump {
+contract PumpHelpersTest is TestHelper, MultiFlowPump {
     uint256[5] testCasesInput = [1, 2, 3, 4, 5];
     uint256[5] testCasesOutput = [32, 32, 64, 64, 96];
 
     constructor()
-        GeoEmaAndCumSmaPump(
+        MultiFlowPump(
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // EVM block time

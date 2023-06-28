@@ -3,11 +3,11 @@
 pragma solidity =0.8.17;
 
 /**
- * @title IGeoEmaAndCumSmaPumpErrors defines the errors for the GeoEmaAndCumSmaPump.
+ * @title IMultiFlowPumpErrors defines the errors for the MultiFlowPump.
  * @dev The errors are separated into a different interface as not all Pump
  * implementations may share the same errors.
  */
-interface IGeoEmaAndCumSmaPumpErrors {
+interface IMultiFlowPumpErrors {
     error NotInitialized();
 
     error NoTimePassed();

@@ -2,16 +2,16 @@
 pragma solidity ^0.8.17;
 
 import {TestHelper, console} from "test/TestHelper.sol";
-import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
 import {simCapReserve50Percent, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
-contract CapBalanceTest is TestHelper, GeoEmaAndCumSmaPump {
+contract CapBalanceTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
 
     constructor()
-        GeoEmaAndCumSmaPump(
+        MultiFlowPump(
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // EVM block time

@@ -5,7 +5,7 @@
 pragma solidity ^0.8.17;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {ABDKMathQuad, GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {ABDKMathQuad, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
 
 import {generateRandomUpdate, from18, to18} from "test/pumps/PumpHelpers.sol";
@@ -16,7 +16,7 @@ contract PumpLongevityTest is TestHelper {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
-    GeoEmaAndCumSmaPump pump;
+    MultiFlowPump pump;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
@@ -25,7 +25,7 @@ contract PumpLongevityTest is TestHelper {
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new GeoEmaAndCumSmaPump(
+        pump = new MultiFlowPump(
             from18(0.5e18),
             from18(0.333333333333333333e18),
             12,
