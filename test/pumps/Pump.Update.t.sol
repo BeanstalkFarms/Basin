@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {GeoEmaAndCumSmaPump, ABDKMathQuad} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
-import {IGeoEmaAndCumSmaPumpErrors} from "src/interfaces/pumps/IGeoEmaAndCumSmaPumpErrors.sol";
+import {IMultiFlowPumpErrors} from "src/interfaces/pumps/IMultiFlowPumpErrors.sol";
 
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
@@ -13,7 +13,7 @@ import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.s
 contract PumpUpdateTest is TestHelper {
     using ABDKMathQuad for bytes16;
 
-    GeoEmaAndCumSmaPump pump;
+    MultiFlowPump pump;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
@@ -23,7 +23,7 @@ contract PumpUpdateTest is TestHelper {
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new GeoEmaAndCumSmaPump(
+        pump = new MultiFlowPump(
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             from18(0.5e18), // cap reserves if changed +/- 50% per block
             12, // block time
@@ -66,7 +66,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
-        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NoTimePassed.selector);
+        vm.expectRevert(IMultiFlowPumpErrors.NoTimePassed.selector);
         pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp, new bytes(0));
     }
 
@@ -100,7 +100,7 @@ contract PumpUpdateTest is TestHelper {
         assertEq(cumulativeReserves[0], bytes16(0));
         assertEq(cumulativeReserves[1], bytes16(0));
 
-        vm.expectRevert(IGeoEmaAndCumSmaPumpErrors.NoTimePassed.selector);
+        vm.expectRevert(IMultiFlowPumpErrors.NoTimePassed.selector);
         pump.readTwaReserves(address(mWell), startCumulativeReserves, lastTimestamp, new bytes(0));
     }
 

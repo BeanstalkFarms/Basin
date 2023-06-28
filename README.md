@@ -23,7 +23,7 @@ Basin is a composable EVM-native decentralized exchange protocol.
 
 A draft of the Basin whitepaper is available [here](https://basin.exchange/basin.pdf).
 
-A draft of the Multi Flow Pump whitepaper (GeoEmaAndCumSmaPump) is available [here](https://basin.exchange/multi-flow-pump.pdf).
+A draft of the Multi Flow Pump whitepaper is available [here](https://basin.exchange/multi-flow-pump.pdf).
 
 A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.
 

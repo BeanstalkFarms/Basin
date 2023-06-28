@@ -6,7 +6,7 @@ import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Users} from "test/helpers/Users.sol";
 import {TestHelper, Balances} from "test/TestHelper.sol";
@@ -18,7 +18,7 @@ abstract contract IntegrationTestHelper is TestHelper {
     function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](1);
         _pumps[0] = Call(
-            address(new GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18))),
+            address(new MultiFlowPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18))),
             new bytes(0)
         );
 

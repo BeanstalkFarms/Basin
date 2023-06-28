@@ -6,7 +6,7 @@ import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
-import {IPump, GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {IPump, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {Handler} from "./Handler.t.sol";
 import "../pumps/PumpHelpers.sol";
 import "forge-std/Test.sol";
@@ -19,7 +19,7 @@ contract Invariants is LiquidityHelper {
 
     function setUp() public {
         // setup the pump
-        IPump pump = new GeoEmaAndCumSmaPump(
+        IPump pump = new MultiFlowPump(
             from18(0.5e18),
             from18(0.333333333333333333e18),
             12,

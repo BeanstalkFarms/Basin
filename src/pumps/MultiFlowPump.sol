@@ -3,7 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
-import {IGeoEmaAndCumSmaPumpErrors} from "src/interfaces/pumps/IGeoEmaAndCumSmaPumpErrors.sol";
+import {IMultiFlowPumpErrors} from "src/interfaces/pumps/IMultiFlowPumpErrors.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
@@ -13,7 +13,7 @@ import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 /**
- * @title GeoEmaAndCumSmaPump
+ * @title MultiFlowPump
  * @author Publius
  * @notice Stores a geometric EMA and cumulative geometric SMA for each reserve.
  * @dev A Pump designed for use in Beanstalk with 2 tokens.
@@ -26,7 +26,7 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-contract GeoEmaAndCumSmaPump is IPump, IGeoEmaAndCumSmaPumpErrors, IInstantaneousPump, ICumulativePump {
+contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
     using SafeCast for uint256;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
