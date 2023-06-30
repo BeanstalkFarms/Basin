@@ -8,7 +8,7 @@ import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} fr
 
 contract WellAddLiquidityStableSwapTest is LiquidityHelper {
     function setUp() public {
-        setupStableSwapWell(2);
+        setupStableSwapWell(10);
     }
 
     /// @dev Liquidity is initially added in {TestHelper}; ensure that subsequent
@@ -40,7 +40,7 @@ contract WellAddLiquidityStableSwapTest is LiquidityHelper {
         amounts[1] = 0;
 
         uint256 amountOut = well.getAddLiquidityOut(amounts);
-        assertEq(amountOut, 9_995_024_785_725_378_226, "incorrect amt out");
+        assertEq(amountOut, 9_998_815_419_300_522_901, "incorrect amt out");
     }
 
     function test_addLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
