@@ -1,31 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, ConstantProduct2, Balances} from "test/TestHelper.sol";
+import {TestHelper, StableSwap2, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
-contract WellRemoveLiquidityImbalancedTest is TestHelper {
+contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
     event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
     uint256[] tokenAmountsOut;
     uint256 requiredLpAmountIn;
+    bytes _data;
+
 
     // Setup
-    ConstantProduct2 cp;
+    StableSwap2 ss;
+
     uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
-        cp = new ConstantProduct2();
-        setupWell(2);
+        ss = new StableSwap2();
+        setupStableSwapWell(10);
 
-        // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
+        _data = abi.encode(
+            StableSwap2.WellFunctionData(
+                10,
+                address(tokens[0]),
+                address(tokens[1])
+            )
+        );
+
+        // Add liquidity. `user` now has (2 * 1000 * 1e18) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);
-
         // Shared removal amounts
         tokenAmountsOut.push(500 * 1e18); // 500   token0
         tokenAmountsOut.push(506 * 1e17); //  50.6 token1
-        requiredLpAmountIn = 290 * 1e24; // LP needed to remove `tokenAmountsOut`
+        requiredLpAmountIn = 552_016_399_701_327_563_972; // ~552e18 LP needed to remove `tokenAmountsOut`
     }
 
     /// @dev Assumes use of ConstantProduct2
@@ -36,7 +46,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
 
     /// @dev not enough LP to receive `tokenAmountsOut`
     function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
-        uint256 maxLpAmountIn = 5 * 1e24;
+        uint256 maxLpAmountIn = 5 * 1e18;
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
         well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint256).max);
     }
@@ -97,7 +107,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 newLpTokenSupply = ss.calcLpTokenSupply(reserves, _data);
         uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove all of `user`'s liquidity and deliver them the tokens
@@ -129,7 +139,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
             (initialLiquidity + addedLiquidity) - amounts[1],
             "Incorrect token1 well reserve"
         );
-        checkInvariant(address(well));
+        checkStableSwapInvariant(address(well));
     }
 
     /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
@@ -165,7 +175,7 @@ contract WellRemoveLiquidityImbalancedTest is TestHelper {
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 newLpTokenSupply = ss.calcLpTokenSupply(reserves, _data);
         uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         // Remove some of `user`'s liquidity and deliver them the tokens

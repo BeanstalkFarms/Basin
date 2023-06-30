@@ -10,13 +10,13 @@ import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellSwapToStableSwapTest is SwapHelper {
     function setUp() public {
-        setupStableSwapWell(2);
+        setupStableSwapWell(10);
     }
 
     function test_getSwapIn() public {
         uint256 amountOut = 100 * 1e18;
         uint256 amountIn = well.getSwapIn(tokens[0], tokens[1], amountOut);
-        assertEq(amountIn, 102_054_486_564_986_716_193); // ~2% slippage
+        assertEq(amountIn, 100_482_889_020_651_556_292); // ~0.4% slippage
     }
 
     function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint256 i) public prank(user) {
@@ -45,7 +45,7 @@ contract WellSwapToStableSwapTest is SwapHelper {
     /// @dev Slippage revert occurs if maxAmountIn is too low
     function test_swapTo_revertIf_maxAmountInTooLow() public prank(user) {
         uint256 amountOut = 100 * 1e18; 
-        uint256 amountIn = 102_054_486_564_986_716_193;
+        uint256 amountIn = 100_482_889_020_651_556_292;
         uint256 maxAmountIn = amountIn * 99 / 100;
 
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageIn.selector, amountIn, maxAmountIn));

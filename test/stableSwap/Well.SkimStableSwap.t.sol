@@ -5,7 +5,7 @@ import {TestHelper, Balances} from "test/TestHelper.sol";
 
 contract WellSkimTest is TestHelper {
     function setUp() public {
-        setupStableSwapWell(2);
+        setupStableSwapWell(10);
     }
 
     function test_initialized() public {

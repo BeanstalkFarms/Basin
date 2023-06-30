@@ -1,25 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, ConstantProduct2, IERC20, Balances} from "test/TestHelper.sol";
+import {TestHelper, StableSwap2, IERC20, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellRemoveLiquidityOneTokenTest is TestHelper {
     event RemoveLiquidityOneToken(uint256 lpAmountIn, IERC20 tokenOut, uint256 tokenAmountOut, address recipient);
 
-    ConstantProduct2 cp;
+    StableSwap2 ss;
     uint256 constant addedLiquidity = 1000 * 1e18;
+    bytes _data;
+
 
     function setUp() public {
-        cp = new ConstantProduct2();
+        ss = new StableSwap2();
         setupWell(2);
 
         // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);
+        _data = abi.encode(
+            StableSwap2.WellFunctionData(
+                10,
+                address(tokens[0]),
+                address(tokens[1])
+            )
+        );
     }
 
-    /// @dev Assumes use of ConstantProduct2
+    /// @dev Assumes use of StableSwap2
     function test_getRemoveLiquidityOneTokenOut() public {
         uint256 amountOut = well.getRemoveLiquidityOneTokenOut(500 * 1e24, tokens[0]);
         assertEq(amountOut, 875 * 1e18, "incorrect tokenOut");
@@ -96,7 +105,7 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
         // Calculate the new LP token supply after the Well's reserves are changed.
         // The delta `lpAmountBurned` is the amount of LP that should be burned
         // when this liquidity is removed.
-        uint256 newLpTokenSupply = cp.calcLpTokenSupply(reserves, "");
+        uint256 newLpTokenSupply = ss.calcLpTokenSupply(reserves, _data);
         uint256 lpAmountBurned = well.totalSupply() - newLpTokenSupply;
 
         vm.expectEmit(true, true, true, true);
