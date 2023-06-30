@@ -12,5 +12,5 @@ interface IBeanstalkA {
    /**
     * @return a A parameter, precision of 2 (a of 1 == 100)
     */
-   function getBeanstalkA() external returns (uint256 a);
+   function getBeanstalkA() external pure returns (uint256 a);
 }

@@ -22,7 +22,7 @@ import {IBeanstalkA} from "src/interfaces/beanstalk/IBeanstalkA.sol";
  *  `D` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  */
-contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
+contract BeanstalkStableSwap is IBeanstalkWellFunction {
     using LibMath for uint256;
     using SafeMath for uint256;
 
@@ -41,8 +41,7 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
     uint256 constant PRECISION = 1e18;
 
     // Beanstalk
-    address constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
-    // address constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    IBeanstalkA BEANSTALK = IBeanstalkA(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
     
 
     // Errors
@@ -51,7 +50,8 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
     error InvalidTokenDecimals(uint256);
 
     /**
-     * This Well function requires 2 parameters from wellFunctionData:
+     * This Well function requires 3 parameters from wellFunctionData:
+     * 0: Failsafe A parameter
      * 1: tkn0 address
      * 2: tkn1 address
      * 
@@ -59,8 +59,11 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
      * tkn0 and tkn1 is used to call decimals() on the tokens to scale to 1e18.
      * For example, USDC and BEAN has 6 decimals (TKX_SCALAR = 1e12),
      * while DAI has 18 decimals (TKX_SCALAR = 1).
+     * 
+     * The failsafe A parameter is used when the beanstalk A parameter is not available.
      */
     struct WellFunctionData {
+        uint256 a;
         address tkn0;
         address tkn1;
     }
@@ -230,21 +233,7 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
         return "SS2";
     }
 
-    function verifyWellFunctionData(
-        bytes memory data
-    ) public view returns (
-        uint256 a, 
-        uint256 Ann,
-        uint256[2] memory precisionMultipliers
-    ){
-        WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
-        a = getBeanstalkA();
-        if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
-        if(IERC20(wfd.tkn0).decimals() > 18) revert InvalidTokenDecimals(IERC20(wfd.tkn0).decimals()); 
-        Ann = a * N * N * A_PRECISION;
-        precisionMultipliers[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn0).decimals()));
-        precisionMultipliers[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn1).decimals()));
-    }
+    
 
 
     /**
@@ -254,15 +243,16 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
      */
     function calcReserveAtRatioSwap(
         uint256[] calldata reserves,
-        uint256,
+        uint256 j,
         uint256[] calldata ratios,
         bytes calldata data
     ) external view returns (uint256 reserve){
         uint256[] memory _reserves = new uint256[](2);
         _reserves[0] = reserves[0].mul(ratios[0]).div(PRECISION);
         _reserves[1] = reserves[1].mul(ratios[1]).div(PRECISION);
-        uint256 D = calcLpTokenSupply(_reserves, data);
-        return D / 2;
+        // uint256 oldD = calcLpTokenSupply(reserves, data) / 2;
+        uint256 newD = calcLpTokenSupply(_reserves, data);
+        return newD / 2;
     }
 
     // TODO: for converts 
@@ -280,8 +270,7 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
     }
 
     function getBeanstalkA() public pure returns (uint256 a) {
-        // return IBeanstalkA(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5).getBeanstalkA();
-        return 10;
+        return IBeanstalkA(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5).getBeanstalkA();
     }
     function getBeanstalkAnn() public pure returns (uint256 a) {
         return getBeanstalkA() * N * N;
@@ -290,6 +279,34 @@ contract BeanstalkStableSwap is IBeanstalkWellFunction, IBeanstalkA {
     // TODO: implement. 
     function getVirtualPrice() public pure returns (uint256 price) {
         price = 1.01 * 1e18;
+    }
+
+    function verifyWellFunctionData(
+        bytes memory data
+    ) public view returns (
+        uint256 a, 
+        uint256 Ann,
+        uint256[2] memory precisionMultipliers
+    ){
+        WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
+        
+        // try to get the beanstalk A. 
+        // if it fails, use the failsafe A stored in well function data.
+        try BEANSTALK.getBeanstalkA() returns (uint256 _a) {
+            a = _a;
+        } catch  {
+            a = wfd.a;
+        }
+        if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
+        uint8 token0Dec = IERC20(wfd.tkn0).decimals();
+        uint8 token1Dec = IERC20(wfd.tkn0).decimals();
+
+        if(token0Dec > 18) revert InvalidTokenDecimals(token0Dec); 
+        if(token1Dec > 18) revert InvalidTokenDecimals(token1Dec); 
+
+        Ann = a * N * N * A_PRECISION;
+        precisionMultipliers[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Dec));
+        precisionMultipliers[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Dec));
     }
 
 }
