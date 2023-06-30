@@ -59,6 +59,7 @@ contract StableSwap2 is IWellFunction {
     }
 
     /**
+     * @notice Calculate the amount of LP tokens minted when adding liquidity.
      * D invariant calculation in non-overflowing integer operations iteratively
      * A * sum(x_i) * n**n + D = A * D * n**n + D**(n+1) / (n**n * prod(x_i))
      * 
@@ -140,10 +141,11 @@ contract StableSwap2 is IWellFunction {
                     .div(reserve.mul(2).add(b).sub(lpTokenSupply));
             // Equality with the precision of 1
             // safeMath not needed due to conditional.
+            // scale reserve down to original precision
             if(reserve > prevReserve){
-                if(reserve - prevReserve <= 1) return reserve;
+                if(reserve - prevReserve <= 1) return reserve.div(precisions[j]);
             } else {
-                if(prevReserve - reserve <= 1) return reserve;
+                if(prevReserve - reserve <= 1) return reserve.div(precisions[j]);
             }
         }
 
