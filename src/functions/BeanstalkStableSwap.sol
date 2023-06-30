@@ -71,7 +71,6 @@ contract BeanstalkStableSwap is StableSwap2, IBeanstalkWellFunction {
     function decodeWFData(
         bytes memory data
     ) public view override returns (
-        uint256 a, 
         uint256 Ann,
         uint256[2] memory precisionMultipliers
     ){
@@ -79,6 +78,7 @@ contract BeanstalkStableSwap is StableSwap2, IBeanstalkWellFunction {
         
         // try to get the beanstalk A. 
         // if it fails, use the failsafe A stored in well function data.
+        uint256 a;
         try BEANSTALK.getBeanstalkA() returns (uint256 _a) {
             a = _a;
         } catch  {

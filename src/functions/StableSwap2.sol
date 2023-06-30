@@ -70,7 +70,7 @@ contract StableSwap2 is IWellFunction {
         uint[] memory reserves,
         bytes calldata _wellFunctionData
     ) public view override returns (uint lpTokenSupply) {
-        (, uint256 Ann,uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
+        (uint256 Ann,uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
         reserves = getScaledReserves(reserves, precisions);
         
         uint256 sumReserves = reserves[0] + reserves[1];
@@ -116,39 +116,31 @@ contract StableSwap2 is IWellFunction {
         uint lpTokenSupply,
         bytes calldata _wellFunctionData
     ) external view override returns (uint reserve) {
-        (, uint256 Ann, uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
+        (uint256 Ann, uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
         reserves = getScaledReserves(reserves, precisions);
 
-        require(j < N);
-        uint256 c = lpTokenSupply;
-        uint256 sumReserves;
-        uint256 prevReserve; 
-        sumReserves = j == 0 ? reserves[1] : reserves[0];
-        c = c.mul(lpTokenSupply).div(sumReserves.mul(N));
-        c = c.mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
-        uint256 b = 
-            sumReserves.add(
-                lpTokenSupply.mul(A_PRECISION).div(Ann)
-            );
+
+        // avoid stack too deep errors.
+        (uint256 c, uint256 b) = getBandC(
+            Ann, 
+            lpTokenSupply, 
+            j == 0 ? reserves[1] : reserves[0]
+        );
         reserve = lpTokenSupply;
+        uint256 prevReserve;
 
         for(uint i; i < 255; ++i){
             prevReserve = reserve;
-            reserve = 
-                reserve
-                    .mul(reserve)
-                    .add(c)
-                    .div(reserve.mul(2).add(b).sub(lpTokenSupply));
+            reserve = _calcReserve(reserve, b, c, lpTokenSupply);
             // Equality with the precision of 1
-            // safeMath not needed due to conditional.
             // scale reserve down to original precision
+            // TODO: discuss with pubs
             if(reserve > prevReserve){
                 if(reserve - prevReserve <= 1) return reserve.div(precisions[j]);
             } else {
                 if(prevReserve - reserve <= 1) return reserve.div(precisions[j]);
             }
         }
-
         revert("did not find convergence");        
     }
 
@@ -165,7 +157,7 @@ contract StableSwap2 is IWellFunction {
         uint lpTokenSupply,
         bytes calldata _wellFunctionData
     ) external view returns (uint[] memory underlyingAmounts) {
-        ( , ,uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
+        (,uint256[2] memory precisions) = decodeWFData(_wellFunctionData);
         reserves = getScaledReserves(reserves, precisions);
 
         underlyingAmounts = new uint[](2);
@@ -185,16 +177,14 @@ contract StableSwap2 is IWellFunction {
     function decodeWFData(
         bytes memory data
     ) public virtual view returns (
-        uint256 a, 
         uint256 Ann,
         uint256[2] memory precisions
     ){
         WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
-        a = wfd.a;
-        if (a == 0) revert InvalidAParameter(a);
+        if (wfd.a == 0) revert InvalidAParameter(wfd.a);
         if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
         if(IERC20(wfd.tkn0).decimals() > 18) revert InvalidTokenDecimals(IERC20(wfd.tkn0).decimals()); 
-        Ann = a * N * N * A_PRECISION;
+        Ann = wfd.a * N * N * A_PRECISION;
         precisions[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn0).decimals()));
         precisions[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn1).decimals()));
     }
@@ -206,5 +196,32 @@ contract StableSwap2 is IWellFunction {
         reserves[0] = reserves[0].mul(precisions[0]);
         reserves[1] = reserves[1].mul(precisions[1]);
         return reserves;
+    }
+
+    function _calcReserve(
+        uint256 reserve, 
+        uint256 b, 
+        uint256 c,
+        uint256 lpTokenSupply
+    ) private pure returns (uint256){
+        // NOTE: the result should be rounded up to ensure that the well benefits from the rounding error,
+        // rather than the user.
+        return reserve
+                .mul(reserve)
+                .add(c)
+                .div(reserve.mul(2).add(b).sub(lpTokenSupply));
+    }
+
+    function getBandC(
+        uint256 Ann,
+        uint256 lpTokenSupply, 
+        uint256 sumReserves
+    ) private pure returns (uint256 c, uint256 b){
+        c = lpTokenSupply
+            .mul(lpTokenSupply).div(sumReserves.mul(N))
+            .mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
+        b = sumReserves.add(
+                lpTokenSupply.mul(A_PRECISION).div(Ann)
+            );
     }
 }
