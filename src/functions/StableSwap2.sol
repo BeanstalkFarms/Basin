@@ -109,6 +109,8 @@ contract StableSwap2 is IWellFunction {
      * x_1**2 + x_1 * (sum' - (A*n**n - 1) * D / (A * n**n)) = D ** (n + 1) / (n ** (2 * n) * prod' * A)
      * x_1**2 + b*x_1 = c
      * x_1 = (x_1**2 + c) / (2*x_1 + b)
+     * @dev This function has a precision of +/- 1,
+     * which may round in favor of the well or the user.
      */
     function calcReserve(
         uint[] memory reserves,
@@ -134,9 +136,9 @@ contract StableSwap2 is IWellFunction {
             reserve = _calcReserve(reserve, b, c, lpTokenSupply);
             // Equality with the precision of 1
             // scale reserve down to original precision
-            // TODO: discuss with pubs
             if(reserve > prevReserve){
                 if(reserve - prevReserve <= 1) return reserve.div(precisions[j]);
+                
             } else {
                 if(prevReserve - reserve <= 1) return reserve.div(precisions[j]);
             }
@@ -183,10 +185,15 @@ contract StableSwap2 is IWellFunction {
         WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
         if (wfd.a == 0) revert InvalidAParameter(wfd.a);
         if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
-        if(IERC20(wfd.tkn0).decimals() > 18) revert InvalidTokenDecimals(IERC20(wfd.tkn0).decimals()); 
+        uint8 token0Dec = IERC20(wfd.tkn0).decimals();
+        uint8 token1Dec = IERC20(wfd.tkn1).decimals();
+
+        if(token0Dec > 18) revert InvalidTokenDecimals(token0Dec); 
+        if(token1Dec > 18) revert InvalidTokenDecimals(token1Dec); 
+
         Ann = wfd.a * N * N * A_PRECISION;
-        precisions[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn0).decimals()));
-        precisions[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(IERC20(wfd.tkn1).decimals()));
+        precisions[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Dec));
+        precisions[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Dec));
     }
 
     function getScaledReserves(
@@ -204,8 +211,6 @@ contract StableSwap2 is IWellFunction {
         uint256 c,
         uint256 lpTokenSupply
     ) private pure returns (uint256){
-        // NOTE: the result should be rounded up to ensure that the well benefits from the rounding error,
-        // rather than the user.
         return reserve
                 .mul(reserve)
                 .add(c)

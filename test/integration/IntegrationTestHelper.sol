@@ -4,12 +4,11 @@ pragma solidity ^0.8.17;
 import {Test, console, stdError} from "forge-std/Test.sol";
 import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Users} from "test/helpers/Users.sol";
-import {TestHelper, Balances} from "test/TestHelper.sol";
+import {TestHelper, Balances, ConstantProduct2, StableSwap2} from "test/TestHelper.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 
 abstract contract IntegrationTestHelper is TestHelper {
@@ -23,6 +22,37 @@ abstract contract IntegrationTestHelper is TestHelper {
         );
 
         return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
+    }
+
+    function setupStableSwapWell(
+        uint256 a, 
+        IERC20[] memory _tokens, 
+        Well _well
+    ) internal returns (Well) {
+        Call[] memory _pumps = new Call[](1);
+        _pumps[0] = Call(
+            address(new GeoEmaAndCumSmaPump(
+                from18(0.5e18),
+                from18(0.333333333333333333e18), 
+                12, 
+                from18(0.9e18)
+            )),
+            new bytes(0)
+        );
+        
+        bytes memory data = abi.encode(
+            StableSwap2.WellFunctionData(
+                a,
+                address(_tokens[0]),
+                address(_tokens[1])
+            )
+        );
+        return setupWell(
+            _tokens, 
+            Call(address(new StableSwap2()), data),
+            _pumps, 
+            _well
+        );
     }
 
     function setupWell(
