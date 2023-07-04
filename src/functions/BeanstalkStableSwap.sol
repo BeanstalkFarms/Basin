@@ -81,15 +81,15 @@ contract BeanstalkStableSwap is StableSwap2, IBeanstalkWellFunction {
         uint256 a;
         try BEANSTALK.getBeanstalkA() returns (uint256 _a) {
             a = _a;
-        } catch  {
+        } catch {
             a = wfd.a;
         }
         if(wfd.tkn0 == address(0) || wfd.tkn1 == address(0)) revert InvalidTokens();
         uint8 token0Dec = IERC20(wfd.tkn0).decimals();
-        uint8 token1Dec = IERC20(wfd.tkn0).decimals();
+        uint8 token1Dec = IERC20(wfd.tkn1).decimals();
 
         if(token0Dec > 18) revert InvalidTokenDecimals(token0Dec); 
-        if(token1Dec > 18) revert InvalidTokenDecimals(token1Dec); 
+        if(token1Dec > 18) revert InvalidTokenDecimals(token1Dec);
 
         Ann = a * N * N * A_PRECISION;
         precisionMultipliers[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Dec));
