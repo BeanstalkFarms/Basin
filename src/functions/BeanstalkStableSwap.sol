@@ -34,12 +34,21 @@ contract BeanstalkStableSwap is StableSwap2, IBeanstalkWellFunction {
         uint256[] calldata ratios,
         bytes calldata data
     ) external view returns (uint256 reserve){
-        uint256[] memory _reserves = new uint256[](2);
-        _reserves[0] = reserves[0].mul(ratios[0]).div(PRECISION);
-        _reserves[1] = reserves[1].mul(ratios[1]).div(PRECISION);
-        // uint256 oldD = calcLpTokenSupply(reserves, data) / 2;
-        uint256 newD = calcLpTokenSupply(_reserves, data);
-        return newD / 2;
+        // uint256 i = j == 1 ? 0 : 1;
+        // uint256 D = calcLpTokenSupply(reserves, data);
+        // uint256 initalPegBeanPeg = D/2;
+        // uint256 currentBeans = reserves[i];
+        // uint256 currentBeans = reserves[i];
+
+
+        // uint256[] memory _reserves = new uint256[](2);
+        // uint256 i = j == 1 ? 0 : 1;
+        // uint256 targetPrice = ratios[j]/ratios[i];
+        // _reserves[0] = reserves[0].mul(ratios[0]).div(PRECISION);
+        // _reserves[1] = reserves[1].mul(ratios[1]).div(PRECISION);
+        // // uint256 oldD = calcLpTokenSupply(reserves, data) / 2;
+        // uint256 newD = calcLpTokenSupply(_reserves, data);
+        // return newD / 2;
     }
 
     // TODO: for converts 
