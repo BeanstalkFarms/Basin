@@ -67,6 +67,7 @@ contract Invariants is LiquidityHelper {
         if (precision == 0) return;
 
         assertApproxEqRelN(well.totalSupply(), functionCalc, precision);
+        assertLe(well.totalSupply(), functionCalc);
     }
 
     /// @dev The reserves calculated by the well function should equal the reserves of the well

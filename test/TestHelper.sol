@@ -212,6 +212,11 @@ abstract contract TestHelper is Test, WellDeployer {
         return address(new Well());
     }
 
+    function mintAndAddLiquidity(address to, uint256[] memory amounts) internal {
+        mintTokens(user, amounts);
+        well.addLiquidity(amounts, 0, to, type(uint256).max);
+    }
+
     /// @dev add the same `amount` of liquidity for all underlying tokens
     function addLiquidityEqualAmount(address from, uint256 amount) internal prank(from) {
         uint256[] memory amounts = new uint256[](tokens.length);
