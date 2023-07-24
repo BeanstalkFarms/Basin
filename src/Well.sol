@@ -92,9 +92,10 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     }
 
     function pumps() public pure returns (Call[] memory _pumps) {
-        if (numberOfPumps() == 0) return _pumps;
+        uint256 _numberOfPumps = numberOfPumps();
+        if (_numberOfPumps == 0) return _pumps;
 
-        _pumps = new Call[](numberOfPumps());
+        _pumps = new Call[](_numberOfPumps);
         uint256 dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
 
         uint256 pumpDataLength;
@@ -645,12 +646,13 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     function _updatePumps(uint256 _numberOfTokens) internal returns (uint256[] memory reserves) {
         reserves = _getReserves(_numberOfTokens);
 
-        if (numberOfPumps() == 0) {
+        uint256 _numberOfPumps = numberOfPumps();
+        if (_numberOfPumps == 0) {
             return reserves;
         }
 
         // gas optimization: avoid looping if there is only one pump
-        if (numberOfPumps() == 1) {
+        if (_numberOfPumps == 1) {
             Call memory _pump = firstPump();
             // Don't revert if the update call fails.
             try IPump(_pump.target).update(reserves, _pump.data) {}
