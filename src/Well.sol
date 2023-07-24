@@ -355,6 +355,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         address recipient
     ) external nonReentrant returns (uint256 amountOut) {
         IERC20[] memory _tokens = tokens();
+        _updatePumps(_tokens.length);
+
         uint256[] memory reserves = new uint256[](_tokens.length);
 
         // Use the balances of the pool instead of the stored reserves.
@@ -589,6 +591,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
      */
     function sync() external nonReentrant {
         IERC20[] memory _tokens = tokens();
+        _updatePumps(_tokens.length);
         uint256[] memory reserves = new uint256[](_tokens.length);
         for (uint256 i; i < _tokens.length; ++i) {
             reserves[i] = _tokens[i].balanceOf(address(this));
