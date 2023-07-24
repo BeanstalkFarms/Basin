@@ -52,18 +52,18 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
     constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _blockTime, bytes16 _alpha) {
-        LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
         // _maxPercentDecrease <= 100%
         if (_maxPercentDecrease > ABDKMathQuad.ONE) {
             revert InvalidMaxPercentDecreaseArgument(_maxPercentDecrease);
         }
-        LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
-        BLOCK_TIME = _blockTime;
-
         // ALPHA <= 1
         if (_alpha > ABDKMathQuad.ONE) {
             revert InvalidAArgument(_alpha);
         }
+
+        LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
+        LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
+        BLOCK_TIME = _blockTime;
         ALPHA = _alpha;
     }
 
