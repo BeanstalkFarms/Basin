@@ -51,7 +51,7 @@ library LibBytes {
                 iByte = i * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(i, 32)),
+                        add(slot, i),
                         add(mload(add(reserves, add(iByte, 32))), shl(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
@@ -64,7 +64,7 @@ library LibBytes {
                 iByte = maxI * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(maxI, 32)),
+                        add(slot, maxI),
                         add(mload(add(reserves, add(iByte, 32))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
                     )
                 }
@@ -93,7 +93,7 @@ library LibBytes {
             // `iByte` is the byte position for the current slot:
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
-            iByte = (i - 1) / 2 * 32;
+            iByte = (i - 1) / 2;
             // Equivalent to "i % 2 == 1", but cheaper.
             if (i & 1 == 1) {
                 assembly {
