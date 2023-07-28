@@ -13,22 +13,6 @@ pragma solidity ^0.8.17;
  * Each value must be `<= type(uint128).max` in order pack properly.
  */
 library LibBytes {
-    bytes32 private constant ZERO_BYTES = bytes32(0);
-
-    /**
-     * @dev Read the `i`th 32-byte chunk from `data`.
-     */
-    function getBytes32FromBytes(bytes memory data, uint256 i) internal pure returns (bytes32 _bytes) {
-        uint256 index = i * 32;
-        if (index > data.length) {
-            _bytes = ZERO_BYTES;
-        } else {
-            assembly {
-                _bytes := mload(add(add(data, index), 32))
-            }
-        }
-    }
-
     /**
      * @dev Store packed uint128 `reserves` starting at storage position `slot`.
      * Balances are passed as an uint256[], but values must be <= max uint128

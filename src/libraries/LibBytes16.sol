@@ -11,8 +11,6 @@ pragma solidity ^0.8.17;
  * slots, where `n` is number of items to pack.
  */
 library LibBytes16 {
-    bytes32 private constant ZERO_BYTES = bytes32(0);
-
     /**
      * @dev Store packed bytes16 `reserves` starting at storage position `slot`.
      */
