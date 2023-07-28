@@ -374,4 +374,10 @@ interface IWell {
      * @notice Gets the reserves of each token held by the Well.
      */
     function getReserves() external view returns (uint256[] memory reserves);
+
+    /**
+     * @notice Returns whether or not the Well is initialized if it requires initialization.
+     * If a Well does not require initialization, it should always return `true`.
+     */
+    function isInitialized() external view returns (bool);
 }

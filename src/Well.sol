@@ -43,6 +43,10 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         }
     }
 
+    function isInitialized() external view returns (bool) {
+        return _getInitializedVersion() > 0;
+    }
+
     //////////////////// WELL DEFINITION ////////////////////
 
     /// This Well uses a dynamic immutable storage layout. Immutable storage is

@@ -22,6 +22,11 @@ interface IAquifer {
     error InvalidConfig();
 
     /**
+     * @notice Thrown a Well is bored, but not initialized.
+     */
+    error WellNotInitialized();
+
+    /**
      * @notice Emitted when a Well is deployed.
      * @param well The address of the new Well
      * @param implementation The Well implementation address
