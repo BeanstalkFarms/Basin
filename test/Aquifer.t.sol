@@ -56,7 +56,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Bore a Well with immutable data and salt.
     function test_bore_cloneDeterministic_withImmutableData() public {
-        address destination = LibClone.predictDeterministicAddress(wellImplementation, immutableData, salt, address(aquifer));
+        address destination = aquifer.predictWellAddress(wellImplementation, immutableData, salt);
 
         vm.expectEmit(true, true, true, true, address(aquifer));
         emit BoreWell(destination, wellImplementation, tokens, wellFunction, pumps, wellData);
@@ -91,7 +91,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Bore a Well with salt, no immutable data.
     function test_bore_cloneDeterministic() public {
-        address destination = LibClone.predictDeterministicAddress(wellImplementation, salt, address(aquifer));
+        address destination = aquifer.predictWellAddress(wellImplementation, "", salt);
 
         vm.expectEmit(true, true, true, true, address(aquifer));
         emit BoreWell(destination, wellImplementation, tokens, wellFunction, pumps, wellData);
