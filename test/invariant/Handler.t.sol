@@ -360,7 +360,7 @@ contract Handler is Test {
     function sync() public {
         console.log("----------------------------------");
         console.log("Sync");
-        s_well.sync();
+        s_well.sync(address(this));
         printWellTokenValues();
     }
 

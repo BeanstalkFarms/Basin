@@ -18,6 +18,13 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * @author Publius, Silo Chad, Brean
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
+ *
+ * Rebasing Tokens:
+ * - Positive rebasing tokens are supposed by Wells, but any tokens recieved from a
+ *   rebase will not be rewarded to LP holders and instead can be extracted by anyone
+ *   using `skim`, `sync` or `shift`.
+ * - Negative rebasing tokens should not be used in Well as the effect of a negative
+ *   rebase will be realized by users interacting with the Well, not LP token holders.
  */
 contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
@@ -596,9 +603,10 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     //////////////////// RESERVES ////////////////////
 
     /**
-     * @dev Sync the reserves of the Well with its current balance of underlying tokens.
+     * @dev Sync the reserves of the Well with its current balance of underlying tokens
+     * and mints LP tokens to `recipient` if the reserves increased.
      */
-    function sync() external nonReentrant {
+    function sync(address recipient) external nonReentrant returns (uint256 lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         _updatePumps(tokensLength);
@@ -606,8 +614,14 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         for (uint256 i; i < tokensLength; ++i) {
             reserves[i] = _tokens[i].balanceOf(address(this));
         }
+        uint256 newTokenSupply = _calcLpTokenSupply(wellFunction(), reserves);
+        uint256 oldTokenSupply = totalSupply();
+        if (newTokenSupply > oldTokenSupply) {
+            lpAmountOut = newTokenSupply - oldTokenSupply;
+            _mint(recipient, lpAmountOut);
+        }
         _setReserves(_tokens, reserves);
-        emit Sync(reserves);
+        emit Sync(reserves, lpAmountOut, recipient);
     }
 
     /**
