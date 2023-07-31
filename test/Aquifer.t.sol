@@ -176,6 +176,17 @@ contract AquiferTest is TestHelper {
         );
     }
 
+    /// @dev Reversion if Well is not initialized after being bored.
+    function test_bore_initRevert_notInitialized() public {
+        vm.expectRevert(IAquifer.WellNotInitialized.selector);
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            "",
+            bytes32(0)
+        );
+    }
+
     function _checkWell(MockStaticWell _well, bool isInitialized) private {
         IERC20[] memory _tokens = _well.tokens();
         Call[] memory _pumps = _well.pumps();

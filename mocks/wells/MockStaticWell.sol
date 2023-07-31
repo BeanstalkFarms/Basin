@@ -100,4 +100,8 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
         }
         return result;
     }
+
+    function isInitialized() external view returns (bool) {
+        return _getInitializedVersion() > 0;
+    }
 }
