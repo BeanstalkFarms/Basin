@@ -11,6 +11,11 @@ pragma solidity ^0.8.17;
  */
 interface IWellFunction {
     /**
+     * @notice Thrown if the user inputs a `j` value is out of bounds.
+     */
+    error InvalidJArgument();
+
+    /**
      * @notice Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`.
      * @param reserves A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided.
      * @param j The index of the reserve to solve for
