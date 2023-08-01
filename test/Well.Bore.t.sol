@@ -36,6 +36,13 @@ contract WellBoreTest is TestHelper {
         assertEq(well.aquifer(), address(aquifer));
     }
 
+    function test_initialized() public {
+        assertEq(well.isInitialized(), true);
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        well.init("", "");
+    }
+
     function test_well() public {
         (
             IERC20[] memory _wellTokens,
@@ -126,5 +133,14 @@ contract WellBoreTest is TestHelper {
 
         // Check that Aquifer recorded the deployment
         assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
+        assertEq(_well.isInitialized(), true);
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        _well.init("", "");
+    }
+
+    function test_notInitialized() public {
+        Well _well = new Well();
+        assertEq(_well.isInitialized(), false);
     }
 }

@@ -39,12 +39,16 @@ contract Aquifer is IAquifer, ReentrancyGuard {
     ) external nonReentrant returns (address well) {
         if (immutableData.length > 0) {
             if (salt != bytes32(0)) {
+                // Encode the salt with the `msg.sender` address to prevent frontrunning attack
+                salt = keccak256(abi.encode(msg.sender, salt));
                 well = implementation.cloneDeterministic(immutableData, salt);
             } else {
                 well = implementation.clone(immutableData);
             }
         } else {
             if (salt != bytes32(0)) {
+                // Encode the salt with the `msg.sender` address to prevent frontrunning attack
+                salt = keccak256(abi.encode(msg.sender, salt));
                 well = implementation.cloneDeterministic(salt);
             } else {
                 well = implementation.clone();
@@ -89,5 +93,22 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
     function wellImplementation(address well) external view returns (address implementation) {
         return wellImplementations[well];
+    }
+
+    function predictWellAddress(
+        address implementation,
+        bytes calldata immutableData,
+        bytes32 salt
+    ) external view returns (address well) {
+        // Aquifer doesn't support using a salt of 0 to deploy a Well at a deterministic address.
+        if (salt == bytes32(0)) {
+            revert InvalidSalt();
+        }
+        salt = keccak256(abi.encode(msg.sender, salt));
+        if (immutableData.length > 0) {
+            well = implementation.predictDeterministicAddress(immutableData, salt, address(this));
+        } else {
+            well = implementation.predictDeterministicAddress(salt, address(this));
+        }
     }
 }
