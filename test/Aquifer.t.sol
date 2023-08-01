@@ -163,6 +163,11 @@ contract AquiferTest is TestHelper {
         );
     }
 
+    /// @dev Check that `predictWellAddress` fails with a salt of 0.
+    function test_predictDeterministAddress_zeroSalt() public {
+        vm.expectRevert(IAquifer.InvalidSalt.selector);
+        aquifer.predictWellAddress(wellImplementation, "", bytes32(0));
+    }
 
     /// @dev Reversion during init uses default message if no revert message is returned. 
     /// See {MockInitFailWell.sol}

@@ -27,6 +27,11 @@ interface IAquifer {
     error WellNotInitialized();
 
     /**
+     * @notice Thrown when the user attempts to predict a Well's deterministic address with a salt of 0.
+     */
+    error InvalidSalt();
+
+    /**
      * @notice Emitted when a Well is deployed.
      * @param well The address of the new Well
      * @param implementation The Well implementation address

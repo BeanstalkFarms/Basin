@@ -100,6 +100,10 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         bytes calldata immutableData,
         bytes32 salt
     ) external view returns (address well) {
+        // Aquifer doesn't support using a salt of 0 to deploy a Well at a deterministic address.
+        if (salt == bytes32(0)) {
+            revert InvalidSalt();
+        }
         salt = keccak256(abi.encode(msg.sender, salt));
         if (immutableData.length > 0) {
             well = implementation.predictDeterministicAddress(immutableData, salt, address(this));
