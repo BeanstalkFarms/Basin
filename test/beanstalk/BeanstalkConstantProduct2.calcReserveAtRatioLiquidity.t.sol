@@ -113,4 +113,11 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
             assertApproxEqAbs(reservesOut[1], 0, 1, "reservesOut[1] should be zero");
         }
     }
+
+    function test_calcReserveAtRatioLiquidity_invalidJ() public {
+        uint256[] memory reserves = new uint256[](2);
+        uint256[] memory ratios = new uint256[](2);
+        vm.expectRevert();
+        _f.calcReserveAtRatioLiquidity(reserves, 2, ratios, "");
+    }
 }

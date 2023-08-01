@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {console, TestHelper} from "test/TestHelper.sol";
+import {IWellFunction, TestHelper} from "test/TestHelper.sol";
 import {WellFunctionHelper} from "./WellFunctionHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
@@ -157,5 +157,11 @@ contract ConstantProduct2Test is WellFunctionHelper {
         } else {
             assertApproxEqRel(reserve1, reserves[1], 3e6);
         }
+    }
+
+    function test_calcReserve_invalidJ() public {
+        uint256[] memory reserves = new uint256[](2);
+        vm.expectRevert(IWellFunction.InvalidJArgument.selector);
+        _function.calcReserve(reserves, 2, 1e18, _data);
     }
 }

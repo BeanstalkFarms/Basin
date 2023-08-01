@@ -61,6 +61,9 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 lpTokenSupply,
         bytes calldata
     ) external pure override returns (uint256 reserve) {
+        if (j >= 2) {
+            revert InvalidJArgument();
+        }
         // Note: potential optimization is to use unchecked math here
         reserve = lpTokenSupply ** 2;
         reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1] * EXP_PRECISION);
