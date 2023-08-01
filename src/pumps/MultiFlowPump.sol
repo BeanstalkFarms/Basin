@@ -107,10 +107,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         // Isolate in brackets to prevent stack too deep errors
         {
             uint256 deltaTimestamp = _getDeltaTimestamp(pumpState.lastTimestamp);
+            // If no time has passed, don't update the pump reserves.
             if (deltaTimestamp == 0) return;
             alphaN = ALPHA.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
-            // Round up in case CAP_INTERNAL < block.timestamp.
+            // Round up in case CAP_INTERVAL > block.timestamp.
             capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
 
@@ -191,7 +192,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      *     log2(max reserve) = log2(last reserve) + capExponent*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     `bytes16 lastReserve`      <- log2(last reserve)
-     *     `bytes16 capExponent`   <- capExponent
+     *     `bytes16 capExponent`      <- cap exponent
      *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     ∴ `maxReserve = lastReserve + capExponent*LOG_MAX_INCREASE`
@@ -250,9 +251,16 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
-        bytes16 capExponent = (deltaTimestamp / CAP_INTERVAL).fromUInt();
-        bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         emaReserves = new uint256[](numberOfReserves);
+        // If no time has passed, return last EMA reserves.
+        if (deltaTimestamp == 0) {
+            for (uint256 i; i < numberOfReserves; ++i) {
+                emaReserves[i] = lastEmaReserves[i].pow_2ToUInt();
+            }
+            return emaReserves;
+        }
+        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
+        bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         for (uint256 i; i < numberOfReserves; ++i) {
             lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
             emaReserves[i] =
@@ -296,8 +304,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         cumulativeReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
+        // If no time has passed, return last cumulative reserves.
+        if (deltaTimestamp == 0) {
+            return cumulativeReserves;
+        }
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        bytes16 capExponent = (deltaTimestamp / CAP_INTERVAL).fromUInt();
+        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
             lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
