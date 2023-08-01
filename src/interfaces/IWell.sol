@@ -22,7 +22,7 @@ interface IWell {
      * @param toToken The token swapped to
      * @param amountIn The amount of `fromToken` transferred into the Well
      * @param amountOut The amount of `toToken` transferred out of the Well
-     * @param recipient The address to receive `toToken`
+     * @param recipient The address that received `toToken`
      */
     event Swap(IERC20 fromToken, IERC20 toToken, uint256 amountIn, uint256 amountOut, address recipient);
 
@@ -30,7 +30,7 @@ interface IWell {
      * @notice Emitted when liquidity is added to the Well.
      * @param tokenAmountsIn The amount of each token added to the Well
      * @param lpAmountOut The amount of LP tokens minted
-     * @param recipient The address to receive the LP tokens
+     * @param recipient The address that received the LP tokens
      */
     event AddLiquidity(uint256[] tokenAmountsIn, uint256 lpAmountOut, address recipient);
 
@@ -38,7 +38,7 @@ interface IWell {
      * @notice Emitted when liquidity is removed from the Well as multiple underlying tokens.
      * @param lpAmountIn The amount of LP tokens burned
      * @param tokenAmountsOut The amount of each underlying token removed
-     * @param recipient The address to receive the underlying tokens
+     * @param recipient The address that received the underlying tokens
      * @dev Gas cost scales with `n` tokens.
      */
     event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
@@ -48,7 +48,7 @@ interface IWell {
      * @param lpAmountIn The amount of LP tokens burned
      * @param tokenOut The underlying token removed
      * @param tokenAmountOut The amount of `tokenOut` removed
-     * @param recipient The address to receive the underlying tokens
+     * @param recipient The address that received the underlying tokens
      * @dev Emitting a separate event when removing liquidity as a single token
      * saves gas, since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
      * for each token in the Well.
@@ -59,16 +59,18 @@ interface IWell {
      * @notice Emitted when a Shift occurs.
      * @param reserves The ending reserves after a shift
      * @param toToken The token swapped to
-     * @param minAmountOut The minimum amount of `toToken` transferred out of the Well
-     * @param recipient The address to receive `toToken`
+     * @param amountOut The amount of `toToken` transferred out of the Well
+     * @param recipient The address that received `toToken`
      */
-    event Shift(uint256[] reserves, IERC20 toToken, uint256 minAmountOut, address recipient);
+    event Shift(uint256[] reserves, IERC20 toToken, uint256 amountOut, address recipient);
 
     /**
      * @notice Emitted when a Sync occurs.
      * @param reserves The ending reserves after a sync
+     * @param lpAmountOut The amount of LP tokens received from the sync.
+     * @param recipient The address that received the LP tokens
      */
-    event Sync(uint256[] reserves);
+    event Sync(uint256[] reserves, uint256 lpAmountOut, address recipient);
 
     //////////////////// WELL DEFINITION ////////////////////
 
@@ -271,7 +273,7 @@ interface IWell {
     /**
      * @notice Gets the amount of LP tokens received from adding liquidity as multiple tokens in any ratio.
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
-     * @return lpAmountOut The amount of LP tokens to receive
+     * @return lpAmountOut The amount of LP tokens received
      */
     function getAddLiquidityOut(uint256[] memory tokenAmountsIn) external view returns (uint256 lpAmountOut);
 
@@ -295,7 +297,7 @@ interface IWell {
     /**
      * @notice Gets the amount of each underlying token received from removing liquidity in a balanced ratio.
      * @param lpAmountIn The amount of LP tokens to burn
-     * @return tokenAmountsOut The amount of each underlying token to receive
+     * @return tokenAmountsOut The amount of each underlying token received
      */
     function getRemoveLiquidityOut(uint256 lpAmountIn) external view returns (uint256[] memory tokenAmountsOut);
 
@@ -322,7 +324,7 @@ interface IWell {
      * @notice Gets the amount received from removing liquidity from the Well as a single underlying token.
      * @param lpAmountIn The amount of LP tokens to burn
      * @param tokenOut The underlying token to receive
-     * @return tokenAmountOut The amount of `tokenOut` to receive
+     * @return tokenAmountOut The amount of `tokenOut` received
      *
      */
     function getRemoveLiquidityOneTokenOut(
@@ -349,7 +351,7 @@ interface IWell {
     /**
      * @notice Gets the amount of LP tokens to burn from removing liquidity as multiple underlying tokens in any ratio.
      * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
-     * @return lpAmountIn The amount of LP tokens to burn
+     * @return lpAmountIn The amount of LP tokens burned
      */
     function getRemoveLiquidityImbalancedIn(uint256[] calldata tokenAmountsOut)
         external
@@ -360,8 +362,10 @@ interface IWell {
 
     /**
      * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens.
+     * @param recipient The address to receive the LP tokens
+     * @return lpAmountOut The amount of LP tokens received
      */
-    function sync() external;
+    function sync(address recipient) external returns (uint256 lpAmountOut);
 
     /**
      * @notice Sends excess tokens held by the Well to the `recipient`.
