@@ -76,11 +76,16 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
 
         for (uint256 i; i < n; ++i) {
-            uint256 capReserve = _capReserve(
-                initReserves[i].fromUIntToLog2(),
-                updateReserves[i].fromUIntToLog2(),
-                (timeIncrease / BLOCK_TIME).fromUInt()
-            ).pow_2ToUInt();
+            uint256 capReserve;
+            if (timeIncrease > 0) {
+                capReserve = _capReserve(
+                    initReserves[i].fromUIntToLog2(),
+                    updateReserves[i].fromUIntToLog2(),
+                    ((timeIncrease - 1) / CAP_INTERVAL + 1).fromUInt()
+                ).pow_2ToUInt();
+            } else {
+                capReserve = initReserves[i];
+            }
 
             if (lastReserves[i] > 1e24) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);

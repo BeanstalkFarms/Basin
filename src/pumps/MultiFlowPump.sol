@@ -36,7 +36,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     bytes16 immutable LOG_MAX_INCREASE;
     bytes16 immutable LOG_MAX_DECREASE;
     bytes16 immutable ALPHA;
-    uint256 immutable BLOCK_TIME;
+    uint256 immutable CAP_INTERVAL;
 
     struct PumpState {
         uint40 lastTimestamp;
@@ -48,10 +48,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @param _maxPercentIncrease The maximum percent increase allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
-     * @param _blockTime The block time in the current EVM in seconds.
+     * @param _capInterval How often to increase the magnitude of the cap on the increase in reserve in seconds.
      * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
-    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _blockTime, bytes16 _alpha) {
+    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _capInterval, bytes16 _alpha) {
         // _maxPercentDecrease <= 100%
         if (_maxPercentDecrease > ABDKMathQuad.ONE) {
             revert InvalidMaxPercentDecreaseArgument(_maxPercentDecrease);
@@ -63,7 +63,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
-        BLOCK_TIME = _blockTime;
+        CAP_INTERVAL = _capInterval;
         ALPHA = _alpha;
     }
 
@@ -103,20 +103,21 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         bytes16 alphaN;
         bytes16 deltaTimestampBytes;
-        bytes16 blocksPassed;
+        bytes16 capExponent;
         // Isolate in brackets to prevent stack too deep errors
         {
             uint256 deltaTimestamp = _getDeltaTimestamp(pumpState.lastTimestamp);
+            if (deltaTimestamp == 0) return;
             alphaN = ALPHA.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
-            // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
-            blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+            // Round up in case CAP_INTERNAL < block.timestamp.
+            capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
 
         for (uint256 i; i < numberOfReserves; ++i) {
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
             pumpState.lastReserves[i] = _capReserve(
-                pumpState.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), blocksPassed
+                pumpState.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), capExponent
             );
             pumpState.emaReserves[i] =
                 pumpState.lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
@@ -184,32 +185,32 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Adds a cap to the reserve value to prevent extreme changes.
      *
      *  Linear space:
-     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ blocks)
+     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ capExponent)
      *
      *  Log space:
-     *     log2(max reserve) = log2(last reserve) + blocks*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
+     *     log2(max reserve) = log2(last reserve) + capExponent*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     `bytes16 lastReserve`      <- log2(last reserve)
-     *     `bytes16 blocksPassed`     <- log2(blocks)
+     *     `bytes16 capExponent`   <- capExponent
      *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
-     *     ∴ `maxReserve = lastReserve + blocks*LOG_MAX_INCREASE`
+     *     ∴ `maxReserve = lastReserve + capExponent*LOG_MAX_INCREASE`
      *
      */
     function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
-        bytes16 blocksPassed
+        bytes16 capExponent
     ) internal view returns (bytes16 cappedReserve) {
         // Reserve decreasing (lastReserve > reserve)
         if (lastReserve.cmp(reserve) == 1) {
-            bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
+            bytes16 minReserve = lastReserve.add(capExponent.mul(LOG_MAX_DECREASE));
             // if reserve < minimum reserve, set reserve to minimum reserve
             if (minReserve.cmp(reserve) == 1) reserve = minReserve;
         }
         // Rerserve Increasing or staying the same.
         else {
-            bytes16 maxReserve = blocksPassed.mul(LOG_MAX_INCREASE);
+            bytes16 maxReserve = capExponent.mul(LOG_MAX_INCREASE);
             maxReserve = lastReserve.add(maxReserve);
             // If reserve > maximum reserve, set reserve to maximum reserve
             if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
@@ -249,11 +250,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
-        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+        bytes16 capExponent = (deltaTimestamp / CAP_INTERVAL).fromUInt();
         bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         emaReserves = new uint256[](numberOfReserves);
         for (uint256 i; i < numberOfReserves; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
             emaReserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(lastEmaReserves[i].mul(alphaN)).pow_2ToUInt();
         }
@@ -296,10 +297,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         cumulativeReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+        bytes16 capExponent = (deltaTimestamp / CAP_INTERVAL).fromUInt();
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
             cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
         }
     }

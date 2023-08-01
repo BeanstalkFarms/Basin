@@ -17,7 +17,7 @@ contract PumpUpdateTest is TestHelper {
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
-    uint256 constant BLOCK_TIME = 12;
+    uint256 constant CAP_INTERVAL = 12;
 
     /// @dev for this test, `user` = a Well that's calling the Pump
     function setUp() public {
@@ -107,12 +107,12 @@ contract PumpUpdateTest is TestHelper {
     function test_update_12Seconds() public prank(user) {
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), new bytes(0));
         uint256 lastTimestamp = block.timestamp;
-        // After BLOCK_TIME, Pump receives an update
+        // After CAP_INTERVAL, Pump receives an update
         b[0] = 2e6; // 1e6 -> 2e6 = +100%
         b[1] = 1e6; // 2e6 -> 1e6 = - 50%
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         mWell.update(address(pump), b, new bytes(0));
 
@@ -160,7 +160,7 @@ contract PumpUpdateTest is TestHelper {
         b[1] = 1e6; // 2e6 -> 1e6 = - 50%
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         //
         uint256[] memory emaReserves = pump.readInstantaneousReserves(address(mWell), new bytes(0));
@@ -192,7 +192,7 @@ contract PumpUpdateTest is TestHelper {
 
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         bytes memory startCumulativeReserves2 = pump.readCumulativeReserves(address(mWell), new bytes(0));
         uint256 lastTimestamp2 = block.timestamp;
@@ -202,7 +202,7 @@ contract PumpUpdateTest is TestHelper {
 
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         mWell.update(address(pump), b, new bytes(0));
 
@@ -261,7 +261,7 @@ contract PumpUpdateTest is TestHelper {
 
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         bytes memory startCumulativeReserves2 = pump.readCumulativeReserves(address(mWell), new bytes(0));
         uint256 lastTimestamp2 = block.timestamp;
@@ -271,7 +271,7 @@ contract PumpUpdateTest is TestHelper {
 
         mWell.update(address(pump), b, new bytes(0));
 
-        increaseTime(BLOCK_TIME);
+        increaseTime(CAP_INTERVAL);
 
         uint256[] memory emaReserves = pump.readInstantaneousReserves(address(mWell), new bytes(0));
         assertEq(emaReserves[0], 1_085_643);
