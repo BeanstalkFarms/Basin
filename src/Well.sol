@@ -25,6 +25,13 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  *   using `skim`, `sync` or `shift`.
  * - Negative rebasing tokens should not be used in Well as the effect of a negative
  *   rebase will be realized by users interacting with the Well, not LP token holders.
+ *
+ * Fee on Tranfer (FoT) Tokens:
+ * - When transferring fee on transfer tokens to a Well (swapping from or adding liquidity),
+ *   use `swapFromFeeOnTrasfer` or `addLiquidityFeeOnTransfer`. `swapTo` does not support
+ *   fee on transfer tokens (See {swapTo}).
+ * - When recieving fee on transfer tokens from a Well (swapping to and removing liquidity),
+ *   INCLUDE the fee that is taken on transfer when calculating amount out values.
  */
 contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
