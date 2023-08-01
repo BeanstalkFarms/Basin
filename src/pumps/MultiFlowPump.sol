@@ -48,7 +48,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @param _maxPercentIncrease The maximum percent increase allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
-     * @param _capInterval How often to increase the magnitude of the cap on the increase in reserve in seconds.
+     * @param _capInterval How often to increase the magnitude of the cap on the change in reserve in seconds.
      * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
      */
     constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _capInterval, bytes16 _alpha) {
