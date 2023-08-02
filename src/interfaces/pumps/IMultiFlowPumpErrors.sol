@@ -15,4 +15,6 @@ interface IMultiFlowPumpErrors {
     error InvalidMaxPercentDecreaseArgument(bytes16 maxPercentDecrease);
 
     error InvalidAArgument(bytes16 a);
+
+    error InvalidCapIntervalArgument(uint256 capInterval);
 }

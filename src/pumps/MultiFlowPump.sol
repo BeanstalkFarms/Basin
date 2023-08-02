@@ -61,6 +61,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             revert InvalidAArgument(_alpha);
         }
 
+        if (_capInterval == 0) {
+            revert InvalidCapIntervalArgument(_capInterval);
+        }
+
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         CAP_INTERVAL = _capInterval;
