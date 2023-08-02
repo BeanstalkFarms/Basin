@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.17;
 
+import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
+
 /**
  * @title LibContractInfo
  * @notice Contains logic to call functions that return information about a given contract.
@@ -19,8 +21,9 @@ library LibContractInfo {
         if (success) {
             symbol = abi.decode(data, (string));
         } else {
+            string memory _address = Strings.toHexString(_contract);
             assembly {
-                mstore(add(symbol, 0x20), shl(224, shr(128, _contract)))
+                mstore(add(symbol, 0x20), shl(16, mload(add(_address, 32))))
             }
         }
     }
@@ -37,8 +40,9 @@ library LibContractInfo {
         if (success) {
             name = abi.decode(data, (string));
         } else {
+            string memory _address = Strings.toHexString(_contract);
             assembly {
-                mstore(add(name, 0x20), shl(224, shr(128, _contract)))
+                mstore(add(name, 0x20), shl(16, mload(add(_address, 32))))
             }
         }
     }
