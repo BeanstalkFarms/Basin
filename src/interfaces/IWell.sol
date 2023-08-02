@@ -14,6 +14,9 @@ struct Call {
 
 /**
  * @title IWell is the interface for the Well contract.
+ *
+ * @dev A Well implementation that can self-destruct should not be considered valid as this leaves any on-chain Well
+ * registry that uses Aquifer to verify a Well's implementation address vulnerable to a metamorphic contract attack.
  */
 interface IWell {
     /**
