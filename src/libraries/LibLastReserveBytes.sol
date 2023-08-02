@@ -7,7 +7,12 @@ pragma solidity ^0.8.17;
  * @author Publius
  * @notice  Contains byte operations used during storage reads & writes for Pumps.
  *
- * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
+ * @dev {LibLastReserveBytes} tightly packs a `uint8 n`, `uint40 timestamp` and `bytes16[] reserves`
+ * for gas efficiency purposes. The first 2 values in `reserves` are packed into the first slot with
+ * `timestamp` and `n`. Thus, only the first 13 bytes (104 bit) of each reserve value are stored and
+ * the last 3 bytes get truncated. Given that the Well uses the quadruple-precision floating-point
+ * format for last reserve values and only uses the last reserves to compute the max increase/decrease
+ * in reserves for manipulation resistance purposes, the gas savings is worth the lose of precision.
  */
 library LibLastReserveBytes {
     function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
