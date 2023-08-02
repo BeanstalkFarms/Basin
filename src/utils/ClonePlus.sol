@@ -7,8 +7,6 @@ import {IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 /// @title ClonePlus
 /// @notice Extends Clone with additional helper functions
 contract ClonePlus is Clone {
-    uint256 private constant ONE_WORD = 0x20;
-
     /// @notice Reads a IERC20 array stored in the immutable args.
     /// @param argOffset The offset of the arg in the packed data
     /// @param arrLen Number of elements in the array

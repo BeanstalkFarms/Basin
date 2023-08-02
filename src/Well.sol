@@ -35,7 +35,6 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
 contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
 
-    uint256 private constant ONE_WORD = 32;
     uint256 private constant PACKED_ADDRESS = 20;
     uint256 private constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
     bytes32 private constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
