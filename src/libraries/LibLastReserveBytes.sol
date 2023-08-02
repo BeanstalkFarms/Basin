@@ -54,7 +54,7 @@ library LibLastReserveBytes {
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            // Equivalent to "i % 2 == 1" but cheaper.
+            // Equivalent to "reserves.length % 2 == 1" but cheaper.
             if (reserves.length & 1 == 1) {
                 iByte = maxI * 64;
                 assembly {
