@@ -40,7 +40,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     bytes32 private constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
 
     constructor() {
-        // Disable Initializers to prevent the init function from being callable on the implementation address
+        // Disable Initializers to prevent the init function from being callable on the implementation contract
         _disableInitializers();
     }
 
