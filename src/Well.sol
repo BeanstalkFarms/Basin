@@ -341,9 +341,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     //////////////////// SHIFT ////////////////////
 
     /**
-     * @dev When using Wells for a multi-step swap, gas costs can be reduced by
-     * "shifting" tokens from one Well to another rather than returning them to
-     * a router (like Pipeline).
+     * @dev When using Wells for a multi-hop swap in 1 single transaction using a
+     * multicall contract like Pipeline, costs can be reduced by "shifting" tokens
+     * from one Well to another rather than returning them to the multicall router.
      *
      * Example multi-hop swap: WETH -> DAI -> USDC
      *

@@ -14,6 +14,10 @@ struct Call {
 
 /**
  * @title IWell is the interface for the Well contract.
+ *
+ * In order for a Well to be verified using a permissionless on-chain registry, a Well Implementation should:
+ * - Not be able to self-destruct (Aquifer's registry would be vulnerable to a metamorphic contract attack)
+ * - Not be able to change its tokens, Well Function, Pumps and Well Data
  */
 interface IWell {
     /**
