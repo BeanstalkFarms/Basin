@@ -17,6 +17,8 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  *  `n` is the number of tokens in the Well
+ *
+ * Note: Using too many tokens in a Constant Product Well may result in overflow.
  */
 contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
     using LibMath for uint256;
