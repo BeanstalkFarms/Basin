@@ -36,4 +36,14 @@ contract PumpInvalidConstructorArguments is TestHelper {
             from18(1.01e18)
         );
     }
+
+    function test_invalid_cap_interval_argument_error() public {
+        vm.expectRevert(abi.encodeWithSelector(IMultiFlowPumpErrors.InvalidCapIntervalArgument.selector, 0));
+        pump = new MultiFlowPump(
+            from18(0.5e18),
+            from18(1e18),
+            0,
+            from18(0.9e18)
+        );
+    }
 }
