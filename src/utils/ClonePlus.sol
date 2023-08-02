@@ -34,7 +34,7 @@ contract ClonePlus is Clone {
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            calldatacopy(add(data, ONE_WORD), offset, shl(5, bytesLen))
+            calldatacopy(add(data, ONE_WORD), offset, bytesLen)
         }
     }
 }

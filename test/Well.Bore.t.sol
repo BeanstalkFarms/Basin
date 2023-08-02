@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {LibClone} from "src/libraries/LibClone.sol";
 
 contract WellBoreTest is TestHelper {
     /// @dev Bore a 4-token Well with ConstantProduct2 & several pumps.
@@ -140,7 +141,7 @@ contract WellBoreTest is TestHelper {
     }
 
     function test_notInitialized() public {
-        Well _well = new Well();
+        Well _well = Well(LibClone.clone(wellImplementation));
         assertEq(_well.isInitialized(), false);
     }
 }
