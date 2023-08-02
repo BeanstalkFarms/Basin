@@ -223,9 +223,9 @@ interface IWell {
      * @param minAmountOut The minimum amount of `tokenOut` to receive
      * @param recipient The address to receive the token
      * @return amountOut The amount of `tokenOut` received
-     * @dev Gas optimization: we leave the responsibility of checking a transaction
-     * deadline to a wrapper contract like {Pipeline} to prevent repeated deadline
-     * checks on each hop of a multi-step transaction.
+     * @dev No deadline is needed since this function does not use the user's assets. If used with
+     * with a multicall contract like Pipeline to perform a swap, a deadline check could be added
+     * to the multicall.
      */
     function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
 
@@ -364,6 +364,9 @@ interface IWell {
      * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens.
      * @param recipient The address to receive the LP tokens
      * @return lpAmountOut The amount of LP tokens received
+     * @dev No deadline is needed since this function does not use the user's assets. If used with
+     * with a multicall contract like Pipeline to perform add liquidity, a deadline check could be
+     * added to the multicall.
      */
     function sync(address recipient) external returns (uint256 lpAmountOut);
 
@@ -371,6 +374,7 @@ interface IWell {
      * @notice Sends excess tokens held by the Well to the `recipient`.
      * @param recipient The address to send the tokens
      * @return skimAmounts The amount of each token skimmed
+     * @dev No deadline is needed since this function does not use the user's assets.
      */
     function skim(address recipient) external returns (uint256[] memory skimAmounts);
 
