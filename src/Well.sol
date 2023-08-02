@@ -3,9 +3,8 @@
 pragma solidity ^0.8.17;
 
 import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
-import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
-import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 import {IPump} from "src/interfaces/pumps/IPump.sol";
@@ -35,16 +34,20 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  */
 contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
     using SafeERC20 for IERC20;
-    using SafeCast for uint256;
 
-    uint256 constant ONE_WORD = 32;
-    uint256 constant PACKED_ADDRESS = 20;
-    uint256 constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
-    bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
+    uint256 private constant PACKED_ADDRESS = 20;
+    uint256 private constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
+    bytes32 private constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
 
-    function init(string memory name, string memory symbol) public initializer {
-        __ERC20Permit_init(name);
-        __ERC20_init(name, symbol);
+    constructor() {
+        // Disable Initializers to prevent the init function from being callable on the implementation contract
+        _disableInitializers();
+    }
+
+    function init(string memory _name, string memory _symbol) public initializer {
+        __ERC20Permit_init(_name);
+        __ERC20_init(_name, _symbol);
+        __ReentrancyGuard_init();
 
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
@@ -93,12 +96,12 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /// ...
     /// ==============================================================
 
-    uint256 constant LOC_AQUIFER_ADDR = 0;
-    uint256 constant LOC_TOKENS_COUNT = LOC_AQUIFER_ADDR + PACKED_ADDRESS;
-    uint256 constant LOC_WELL_FUNCTION_ADDR = LOC_TOKENS_COUNT + ONE_WORD;
-    uint256 constant LOC_WELL_FUNCTION_DATA_LENGTH = LOC_WELL_FUNCTION_ADDR + PACKED_ADDRESS;
-    uint256 constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + ONE_WORD;
-    uint256 constant LOC_VARIABLE = LOC_PUMPS_COUNT + ONE_WORD;
+    uint256 private constant LOC_AQUIFER_ADDR = 0;
+    uint256 private constant LOC_TOKENS_COUNT = LOC_AQUIFER_ADDR + PACKED_ADDRESS;
+    uint256 private constant LOC_WELL_FUNCTION_ADDR = LOC_TOKENS_COUNT + ONE_WORD;
+    uint256 private constant LOC_WELL_FUNCTION_DATA_LENGTH = LOC_WELL_FUNCTION_ADDR + PACKED_ADDRESS;
+    uint256 private constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + ONE_WORD;
+    uint256 private constant LOC_VARIABLE = LOC_PUMPS_COUNT + ONE_WORD;
 
     function tokens() public pure returns (IERC20[] memory ts) {
         ts = _getArgIERC20Array(LOC_VARIABLE, numberOfTokens());

@@ -3,11 +3,9 @@
 pragma solidity ^0.8.17;
 
 import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
-import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IAquifer} from "src/interfaces/IAquifer.sol";
-import {Well, IWell, Call, IERC20} from "src/Well.sol";
+import {IWell} from "src/Well.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
 
 /**
@@ -17,12 +15,11 @@ import {LibClone} from "src/libraries/LibClone.sol";
  * @dev Aquifer deploys Wells by cloning a pre-deployed Well implementation.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
-    using SafeCast for uint256;
     using LibClone for address;
 
     // A mapping of Well address to the Well implementation addresses
     // Mapping gets set on Well deployment
-    mapping(address => address) wellImplementations;
+    mapping(address => address) private wellImplementations;
 
     constructor() ReentrancyGuard() {}
 

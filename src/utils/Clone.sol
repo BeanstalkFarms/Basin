@@ -6,7 +6,7 @@ pragma solidity ^0.8.4;
 /// @notice Provides helper functions for reading immutable args from calldata
 contract Clone {
 
-    uint256 private constant ONE_WORD = 0x20;
+    uint256 internal constant ONE_WORD = 0x20;
 
     /// @notice Reads an immutable arg with type address
     /// @param argOffset The offset of the arg in the packed data

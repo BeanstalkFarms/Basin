@@ -10,7 +10,6 @@ import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
 import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
-import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 /**
  * @title MultiFlowPump
@@ -27,16 +26,15 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
-    using SafeCast for uint256;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
-    bytes16 immutable LOG_MAX_INCREASE;
-    bytes16 immutable LOG_MAX_DECREASE;
-    bytes16 immutable ALPHA;
-    uint256 immutable CAP_INTERVAL;
+    bytes16 private immutable LOG_MAX_INCREASE;
+    bytes16 private immutable LOG_MAX_DECREASE;
+    bytes16 private immutable ALPHA;
+    uint256 private immutable CAP_INTERVAL;
 
     struct PumpState {
         uint40 lastTimestamp;
