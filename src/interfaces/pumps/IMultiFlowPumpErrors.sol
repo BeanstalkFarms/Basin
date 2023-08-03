@@ -11,10 +11,4 @@ interface IMultiFlowPumpErrors {
     error NotInitialized();
 
     error NoTimePassed();
-
-    error InvalidMaxPercentDecreaseArgument(bytes16 maxPercentDecrease);
-
-    error InvalidAArgument(bytes16 a);
-
-    error InvalidCapIntervalArgument(uint256 capInterval);
 }

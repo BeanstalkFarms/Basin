@@ -48,21 +48,17 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _capInterval How often to increase the magnitude of the cap on the change in reserve in seconds.
      * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
+     *
+     * @dev The Pump will not flow and should definitely be considered invalid if the following constraints are not met:
+     * - 0% < _maxPercentIncrease
+     * - 0% < _maxPercentDecrease <= 100%
+     * - 0 < ALPHA <= 1
+     * - _capInterval > 0
+     * The above constraints are not checked in the constructor for gas efficiency reasons.
+     * When evaluating the manipulation resistance of an instance of a Multi Flow Pump for use as an oracle, stricter
+     * constraints should be used.
      */
     constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _capInterval, bytes16 _alpha) {
-        // _maxPercentDecrease <= 100%
-        if (_maxPercentDecrease > ABDKMathQuad.ONE) {
-            revert InvalidMaxPercentDecreaseArgument(_maxPercentDecrease);
-        }
-        // ALPHA <= 1
-        if (_alpha > ABDKMathQuad.ONE) {
-            revert InvalidAArgument(_alpha);
-        }
-
-        if (_capInterval == 0) {
-            revert InvalidCapIntervalArgument(_capInterval);
-        }
-
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
         CAP_INTERVAL = _capInterval;
@@ -209,8 +205,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         // Reserve increasing or staying the same (lastReserve <= reserve)
         else {
-            bytes16 maxReserve = capExponent.mul(LOG_MAX_INCREASE);
-            maxReserve = lastReserve.add(maxReserve);
+            bytes16 maxReserve = lastReserve.add(capExponent.mul(LOG_MAX_INCREASE));
             // If reserve > maximum reserve, set reserve to maximum reserve
             if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
         }

@@ -393,8 +393,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
 
         if (amountOut >= minAmountOut) {
-            tokenOut.safeTransfer(recipient, amountOut);
             reserves[j] -= amountOut;
+            tokenOut.safeTransfer(recipient, amountOut);
             _setReserves(_tokens, reserves);
             emit Shift(reserves, tokenOut, amountOut, recipient);
         } else {
