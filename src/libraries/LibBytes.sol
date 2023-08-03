@@ -13,6 +13,8 @@ pragma solidity ^0.8.17;
  * Each value must be `<= type(uint128).max` in order pack properly.
  */
 library LibBytes {
+    uint256 constant MAX_UINT128 = 340_282_366_920_938_463_463_374_607_431_768_211_455; // type(uint128).max
+
     /**
      * @dev Store packed uint128 `reserves` starting at storage position `slot`.
      * Balances are passed as an uint256[], but values must be <= max uint128
@@ -21,8 +23,8 @@ library LibBytes {
     function storeUint128(bytes32 slot, uint256[] memory reserves) internal {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
-            require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
-            require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
+            require(reserves[0] <= MAX_UINT128, "ByteStorage: too large");
+            require(reserves[1] <= MAX_UINT128, "ByteStorage: too large");
             assembly {
                 sstore(slot, add(mload(add(reserves, 32)), shl(128, mload(add(reserves, 64)))))
             }
@@ -30,8 +32,8 @@ library LibBytes {
             uint256 maxI = reserves.length / 2; // number of fully-packed slots
             uint256 iByte; // byte offset of the current reserve
             for (uint256 i; i < maxI; ++i) {
-                require(reserves[2 * i] <= type(uint128).max, "ByteStorage: too large");
-                require(reserves[2 * i + 1] <= type(uint128).max, "ByteStorage: too large");
+                require(reserves[2 * i] <= MAX_UINT128, "ByteStorage: too large");
+                require(reserves[2 * i + 1] <= MAX_UINT128, "ByteStorage: too large");
                 iByte = i * 64;
                 assembly {
                     sstore(
@@ -44,7 +46,7 @@ library LibBytes {
             // Since `i < maxI` above, the next byte offset `maxI * 64`
             // Equivalent to "reserves.length % 2 == 1", but cheaper.
             if (reserves.length & 1 == 1) {
-                require(reserves[reserves.length - 1] <= type(uint128).max, "ByteStorage: too large");
+                require(reserves[reserves.length - 1] <= MAX_UINT128, "ByteStorage: too large");
                 iByte = maxI * 64;
                 assembly {
                     sstore(

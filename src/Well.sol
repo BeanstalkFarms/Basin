@@ -37,14 +37,14 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
 
     uint256 private constant PACKED_ADDRESS = 20;
     uint256 private constant ONE_WORD_PLUS_PACKED_ADDRESS = 52; // For gas efficiency purposes
-    bytes32 private constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
+    bytes32 private constant RESERVES_STORAGE_SLOT = 0x4bba01c388049b5ebd30398b65e8ad45b632802c5faf4964e58085ea8ab03715; // bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
 
     constructor() {
         // Disable Initializers to prevent the init function from being callable on the implementation contract
         _disableInitializers();
     }
 
-    function init(string memory _name, string memory _symbol) public initializer {
+    function init(string memory _name, string memory _symbol) external initializer {
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ReentrancyGuard_init();
