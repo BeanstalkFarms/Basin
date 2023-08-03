@@ -19,7 +19,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
 
     // A mapping of Well address to the Well implementation addresses
     // Mapping gets set on Well deployment
-    mapping(address => address) private wellImplementations;
+    mapping(address => address) public wellImplementation;
 
     constructor() ReentrancyGuard() {}
 
@@ -76,7 +76,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         }
 
         // Save implementation
-        wellImplementations[well] = implementation;
+        wellImplementation[well] = implementation;
 
         emit BoreWell(
             well,
@@ -86,10 +86,6 @@ contract Aquifer is IAquifer, ReentrancyGuard {
             IWell(well).pumps(),
             IWell(well).wellData()
         );
-    }
-
-    function wellImplementation(address well) external view returns (address implementation) {
-        return wellImplementations[well];
     }
 
     function predictWellAddress(

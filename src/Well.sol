@@ -393,7 +393,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
 
         if (amountOut >= minAmountOut) {
-            reserves[j] -= amountOut;
+            reserves[j] = reserves[j] - amountOut;
             tokenOut.safeTransfer(recipient, amountOut);
             _setReserves(_tokens, reserves);
             emit Shift(reserves, tokenOut, amountOut, recipient);
@@ -456,8 +456,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         } else {
             for (uint256 i; i < tokensLength; ++i) {
                 if (tokenAmountsIn[i] == 0) continue;
-                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
                 reserves[i] = reserves[i] + tokenAmountsIn[i];
+                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
             }
         }
 
@@ -504,8 +504,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
             if (tokenAmountsOut[i] < minTokenAmountsOut[i]) {
                 revert SlippageOut(tokenAmountsOut[i], minTokenAmountsOut[i]);
             }
-            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             reserves[i] = reserves[i] - tokenAmountsOut[i];
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         }
 
         _setReserves(_tokens, reserves);
@@ -586,8 +586,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256[] memory reserves = _updatePumps(tokensLength);
 
         for (uint256 i; i < tokensLength; ++i) {
-            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
             reserves[i] = reserves[i] - tokenAmountsOut[i];
+            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
         }
 
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
