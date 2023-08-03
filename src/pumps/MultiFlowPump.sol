@@ -111,9 +111,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         for (uint256 i; i < numberOfReserves; ++i) {
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-            pumpState.lastReserves[i] = _capReserve(
-                pumpState.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), capExponent
-            );
+            uint256 _reserve = reserves[i];
+            pumpState.lastReserves[i] =
+                _capReserve(pumpState.lastReserves[i], (_reserve > 0 ? _reserve : 1).fromUIntToLog2(), capExponent);
             pumpState.emaReserves[i] =
                 pumpState.lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
             pumpState.cumulativeReserves[i] =
@@ -146,8 +146,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         // Skip {_capReserve} since we have no prior reference
 
         for (uint256 i; i < numberOfReserves; ++i) {
-            if (reserves[i] == 0) return;
-            byteReserves[i] = reserves[i].fromUIntToLog2();
+            uint256 _reserve = reserves[i];
+            if (_reserve == 0) return;
+            byteReserves[i] = _reserve.fromUIntToLog2();
         }
 
         // Write: Last Timestamp & Last Reserves
@@ -165,8 +166,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     //////////////////// LAST RESERVES ////////////////////
 
     function readLastReserves(address well) public view returns (uint256[] memory reserves) {
-        bytes32 slot = _getSlotForAddress(well);
-        (uint8 numberOfReserves,, bytes16[] memory bytesReserves) = slot.readLastReserves();
+        (uint8 numberOfReserves,, bytes16[] memory bytesReserves) = _getSlotForAddress(well).readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
