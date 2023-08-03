@@ -45,6 +45,8 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
      *
      * In other words, {calcLpTokenSupply} overflows if all reserves are simultaneously
      * >= 10^32.5, or about 100 trillion if tokens are measured to 18 decimal precision.
+     *
+     * The further apart the reserve values, the greater the loss of precision in the `sqrt` function.
      */
     function calcLpTokenSupply(
         uint256[] calldata reserves,
