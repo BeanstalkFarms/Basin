@@ -450,8 +450,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         if (feeOnTransfer) {
             for (uint256 i; i < tokensLength; ++i) {
                 if (tokenAmountsIn[i] == 0) continue;
-                reserves[i] = reserves[i] + tokenAmountsIn[i];
                 tokenAmountsIn[i] = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
+                reserves[i] = reserves[i] + tokenAmountsIn[i];
             }
         } else {
             for (uint256 i; i < tokensLength; ++i) {
