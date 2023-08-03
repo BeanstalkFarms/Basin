@@ -214,7 +214,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     //////////////////// EMA RESERVES ////////////////////
 
-    function readLastInstantaneousReserves(address well) public view returns (uint256[] memory emaReserves) {
+    function readLastInstantaneousReserves(address well) external view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -231,7 +231,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
     }
 
-    function readInstantaneousReserves(address well, bytes memory) public view returns (uint256[] memory emaReserves) {
+    function readInstantaneousReserves(
+        address well,
+        bytes memory
+    ) external view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint256[] memory reserves = IWell(well).getReserves();
         (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
@@ -266,7 +269,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @notice Read the latest cumulative reserves of `well`.
      */
-    function readLastCumulativeReserves(address well) public view returns (bytes16[] memory cumulativeReserves) {
+    function readLastCumulativeReserves(address well) external view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -279,7 +282,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         cumulativeReserves = slot.readBytes16(numberOfReserves);
     }
 
-    function readCumulativeReserves(address well, bytes memory) public view returns (bytes memory cumulativeReserves) {
+    function readCumulativeReserves(
+        address well,
+        bytes memory
+    ) external view returns (bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
         cumulativeReserves = abi.encode(byteCumulativeReserves);
     }
@@ -338,21 +344,21 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
-    function _getSlotForAddress(address addressValue) internal pure returns (bytes32) {
-        return bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
+    function _getSlotForAddress(address addressValue) internal pure returns (bytes32 _slot) {
+        _slot = bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
     }
 
     /**
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
-    function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256) {
-        return ((numberOfReserves - 1) / 2 + 1) << 5;
+    function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
+        _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
     }
 
     /**
      * @dev Get the delta between the current and provided timestamp as a `uint256`.
      */
-    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256) {
+    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256 _deltaTimestamp) {
         return uint256(uint40(block.timestamp) - lastTimestamp);
     }
 }
