@@ -83,10 +83,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         // If the last timestamp is 0, then the pump has never been used before.
         if (pumpState.lastTimestamp == 0) {
-            for (uint256 i; i < numberOfReserves; ++i) {
-                // If a reserve is 0, then the pump cannot be initialized.
-                if (reserves[i] == 0) return;
-            }
             _init(slot, uint40(block.timestamp), reserves);
             return;
         }
@@ -163,7 +159,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         // Write: EMA Reserves
         // Start at the slot after `byteReserves`
-        uint256 numSlots = _getSlotsOffset(byteReserves.length);
+        uint256 numSlots = _getSlotsOffset(numberOfReserves);
         assembly {
             slot := add(slot, numSlots)
         }
@@ -211,7 +207,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             // if reserve < minimum reserve, set reserve to minimum reserve
             if (minReserve.cmp(reserve) == 1) reserve = minReserve;
         }
-        // Rerserve Increasing or staying the same.
+        // Reserve increasing or staying the same (lastReserve <= reserve)
         else {
             bytes16 maxReserve = capExponent.mul(LOG_MAX_INCREASE);
             maxReserve = lastReserve.add(maxReserve);
@@ -223,7 +219,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     //////////////////// EMA RESERVES ////////////////////
 
-    function readLastInstantaneousReserves(address well) public view returns (uint256[] memory reserves) {
+    function readLastInstantaneousReserves(address well) public view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -234,9 +230,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             slot := add(slot, offset)
         }
         bytes16[] memory byteReserves = slot.readBytes16(numberOfReserves);
-        reserves = new uint256[](numberOfReserves);
+        emaReserves = new uint256[](numberOfReserves);
         for (uint256 i; i < numberOfReserves; ++i) {
-            reserves[i] = byteReserves[i].pow_2ToUInt();
+            emaReserves[i] = byteReserves[i].pow_2ToUInt();
         }
     }
 
@@ -275,7 +271,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @notice Read the latest cumulative reserves of `well`.
      */
-    function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
+    function readLastCumulativeReserves(address well) public view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -285,7 +281,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         assembly {
             slot := add(slot, offset)
         }
-        reserves = slot.readBytes16(numberOfReserves);
+        cumulativeReserves = slot.readBytes16(numberOfReserves);
     }
 
     function readCumulativeReserves(address well, bytes memory) public view returns (bytes memory cumulativeReserves) {
