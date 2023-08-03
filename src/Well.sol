@@ -103,8 +103,8 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     uint256 private constant LOC_PUMPS_COUNT = LOC_WELL_FUNCTION_DATA_LENGTH + ONE_WORD;
     uint256 private constant LOC_VARIABLE = LOC_PUMPS_COUNT + ONE_WORD;
 
-    function tokens() public pure returns (IERC20[] memory ts) {
-        ts = _getArgIERC20Array(LOC_VARIABLE, numberOfTokens());
+    function tokens() public pure returns (IERC20[] memory _tokens) {
+        _tokens = _getArgIERC20Array(LOC_VARIABLE, numberOfTokens());
     }
 
     function wellFunction() public pure returns (Call memory _wellFunction) {
@@ -769,6 +769,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Returns the indices of `iToken` and `jToken` in `_tokens`.
      * Reverts if either token is not in `_tokens`.
+     * Reverts if `iToken` and `jToken` are the same.
      */
     function _getIJ(
         IERC20[] memory _tokens,
