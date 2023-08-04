@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
 import {ERC20Upgradeable, ERC20PermitUpgradeable} from "ozu/token/ERC20/extensions/ERC20PermitUpgradeable.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // forgefmt: disable-start
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Call, IERC20} from "src/Well.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // forgefmt: disable-start
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
 import {MockStaticWell} from "mocks/wells/MockStaticWell.sol";

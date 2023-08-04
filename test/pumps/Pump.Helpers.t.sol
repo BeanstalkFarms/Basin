@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
 import {simCapReserve50Percent, from18, to18} from "test/pumps/PumpHelpers.sol";
