@@ -109,8 +109,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
 
     function wellFunction() public pure returns (Call memory _wellFunction) {
         _wellFunction.target = wellFunctionAddress();
-        uint256 dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD;
-        _wellFunction.data = _getArgBytes(dataLoc, wellFunctionDataLength());
+        _wellFunction.data = _getArgBytes(LOC_VARIABLE + numberOfTokens() * ONE_WORD, wellFunctionDataLength());
     }
 
     function pumps() public pure returns (Call[] memory _pumps) {
@@ -121,7 +120,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
 
         uint256 pumpDataLength;
-        for (uint256 i; i < _pumps.length; i++) {
+        for (uint256 i; i < _pumps.length; ++i) {
             _pumps[i].target = _getArgAddress(dataLoc);
             dataLoc += PACKED_ADDRESS;
             pumpDataLength = _getArgUint256(dataLoc);
@@ -196,8 +195,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     function firstPump() public pure returns (Call memory _pump) {
         uint256 dataLoc = LOC_VARIABLE + numberOfTokens() * ONE_WORD + wellFunctionDataLength();
         _pump.target = _getArgAddress(dataLoc);
-        uint256 pumpDataLength = _getArgUint256(dataLoc + PACKED_ADDRESS);
-        _pump.data = _getArgBytes(dataLoc + ONE_WORD_PLUS_PACKED_ADDRESS, pumpDataLength);
+        _pump.data = _getArgBytes(dataLoc + ONE_WORD_PLUS_PACKED_ADDRESS, _getArgUint256(dataLoc + PACKED_ADDRESS));
     }
 
     //////////////////// SWAP: FROM ////////////////////
@@ -447,17 +445,21 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
 
+        uint256 _tokenAmountIn;
         if (feeOnTransfer) {
             for (uint256 i; i < tokensLength; ++i) {
-                if (tokenAmountsIn[i] == 0) continue;
-                tokenAmountsIn[i] = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, tokenAmountsIn[i]);
-                reserves[i] = reserves[i] + tokenAmountsIn[i];
+                _tokenAmountIn = tokenAmountsIn[i];
+                if (_tokenAmountIn == 0) continue;
+                _tokenAmountIn = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, _tokenAmountIn);
+                reserves[i] = reserves[i] + _tokenAmountIn;
+                tokenAmountsIn[i] = _tokenAmountIn;
             }
         } else {
             for (uint256 i; i < tokensLength; ++i) {
-                if (tokenAmountsIn[i] == 0) continue;
-                reserves[i] = reserves[i] + tokenAmountsIn[i];
-                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
+                _tokenAmountIn = tokenAmountsIn[i];
+                if (_tokenAmountIn == 0) continue;
+                reserves[i] = reserves[i] + _tokenAmountIn;
+                _tokens[i].safeTransferFrom(msg.sender, address(this), _tokenAmountIn);
             }
         }
 
@@ -495,17 +497,17 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
-        uint256 lpTokenSupply = totalSupply();
 
-        tokenAmountsOut = new uint256[](tokensLength);
+        tokenAmountsOut = _calcLPTokenUnderlying(wellFunction(), lpAmountIn, reserves, totalSupply());
         _burn(msg.sender, lpAmountIn);
-        tokenAmountsOut = _calcLPTokenUnderlying(wellFunction(), lpAmountIn, reserves, lpTokenSupply);
+        uint256 _tokenAmountOut;
         for (uint256 i; i < tokensLength; ++i) {
-            if (tokenAmountsOut[i] < minTokenAmountsOut[i]) {
-                revert SlippageOut(tokenAmountsOut[i], minTokenAmountsOut[i]);
+            _tokenAmountOut = tokenAmountsOut[i];
+            if (_tokenAmountOut < minTokenAmountsOut[i]) {
+                revert SlippageOut(_tokenAmountOut, minTokenAmountsOut[i]);
             }
-            reserves[i] = reserves[i] - tokenAmountsOut[i];
-            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
+            reserves[i] = reserves[i] - _tokenAmountOut;
+            _tokens[i].safeTransfer(recipient, _tokenAmountOut);
         }
 
         _setReserves(_tokens, reserves);
@@ -552,8 +554,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     ) external view returns (uint256 tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint256[] memory reserves = _getReserves(_tokens.length);
-        uint256 j = _getJ(_tokens, tokenOut);
-        tokenAmountOut = _getRemoveLiquidityOneTokenOut(lpAmountIn, j, reserves);
+        tokenAmountOut = _getRemoveLiquidityOneTokenOut(lpAmountIn, _getJ(_tokens, tokenOut), reserves);
     }
 
     /**
@@ -568,8 +569,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 j,
         uint256[] memory reserves
     ) private view returns (uint256 tokenAmountOut) {
-        uint256 newLpTokenSupply = totalSupply() - lpAmountIn;
-        uint256 newReserveJ = _calcReserve(wellFunction(), reserves, j, newLpTokenSupply);
+        uint256 newReserveJ = _calcReserve(wellFunction(), reserves, j, totalSupply() - lpAmountIn);
         tokenAmountOut = reserves[j] - newReserveJ;
     }
 
@@ -585,9 +585,11 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
 
+        uint256 _tokenAmountOut;
         for (uint256 i; i < tokensLength; ++i) {
-            reserves[i] = reserves[i] - tokenAmountsOut[i];
-            _tokens[i].safeTransfer(recipient, tokenAmountsOut[i]);
+            _tokenAmountOut = tokenAmountsOut[i];
+            reserves[i] = reserves[i] - _tokenAmountOut;
+            _tokens[i].safeTransfer(recipient, _tokenAmountOut);
         }
 
         lpAmountIn = totalSupply() - _calcLpTokenSupply(wellFunction(), reserves);
