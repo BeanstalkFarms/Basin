@@ -619,7 +619,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     //////////////////// RESERVES ////////////////////
 
     /**
-     * @dev Can be used in a multicall to add liquidity similar to how `shift` can be used to swap in a multicall.
+     * @dev Can be used in a multicall to add liquidity similar to how `shift` can be used to swap.
      * See {shift} for examples of how to use in a multicall.
      */
     function sync(address recipient, uint256 minLpAmountOut) external nonReentrant returns (uint256 lpAmountOut) {
