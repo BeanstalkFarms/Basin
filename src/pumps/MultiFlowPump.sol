@@ -109,9 +109,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
 
+        uint256 _reserve;
         for (uint256 i; i < numberOfReserves; ++i) {
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-            uint256 _reserve = reserves[i];
+            _reserve = reserves[i];
             pumpState.lastReserves[i] =
                 _capReserve(pumpState.lastReserves[i], (_reserve > 0 ? _reserve : 1).fromUIntToLog2(), capExponent);
             pumpState.emaReserves[i] =
