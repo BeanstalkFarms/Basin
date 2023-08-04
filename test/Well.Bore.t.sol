@@ -18,6 +18,7 @@ contract WellBoreTest is TestHelper {
     //////////// Well Definition ////////////
 
     function test_tokens() public {
+        assertEq(well.numberOfTokens(), 4);
         assertEq(well.tokens(), tokens);
     }
 
