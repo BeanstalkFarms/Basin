@@ -367,12 +367,14 @@ interface IWell {
     /**
      * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens.
      * @param recipient The address to receive the LP tokens
+     * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @return lpAmountOut The amount of LP tokens received
-     * @dev No deadline is needed since this function does not use the user's assets. If used with
-     * with a multicall contract like Pipeline to perform add liquidity, a deadline check could be
-     * added to the multicall.
+     * @dev Can be used in a multicall contract like Pipeline to perform a gas efficient add liquidity operation.
+     * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
+     * then a deadline check can be added to the multicall.
+     * When adding liquidity through a multicall, use `minLpAmountOut` to protect against MEV.
      */
-    function sync(address recipient) external returns (uint256 lpAmountOut);
+    function sync(address recipient, uint256 minLpAmountOut) external returns (uint256 lpAmountOut);
 
     /**
      * @notice Sends excess tokens held by the Well to the `recipient`.
