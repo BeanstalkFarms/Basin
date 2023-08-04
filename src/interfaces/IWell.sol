@@ -365,8 +365,8 @@ interface IWell {
     //////////////////// RESERVES ////////////////////
 
     /**
-     * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens and if the reserves
-     * increase mints at least `minLpAmountOut` LP Tokens to `recipient`.
+     * @notice Syncs the reserves of the Well with the Well's balances of underlying tokens. If the reserves
+     * increasem, mints at least `minLpAmountOut` LP Tokens to `recipient`.
      * @param recipient The address to receive the LP tokens
      * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @return lpAmountOut The amount of LP tokens received
