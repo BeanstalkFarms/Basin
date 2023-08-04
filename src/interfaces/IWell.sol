@@ -227,7 +227,7 @@ interface IWell {
      * @param minAmountOut The minimum amount of `tokenOut` to receive
      * @param recipient The address to receive the token
      * @return amountOut The amount of `tokenOut` received
-     * @dev Can be used in a multicall using a contract like Pipeline to perform a gas efficient swap.
+     * @dev Can be used in a multicall using a contract like Pipeline to perform gas efficient swaps.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
      */
@@ -369,8 +369,8 @@ interface IWell {
      * increase mints at least `minLpAmountOut` LP Tokens to `recipient`.
      * @param recipient The address to receive the LP tokens
      * @param minLpAmountOut The minimum amount of LP tokens to receive
-     * @return lpAmountOut The amount of LP tokens receivedWeh
-     * @dev Can be used in a multicall using a contract like Pipeline to perform gas efficient add liquidity operations.
+     * @return lpAmountOut The amount of LP tokens received
+     * @dev Can be used in a multicall using a contract like Pipeline to perform gas efficient additions of liquidity.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
      * If `sync` decreases the Well's reserve balances, then no LP tokens are minted and `lpAmountOut` must be 0.
