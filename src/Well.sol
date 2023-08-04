@@ -619,10 +619,10 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     //////////////////// RESERVES ////////////////////
 
     /**
-     * @dev Sync the reserves of the Well with its current balance of underlying tokens
-     * and mints LP tokens to `recipient` if the reserves increased.
+     * @dev Can be used in a multicall to add liquidity similar to how `shift` can be used to swap.
+     * See {shift} for examples of how to use in a multicall.
      */
-    function sync(address recipient) external nonReentrant returns (uint256 lpAmountOut) {
+    function sync(address recipient, uint256 minLpAmountOut) external nonReentrant returns (uint256 lpAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         _updatePumps(tokensLength);
@@ -636,6 +636,11 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
             lpAmountOut = newTokenSupply - oldTokenSupply;
             _mint(recipient, lpAmountOut);
         }
+
+        if (lpAmountOut < minLpAmountOut) {
+            revert SlippageOut(lpAmountOut, minLpAmountOut);
+        }
+
         _setReserves(_tokens, reserves);
         emit Sync(reserves, lpAmountOut, recipient);
     }
