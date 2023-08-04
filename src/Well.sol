@@ -445,18 +445,21 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
 
+        uint256 _tokenAmountIn;
         if (feeOnTransfer) {
             for (uint256 i; i < tokensLength; ++i) {
-                uint256 _tokenAmountsIn = tokenAmountsIn[i];
-                if (_tokenAmountsIn == 0) continue;
-                reserves[i] = reserves[i] + _tokenAmountsIn;
-                tokenAmountsIn[i] = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, _tokenAmountsIn);
+                _tokenAmountIn = tokenAmountsIn[i];
+                if (_tokenAmountIn == 0) continue;
+                _tokenAmountIn = _safeTransferFromFeeOnTransfer(_tokens[i], msg.sender, _tokenAmountIn);
+                reserves[i] = reserves[i] + _tokenAmountIn;
+                tokenAmountsIn[i] = _tokenAmountIn;
             }
         } else {
             for (uint256 i; i < tokensLength; ++i) {
-                if (tokenAmountsIn[i] == 0) continue;
-                reserves[i] = reserves[i] + tokenAmountsIn[i];
-                _tokens[i].safeTransferFrom(msg.sender, address(this), tokenAmountsIn[i]);
+                _tokenAmountIn = tokenAmountsIn[i];
+                if (_tokenAmountIn == 0) continue;
+                reserves[i] = reserves[i] + _tokenAmountIn;
+                _tokens[i].safeTransferFrom(msg.sender, address(this), _tokenAmountIn);
             }
         }
 
@@ -495,11 +498,11 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
 
-        tokenAmountsOut = new uint256[](tokensLength);
-        _burn(msg.sender, lpAmountIn);
         tokenAmountsOut = _calcLPTokenUnderlying(wellFunction(), lpAmountIn, reserves, totalSupply());
+        _burn(msg.sender, lpAmountIn);
+        uint256 _tokenAmountOut;
         for (uint256 i; i < tokensLength; ++i) {
-            uint256 _tokenAmountOut = tokenAmountsOut[i];
+            _tokenAmountOut = tokenAmountsOut[i];
             if (_tokenAmountOut < minTokenAmountsOut[i]) {
                 revert SlippageOut(_tokenAmountOut, minTokenAmountsOut[i]);
             }
@@ -582,8 +585,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _updatePumps(tokensLength);
 
+        uint256 _tokenAmountOut;
         for (uint256 i; i < tokensLength; ++i) {
-            uint256 _tokenAmountOut = tokenAmountsOut[i];
+            _tokenAmountOut = tokenAmountsOut[i];
             reserves[i] = reserves[i] - _tokenAmountOut;
             _tokens[i].safeTransfer(recipient, _tokenAmountOut);
         }
