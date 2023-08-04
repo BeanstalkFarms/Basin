@@ -227,7 +227,7 @@ interface IWell {
      * @param minAmountOut The minimum amount of `tokenOut` to receive
      * @param recipient The address to receive the token
      * @return amountOut The amount of `tokenOut` received
-     * @dev Can be used in a multicall contract like Pipeline to perform a gas efficient swap.
+     * @dev Can be used in a multicall using a contract like Pipeline to perform a gas efficient swap.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
      * When swapping through a multicall, use `minAmountOut` to protect against MEV.
@@ -371,7 +371,7 @@ interface IWell {
      * @param recipient The address to receive the LP tokens
      * @param minLpAmountOut The minimum amount of LP tokens to receive
      * @return lpAmountOut The amount of LP tokens received
-     * @dev Can be used in a multicall contract like Pipeline to perform gas efficient add liquidity operations.
+     * @dev Can be used in a multicall using a contract like Pipeline to perform gas efficient add liquidity operations.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
      * When adding liquidity through a multicall, use `minLpAmountOut` to protect against MEV.
