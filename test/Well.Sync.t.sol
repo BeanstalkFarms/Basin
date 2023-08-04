@@ -23,7 +23,7 @@ contract WellSyncTest is TestHelper {
         assertEq(wellBalance.tokens[1], 1000 * 1e18);
     }
 
-    function test_syncDown_revert_minAmountOutTooHigh() public prank(user) {
+    function test_syncDown() public prank(user) {
         MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
 
@@ -45,7 +45,7 @@ contract WellSyncTest is TestHelper {
         assertEq(lpAmountOut, 0, "return value should be 0");
     }
 
-    function test_syncDown() public prank(user) {
+    function test_syncDown_revert_minAmountOutTooHigh() public prank(user) {
         MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, 0, 1));
