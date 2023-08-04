@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
