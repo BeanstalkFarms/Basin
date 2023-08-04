@@ -230,7 +230,6 @@ interface IWell {
      * @dev Can be used in a multicall using a contract like Pipeline to perform a gas efficient swap.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
-     * When swapping through a multicall, use `minAmountOut` to protect against MEV.
      */
     function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
 
@@ -370,11 +369,10 @@ interface IWell {
      * mints at least `minLpAmountOut` LP Tokens to `recipient` if the reserves increased.
      * @param recipient The address to receive the LP tokens
      * @param minLpAmountOut The minimum amount of LP tokens to receive
-     * @return lpAmountOut The amount of LP tokens received
+     * @return lpAmountOut The amount of LP tokens receivedWeh
      * @dev Can be used in a multicall using a contract like Pipeline to perform gas efficient add liquidity operations.
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
-     * When adding liquidity through a multicall, use `minLpAmountOut` to protect against MEV.
      */
     function sync(address recipient, uint256 minLpAmountOut) external returns (uint256 lpAmountOut);
 
