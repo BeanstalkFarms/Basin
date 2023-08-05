@@ -391,7 +391,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         amountOut = reserves[j] - _calcReserve(wellFunction(), reserves, j, totalSupply());
 
         if (amountOut >= minAmountOut) {
-            reserves[j] = reserves[j] - amountOut;
+            reserves[j] -= amountOut;
             tokenOut.safeTransfer(recipient, amountOut);
             _setReserves(_tokens, reserves);
             emit Shift(reserves, tokenOut, amountOut, recipient);
@@ -543,7 +543,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         _burn(msg.sender, lpAmountIn);
         tokenOut.safeTransfer(recipient, tokenAmountOut);
 
-        reserves[j] = reserves[j] - tokenAmountOut;
+        reserves[j] -= tokenAmountOut;
         _setReserves(_tokens, reserves);
         emit RemoveLiquidityOneToken(lpAmountIn, tokenOut, tokenAmountOut, recipient);
     }

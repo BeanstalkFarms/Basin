@@ -83,18 +83,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return;
         }
 
-        // Read: Cumulative & EMA Reserves
-        // Start at the slot after `pumpState.lastReserves`
-        uint256 numSlots = _getSlotsOffset(numberOfReserves);
-        assembly {
-            slot := add(slot, numSlots)
-        }
-        pumpState.emaReserves = slot.readBytes16(numberOfReserves);
-        assembly {
-            slot := add(slot, numSlots)
-        }
-        pumpState.cumulativeReserves = slot.readBytes16(numberOfReserves);
-
         bytes16 alphaN;
         bytes16 deltaTimestampBytes;
         bytes16 capExponent;
@@ -108,6 +96,18 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             // Round up in case CAP_INTERVAL > block.timestamp.
             capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
+
+        // Read: Cumulative & EMA Reserves
+        // Start at the slot after `pumpState.lastReserves`
+        uint256 numSlots = _getSlotsOffset(numberOfReserves);
+        assembly {
+            slot := add(slot, numSlots)
+        }
+        pumpState.emaReserves = slot.readBytes16(numberOfReserves);
+        assembly {
+            slot := add(slot, numSlots)
+        }
+        pumpState.cumulativeReserves = slot.readBytes16(numberOfReserves);
 
         uint256 _reserve;
         for (uint256 i; i < numberOfReserves; ++i) {
