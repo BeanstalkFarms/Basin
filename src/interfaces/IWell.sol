@@ -378,6 +378,12 @@ interface IWell {
     function sync(address recipient, uint256 minLpAmountOut) external returns (uint256 lpAmountOut);
 
     /**
+     * @notice Calculates the amount of LP Tokens received from syncing the Well's reserves with the Well's balances.
+     * @return lpAmountOut The amount of LP tokens received
+     */
+    function getSyncOut() external view returns (uint256 lpAmountOut);
+
+    /**
      * @notice Sends excess tokens held by the Well to the `recipient`.
      * @param recipient The address to send the tokens
      * @return skimAmounts The amount of each token skimmed
