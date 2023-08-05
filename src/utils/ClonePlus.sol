@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.20;
 
 import {Clone} from "./Clone.sol";
 import {IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
