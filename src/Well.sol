@@ -263,7 +263,11 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Assumes both tokens incur no fee on transfer.
      */
-    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint256 amountIn) external view returns (uint256 amountOut) {
+    function getSwapOut(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 amountIn
+    ) external view readOnlyNonReentrant returns (uint256 amountOut) {
         IERC20[] memory _tokens = tokens();
         (uint256 i, uint256 j) = _getIJ(_tokens, fromToken, toToken);
         uint256[] memory reserves = _getReserves(_tokens.length);
@@ -329,7 +333,11 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Assumes both tokens incur no fee on transfer.
      */
-    function getSwapIn(IERC20 fromToken, IERC20 toToken, uint256 amountOut) external view returns (uint256 amountIn) {
+    function getSwapIn(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 amountOut
+    ) external view readOnlyNonReentrant returns (uint256 amountIn) {
         IERC20[] memory _tokens = tokens();
         (uint256 i, uint256 j) = _getIJ(_tokens, fromToken, toToken);
         uint256[] memory reserves = _getReserves(_tokens.length);
@@ -400,7 +408,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         }
     }
 
-    function getShiftOut(IERC20 tokenOut) external view returns (uint256 amountOut) {
+    function getShiftOut(IERC20 tokenOut) external view readOnlyNonReentrant returns (uint256 amountOut) {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = new uint256[](tokensLength);
@@ -476,7 +484,12 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Assumes that no tokens involved incur a fee on transfer.
      */
-    function getAddLiquidityOut(uint256[] memory tokenAmountsIn) external view returns (uint256 lpAmountOut) {
+    function getAddLiquidityOut(uint256[] memory tokenAmountsIn)
+        external
+        view
+        readOnlyNonReentrant
+        returns (uint256 lpAmountOut)
+    {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _getReserves(tokensLength);
@@ -514,7 +527,12 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         emit RemoveLiquidity(lpAmountIn, tokenAmountsOut, recipient);
     }
 
-    function getRemoveLiquidityOut(uint256 lpAmountIn) external view returns (uint256[] memory tokenAmountsOut) {
+    function getRemoveLiquidityOut(uint256 lpAmountIn)
+        external
+        view
+        readOnlyNonReentrant
+        returns (uint256[] memory tokenAmountsOut)
+    {
         IERC20[] memory _tokens = tokens();
         uint256[] memory reserves = _getReserves(_tokens.length);
         uint256 lpTokenSupply = totalSupply();
@@ -551,7 +569,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     function getRemoveLiquidityOneTokenOut(
         uint256 lpAmountIn,
         IERC20 tokenOut
-    ) external view returns (uint256 tokenAmountOut) {
+    ) external view readOnlyNonReentrant returns (uint256 tokenAmountOut) {
         IERC20[] memory _tokens = tokens();
         uint256[] memory reserves = _getReserves(_tokens.length);
         tokenAmountOut = _getRemoveLiquidityOneTokenOut(lpAmountIn, _getJ(_tokens, tokenOut), reserves);
@@ -605,6 +623,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     function getRemoveLiquidityImbalancedIn(uint256[] calldata tokenAmountsOut)
         external
         view
+        readOnlyNonReentrant
         returns (uint256 lpAmountIn)
     {
         IERC20[] memory _tokens = tokens();
@@ -661,9 +680,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         }
     }
 
-    function getReserves() external view returns (uint256[] memory reserves) {
-        // Use the same error as `ReentrancyGuardUpgradeable` instead of using a custom error for consistency.
-        require(!_reentrancyGuardEntered(), "ReentrancyGuard: reentrant call");
+    function getReserves() external view readOnlyNonReentrant returns (uint256[] memory reserves) {
         reserves = _getReserves(numberOfTokens());
     }
 
@@ -839,6 +856,17 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         if (block.timestamp > deadline) {
             revert Expired();
         }
+        _;
+    }
+
+    //////////////////// INTERNAL: Read Only Reentrancy ////////////////////
+
+    /**
+     * @dev Reverts if the reentrncy guard has been entered.
+     */
+    modifier readOnlyNonReentrant() {
+        // Use the same error as `ReentrancyGuardUpgradeable` instead of using a custom error for consistency.
+        require(!_reentrancyGuardEntered(), "ReentrancyGuard: reentrant call");
         _;
     }
 }
