@@ -23,6 +23,12 @@ contract WellSyncTest is TestHelper {
         assertEq(wellBalance.tokens[1], 1000 * 1e18);
     }
 
+    function test_syncDown_getSyncOut() public prank(user) {
+        MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
+        MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
+        assertEq(well.getSyncOut(), 0);
+    }
+
     function test_syncDown() public prank(user) {
         MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
@@ -50,6 +56,18 @@ contract WellSyncTest is TestHelper {
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, 0, 1));
         well.sync(address(user), 1);
+    }
+
+    function test_syncUp_getSyncOut() public prank(user) {
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 1e18;
+        tokenAmountsIn[1] = 1e18;
+        uint256 expectedLpAmountOut = well.getAddLiquidityOut(tokenAmountsIn);
+
+        MockToken(address(tokens[0])).mint(address(well), 1e18);
+        MockToken(address(tokens[1])).mint(address(well), 1e18);
+
+        assertEq(well.getSyncOut(), expectedLpAmountOut);
     }
 
     function test_syncUp() public prank(user) {

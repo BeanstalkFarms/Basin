@@ -664,6 +664,22 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         emit Sync(reserves, lpAmountOut, recipient);
     }
 
+    function getSyncOut() external view readOnlyNonReentrant returns (uint256 lpAmountOut) {
+        IERC20[] memory _tokens = tokens();
+        uint256 tokensLength = _tokens.length;
+
+        uint256[] memory reserves = new uint256[](tokensLength);
+        for (uint256 i; i < tokensLength; ++i) {
+            reserves[i] = _tokens[i].balanceOf(address(this));
+        }
+
+        uint256 newTokenSupply = _calcLpTokenSupply(wellFunction(), reserves);
+        uint256 oldTokenSupply = totalSupply();
+        if (newTokenSupply > oldTokenSupply) {
+            lpAmountOut = newTokenSupply - oldTokenSupply;
+        }
+    }
+
     /**
      * @dev Transfer excess tokens held by the Well to `recipient`.
      */
