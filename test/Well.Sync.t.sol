@@ -49,7 +49,7 @@ contract WellSyncTest is TestHelper {
         MockToken(address(tokens[0])).burnFrom(address(well), 1e18);
         MockToken(address(tokens[1])).burnFrom(address(well), 1e18);
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, 0, 1));
-        uint256 lpAmountOut = well.sync(address(user), 1);
+        well.sync(address(user), 1);
     }
 
     function test_syncUp() public prank(user) {
@@ -90,7 +90,7 @@ contract WellSyncTest is TestHelper {
         MockToken(address(tokens[1])).mint(address(well), 1e18);
 
         vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, minLpAmountOut, minLpAmountOut + 1));
-        uint256 lpAmountOut = well.sync(address(user), minLpAmountOut + 1);
+        well.sync(address(user), minLpAmountOut + 1);
     }
 
     function testFuzz_sync(uint96[2] calldata mintAmount, uint96[2] calldata burnAmount) public prank(user) {
