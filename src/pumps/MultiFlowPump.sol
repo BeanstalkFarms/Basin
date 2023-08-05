@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IMultiFlowPumpErrors} from "src/interfaces/pumps/IMultiFlowPumpErrors.sol";
@@ -10,7 +10,6 @@ import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
 import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
-import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 /**
  * @title MultiFlowPump
@@ -27,16 +26,15 @@ import {SafeCast} from "oz/utils/math/SafeCast.sol";
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
-    using SafeCast for uint256;
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
-    bytes16 immutable LOG_MAX_INCREASE;
-    bytes16 immutable LOG_MAX_DECREASE;
-    bytes16 immutable ALPHA;
-    uint256 immutable BLOCK_TIME;
+    bytes16 private immutable LOG_MAX_INCREASE;
+    bytes16 private immutable LOG_MAX_DECREASE;
+    bytes16 private immutable ALPHA;
+    uint256 private immutable CAP_INTERVAL;
 
     struct PumpState {
         uint40 lastTimestamp;
@@ -48,22 +46,22 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @param _maxPercentIncrease The maximum percent increase allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
      * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
-     * @param _blockTime The block time in the current EVM in seconds.
+     * @param _capInterval How often to increase the magnitude of the cap on the change in reserve in seconds.
      * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
+     *
+     * @dev The Pump will not flow and should definitely be considered invalid if the following constraints are not met:
+     * - 0% < _maxPercentIncrease
+     * - 0% < _maxPercentDecrease <= 100%
+     * - 0 < ALPHA <= 1
+     * - _capInterval > 0
+     * The above constraints are not checked in the constructor for gas efficiency reasons.
+     * When evaluating the manipulation resistance of an instance of a Multi Flow Pump for use as an oracle, stricter
+     * constraints should be used.
      */
-    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _blockTime, bytes16 _alpha) {
+    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _capInterval, bytes16 _alpha) {
         LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
-        // _maxPercentDecrease <= 100%
-        if (_maxPercentDecrease > ABDKMathQuad.ONE) {
-            revert InvalidMaxPercentDecreaseArgument(_maxPercentDecrease);
-        }
         LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
-        BLOCK_TIME = _blockTime;
-
-        // ALPHA <= 1
-        if (_alpha > ABDKMathQuad.ONE) {
-            revert InvalidAArgument(_alpha);
-        }
+        CAP_INTERVAL = _capInterval;
         ALPHA = _alpha;
     }
 
@@ -81,12 +79,22 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         // If the last timestamp is 0, then the pump has never been used before.
         if (pumpState.lastTimestamp == 0) {
-            for (uint256 i; i < numberOfReserves; ++i) {
-                // If a reserve is 0, then the pump cannot be initialized.
-                if (reserves[i] == 0) return;
-            }
             _init(slot, uint40(block.timestamp), reserves);
             return;
+        }
+
+        bytes16 alphaN;
+        bytes16 deltaTimestampBytes;
+        bytes16 capExponent;
+        // Isolate in brackets to prevent stack too deep errors
+        {
+            uint256 deltaTimestamp = _getDeltaTimestamp(pumpState.lastTimestamp);
+            // If no time has passed, don't update the pump reserves.
+            if (deltaTimestamp == 0) return;
+            alphaN = ALPHA.powu(deltaTimestamp);
+            deltaTimestampBytes = deltaTimestamp.fromUInt();
+            // Round up in case CAP_INTERVAL > block.timestamp.
+            capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
 
         // Read: Cumulative & EMA Reserves
@@ -101,23 +109,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         pumpState.cumulativeReserves = slot.readBytes16(numberOfReserves);
 
-        bytes16 alphaN;
-        bytes16 deltaTimestampBytes;
-        bytes16 blocksPassed;
-        // Isolate in brackets to prevent stack too deep errors
-        {
-            uint256 deltaTimestamp = _getDeltaTimestamp(pumpState.lastTimestamp);
-            alphaN = ALPHA.powu(deltaTimestamp);
-            deltaTimestampBytes = deltaTimestamp.fromUInt();
-            // Relies on the assumption that a block can only occur every `BLOCK_TIME` seconds.
-            blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
-        }
-
+        uint256 _reserve;
         for (uint256 i; i < numberOfReserves; ++i) {
             // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-            pumpState.lastReserves[i] = _capReserve(
-                pumpState.lastReserves[i], (reserves[i] > 0 ? reserves[i] : 1).fromUIntToLog2(), blocksPassed
-            );
+            _reserve = reserves[i];
+            pumpState.lastReserves[i] =
+                _capReserve(pumpState.lastReserves[i], (_reserve > 0 ? _reserve : 1).fromUIntToLog2(), capExponent);
             pumpState.emaReserves[i] =
                 pumpState.lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
             pumpState.cumulativeReserves[i] =
@@ -150,8 +147,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         // Skip {_capReserve} since we have no prior reference
 
         for (uint256 i; i < numberOfReserves; ++i) {
-            if (reserves[i] == 0) return;
-            byteReserves[i] = reserves[i].fromUIntToLog2();
+            uint256 _reserve = reserves[i];
+            if (_reserve == 0) return;
+            byteReserves[i] = _reserve.fromUIntToLog2();
         }
 
         // Write: Last Timestamp & Last Reserves
@@ -159,7 +157,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         // Write: EMA Reserves
         // Start at the slot after `byteReserves`
-        uint256 numSlots = _getSlotsOffset(byteReserves.length);
+        uint256 numSlots = _getSlotsOffset(numberOfReserves);
         assembly {
             slot := add(slot, numSlots)
         }
@@ -169,8 +167,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     //////////////////// LAST RESERVES ////////////////////
 
     function readLastReserves(address well) public view returns (uint256[] memory reserves) {
-        bytes32 slot = _getSlotForAddress(well);
-        (uint8 numberOfReserves,, bytes16[] memory bytesReserves) = slot.readLastReserves();
+        (uint8 numberOfReserves,, bytes16[] memory bytesReserves) = _getSlotForAddress(well).readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
@@ -184,33 +181,32 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Adds a cap to the reserve value to prevent extreme changes.
      *
      *  Linear space:
-     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ blocks)
+     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ capExponent)
      *
      *  Log space:
-     *     log2(max reserve) = log2(last reserve) + blocks*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
+     *     log2(max reserve) = log2(last reserve) + capExponent*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
      *     `bytes16 lastReserve`      <- log2(last reserve)
-     *     `bytes16 blocksPassed`     <- log2(blocks)
+     *     `bytes16 capExponent`      <- cap exponent
      *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
      *
-     *     ∴ `maxReserve = lastReserve + blocks*LOG_MAX_INCREASE`
+     *     ∴ `maxReserve = lastReserve + capExponent*LOG_MAX_INCREASE`
      *
      */
     function _capReserve(
         bytes16 lastReserve,
         bytes16 reserve,
-        bytes16 blocksPassed
+        bytes16 capExponent
     ) internal view returns (bytes16 cappedReserve) {
         // Reserve decreasing (lastReserve > reserve)
         if (lastReserve.cmp(reserve) == 1) {
-            bytes16 minReserve = lastReserve.add(blocksPassed.mul(LOG_MAX_DECREASE));
+            bytes16 minReserve = lastReserve.add(capExponent.mul(LOG_MAX_DECREASE));
             // if reserve < minimum reserve, set reserve to minimum reserve
             if (minReserve.cmp(reserve) == 1) reserve = minReserve;
         }
-        // Rerserve Increasing or staying the same.
+        // Reserve increasing or staying the same (lastReserve <= reserve)
         else {
-            bytes16 maxReserve = blocksPassed.mul(LOG_MAX_INCREASE);
-            maxReserve = lastReserve.add(maxReserve);
+            bytes16 maxReserve = lastReserve.add(capExponent.mul(LOG_MAX_INCREASE));
             // If reserve > maximum reserve, set reserve to maximum reserve
             if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
         }
@@ -219,7 +215,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     //////////////////// EMA RESERVES ////////////////////
 
-    function readLastInstantaneousReserves(address well) public view returns (uint256[] memory reserves) {
+    function readLastInstantaneousReserves(address well) external view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -230,13 +226,16 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             slot := add(slot, offset)
         }
         bytes16[] memory byteReserves = slot.readBytes16(numberOfReserves);
-        reserves = new uint256[](numberOfReserves);
+        emaReserves = new uint256[](numberOfReserves);
         for (uint256 i; i < numberOfReserves; ++i) {
-            reserves[i] = byteReserves[i].pow_2ToUInt();
+            emaReserves[i] = byteReserves[i].pow_2ToUInt();
         }
     }
 
-    function readInstantaneousReserves(address well, bytes memory) public view returns (uint256[] memory emaReserves) {
+    function readInstantaneousReserves(
+        address well,
+        bytes memory
+    ) external view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint256[] memory reserves = IWell(well).getReserves();
         (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
@@ -249,11 +248,18 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
-        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
-        bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         emaReserves = new uint256[](numberOfReserves);
+        // If no time has passed, return last EMA reserves.
+        if (deltaTimestamp == 0) {
+            for (uint256 i; i < numberOfReserves; ++i) {
+                emaReserves[i] = lastEmaReserves[i].pow_2ToUInt();
+            }
+            return emaReserves;
+        }
+        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
+        bytes16 alphaN = ALPHA.powu(deltaTimestamp);
         for (uint256 i; i < numberOfReserves; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
             emaReserves[i] =
                 lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(lastEmaReserves[i].mul(alphaN)).pow_2ToUInt();
         }
@@ -264,7 +270,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @notice Read the latest cumulative reserves of `well`.
      */
-    function readLastCumulativeReserves(address well) public view returns (bytes16[] memory reserves) {
+    function readLastCumulativeReserves(address well) external view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -274,10 +280,13 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         assembly {
             slot := add(slot, offset)
         }
-        reserves = slot.readBytes16(numberOfReserves);
+        cumulativeReserves = slot.readBytes16(numberOfReserves);
     }
 
-    function readCumulativeReserves(address well, bytes memory) public view returns (bytes memory cumulativeReserves) {
+    function readCumulativeReserves(
+        address well,
+        bytes memory
+    ) external view returns (bytes memory cumulativeReserves) {
         bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
         cumulativeReserves = abi.encode(byteCumulativeReserves);
     }
@@ -295,11 +304,15 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
         cumulativeReserves = slot.readBytes16(numberOfReserves);
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
+        // If no time has passed, return last cumulative reserves.
+        if (deltaTimestamp == 0) {
+            return cumulativeReserves;
+        }
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        bytes16 blocksPassed = (deltaTimestamp / BLOCK_TIME).fromUInt();
+        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), blocksPassed);
+            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
             cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
         }
     }
@@ -332,21 +345,21 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
-    function _getSlotForAddress(address addressValue) internal pure returns (bytes32) {
-        return bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
+    function _getSlotForAddress(address addressValue) internal pure returns (bytes32 _slot) {
+        _slot = bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
     }
 
     /**
      * @dev Get the starting byte of the slot that contains the `n`th element of an array.
      */
-    function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256) {
-        return ((numberOfReserves - 1) / 2 + 1) << 5;
+    function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
+        _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
     }
 
     /**
      * @dev Get the delta between the current and provided timestamp as a `uint256`.
      */
-    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256) {
+    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256 _deltaTimestamp) {
         return uint256(uint40(block.timestamp) - lastTimestamp);
     }
 }

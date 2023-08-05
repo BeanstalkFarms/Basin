@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  *
  */
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {ABDKMathQuad, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
@@ -15,6 +15,8 @@ import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.s
 contract PumpFuzzTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
+
+    uint256 private constant CAP_INTERVAL = 12;
 
     MultiFlowPump pump;
     MockReserveWell mWell;
@@ -76,11 +78,16 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
 
         for (uint256 i; i < n; ++i) {
-            uint256 capReserve = _capReserve(
-                initReserves[i].fromUIntToLog2(),
-                updateReserves[i].fromUIntToLog2(),
-                (timeIncrease / BLOCK_TIME).fromUInt()
-            ).pow_2ToUInt();
+            uint256 capReserve;
+            if (timeIncrease > 0) {
+                capReserve = _capReserve(
+                    initReserves[i].fromUIntToLog2(),
+                    updateReserves[i].fromUIntToLog2(),
+                    ((timeIncrease - 1) / CAP_INTERVAL + 1).fromUInt()
+                ).pow_2ToUInt();
+            } else {
+                capReserve = initReserves[i];
+            }
 
             if (lastReserves[i] > 1e24) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);

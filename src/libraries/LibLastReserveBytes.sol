@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 /**
  * @title LibLastReserveBytes
  * @author Publius
  * @notice  Contains byte operations used during storage reads & writes for Pumps.
  *
- * {LibLastReserveBytes} tightly packs a `uint40 timestamp` and `bytes16[] reserves`.
+ * @dev {LibLastReserveBytes} tightly packs a `uint8 n`, `uint40 timestamp` and `bytes16[] reserves`
+ * for gas efficiency purposes. The first 2 values in `reserves` are packed into the first slot with
+ * `timestamp` and `n`. Thus, only the first 13 bytes (104 bit) of each reserve value are stored and
+ * the last 3 bytes get truncated. Given that the Well uses the quadruple-precision floating-point
+ * format for last reserve values and only uses the last reserves to compute the max increase/decrease
+ * in reserves for manipulation resistance purposes, the gas savings is worth the lose of precision.
  */
 library LibLastReserveBytes {
     function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
@@ -42,19 +47,19 @@ library LibLastReserveBytes {
                 iByte = i * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(i, 32)),
+                        add(slot, i),
                         add(mload(add(reserves, add(iByte, 32))), shr(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            // Equivalent to "i % 2 == 1" but cheaper.
+            // Equivalent to "reserves.length % 2 == 1" but cheaper.
             if (reserves.length & 1 == 1) {
                 iByte = maxI * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(maxI, 32)),
+                        add(slot, maxI),
                         add(mload(add(reserves, add(iByte, 32))), shr(128, shl(128, sload(add(slot, maxI)))))
                     )
                 }
@@ -94,7 +99,7 @@ library LibLastReserveBytes {
                 // `iByte` is the byte position for the current slot:
                 // i        3 4 5 6
                 // iByte    1 1 2 2
-                iByte = (i - 1) / 2 * 32;
+                iByte = (i - 1) / 2;
                 // Equivalent to "i % 2 == 1" but cheaper.
                 if (i & 1 == 1) {
                     assembly {

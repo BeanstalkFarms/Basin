@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Call, MockPump} from "test/TestHelper.sol";
 import {MockEmptyFunction} from "mocks/functions/MockEmptyFunction.sol";

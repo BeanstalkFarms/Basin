@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
@@ -103,5 +103,12 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
 
         // Check ratio of `reservesOut` = ratio of `ratios`.
         assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
+    }
+
+    function test_calcReserveAtRatioSwap_invalidJ() public {
+        uint256[] memory reserves = new uint256[](2);
+        uint256[] memory ratios = new uint256[](2);
+        vm.expectRevert();
+        _f.calcReserveAtRatioSwap(reserves, 2, ratios, "");
     }
 }

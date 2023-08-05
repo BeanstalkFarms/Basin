@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.20;
 
 /// @title Clone
 /// @author zefram.eth, Saw-mon & Natalie
 /// @notice Provides helper functions for reading immutable args from calldata
 contract Clone {
 
-    uint256 private constant ONE_WORD = 0x20;
+    uint256 internal constant ONE_WORD = 0x20;
 
     /// @notice Reads an immutable arg with type address
     /// @param argOffset The offset of the arg in the packed data

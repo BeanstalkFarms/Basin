@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
@@ -16,7 +16,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
-    uint256 constant BLOCK_TIME = 12;
+    uint256 constant CAP_INTERVAL = 12;
 
     /// @dev for this test, `user` = a Well that's calling the Pump
     function setUp() public {

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import "test/TestHelper.sol";
 import "src/libraries/ABDKMathQuad.sol";

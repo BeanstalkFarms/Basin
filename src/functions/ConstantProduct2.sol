@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
@@ -45,6 +45,8 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
      *
      * In other words, {calcLpTokenSupply} overflows if all reserves are simultaneously
      * >= 10^32.5, or about 100 trillion if tokens are measured to 18 decimal precision.
+     *
+     * The further apart the reserve values, the greater the loss of precision in the `sqrt` function.
      */
     function calcLpTokenSupply(
         uint256[] calldata reserves,
@@ -61,6 +63,9 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 lpTokenSupply,
         bytes calldata
     ) external pure override returns (uint256 reserve) {
+        if (j >= 2) {
+            revert InvalidJArgument();
+        }
         // Note: potential optimization is to use unchecked math here
         reserve = lpTokenSupply ** 2;
         reserve = LibMath.roundUpDiv(reserve, reserves[j == 1 ? 0 : 1] * EXP_PRECISION);
