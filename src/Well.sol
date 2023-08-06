@@ -19,7 +19,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * into a single pooled on-chain liquidity position.
  *
  * Rebasing Tokens:
- * - Positive rebasing tokens are supposed by Wells, but any tokens recieved from a
+ * - Positive rebasing tokens are supported by Wells, but any tokens recieved from a
  *   rebase will not be rewarded to LP holders and instead can be extracted by anyone
  *   using `skim`, `sync` or `shift`.
  * - Negative rebasing tokens should not be used in Well as the effect of a negative
