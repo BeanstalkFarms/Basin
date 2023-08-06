@@ -31,10 +31,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
-    bytes16 private immutable LOG_MAX_INCREASE;
-    bytes16 private immutable LOG_MAX_DECREASE;
-    bytes16 private immutable ALPHA;
-    uint256 private immutable CAP_INTERVAL;
+    bytes16 public immutable LOG_MAX_INCREASE;
+    bytes16 public immutable LOG_MAX_DECREASE;
+    bytes16 public immutable ALPHA;
+    uint256 public immutable CAP_INTERVAL;
 
     struct PumpState {
         uint40 lastTimestamp;
