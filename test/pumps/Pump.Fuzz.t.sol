@@ -16,8 +16,6 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
-    uint256 private constant CAP_INTERVAL = 12;
-
     MultiFlowPump pump;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
