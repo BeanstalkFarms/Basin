@@ -93,7 +93,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             if (deltaTimestamp == 0) return;
             alphaN = ALPHA.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
-            // Round up in case CAP_INTERVAL > block.timestamp.
+            // Round up in case CAP_INTERVAL > block time to guarantee capExponent > 0 if time has passed since the last update.
             capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
         }
 
