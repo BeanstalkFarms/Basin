@@ -73,7 +73,7 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         increaseTime(timeIncrease);
         mWell.update(address(pump), updateReserves, new bytes(0));
 
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
 
         for (uint256 i; i < n; ++i) {
             uint256 capReserve;

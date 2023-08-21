@@ -42,7 +42,7 @@ contract PumpUpdateTest is TestHelper {
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), new bytes(0));
         uint256 lastTimestamp = block.timestamp;
         // Last reserves are initialized with initial liquidity
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
 
@@ -79,7 +79,7 @@ contract PumpUpdateTest is TestHelper {
         mWell.update(address(pump), b, new bytes(0));
         mWell.update(address(pump), b, new bytes(0));
 
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
 
@@ -117,7 +117,7 @@ contract PumpUpdateTest is TestHelper {
         mWell.update(address(pump), b, new bytes(0));
 
         //
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
         assertApproxEqAbs(lastReserves[0], 1.5e6, 1); // capped
         assertApproxEqAbs(lastReserves[1], 1e6, 1); // uncapped
 
@@ -207,7 +207,7 @@ contract PumpUpdateTest is TestHelper {
         mWell.update(address(pump), b, new bytes(0));
 
         //
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
         assertApproxEqAbs(lastReserves[0], 1e6, 1); // capped
         assertApproxEqAbs(lastReserves[1], 1.5e6, 1); // uncapped
 

@@ -166,14 +166,44 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     //////////////////// LAST RESERVES ////////////////////
 
-    function readLastReserves(address well) public view returns (uint256[] memory reserves) {
-        (uint8 numberOfReserves,, bytes16[] memory bytesReserves) = _getSlotForAddress(well).readLastReserves();
+    /**
+     * @dev Reads the last capped reserves from the Pump from storage.
+     */
+    function readLastCappedReserves(address well) public view returns (uint256[] memory lastCappedReserves) {
+        (uint8 numberOfReserves,, bytes16[] memory lastReserves) = _getSlotForAddress(well).readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
-        reserves = new uint256[](numberOfReserves);
+        lastCappedReserves = new uint256[](numberOfReserves);
         for (uint256 i; i < numberOfReserves; ++i) {
-            reserves[i] = bytesReserves[i].pow_2ToUInt();
+            lastCappedReserves[i] = lastReserves[i].pow_2ToUInt();
+        }
+    }
+
+    /**
+     * @dev Reads the capped reserves from the Pump updated to the current block using the current reserves of `well`.
+     */
+    function readCappedReserves(address well) external view returns (uint256[] memory cappedReserves) {
+        bytes32 slot = _getSlotForAddress(well);
+        uint256[] memory currentReserves = IWell(well).getReserves();
+        (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        if (numberOfReserves == 0) {
+            revert NotInitialized();
+        }
+        uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
+        cappedReserves = new uint256[](numberOfReserves);
+        if (deltaTimestamp == 0) {
+            for (uint256 i; i < numberOfReserves; ++i) {
+                cappedReserves[i] = lastReserves[i].pow_2ToUInt();
+            }
+            return cappedReserves;
+        }
+
+        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
+
+        for (uint256 i; i < numberOfReserves; ++i) {
+            cappedReserves[i] =
+                _capReserve(lastReserves[i], currentReserves[i].fromUIntToLog2(), capExponent).pow_2ToUInt();
         }
     }
 
