@@ -47,7 +47,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), "");
         uint256 startTimestamp = block.timestamp;
 
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
 
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
         assertApproxEqAbs(lastReserves[1], 2e6, 1);
