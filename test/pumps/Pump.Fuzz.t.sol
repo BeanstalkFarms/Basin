@@ -71,6 +71,8 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
+        uint256[] memory cappedReserves = pump.readCappedReserves(address(mWell));
+
         mWell.update(address(pump), updateReserves, new bytes(0));
 
         uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
@@ -89,8 +91,10 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
             if (lastReserves[i] > 1e24) {
                 assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
+                assertApproxEqRelN(capReserve, cappedReserves[i], 1, 24);
             } else {
                 assertApproxEqAbs(capReserve, lastReserves[i], 1);
+                assertApproxEqAbs(capReserve, cappedReserves[i], 1);
             }
         }
 
