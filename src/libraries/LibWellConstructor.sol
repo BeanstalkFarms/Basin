@@ -39,16 +39,6 @@ library LibWellConstructor {
         Call memory _wellFunction,
         Call[] memory _pumps
     ) internal pure returns (bytes memory immutableData) {
-        bytes memory packedPumps;
-        for (uint256 i; i < _pumps.length; ++i) {
-            Call memory _pump = _pumps[i];
-            packedPumps = abi.encodePacked(
-                packedPumps,            // previously packed pumps
-                _pump.target,       // pump address
-                _pump.data.length,  // pump data length
-                _pump.data          // pump data (bytes)
-            );
-        }
         
         immutableData = abi.encodePacked(
             _aquifer,                   // aquifer address
@@ -57,9 +47,16 @@ library LibWellConstructor {
             _wellFunction.data.length,  // well function data length
             _pumps.length,              // number of pumps
             _tokens,                    // tokens array
-            _wellFunction.data,         // well function data (bytes)
-            packedPumps                 // packed pumps (bytes)
+            _wellFunction.data         // well function data (bytes)
         );
+        for (uint256 i; i < _pumps.length; ++i) {
+            immutableData = abi.encodePacked(
+                immutableData,            // previously packed pumps
+                _pumps[i].target,       // pump address
+                _pumps[i].data.length,  // pump data length
+                _pumps[i].data          // pump data (bytes)
+            );
+        }
     }
 
     /**

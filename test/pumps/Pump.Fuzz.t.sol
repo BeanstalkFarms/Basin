@@ -67,7 +67,6 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
         // Read a snapshot from the Pump
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), new bytes(0));
-        uint256 startTimestamp = block.timestamp;
 
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
@@ -100,8 +99,9 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
         // readTwaReserves reverts if no time has passed.
         if (timeIncrease > 0) {
-            (uint256[] memory twaReserves,) =
-                pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp, new bytes(0));
+            (uint256[] memory twaReserves,) = pump.readTwaReserves(
+                address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, new bytes(0)
+            );
             for (uint256 i; i < n; ++i) {
                 console.log("TWA RESERVES", i, twaReserves[i]);
                 if (lastReserves[i] > 1e24) {

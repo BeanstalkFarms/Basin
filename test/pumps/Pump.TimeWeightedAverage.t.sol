@@ -45,8 +45,6 @@ contract PumpTimeWeightedAverageTest is TestHelper {
         increaseTime(12);
 
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), "");
-        uint256 startTimestamp = block.timestamp;
-
         uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
 
         assertApproxEqAbs(lastReserves[0], 1e6, 1);
@@ -55,7 +53,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
         increaseTime(120);
         uint256[] memory twaReserves;
 
-        (twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp, "");
+        (twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, block.timestamp - 120, "");
 
         assertApproxEqAbs(twaReserves[0], 1e6, 1);
         assertApproxEqAbs(twaReserves[1], 2e6, 1);
@@ -66,7 +64,7 @@ contract PumpTimeWeightedAverageTest is TestHelper {
 
         increaseTime(120);
 
-        (twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp, "");
+        (twaReserves,) = pump.readTwaReserves(address(mWell), startCumulativeReserves, block.timestamp - 240, "");
 
         assertEq(twaReserves[0], 1_414_213); // Geometric Mean of 1e6 and 2e6 is 1_414_213
         assertEq(twaReserves[1], 2_828_427); // Geometric mean of 2e6 and 4e6 is 2_828_427
