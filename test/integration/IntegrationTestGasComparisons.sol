@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.20;
 
 import {IntegrationTestHelper, IERC20, console, Balances} from "test/integration/IntegrationTestHelper.sol";
 import {IUniswapV2Router, IUniswapV3Router, IUniswapV2Factory} from "test/integration/interfaces/IUniswap.sol";

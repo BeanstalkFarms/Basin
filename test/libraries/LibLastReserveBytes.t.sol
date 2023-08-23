@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import "test/TestHelper.sol";
 
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 
-contract LibEmaBytesTest is TestHelper {
+contract LibLastReserveBytesTest is TestHelper {
     using LibLastReserveBytes for bytes32;
 
     uint256 constant NUM_RESERVES_MAX = 8;

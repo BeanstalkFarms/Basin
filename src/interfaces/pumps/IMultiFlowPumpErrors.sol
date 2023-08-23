@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.8.17;
+pragma solidity ^0.8.20;
 
 /**
  * @title IMultiFlowPumpErrors defines the errors for the MultiFlowPump.
@@ -11,8 +11,4 @@ interface IMultiFlowPumpErrors {
     error NotInitialized();
 
     error NoTimePassed();
-
-    error InvalidMaxPercentDecreaseArgument(bytes16 maxPercentDecrease);
-
-    error InvalidAArgument(bytes16 a);
 }

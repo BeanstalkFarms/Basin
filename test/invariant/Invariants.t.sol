@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
@@ -67,6 +67,7 @@ contract Invariants is LiquidityHelper {
         if (precision == 0) return;
 
         assertApproxEqRelN(well.totalSupply(), functionCalc, precision);
+        assertLe(well.totalSupply(), functionCalc);
     }
 
     /// @dev The reserves calculated by the well function should equal the reserves of the well

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {Test, console, stdError} from "forge-std/Test.sol";
 import {Strings} from "oz/utils/Strings.sol";
@@ -210,6 +210,11 @@ abstract contract TestHelper is Test, WellDeployer {
     /// @dev deploy the Well contract
     function deployWellImplementation() internal returns (address) {
         return address(new Well());
+    }
+
+    function mintAndAddLiquidity(address to, uint256[] memory amounts) internal {
+        mintTokens(user, amounts);
+        well.addLiquidity(amounts, 0, to, type(uint256).max);
     }
 
     /// @dev add the same `amount` of liquidity for all underlying tokens

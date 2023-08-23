@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
@@ -112,5 +112,12 @@ contract BeanstalkConstantProduct2LiquidityTest is TestHelper {
             // Because `roundedDiv` is used. It could round up to 1.
             assertApproxEqAbs(reservesOut[1], 0, 1, "reservesOut[1] should be zero");
         }
+    }
+
+    function test_calcReserveAtRatioLiquidity_invalidJ() public {
+        uint256[] memory reserves = new uint256[](2);
+        uint256[] memory ratios = new uint256[](2);
+        vm.expectRevert();
+        _f.calcReserveAtRatioLiquidity(reserves, 2, ratios, "");
     }
 }

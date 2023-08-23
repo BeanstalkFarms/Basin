@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Balances, ConstantProduct2, IERC20} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellShiftTest is TestHelper {
-    event Shift(uint256[] reserves, IERC20 toToken, uint256 minAmountOut, address recipient);
+    event Shift(uint256[] reserves, IERC20 toToken, uint256 amountOut, address recipient);
 
     ConstantProduct2 cp;
 
@@ -33,11 +33,10 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
-        well.sync();
         uint256 minAmountOut = well.getShiftOut(tokens[1]);
         uint256[] memory calcReservesAfter = new uint256[](2);
-        calcReservesAfter[0] = well.getReserves()[0];
-        calcReservesAfter[1] = well.getReserves()[1] - minAmountOut;
+        calcReservesAfter[0] = tokens[0].balanceOf(address(well));
+        calcReservesAfter[1] = tokens[1].balanceOf(address(well)) - minAmountOut;
 
         vm.expectEmit(true, true, true, true);
         emit Shift(calcReservesAfter, tokens[1], minAmountOut, _user);
@@ -87,11 +86,10 @@ contract WellShiftTest is TestHelper {
         assertEq(userBalanceBeforeShift.tokens[0], 0, "User should start with 0 of token0");
         assertEq(userBalanceBeforeShift.tokens[1], 0, "User should start with 0 of token1");
 
-        well.sync();
         uint256 minAmountOut = well.getShiftOut(tokens[0]);
         uint256[] memory calcReservesAfter = new uint256[](2);
-        calcReservesAfter[0] = well.getReserves()[0] - minAmountOut;
-        calcReservesAfter[1] = well.getReserves()[1];
+        calcReservesAfter[0] = tokens[0].balanceOf(address(well)) - minAmountOut;
+        calcReservesAfter[1] = tokens[1].balanceOf(address(well));
 
         vm.expectEmit(true, true, true, true);
         emit Shift(calcReservesAfter, tokens[0], minAmountOut, _user);

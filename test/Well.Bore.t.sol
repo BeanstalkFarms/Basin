@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {LibClone} from "src/libraries/LibClone.sol";
 
 contract WellBoreTest is TestHelper {
     /// @dev Bore a 4-token Well with ConstantProduct2 & several pumps.
@@ -17,6 +18,7 @@ contract WellBoreTest is TestHelper {
     //////////// Well Definition ////////////
 
     function test_tokens() public {
+        assertEq(well.numberOfTokens(), 4);
         assertEq(well.tokens(), tokens);
     }
 
@@ -34,6 +36,13 @@ contract WellBoreTest is TestHelper {
 
     function test_aquifer() public {
         assertEq(well.aquifer(), address(aquifer));
+    }
+
+    function test_initialized() public {
+        assertEq(well.isInitialized(), true);
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        well.init("", "");
     }
 
     function test_well() public {
@@ -126,5 +135,14 @@ contract WellBoreTest is TestHelper {
 
         // Check that Aquifer recorded the deployment
         assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
+        assertEq(_well.isInitialized(), true);
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        _well.init("", "");
+    }
+
+    function test_notInitialized() public {
+        Well _well = Well(LibClone.clone(wellImplementation));
+        assertEq(_well.isInitialized(), false);
     }
 }

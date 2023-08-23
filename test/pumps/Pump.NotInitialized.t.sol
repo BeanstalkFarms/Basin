@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  *
  */
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
 import {MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
@@ -48,9 +48,14 @@ contract PumpNotInitialized is TestHelper {
         pump.readInstantaneousReserves(address(mWell), new bytes(0));
     }
 
-    function test_not_initialized_last_reserves() public {
+    function test_not_initialized_last_capped_reserves() public {
         vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
-        pump.readLastReserves(address(mWell));
+        pump.readLastCappedReserves(address(mWell));
+    }
+
+    function test_not_initialized_capped_reserves() public {
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readCappedReserves(address(mWell));
     }
 
     function test_not_initialized_twa_reserves() public {

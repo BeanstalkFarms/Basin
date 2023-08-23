@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {ReentrancyGuard} from "oz/security/ReentrancyGuard.sol";
-import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IAquifer} from "src/interfaces/IAquifer.sol";
-import {Well, IWell, Call, IERC20} from "src/Well.sol";
+import {IWell} from "src/Well.sol";
 import {LibClone} from "src/libraries/LibClone.sol";
 
 /**
@@ -17,12 +15,11 @@ import {LibClone} from "src/libraries/LibClone.sol";
  * @dev Aquifer deploys Wells by cloning a pre-deployed Well implementation.
  */
 contract Aquifer is IAquifer, ReentrancyGuard {
-    using SafeCast for uint256;
     using LibClone for address;
 
     // A mapping of Well address to the Well implementation addresses
     // Mapping gets set on Well deployment
-    mapping(address => address) wellImplementations;
+    mapping(address => address) public wellImplementation;
 
     constructor() ReentrancyGuard() {}
 
@@ -39,12 +36,16 @@ contract Aquifer is IAquifer, ReentrancyGuard {
     ) external nonReentrant returns (address well) {
         if (immutableData.length > 0) {
             if (salt != bytes32(0)) {
+                // Encode the salt with the `msg.sender` address to prevent frontrunning attack
+                salt = keccak256(abi.encode(msg.sender, salt));
                 well = implementation.cloneDeterministic(immutableData, salt);
             } else {
                 well = implementation.clone(immutableData);
             }
         } else {
             if (salt != bytes32(0)) {
+                // Encode the salt with the `msg.sender` address to prevent frontrunning attack
+                salt = keccak256(abi.encode(msg.sender, salt));
                 well = implementation.cloneDeterministic(salt);
             } else {
                 well = implementation.clone();
@@ -63,6 +64,10 @@ contract Aquifer is IAquifer, ReentrancyGuard {
             }
         }
 
+        if (!IWell(well).isInitialized()) {
+            revert WellNotInitialized();
+        }
+
         // The Aquifer address MUST be set, either (a) via immutable data during cloning,
         // or (b) as a storage variable during an init function call. In either case,
         // the address MUST match the address of the Aquifer that performed deployment.
@@ -71,7 +76,7 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         }
 
         // Save implementation
-        wellImplementations[well] = implementation;
+        wellImplementation[well] = implementation;
 
         emit BoreWell(
             well,
@@ -83,7 +88,20 @@ contract Aquifer is IAquifer, ReentrancyGuard {
         );
     }
 
-    function wellImplementation(address well) external view returns (address implementation) {
-        return wellImplementations[well];
+    function predictWellAddress(
+        address implementation,
+        bytes calldata immutableData,
+        bytes32 salt
+    ) external view returns (address well) {
+        // Aquifer doesn't support using a salt of 0 to deploy a Well at a deterministic address.
+        if (salt == bytes32(0)) {
+            revert InvalidSalt();
+        }
+        salt = keccak256(abi.encode(msg.sender, salt));
+        if (immutableData.length > 0) {
+            well = implementation.predictDeterministicAddress(immutableData, salt, address(this));
+        } else {
+            well = implementation.predictDeterministicAddress(salt, address(this));
+        }
     }
 }

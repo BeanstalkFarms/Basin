@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {IWell, Call} from "src/interfaces/IWell.sol";
@@ -20,6 +20,16 @@ interface IAquifer {
      * @notice Thrown when the user attempts to bore a Well with invalid configuration.
      */
     error InvalidConfig();
+
+    /**
+     * @notice Thrown a Well is bored, but not initialized.
+     */
+    error WellNotInitialized();
+
+    /**
+     * @notice Thrown when the user attempts to predict a Well's deterministic address with a salt of 0.
+     */
+    error InvalidSalt();
 
     /**
      * @notice Emitted when a Well is deployed.

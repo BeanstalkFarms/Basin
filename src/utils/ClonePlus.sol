@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.20;
 
 import {Clone} from "./Clone.sol";
 import {IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
@@ -7,8 +7,6 @@ import {IERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 /// @title ClonePlus
 /// @notice Extends Clone with additional helper functions
 contract ClonePlus is Clone {
-    uint256 private constant ONE_WORD = 0x20;
-
     /// @notice Reads a IERC20 array stored in the immutable args.
     /// @param argOffset The offset of the arg in the packed data
     /// @param arrLen Number of elements in the array
@@ -34,7 +32,7 @@ contract ClonePlus is Clone {
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            calldatacopy(add(data, ONE_WORD), offset, shl(5, bytesLen))
+            calldatacopy(add(data, ONE_WORD), offset, bytesLen)
         }
     }
 }
