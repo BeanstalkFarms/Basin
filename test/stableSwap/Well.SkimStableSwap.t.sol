@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.17;
 
 import {TestHelper, Balances} from "test/TestHelper.sol";
 
-contract WellSkimStableSwapTest is TestHelper {
+contract WellSkimTest is TestHelper {
     function setUp() public {
-        setupWell(2);
+        setupStableSwapWell(10);
     }
 
     function test_initialized() public {
