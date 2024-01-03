@@ -43,7 +43,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
      *
      *  ∴ X >= (1/N) * (77 - ln(P)/ln(10))
      *
-     * ConstantProduct2 sets the constraints `N = 2` and `EXP_PRECISION = 1e12`,
+    * ConstantProduct2 sets the constraints `N = 2` and `EXP_PRECISION = 1e12`,
      * resulting in an upper bound of X = 32.5.
      *
      * In other words, {calcLpTokenSupply} overflows if all reserves are simultaneously
@@ -92,8 +92,8 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     ) external view override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
         // use 512 muldiv for last mul to avoid overflow
-        console.log("reserves[i] * reserves[j]: ", reserves[i] * reserves[j]);
-        console.log("mulDiv ", (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]));
+        // console.log("reserves[i] * reserves[j]: ", reserves[i] * reserves[j]);
+        // console.log("mulDiv ", (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]));
         reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
     }
 
