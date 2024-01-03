@@ -4,12 +4,17 @@ pragma solidity ^0.8.20;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IMultiFlowPumpErrors} from "src/interfaces/pumps/IMultiFlowPumpErrors.sol";
-import {IWell} from "src/interfaces/IWell.sol";
+import {IWell, Call} from "src/interfaces/IWell.sol";
 import {IInstantaneousPump} from "src/interfaces/pumps/IInstantaneousPump.sol";
+import {IMultiFlowPumpWellFunction} from "src/interfaces/IMultiFlowPumpWellFunction.sol";
 import {ICumulativePump} from "src/interfaces/pumps/ICumulativePump.sol";
 import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
+import {Math} from "oz/utils/math/Math.sol";
+
+
+import {console} from "forge-std/console.sol";
 
 /**
  * @title MultiFlowPump
@@ -35,6 +40,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     bytes16 public immutable LOG_MAX_DECREASE;
     bytes16 public immutable ALPHA;
     uint256 public immutable CAP_INTERVAL;
+    
+    uint256 CAP_PRECISION = 1e18;
+    uint256 DOUBLE_CAP_PRECISION = CAP_PRECISION ** 2;
 
     struct PumpState {
         uint40 lastTimestamp;
@@ -224,7 +232,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      *
      */
     function _capReserve(
-        bytes16 lastReserve,
+        bytes16 lastReserve,    
         bytes16 reserve,
         bytes16 capExponent
     ) internal view returns (bytes16 cappedReserve) {
@@ -241,6 +249,96 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
         }
         cappedReserve = reserve;
+    }
+
+    struct CapReservesVariables {
+        uint256 rLast;
+        uint256 rMaxIJ;
+        uint256 rMaxJI;
+    }
+
+    struct CapReservesParameters {
+        uint256[][] maxRatioChanges;
+        uint256 maxLpTokenIncrease;
+        uint256 maxLpTokenDecrease;
+    }
+
+    function _capReserves(
+        address well,
+        uint256[] memory lastReserves,
+        uint256[] memory reserves,
+        uint256 capExponent,
+        CapReservesParameters memory crp
+    ) internal view returns (uint256[] memory cappedReserves) {
+        // Assume two token well
+        console.log(reserves.length);
+        if (reserves.length != 2) {
+            revert TooManyTokens();
+        }
+
+        cappedReserves = new uint256[](2);
+        uint256 i; uint256 j = 1;
+        Call memory wf = IWell(well).wellFunction();
+        IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
+
+        // Part 1: Cap Rates
+        CapReservesVariables memory crv;
+
+        if (lastReserves[i] > lastReserves[j]) {
+            // R is IJ
+            crv.rLast = mfpWf.calcRate(lastReserves, i, j, wf.data);
+            // crv.rMaxIJ = crv.rLastIJ * (1 + crp.maxRatioChanges[i][j])**capExponent; // TODO: Fix cap exponent
+            // crv.rMaxJI = CAP_PRECISION / crv.rLastIJ * (1 + crp.maxRatioChanges[j][i])**capExponent; // TODO: Fix cap exponent
+            crv.rMaxIJ = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
+            crv.rMaxJI = DOUBLE_CAP_PRECISION / crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[j][i]) / CAP_PRECISION; // TODO: Fix cap exponent
+        } else {
+            // R is JI
+            crv.rLast = mfpWf.calcRate(lastReserves, j, i, wf.data);
+            crv.rMaxIJ = DOUBLE_CAP_PRECISION / crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
+            crv.rMaxJI = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[j][i]) / CAP_PRECISION; // TODO: Fix cap exponent
+            
+        }
+
+        console.log("rLast: %s", crv.rLast);
+        console.log("rMaxIJ: %s", crv.rMaxIJ);
+        console.log("rMaxJI: %s", crv.rMaxJI);
+
+        console.log("rIJ: %s", reserves[i] * CAP_PRECISION / reserves[j]);
+        console.log("rJI: %s", reserves[j] * CAP_PRECISION / reserves[i]);
+
+        if (reserves[i] * CAP_PRECISION / reserves[j] > crv.rMaxIJ) {
+            uint256[] memory ratios = new uint256[](2);
+            ratios[i] = crv.rMaxIJ;
+            ratios[j] = CAP_PRECISION;
+            cappedReserves[i] = Math.max(mfpWf.calcReserveAtRatioSwap(reserves, i, ratios, wf.data), 1);
+            cappedReserves[j] = Math.max(mfpWf.calcReserveAtRatioSwap(reserves, j, ratios, wf.data), 1);
+        } else if (reserves[j] * CAP_PRECISION / reserves[i] > crv.rMaxJI) {
+            uint256[] memory ratios = new uint256[](2);
+            ratios[i] = CAP_PRECISION;
+            ratios[j] = crv.rMaxJI;
+            cappedReserves[i] = Math.max(mfpWf.calcReserveAtRatioSwap(reserves, i, ratios, wf.data), 1);
+            cappedReserves[j] = Math.max(mfpWf.calcReserveAtRatioSwap(reserves, j, ratios, wf.data), 1);
+        } else {
+            cappedReserves[i] = reserves[i];
+            cappedReserves[j] = reserves[j];
+        }
+
+        console.log("Ratio Capped Reserve 0: %s", cappedReserves[0]);
+        console.log("Ratio Capped Reserve 1: %s", cappedReserves[1]);
+
+        // Part 2: Cap LP Token Support Change
+        uint256 lastLpTokenSupply = mfpWf.calcLpTokenSupply(lastReserves, wf.data);
+        uint256 lpTokenSupply = mfpWf.calcLpTokenSupply(cappedReserves, wf.data);
+        // uint256 maxLpTokenSupply = lastLpTokenSupply * (1 + crp.maxLpTokenIncrease) ** capExponent;
+        // uint256 minLpTokenSupply = lastLpTokenSupply * (1 - crp.maxLpTokenDecrease) ** capExponent;
+        uint256 maxLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION + crp.maxLpTokenIncrease) / CAP_PRECISION;
+        uint256 minLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION - crp.maxLpTokenDecrease) / CAP_PRECISION;
+
+        if (lpTokenSupply > maxLpTokenSupply) {
+            cappedReserves = mfpWf.calcLPTokenUnderlying(maxLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+        } else if (lpTokenSupply < minLpTokenSupply) {
+            cappedReserves = mfpWf.calcLPTokenUnderlying(minLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+        }
     }
 
     //////////////////// EMA RESERVES ////////////////////

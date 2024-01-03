@@ -6,6 +6,8 @@ import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol"
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
+import {console} from "forge-std/Test.sol";
+
 /**
  * @title ConstantProduct2
  * @author Publius
@@ -21,6 +23,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     using LibMath for uint256;
 
     uint256 constant EXP_PRECISION = 1e12;
+    uint256 constant CALC_RATE_PRECISION = 1e18;
 
     /**
      * @dev `s = (b_0 * b_1)^(1/2)`
@@ -86,9 +89,11 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 j,
         uint256[] calldata ratios,
         bytes calldata
-    ) external pure override returns (uint256 reserve) {
+    ) external view override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
         // use 512 muldiv for last mul to avoid overflow
+        console.log("reserves[i] * reserves[j]: ", reserves[i] * reserves[j]);
+        console.log("mulDiv ", (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]));
         reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
     }
 
@@ -102,5 +107,14 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     ) external pure override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
         reserve = reserves[i] * ratios[j] / ratios[i];
+    }
+
+    function calcRate(
+        uint256[] calldata reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata
+    ) external pure returns (uint256 rate) {
+        return reserves[i] * CALC_RATE_PRECISION / reserves[j];
     }
 }

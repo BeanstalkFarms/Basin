@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {TestHelper, console, stdError} from "test/TestHelper.sol";
-import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {IMultiFlowPumpWellFunction} from "src/interfaces/IMultiFlowPumpWellFunction.sol";
 
 /// @dev Provides a base test suite for all Well functions.
 abstract contract WellFunctionHelper is TestHelper {
-    IWellFunction _function;
+    IMultiFlowPumpWellFunction _function;
     bytes _data;
 
     /// @dev calcLpTokenSupply: 0 reserves = 0 supply

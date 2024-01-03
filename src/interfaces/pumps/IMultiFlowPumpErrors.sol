@@ -11,4 +11,6 @@ interface IMultiFlowPumpErrors {
     error NotInitialized();
 
     error NoTimePassed();
+
+    error TooManyTokens();
 }
