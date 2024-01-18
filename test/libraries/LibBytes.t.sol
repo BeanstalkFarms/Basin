@@ -11,7 +11,7 @@ contract LibBytesTest is TestHelper {
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testFuzz_storeAndRead(uint256 n, uint128[8] memory _reserves) public {
-        vm.assume(n <= NUM_RESERVES_MAX);
+        n = bound(n, 0, NUM_RESERVES_MAX);
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         uint256[] memory reserves = new uint256[](n);
@@ -59,9 +59,8 @@ contract LibBytesTest is TestHelper {
     /// @dev Fuzz test different sizes of reserves array and different positions
     /// for overflow. reserves besides `reserves[j]` can be non-zero.
     function testFuzz_storeUint128_overflow(uint256 n, uint256 tooLargeIndex, uint128[8] memory _reserves) public {
-        vm.assume(n <= NUM_RESERVES_MAX);
-        vm.assume(n > 0);
-        vm.assume(tooLargeIndex < n);
+        tooLargeIndex = bound(tooLargeIndex, 0, NUM_RESERVES_MAX-1);
+        n = bound(n, tooLargeIndex + 1, NUM_RESERVES_MAX);
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         uint256[] memory reserves = new uint256[](n);

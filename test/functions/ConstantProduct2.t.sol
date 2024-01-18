@@ -164,4 +164,27 @@ contract ConstantProduct2Test is WellFunctionHelper {
         vm.expectRevert(IWellFunction.InvalidJArgument.selector);
         _function.calcReserve(reserves, 2, 1e18, _data);
     }
+
+    function test_calcRate() public {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = 100;
+        reserves[1] = 1;
+        assertEq(_function.calcRate(reserves, 0, 1, _data), 100e18);
+        assertEq(_function.calcRate(reserves, 1, 0, _data), 0.01e18);
+    }
+
+    function test_fuzz_calcRate(uint256[2] memory _reserves) public {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = bound(_reserves[0], 1, MAX_RESERVE);
+        reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
+        assertEq(
+            _function.calcRate(reserves, 0, 1, _data),
+            reserves[0] * 1e18 / reserves[1]
+        );
+
+        assertEq(
+            _function.calcRate(reserves, 1, 0, _data),
+            reserves[1] * 1e18 / reserves[0]
+        );
+    }
 }

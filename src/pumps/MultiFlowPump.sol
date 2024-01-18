@@ -12,7 +12,7 @@ import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
 import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {Math} from "oz/utils/math/Math.sol";
-
+import {SafeCast} from "oz/utils/math/SafeCast.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -30,52 +30,36 @@ import {console} from "forge-std/console.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
+
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
-
-    bytes16 public immutable LOG_MAX_INCREASE;
-    bytes16 public immutable LOG_MAX_DECREASE;
-    bytes16 public immutable ALPHA;
-    uint256 public immutable CAP_INTERVAL;
+    using SafeCast for int256;
+    using Math for uint256;
     
     uint256 CAP_PRECISION = 1e18;
-    uint256 DOUBLE_CAP_PRECISION = CAP_PRECISION ** 2;
+    uint256 CAP_PRECISION2 = 2**128;
+    bytes16 MAX_CONVERT_TO_128x128 = 0x407dffffffffffffffffffffffffffff;
 
     struct PumpState {
         uint40 lastTimestamp;
-        bytes16[] lastReserves;
+        uint256[] lastReserves;
         bytes16[] emaReserves;
         bytes16[] cumulativeReserves;
     }
 
-    /**
-     * @param _maxPercentIncrease The maximum percent increase allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
-     * @param _maxPercentDecrease The maximum percent decrease allowed in a single block. Must be in quadruple precision format (See {ABDKMathQuad}).
-     * @param _capInterval How often to increase the magnitude of the cap on the change in reserve in seconds.
-     * @param _alpha The geometric EMA constant. Must be in quadruple precision format (See {ABDKMathQuad}).
-     *
-     * @dev The Pump will not flow and should definitely be considered invalid if the following constraints are not met:
-     * - 0% < _maxPercentIncrease
-     * - 0% < _maxPercentDecrease <= 100%
-     * - 0 < ALPHA <= 1
-     * - _capInterval > 0
-     * The above constraints are not checked in the constructor for gas efficiency reasons.
-     * When evaluating the manipulation resistance of an instance of a Multi Flow Pump for use as an oracle, stricter
-     * constraints should be used.
-     */
-    constructor(bytes16 _maxPercentIncrease, bytes16 _maxPercentDecrease, uint256 _capInterval, bytes16 _alpha) {
-        LOG_MAX_INCREASE = ABDKMathQuad.ONE.add(_maxPercentIncrease).log_2();
-        LOG_MAX_DECREASE = ABDKMathQuad.ONE.sub(_maxPercentDecrease).log_2();
-        CAP_INTERVAL = _capInterval;
-        ALPHA = _alpha;
+    struct CapReservesParameters {
+        bytes16[][] maxRatioChanges;
+        bytes16 maxLpTokenIncrease;
+        bytes16 maxLpTokenDecrease;
     }
 
     //////////////////// PUMP ////////////////////
 
-    function update(uint256[] calldata reserves, bytes calldata) external {
+    function update(uint256[] calldata reserves, bytes calldata data) external {
+        (bytes16 alpha, uint256 capInterval, CapReservesParameters memory crp) = abi.decode(data, (bytes16, uint256, CapReservesParameters));
         uint256 numberOfReserves = reserves.length;
         PumpState memory pumpState;
 
@@ -93,17 +77,23 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
         bytes16 alphaN;
         bytes16 deltaTimestampBytes;
-        bytes16 capExponent;
+        uint256 capExponent;
         // Isolate in brackets to prevent stack too deep errors
         {
             uint256 deltaTimestamp = _getDeltaTimestamp(pumpState.lastTimestamp);
             // If no time has passed, don't update the pump reserves.
             if (deltaTimestamp == 0) return;
-            alphaN = ALPHA.powu(deltaTimestamp);
+            console.log("Delta Timestamp: %s", deltaTimestamp);
+            console.log("Alpha: %s", uint256(alpha.to128x128()));
+            alphaN = alpha.powu(deltaTimestamp);
+            console.log("Alpha N: %s", uint256(alphaN.to128x128()));
             deltaTimestampBytes = deltaTimestamp.fromUInt();
-            // Round up in case CAP_INTERVAL > block time to guarantee capExponent > 0 if time has passed since the last update.
-            capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
+            // Round up in case capInterval > block time to guarantee capExponent > 0 if time has passed since the last update.
+            capExponent = ((deltaTimestamp - 1) / capInterval + 1);
         }
+
+        (numberOfReserves, pumpState.lastTimestamp, pumpState.lastReserves) = slot.readLastReserves();
+        pumpState.lastReserves = _capReserves(msg.sender, pumpState.lastReserves, reserves, capExponent, crp);
 
         // Read: Cumulative & EMA Reserves
         // Start at the slot after `pumpState.lastReserves`
@@ -116,17 +106,14 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             slot := add(slot, numSlots)
         }
         pumpState.cumulativeReserves = slot.readBytes16(numberOfReserves);
-
-        uint256 _reserve;
+    
+        bytes16 lastReserve;
         for (uint256 i; i < numberOfReserves; ++i) {
-            // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-            _reserve = reserves[i];
-            pumpState.lastReserves[i] =
-                _capReserve(pumpState.lastReserves[i], (_reserve > 0 ? _reserve : 1).fromUIntToLog2(), capExponent);
+            lastReserve = pumpState.lastReserves[i].fromUIntToLog2();
             pumpState.emaReserves[i] =
-                pumpState.lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
+                lastReserve.mul((ABDKMathQuad.ONE.sub(alphaN))).add(pumpState.emaReserves[i].mul(alphaN));
             pumpState.cumulativeReserves[i] =
-                pumpState.cumulativeReserves[i].add(pumpState.lastReserves[i].mul(deltaTimestampBytes));
+                pumpState.cumulativeReserves[i].add(lastReserve.mul(deltaTimestampBytes));
         }
 
         // Write: Cumulative & EMA Reserves
@@ -161,7 +148,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
 
         // Write: Last Timestamp & Last Reserves
-        slot.storeLastReserves(lastTimestamp, byteReserves);
+        slot.storeLastReserves(lastTimestamp, reserves);
 
         // Write: EMA Reserves
         // Start at the slot after `byteReserves`
@@ -177,90 +164,41 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Reads the last capped reserves from the Pump from storage.
      */
-    function readLastCappedReserves(address well) public view returns (uint256[] memory lastCappedReserves) {
-        (uint8 numberOfReserves,, bytes16[] memory lastReserves) = _getSlotForAddress(well).readLastReserves();
+    function readLastCappedReserves(address well, bytes memory) public view returns (uint256[] memory lastCappedReserves) {
+        uint8 numberOfReserves;
+        (numberOfReserves, , lastCappedReserves) = _getSlotForAddress(well).readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
-        }
-        lastCappedReserves = new uint256[](numberOfReserves);
-        for (uint256 i; i < numberOfReserves; ++i) {
-            lastCappedReserves[i] = lastReserves[i].pow_2ToUInt();
         }
     }
 
     /**
      * @dev Reads the capped reserves from the Pump updated to the current block using the current reserves of `well`.
      */
-    function readCappedReserves(address well) external view returns (uint256[] memory cappedReserves) {
+    function readCappedReserves(address well, bytes calldata data) external view returns (uint256[] memory cappedReserves) {
+        (, uint256 capInterval, CapReservesParameters memory crp) = abi.decode(data, (bytes16, uint256, CapReservesParameters));
         bytes32 slot = _getSlotForAddress(well);
         uint256[] memory currentReserves = IWell(well).getReserves();
-        (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        uint8 numberOfReserves; uint40 lastTimestamp;
+        (numberOfReserves, lastTimestamp, cappedReserves) = slot.readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
         uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
-        cappedReserves = new uint256[](numberOfReserves);
         if (deltaTimestamp == 0) {
-            for (uint256 i; i < numberOfReserves; ++i) {
-                cappedReserves[i] = lastReserves[i].pow_2ToUInt();
-            }
             return cappedReserves;
         }
 
-        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
-
-        for (uint256 i; i < numberOfReserves; ++i) {
-            cappedReserves[i] =
-                _capReserve(lastReserves[i], currentReserves[i].fromUIntToLog2(), capExponent).pow_2ToUInt();
-        }
-    }
-
-    /**
-     * @dev Adds a cap to the reserve value to prevent extreme changes.
-     *
-     *  Linear space:
-     *     max reserve = (last reserve) * ((1 + MAX_PERCENT_CHANGE_PER_BLOCK) ^ capExponent)
-     *
-     *  Log space:
-     *     log2(max reserve) = log2(last reserve) + capExponent*log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
-     *
-     *     `bytes16 lastReserve`      <- log2(last reserve)
-     *     `bytes16 capExponent`      <- cap exponent
-     *     `bytes16 LOG_MAX_INCREASE` <- log2(1 + MAX_PERCENT_CHANGE_PER_BLOCK)
-     *
-     *     ∴ `maxReserve = lastReserve + capExponent*LOG_MAX_INCREASE`
-     *
-     */
-    function _capReserve(
-        bytes16 lastReserve,    
-        bytes16 reserve,
-        bytes16 capExponent
-    ) internal view returns (bytes16 cappedReserve) {
-        // Reserve decreasing (lastReserve > reserve)
-        if (lastReserve.cmp(reserve) == 1) {
-            bytes16 minReserve = lastReserve.add(capExponent.mul(LOG_MAX_DECREASE));
-            // if reserve < minimum reserve, set reserve to minimum reserve
-            if (minReserve.cmp(reserve) == 1) reserve = minReserve;
-        }
-        // Reserve increasing or staying the same (lastReserve <= reserve)
-        else {
-            bytes16 maxReserve = lastReserve.add(capExponent.mul(LOG_MAX_INCREASE));
-            // If reserve > maximum reserve, set reserve to maximum reserve
-            if (reserve.cmp(maxReserve) == 1) reserve = maxReserve;
-        }
-        cappedReserve = reserve;
+        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        cappedReserves = _capReserves(well, cappedReserves, currentReserves, capExponent, crp);
     }
 
     struct CapReservesVariables {
         uint256 rLast;
+        bytes16 tempExp;
         uint256 rMaxIJ;
-        uint256 rMaxJI;
-    }
-
-    struct CapReservesParameters {
-        uint256[][] maxRatioChanges;
-        uint256 maxLpTokenIncrease;
-        uint256 maxLpTokenDecrease;
+        uint256 rMinIJ;
+        uint256[] ratios;
     }
 
     function _capReserves(
@@ -277,82 +215,125 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
 
         cappedReserves = reserves;
-        uint256 i; uint256 j = 1;
+
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 
-        // Part 2: Cap LP Token Support Change
-        uint256 lastLpTokenSupply = mfpWf.calcLpTokenSupply(lastReserves, wf.data);
-        uint256 lpTokenSupply = mfpWf.calcLpTokenSupply(cappedReserves, wf.data);
-        // uint256 maxLpTokenSupply = lastLpTokenSupply * (1 + crp.maxLpTokenIncrease) ** capExponent;
-        // uint256 minLpTokenSupply = lastLpTokenSupply * (1 - crp.maxLpTokenDecrease) ** capExponent;
-        uint256 maxLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION + crp.maxLpTokenIncrease) / CAP_PRECISION;
-        uint256 minLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION - crp.maxLpTokenDecrease) / CAP_PRECISION;
-
-        if (lpTokenSupply > maxLpTokenSupply) {
-            cappedReserves = mfpWf.calcLPTokenUnderlying(maxLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
-        } else if (lpTokenSupply < minLpTokenSupply) {
-            cappedReserves = mfpWf.calcLPTokenUnderlying(minLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
-        }
-
-        console.log("LP Supply Capped 0: %s", cappedReserves[0]);
-        console.log("LP Supply Capped 1: %s", cappedReserves[1]);
-
-        // Part 1: Cap Rates
-        CapReservesVariables memory crv;
-
-        if (lastReserves[i] > lastReserves[j]) {
-            // R is IJ
+        {
+            // Part 1: Cap Ratios
+            (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
+            CapReservesVariables memory crv;
             crv.rLast = mfpWf.calcRate(lastReserves, i, j, wf.data);
-            // crv.rMaxIJ = crv.rLastIJ * (1 + crp.maxRatioChanges[i][j])**capExponent; // TODO: Fix cap exponent
-            // crv.rMaxJI = CAP_PRECISION / crv.rLastIJ * (1 + crp.maxRatioChanges[j][i])**capExponent; // TODO: Fix cap exponent
-            crv.rMaxIJ = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
-            crv.rMaxJI = DOUBLE_CAP_PRECISION / crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[j][i]) / CAP_PRECISION; // TODO: Fix cap exponent
-        } else {
-            // R is JI
-            crv.rLast = mfpWf.calcRate(lastReserves, j, i, wf.data);
-            crv.rMaxIJ = DOUBLE_CAP_PRECISION / crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
-            crv.rMaxJI = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[j][i]) / CAP_PRECISION; // TODO: Fix cap exponent
+            console.log("rLast: %s", crv.rLast);
+
+            console.logInt(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).to128x128());
+            console.log(capExponent);
+            console.logBytes16(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent));
+            
+            console.logInt(crp.maxRatioChanges[i][j].powu(capExponent).to128x128());
+
+            crv.tempExp = ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent);
+            if (crv.tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
+                console.log("Ratio Exp Above Max");
+            // if (crv.tempExp == ABDKMathQuad.POSITIVE_INFINITY) {
+                crv.rMaxIJ = type(uint256).max;
+            } else {
+                console.log("Ratio Exp Below Max");
+                console.log("Temp Exp: %s", crv.tempExp.to128x128().toUint256());
+                crv.rMaxIJ = crv.rLast.mulDiv(crv.tempExp.to128x128().toUint256(), CAP_PRECISION2);
+                // crv.rMaxIJ = crv.rLast * crv.tempExp.to128x128().toUint256() / CAP_PRECISION2;
+            }
+            console.log("rMaxIJ 1: %s", crv.rMaxIJ);
+            crv.rMinIJ = crv.rLast.mulDiv(ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128().toUint256(), CAP_PRECISION2);
+            console.log("rMinIJ 1: %s", crv.rMinIJ);
+            // crv.rMaxIJ = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
+            // crv.rMinIJ = crv.rLast * (CAP_PRECISION - 1 / (1 + crp.maxRatioChanges[j][i])) / CAP_PRECISION; // TODO: Fix cap exponent
+            console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION + 0.05e18) / CAP_PRECISION);
+            console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION - 0.04761904762e18) / CAP_PRECISION);
+
+            console.log("rIJ: %s", cappedReserves[i] * CAP_PRECISION / cappedReserves[j]);
+
+            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rMaxIJ) {
+                console.log("Ratio Above Max");
+                crv.ratios = new uint256[](2);
+                crv.ratios[i] = crv.rMaxIJ;
+                crv.ratios[j] = CAP_PRECISION;
+                console.log("Ratio 0: %s", crv.ratios[0]);
+                console.log("Ratio 1: %s", crv.ratios[1]);
+                console.log("CRi", cappedReserves[i]);
+                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+                // TODO: Make sure this works.
+                uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data), 1);
+                console.log("CRi", cappedReserves[i]);
+                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data), 1);
+                cappedReserves[i] = cappedReserveI;
+            } else if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rMinIJ) {
+                console.log("Ratio Below Max");
+                crv.ratios = new uint256[](2);
+                crv.ratios[i] = crv.rMinIJ;
+                crv.ratios[j] = CAP_PRECISION;
+                console.log("2");
+                console.log("Ratio 0: %s", crv.ratios[0]);
+                console.log("Ratio 1: %s", crv.ratios[1]);
+                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+                console.log("Try 0: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data));
+                console.log("Try 1: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data));
+                uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data), 1);
+                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data), 1);
+                cappedReserves[i] = cappedReserveI;
+            }
         }
 
-        console.log("rLast: %s", crv.rLast);
-        console.log("rMaxIJ: %s", crv.rMaxIJ);
-        console.log("rMaxJI: %s", crv.rMaxJI); // 61764705882352941176470650000000000
+        console.log("Partway Capped 0: %s", cappedReserves[0]);
+        console.log("Partway Capped 1: %s", cappedReserves[1]);
 
-        console.log("rIJ: %s", cappedReserves[i] * CAP_PRECISION / cappedReserves[j]);
-        console.log("rJI: %s", cappedReserves[j] * CAP_PRECISION / cappedReserves[i]);
+        {
+            // Part 2: Cap LP Token Supply Change
+            uint256 lastLpTokenSupply = tryCalcLpTokenSupply(mfpWf, lastReserves, wf.data);
+            uint256 lpTokenSupply = tryCalcLpTokenSupply(mfpWf, cappedReserves, wf.data);
+            console.log("lastLpTokenSupply: %s", lastLpTokenSupply);
+            console.log("lpTokenSupply: %s", lpTokenSupply);
+            console.log("Cap Exp: %s", capExponent);
+            bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxLpTokenIncrease).powu(capExponent);
+            console.logBytes16(tempExp);
+            uint256 maxLpTokenSupply;
+            if (tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
+                console.log("Token Supply Exp Above max");
+                maxLpTokenSupply = type(uint256).max;
+            } else {
+                console.log("Token Supply Exp Below Max");
+                console.logInt(tempExp.to128x128());
+                maxLpTokenSupply = lastLpTokenSupply.mulDiv(tempExp.to128x128().toUint256(), CAP_PRECISION2);
+            }
+            console.log(maxLpTokenSupply);
+            uint256 minLpTokenSupply = lastLpTokenSupply * (ABDKMathQuad.ONE.sub(crp.maxLpTokenDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
+            console.log("maxLpTokenSupply 1: %s", maxLpTokenSupply);
+            console.log("minLpTokenSupply 1: %s", minLpTokenSupply);
+            console.log("maxLpTokenSupply 2: %s", lastLpTokenSupply * (CAP_PRECISION + 0.05e18) / CAP_PRECISION);
+            console.log("minLpTokenSupply 2: %s", lastLpTokenSupply * (CAP_PRECISION - 0.04761904762e18) / CAP_PRECISION);
+            // uint256 maxLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION + crp.maxLpTokenIncrease) / CAP_PRECISION;
+            // uint256 minLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION - crp.maxLpTokenDecrease) / CAP_PRECISION;
 
-        if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rMaxIJ) {
-            uint256[] memory ratios = new uint256[](2);
-            console.log("1");
-            ratios[i] = crv.rMaxIJ;
-            ratios[j] = CAP_PRECISION;
-            console.log("Ratio 0: %s", ratios[0]);
-            console.log("Ratio 1: %s", ratios[1]);
-            console.log("CRi", cappedReserves[i]);
-            uint256 cappedReserveI = Math.max(mfpWf.calcReserveAtRatioSwap(cappedReserves, i, ratios, wf.data), 1);
-            console.log("CRi", cappedReserves[i]);
-            cappedReserves[j] = Math.max(mfpWf.calcReserveAtRatioSwap(cappedReserves, j, ratios, wf.data), 1);
-            cappedReserves[i] = cappedReserveI;
-        } else if (cappedReserves[j] * CAP_PRECISION / cappedReserves[i] > crv.rMaxJI) {
-            uint256[] memory ratios = new uint256[](2);
-            ratios[i] = CAP_PRECISION;
-            ratios[j] = crv.rMaxJI;
-            console.log("2");
-            console.log("Ratio 0: %s", ratios[0]);
-            console.log("Ratio 1: %s", ratios[1]);
-            uint256 cappedReserveI = Math.max(mfpWf.calcReserveAtRatioSwap(cappedReserves, i, ratios, wf.data), 1);
-            cappedReserves[j] = Math.max(mfpWf.calcReserveAtRatioSwap(cappedReserves, j, ratios, wf.data), 1);
-            cappedReserves[i] = cappedReserveI;
+            if (lpTokenSupply > maxLpTokenSupply) {
+                console.log("Supply Capped!!!!");
+                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
+                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
+            } else if (lpTokenSupply < minLpTokenSupply) {
+                console.log("Supply Capped!!!!");
+                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
+                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
+            }
         }
 
-        console.log("Ratio Capped Reserve 0: %s", cappedReserves[0]);
-        console.log("Ratio Capped Reserve 1: %s", cappedReserves[1]);
+        console.log("Final Capped Reserve 0: %s", cappedReserves[0]);
+        console.log("Final Capped Reserve 1: %s", cappedReserves[1]);
     }
 
     //////////////////// EMA RESERVES ////////////////////
 
-    function readLastInstantaneousReserves(address well) external view returns (uint256[] memory emaReserves) {
+    function readLastInstantaneousReserves(address well, bytes memory) external view returns (uint256[] memory emaReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -371,11 +352,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     function readInstantaneousReserves(
         address well,
-        bytes memory
+        bytes memory data
     ) external view returns (uint256[] memory emaReserves) {
+        (bytes16 alpha, uint256 capInterval, CapReservesParameters memory crp) = abi.decode(data, (bytes16, uint256, CapReservesParameters));
         bytes32 slot = _getSlotForAddress(well);
         uint256[] memory reserves = IWell(well).getReserves();
-        (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        (uint8 numberOfReserves, uint40 lastTimestamp, uint256[] memory lastReserves) = slot.readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
@@ -384,8 +366,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             slot := add(slot, offset)
         }
         bytes16[] memory lastEmaReserves = slot.readBytes16(numberOfReserves);
-        uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
+        console.log("B");
         emaReserves = new uint256[](numberOfReserves);
+        uint256 deltaTimestamp = _getDeltaTimestamp(lastTimestamp);
         // If no time has passed, return last EMA reserves.
         if (deltaTimestamp == 0) {
             for (uint256 i; i < numberOfReserves; ++i) {
@@ -393,12 +376,26 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             }
             return emaReserves;
         }
-        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
-        bytes16 alphaN = ALPHA.powu(deltaTimestamp);
+        console.log("C");
+        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        console.log("D");
+        console.logBytes16(crp.maxLpTokenIncrease);
+        console.logBytes16(crp.maxLpTokenDecrease);
+        console.logBytes16(crp.maxRatioChanges[0][1]);
+        console.logBytes16(crp.maxRatioChanges[1][0]);
+        console.log("Cap Exponent: %s", capExponent);
+        lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
+        console.log("E");
+        console.log("Delta Timestamp: %s", deltaTimestamp);
+        console.log("Alpha: %s", uint256(alpha.to128x128()));
+        bytes16 alphaN = alpha.powu(deltaTimestamp);
+        console.log("Alpha N: %s", uint256(alphaN.to128x128()));
         for (uint256 i; i < numberOfReserves; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
+            console.log("%s---------------------------", i);
+            console.log("Last Ema Reserve: %s", lastEmaReserves[i].pow_2ToUInt());
+            console.log("Reserve: %s", lastReserves[i]);
             emaReserves[i] =
-                lastReserves[i].mul((ABDKMathQuad.ONE.sub(alphaN))).add(lastEmaReserves[i].mul(alphaN)).pow_2ToUInt();
+                lastReserves[i].fromUIntToLog2().mul((ABDKMathQuad.ONE.sub(alphaN))).add(lastEmaReserves[i].mul(alphaN)).pow_2ToUInt();
         }
     }
 
@@ -407,7 +404,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @notice Read the latest cumulative reserves of `well`.
      */
-    function readLastCumulativeReserves(address well) external view returns (bytes16[] memory cumulativeReserves) {
+    function readLastCumulativeReserves(address well, bytes memory) external view returns (bytes16[] memory cumulativeReserves) {
         bytes32 slot = _getSlotForAddress(well);
         uint8 numberOfReserves = slot.readNumberOfReserves();
         if (numberOfReserves == 0) {
@@ -422,16 +419,17 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     function readCumulativeReserves(
         address well,
-        bytes memory
+        bytes memory data
     ) external view returns (bytes memory cumulativeReserves) {
-        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
+        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well, data);
         cumulativeReserves = abi.encode(byteCumulativeReserves);
     }
 
-    function _readCumulativeReserves(address well) internal view returns (bytes16[] memory cumulativeReserves) {
+    function _readCumulativeReserves(address well, bytes memory data) internal view returns (bytes16[] memory cumulativeReserves) {
+        (, uint256 capInterval, CapReservesParameters memory crp) = abi.decode(data, (bytes16, uint256, CapReservesParameters));
         bytes32 slot = _getSlotForAddress(well);
         uint256[] memory reserves = IWell(well).getReserves();
-        (uint8 numberOfReserves, uint40 lastTimestamp, bytes16[] memory lastReserves) = slot.readLastReserves();
+        (uint8 numberOfReserves, uint40 lastTimestamp, uint256[] memory lastReserves) = slot.readLastReserves();
         if (numberOfReserves == 0) {
             revert NotInitialized();
         }
@@ -446,11 +444,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return cumulativeReserves;
         }
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        bytes16 capExponent = ((deltaTimestamp - 1) / CAP_INTERVAL + 1).fromUInt();
+        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
-            lastReserves[i] = _capReserve(lastReserves[i], reserves[i].fromUIntToLog2(), capExponent);
-            cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].mul(deltaTimestampBytes));
+            cumulativeReserves[i] = cumulativeReserves[i].add(lastReserves[i].fromUIntToLog2().mul(deltaTimestampBytes));
         }
     }
 
@@ -458,9 +456,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         address well,
         bytes calldata startCumulativeReserves,
         uint256 startTimestamp,
-        bytes memory
+        bytes memory data
     ) public view returns (uint256[] memory twaReserves, bytes memory cumulativeReserves) {
-        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well);
+        bytes16[] memory byteCumulativeReserves = _readCumulativeReserves(well, data);
         bytes16[] memory byteStartCumulativeReserves = abi.decode(startCumulativeReserves, (bytes16[]));
         twaReserves = new uint256[](byteCumulativeReserves.length);
 
@@ -498,5 +496,58 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      */
     function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256 _deltaTimestamp) {
         return uint256(uint40(block.timestamp) - lastTimestamp);
+    }
+
+    /**
+     * @dev Assumes that if `calcReserveAtRatioSwap` fails, it fails because of overflow.
+     */
+    function tryCalcReserveAtRatioSwap(
+        IMultiFlowPumpWellFunction wf,
+        uint256[] memory reserves,
+        uint256 i,
+        uint256[] memory ratios,
+        bytes memory data
+    ) internal view returns (uint256 reserve) {
+        try wf.calcReserveAtRatioSwap(reserves, i, ratios, data) returns (uint256 _reserve) {
+            reserve = _reserve;
+        } catch {
+            reserve = type(uint256).max;
+        }
+    }
+
+    /**
+     * @dev Assumes that if `calcLpTokenSupply` fails, it fails because of overflow.
+     */
+    function tryCalcLpTokenSupply(
+        IMultiFlowPumpWellFunction wf,
+        uint256[] memory reserves,
+        bytes memory data
+    ) internal view returns (uint256 lpTokenSupply) {
+        try wf.calcLpTokenSupply(reserves, data) returns (uint256 _lpTokenSupply) {
+            lpTokenSupply = _lpTokenSupply;
+        } catch {
+            lpTokenSupply = type(uint256).max;
+        }
+    }
+
+    /**
+     * @dev Assumes that if `calcLPTokenUnderlying` fails, it fails because of overflow.
+     */
+    function tryCalcLPTokenUnderlying(
+        IMultiFlowPumpWellFunction wf,
+        uint256 lpTokenAmount,
+        uint256[] memory reserves,
+        uint256 lpTokenSupply,
+        bytes memory data
+    ) internal view returns (uint256[] memory underlyingAmounts) {
+        return wf.calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, data);
+        // try wf.calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, data) returns (uint256[] memory _underlyingAmounts) {
+        //     underlyingAmounts = _underlyingAmounts;
+        // } catch {
+        //     underlyingAmounts = new uint256[](reserves.length);
+        //     for (uint256 i; i < reserves.length; ++i) {
+        //         underlyingAmounts[i] = type(uint256).max;
+        //     }
+        // }
     }
 }

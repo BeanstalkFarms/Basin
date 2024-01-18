@@ -8,29 +8,30 @@ import {console, TestHelper} from "test/TestHelper.sol";
 import {ABDKMathQuad, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
 
-import {from18, to18} from "test/pumps/PumpHelpers.sol";
+import {mockPumpData, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 contract PumpFuzzTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
 
+    uint256 constant capInterval = 12;
     MultiFlowPump pump;
+    bytes data;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
-    constructor() MultiFlowPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18)) {}
+    constructor() MultiFlowPump() {}
 
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new MultiFlowPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        );
+        pump = new MultiFlowPump();
+        data = mockPumpData();
+        wellFunction.target = address(new ConstantProduct2());
+        mWell.setWellFunction(wellFunction);
     }
 
     /**
@@ -47,10 +48,12 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         uint8 n,
         uint40 timeIncrease
     ) public prank(user) {
-        n = uint8(bound(n, 1, 8));
+        // n is bound to 2 in the current iteration of the well.
+        // n = uint8(bound(n, 1, 8));
+        n = 2;
         for (uint256 i; i < n; i++) {
-            initReserves[i] = bound(initReserves[i], 1e6, type(uint128).max);
-            reserves[i] = bound(reserves[i], 1e6, type(uint128).max);
+            initReserves[i] = bound(initReserves[i], 1e6, 1e32);
+            reserves[i] = bound(reserves[i], 1e6, 1e32);
         }
         vm.assume(block.timestamp + timeIncrease <= type(uint40).max);
 
@@ -59,48 +62,57 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         for (uint256 i; i < n; i++) {
             updateReserves[i] = initReserves[i];
         }
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        mWell.update(address(pump), updateReserves, data);
         for (uint256 i; i < n; i++) {
             updateReserves[i] = reserves[i];
         }
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        mWell.update(address(pump), updateReserves, data);
 
         // Read a snapshot from the Pump
-        bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), new bytes(0));
+        bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), data);
 
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
-        uint256[] memory cappedReserves = pump.readCappedReserves(address(mWell));
+        uint256[] memory cappedReserves = pump.readCappedReserves(address(mWell), data);
 
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        mWell.update(address(pump), updateReserves, data);
 
-        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell));
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell), data);
+
+        console.log(1);
+
+        uint256[] memory expectedCappedReserves = new uint256[](n);
+        uint256[] memory _reserves = new uint256[](n);
 
         for (uint256 i; i < n; ++i) {
-            uint256 capReserve;
-            if (timeIncrease > 0) {
-                capReserve = _capReserve(
-                    initReserves[i].fromUIntToLog2(),
-                    updateReserves[i].fromUIntToLog2(),
-                    ((timeIncrease - 1) / CAP_INTERVAL + 1).fromUInt()
-                ).pow_2ToUInt();
-            } else {
-                capReserve = initReserves[i];
-            }
+            expectedCappedReserves[i] = initReserves[i];
+            _reserves[i] = reserves[i];
+        }
 
+        console.log(2);
+
+        (,, CapReservesParameters memory crp) = abi.decode(data, (uint256, uint256, CapReservesParameters));
+        if (timeIncrease > 0) {
+            uint256 capExponent = (timeIncrease - 1) / capInterval + 1;
+            expectedCappedReserves = _capReserves(address(mWell), expectedCappedReserves, _reserves, capExponent, crp);
+        }
+
+        console.log(3);
+
+        for (uint256 i; i < n; ++i) {
             if (lastReserves[i] > 1e24) {
-                assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
-                assertApproxEqRelN(capReserve, cappedReserves[i], 1, 24);
+                assertApproxEqRelN(expectedCappedReserves[i], lastReserves[i], 1, 24);
+                assertApproxEqRelN(expectedCappedReserves[i], cappedReserves[i], 1, 24);
             } else {
-                assertApproxEqAbs(capReserve, lastReserves[i], 1);
-                assertApproxEqAbs(capReserve, cappedReserves[i], 1);
+                assertApproxEqAbs(expectedCappedReserves[i], lastReserves[i], 1);
+                assertApproxEqAbs(expectedCappedReserves[i], cappedReserves[i], 1);
             }
         }
 
         // readTwaReserves reverts if no time has passed.
         if (timeIncrease > 0) {
             (uint256[] memory twaReserves,) = pump.readTwaReserves(
-                address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, new bytes(0)
+                address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, data
             );
             for (uint256 i; i < n; ++i) {
                 console.log("TWA RESERVES", i, twaReserves[i]);

@@ -60,6 +60,7 @@ abstract contract TestHelper is Test, WellDeployer {
     IERC20[] tokens;
     Call wellFunction;
     Call[] pumps;
+    bytes[] pumpData;
     bytes wellData;
 
     // Registry
@@ -203,7 +204,7 @@ abstract contract TestHelper is Test, WellDeployer {
         _pumps = new Call[](n);
         for (uint256 i; i < n; i++) {
             _pumps[i].target = address(new MockPump());
-            _pumps[i].data = new bytes(i);
+            _pumps[i].data = new bytes(0);
         }
     }
 
@@ -295,6 +296,48 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function assertApproxEqRelN(uint256 a, uint256 b, uint256 precision) internal virtual {
         assertApproxEqRelN(a, b, 1, precision);
+    }
+
+    function assertApproxLeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal {
+        console.log("A: %s", a);
+        console.log("B: %s", b);
+        console.log(precision);
+        uint256 numDigitsA = numDigits(a);
+        uint256 numDigitsB = numDigits(b);
+        if (numDigitsA != numDigitsB || numDigitsA < precision) {
+            if (b + absoluteError < type(uint256).max) {
+                assertLe(a, b + absoluteError);
+            }
+        } else {
+            uint256 denom = 10 ** (numDigits(a) - precision);
+            uint256 maxB = b / denom;
+            console.log("Max B", maxB);
+            console.log("Max B", maxB+absoluteError);
+            if (maxB + absoluteError < type(uint256).max) {
+                assertLe(a / denom, maxB + absoluteError);
+            }
+        }
+    }
+
+    function assertApproxGeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal {
+        console.log("A: %s", a);
+        console.log("B: %s", b);
+        console.log(precision);
+        uint256 numDigitsA = numDigits(a);
+        uint256 numDigitsB = numDigits(b);
+        if (numDigitsA != numDigitsB || numDigitsA < precision) {
+            console.log("Here for some reason");
+            if (b > absoluteError) {
+                assertGe(a, b - absoluteError);
+            }
+        } else {
+            uint256 denom = 10 ** (numDigits(a) - precision);
+            uint256 minB = b / denom;
+            console.log("Min B: %s, Abs Err: %s", minB, absoluteError);
+            if (minB > absoluteError) {
+                assertGe(a / denom, minB - absoluteError);
+            }
+        }
     }
 
     function assertApproxEqRelN(

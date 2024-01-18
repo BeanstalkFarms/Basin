@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
+import {Math} from "oz/utils/math/Math.sol";
 
 /**
  * @title ProportionalLPToken2
@@ -12,6 +13,9 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
  * recieves `s * b_i / S` of each underlying token.
  */
 abstract contract ProportionalLPToken2 is IWellFunction {
+
+    using Math for uint256;
+
     function calcLPTokenUnderlying(
         uint256 lpTokenAmount,
         uint256[] calldata reserves,
@@ -19,7 +23,7 @@ abstract contract ProportionalLPToken2 is IWellFunction {
         bytes calldata
     ) external pure returns (uint256[] memory underlyingAmounts) {
         underlyingAmounts = new uint256[](2);
-        underlyingAmounts[0] = lpTokenAmount * reserves[0] / lpTokenSupply;
-        underlyingAmounts[1] = lpTokenAmount * reserves[1] / lpTokenSupply;
+        underlyingAmounts[0] = lpTokenAmount.mulDiv(reserves[0], lpTokenSupply);
+        underlyingAmounts[1] = lpTokenAmount.mulDiv(reserves[1], lpTokenSupply);
     }
 }

@@ -19,12 +19,7 @@ contract Invariants is LiquidityHelper {
 
     function setUp() public {
         // setup the pump
-        IPump pump = new MultiFlowPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        );
+        IPump pump = new MultiFlowPump();
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call({target: address(pump), data: new bytes(0)});
 

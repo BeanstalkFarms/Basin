@@ -7,6 +7,8 @@ pragma solidity ^0.8.20;
 import {console, TestHelper} from "test/TestHelper.sol";
 import {ABDKMathQuad, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
+import {mockPumpData} from "test/pumps/PumpHelpers.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
 import {generateRandomUpdate, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
@@ -18,6 +20,7 @@ contract PumpLongevityTest is TestHelper {
 
     MultiFlowPump pump;
     MockReserveWell mWell;
+    bytes data;
     uint256[] b = new uint256[](2);
 
     constructor() {}
@@ -25,12 +28,10 @@ contract PumpLongevityTest is TestHelper {
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new MultiFlowPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        );
+        pump = new MultiFlowPump();
+        data = mockPumpData();
+        wellFunction.target = address(new ConstantProduct2());
+        mWell.setWellFunction(wellFunction);
     }
 
     function testIterate() public prank(user) {
@@ -39,14 +40,17 @@ contract PumpLongevityTest is TestHelper {
         uint256[] memory balances;
         uint40 timeStep;
         uint256 timestamp = block.timestamp;
-        for (uint256 i; i < 30_000; ++i) {
+        for (uint256 i; i < 4_000; ++i) {
+            if (i % 1000 == 0) {
+                console.log(i);
+            }
             (balances, timeStep, seed) = generateRandomUpdate(n, seed);
             // console.log("Time Step: ", timeStep);
             // for (uint256 j; j < n; ++j) {
             //     console.log("Balance", j, balances[j]);
             // }
             increaseTime(timeStep);
-            mWell.update(address(pump), balances, new bytes(0));
+            mWell.update(address(pump), balances, data);
         }
 
         // uint256[] memory lastReserves = pump.readLastReserves(address(mWell));

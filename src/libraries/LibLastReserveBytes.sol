@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.20;
 
+import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
+
 /**
  * @title LibLastReserveBytes
  * @author Publius
@@ -15,15 +17,26 @@ pragma solidity ^0.8.20;
  * in reserves for manipulation resistance purposes, the gas savings is worth the lose of precision.
  */
 library LibLastReserveBytes {
+
+    using ABDKMathQuad for uint256;
+    using ABDKMathQuad for bytes16;
+
     function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
         assembly {
             _numberOfReserves := shr(248, sload(slot))
         }
     }
 
-    function storeLastReserves(bytes32 slot, uint40 lastTimestamp, bytes16[] memory reserves) internal {
+    function storeLastReserves(bytes32 slot, uint40 lastTimestamp, uint256[] memory lastReserves) internal {
         // Potential optimization – shift reserve bytes left to perserve extra decimal precision.
-        uint8 n = uint8(reserves.length);
+        uint8 n = uint8(lastReserves.length);
+
+        bytes16[] memory reserves = new bytes16[](n);
+
+        for (uint256 i; i < n; ++i) {
+            reserves[i] = lastReserves[i].fromUInt();
+        }
+
         if (n == 1) {
             assembly {
                 sstore(slot, or(or(shl(208, lastTimestamp), shl(248, n)), shl(104, shr(152, mload(add(reserves, 32))))))
@@ -73,7 +86,7 @@ library LibLastReserveBytes {
     function readLastReserves(bytes32 slot)
         internal
         view
-        returns (uint8 n, uint40 lastTimestamp, bytes16[] memory reserves)
+        returns (uint8 n, uint40 lastTimestamp, uint256[] memory lastReserves)
     {
         // Shortcut: two reserves can be quickly unpacked from one slot
         bytes32 temp;
@@ -82,13 +95,17 @@ library LibLastReserveBytes {
             n := shr(248, temp)
             lastTimestamp := shr(208, temp)
         }
-        if (n == 0) return (n, lastTimestamp, reserves);
+        if (n == 0) return (n, lastTimestamp, lastReserves);
         // Initialize array with length `n`, fill it in via assembly
-        reserves = new bytes16[](n);
+        bytes16[] memory reserves = new bytes16[](n);
         assembly {
             mstore(add(reserves, 32), shl(152, shr(104, temp)))
         }
-        if (n == 1) return (n, lastTimestamp, reserves);
+        if (n == 1) {
+            lastReserves = new uint256[](1);
+            lastReserves[0] = reserves[0].toUInt();
+            return (n, lastTimestamp, lastReserves);
+        }
         assembly {
             mstore(add(reserves, 64), shl(152, temp))
         }
@@ -115,6 +132,11 @@ library LibLastReserveBytes {
                     }
                 }
             }
+        }
+
+        lastReserves = new uint256[](n);
+        for (uint i; i < n; ++i) {
+            lastReserves[i] = reserves[i].toUInt();
         }
     }
 
