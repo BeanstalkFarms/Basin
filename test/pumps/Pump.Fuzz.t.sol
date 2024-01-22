@@ -13,9 +13,12 @@ import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
+import {Math} from "oz/utils/math/Math.sol";
+
 contract PumpFuzzTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
+    using Math for uint256;
 
     uint256 constant capInterval = 12;
     MultiFlowPump pump;
@@ -71,6 +74,8 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         // Read a snapshot from the Pump
         bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), data);
 
+        uint256[] memory expectedCappedReserves = pump.readLastCappedReserves(address(mWell), data);
+
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
         uint256[] memory cappedReserves = pump.readCappedReserves(address(mWell), data);
@@ -79,25 +84,17 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
         uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell), data);
 
-        console.log(1);
-
-        uint256[] memory expectedCappedReserves = new uint256[](n);
         uint256[] memory _reserves = new uint256[](n);
 
         for (uint256 i; i < n; ++i) {
-            expectedCappedReserves[i] = initReserves[i];
             _reserves[i] = reserves[i];
         }
-
-        console.log(2);
 
         (,, CapReservesParameters memory crp) = abi.decode(data, (uint256, uint256, CapReservesParameters));
         if (timeIncrease > 0) {
             uint256 capExponent = (timeIncrease - 1) / capInterval + 1;
             expectedCappedReserves = _capReserves(address(mWell), expectedCappedReserves, _reserves, capExponent, crp);
         }
-
-        console.log(3);
 
         for (uint256 i; i < n; ++i) {
             if (lastReserves[i] > 1e24) {
