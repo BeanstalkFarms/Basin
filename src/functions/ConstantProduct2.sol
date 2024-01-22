@@ -7,8 +7,6 @@ import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 import {Math} from "oz/utils/math/Math.sol";
 
-import {console} from "forge-std/Test.sol";
-
 /**
  * @title ConstantProduct2
  * @author Publius
@@ -90,11 +88,9 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 j,
         uint256[] calldata ratios,
         bytes calldata
-    ) external view override returns (uint256 reserve) {
+    ) external pure override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
         // use 512 muldiv for last mul to avoid overflow
-        console.log("reserves[i] * reserves[j]: ", reserves[i] * reserves[j]);
-        console.log("mulDiv ", (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]));
         reserve = (reserves[i] * reserves[j]).mulDiv(ratios[j], ratios[i]).sqrt();
     }
 

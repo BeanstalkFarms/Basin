@@ -268,10 +268,8 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
             .min(numDigits(reserves[1]))
             .min(numDigits(lpTokenSupplyCapped.sqrt()));
         precision = precision.min(ratioDigits);
-        if (precision >= 2) precision = precision - 2;
-        else precision = 1;
+        if (precision >= 1) precision = precision - 1;
         console.log("Digit precision: %s", precision);
-
 
         (uint256 expectedCappedReserve0, uint256 expectedCappedReserve1) = abi.decode(result, (uint256, uint256));
         console.log("R0: %s, R1: %s", expectedCappedReserve0, expectedCappedReserve1);
