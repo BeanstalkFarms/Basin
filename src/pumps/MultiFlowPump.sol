@@ -13,6 +13,7 @@ import {LibBytes16} from "src/libraries/LibBytes16.sol";
 import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {Math} from "oz/utils/math/Math.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
+import {LibMath} from "src/libraries/LibMath.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -38,6 +39,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     using ABDKMathQuad for uint256;
     using SafeCast for int256;
     using Math for uint256;
+    using LibMath for uint256;
     
     uint256 CAP_PRECISION = 1e18;
     uint256 CAP_PRECISION2 = 2**128;
@@ -214,86 +216,129 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             revert TooManyTokens();
         }
 
-        cappedReserves = reserves;
+        cappedReserves = new uint256[](2);
+        cappedReserves[0] = reserves[0];
+        cappedReserves[1] = reserves[1];
 
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 
-        {
-            // Part 1: Cap Ratios
-            (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
-            CapReservesVariables memory crv;
-            crv.rLast = mfpWf.calcRate(lastReserves, i, j, wf.data);
-            console.log("rLast: %s", crv.rLast);
+        cappedReserves = _capRatios(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
 
-            console.logInt(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).to128x128());
-            console.log(capExponent);
-            console.logBytes16(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent));
-            
-            console.logInt(crp.maxRatioChanges[i][j].powu(capExponent).to128x128());
+        console.log("Partial Capped Reserve 0: %s", cappedReserves[0]);
+        console.log("Partial Capped Reserve 1: %s", cappedReserves[1]);
 
-            crv.tempExp = ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent);
-            if (crv.tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
-                console.log("Ratio Exp Above Max");
-            // if (crv.tempExp == ABDKMathQuad.POSITIVE_INFINITY) {
-                crv.rMaxIJ = type(uint256).max;
-            } else {
-                console.log("Ratio Exp Below Max");
-                console.log("Temp Exp: %s", crv.tempExp.to128x128().toUint256());
-                crv.rMaxIJ = crv.rLast.mulDiv(crv.tempExp.to128x128().toUint256(), CAP_PRECISION2);
-                // crv.rMaxIJ = crv.rLast * crv.tempExp.to128x128().toUint256() / CAP_PRECISION2;
-            }
-            console.log("rMaxIJ 1: %s", crv.rMaxIJ);
-            crv.rMinIJ = crv.rLast.mulDiv(ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128().toUint256(), CAP_PRECISION2);
-            console.log("rMinIJ 1: %s", crv.rMinIJ);
-            // crv.rMaxIJ = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
-            // crv.rMinIJ = crv.rLast * (CAP_PRECISION - 1 / (1 + crp.maxRatioChanges[j][i])) / CAP_PRECISION; // TODO: Fix cap exponent
-            console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION + 0.05e18) / CAP_PRECISION);
-            console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION - 0.04761904762e18) / CAP_PRECISION);
+        // if (cappedReserves[0] < 10 || cappedReserves[1] < 10) {
+        if (false) {
+            console.log("Reserves PreCap 0: %s", reserves[0]);
+            console.log("Reserves PreCap 1: %s", reserves[1]);
+            cappedReserves = _capLpTokenSupply(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
 
-            console.log("rIJ: %s", cappedReserves[i] * CAP_PRECISION / cappedReserves[j]);
+            console.log("Partial Capped Reserve Again 0: %s", cappedReserves[0]);
+            console.log("Partial Capped Reserve Again 1: %s", cappedReserves[1]);
 
-            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rMaxIJ) {
-                console.log("Ratio Above Max");
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rMaxIJ;
-                crv.ratios[j] = CAP_PRECISION;
-                console.log("Ratio 0: %s", crv.ratios[0]);
-                console.log("Ratio 1: %s", crv.ratios[1]);
-                console.log("CRi", cappedReserves[i]);
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                // TODO: Make sure this works.
-                uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data), 1);
-                console.log("CRi", cappedReserves[i]);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data), 1);
-                cappedReserves[i] = cappedReserveI;
-            } else if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rMinIJ) {
-                console.log("Ratio Below Max");
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rMinIJ;
-                crv.ratios[j] = CAP_PRECISION;
-                console.log("2");
-                console.log("Ratio 0: %s", crv.ratios[0]);
-                console.log("Ratio 1: %s", crv.ratios[1]);
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                console.log("Try 0: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data));
-                console.log("Try 1: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data));
-                uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, wf.data), 1);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, wf.data), 1);
-                cappedReserves[i] = cappedReserveI;
-            }
+            cappedReserves = _capRatios(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
+
+        } else {
+            cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
         }
 
-        console.log("Partway Capped 0: %s", cappedReserves[0]);
-        console.log("Partway Capped 1: %s", cappedReserves[1]);
+        console.log("Final Capped Reserve 0: %s", cappedReserves[0]);
+        console.log("Final Capped Reserve 1: %s", cappedReserves[1]);
+    }
 
-        {
-            // Part 2: Cap LP Token Supply Change
-            uint256 lastLpTokenSupply = tryCalcLpTokenSupply(mfpWf, lastReserves, wf.data);
-            uint256 lpTokenSupply = tryCalcLpTokenSupply(mfpWf, cappedReserves, wf.data);
-            console.log("lastLpTokenSupply: %s", lastLpTokenSupply);
-            console.log("lpTokenSupply: %s", lpTokenSupply);
-            console.log("Cap Exp: %s", capExponent);
+    function _capRatios(
+        uint256[] memory lastReserves,
+        uint256[] memory reserves,
+        uint256 capExponent,
+        CapReservesParameters memory crp,
+        IMultiFlowPumpWellFunction mfpWf,
+        bytes memory data
+    ) internal view returns (uint256[] memory cappedReserves) {
+        cappedReserves = reserves;
+        // Part 1: Cap Ratios
+        (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
+        CapReservesVariables memory crv;
+        crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
+        console.log("rLast: %s", crv.rLast);
+
+        console.logInt(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).to128x128());
+        console.log(capExponent);
+        console.logBytes16(ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent));
+        
+        console.logInt(crp.maxRatioChanges[i][j].powu(capExponent).to128x128());
+
+        crv.tempExp = ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent);
+        if (crv.tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
+            console.log("Ratio Exp Above Max");
+        // if (crv.tempExp == ABDKMathQuad.POSITIVE_INFINITY) {
+            crv.rMaxIJ = type(uint256).max;
+        } else {
+            console.log("Ratio Exp Below Max");
+            console.log("Temp Exp: %s", crv.tempExp.to128x128().toUint256());
+            crv.rMaxIJ = crv.rLast.mulDivOrMax(crv.tempExp.to128x128().toUint256(), CAP_PRECISION2);
+            // crv.rMaxIJ = crv.rLast * crv.tempExp.to128x128().toUint256() / CAP_PRECISION2;
+        }
+        console.log("rMaxIJ 1: %s", crv.rMaxIJ);
+        crv.rMinIJ = crv.rLast.mulDiv(ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128().toUint256(), CAP_PRECISION2);
+        console.log("rMinIJ 1: %s", crv.rMinIJ);
+        // crv.rMaxIJ = crv.rLast * (CAP_PRECISION + crp.maxRatioChanges[i][j]) / CAP_PRECISION; // TODO: Fix cap exponent
+        // crv.rMinIJ = crv.rLast * (CAP_PRECISION - 1 / (1 + crp.maxRatioChanges[j][i])) / CAP_PRECISION; // TODO: Fix cap exponent
+        console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION + 0.05e18) / CAP_PRECISION);
+        console.log("rMaxIJ 2: %s", crv.rLast * (CAP_PRECISION - 0.04761904762e18) / CAP_PRECISION);
+
+        console.log("rIJ: %s", cappedReserves[i] * CAP_PRECISION / cappedReserves[j]);
+
+        if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rMaxIJ) {
+
+            console.log("Ratio Above Max");
+            crv.ratios = new uint256[](2);
+            crv.ratios[i] = crv.rMaxIJ;
+            crv.ratios[j] = CAP_PRECISION;
+            console.log("Ratio 0: %s", crv.ratios[0]);
+            console.log("Ratio 1: %s", crv.ratios[1]);
+            console.log("CRi", cappedReserves[i]);
+            // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+            // TODO: Make sure this works.
+            uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
+            console.log("CRi", cappedReserves[i]);
+            cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
+            cappedReserves[i] = cappedReserveI;
+        } else if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rMinIJ) {
+            console.log("Ratio Below Max");
+            crv.ratios = new uint256[](2);
+            crv.ratios[i] = crv.rMinIJ;
+            crv.ratios[j] = CAP_PRECISION;
+            console.log("2");
+            console.log("Ratio 0: %s", crv.ratios[0]);
+            console.log("Ratio 1: %s", crv.ratios[1]);
+            // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+            console.log("Try 0: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data));
+            console.log("Try 1: %s", tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data));
+            uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
+            cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
+            cappedReserves[i] = cappedReserveI;
+        }
+    }
+
+    function _capLpTokenSupply(
+        uint256[] memory lastReserves,
+        uint256[] memory reserves,
+        uint256 capExponent,
+        CapReservesParameters memory crp,
+        IMultiFlowPumpWellFunction mfpWf,
+        bytes memory data,
+    ) internal view returns (uint256[] memory cappedReserves) {
+        cappedReserves = reserves;
+        // Part 2: Cap LP Token Supply Change
+        uint256 lastLpTokenSupply = tryCalcLpTokenSupply(mfpWf, lastReserves, data);
+        uint256 lpTokenSupply = tryCalcLpTokenSupply(mfpWf, cappedReserves, data);
+        console.log("lastLpTokenSupply: %s", lastLpTokenSupply);
+        console.log("lpTokenSupply: %s", lpTokenSupply);
+        console.log("Cap Exp: %s", capExponent);
+
+        // If LP Token Supply increased, check that it didn't increase above the max.
+        if (lpTokenSupply > lastLpTokenSupply) {
             bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxLpTokenIncrease).powu(capExponent);
             console.logBytes16(tempExp);
             uint256 maxLpTokenSupply;
@@ -305,30 +350,24 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 console.logInt(tempExp.to128x128());
                 maxLpTokenSupply = lastLpTokenSupply.mulDiv(tempExp.to128x128().toUint256(), CAP_PRECISION2);
             }
-            console.log(maxLpTokenSupply);
-            uint256 minLpTokenSupply = lastLpTokenSupply * (ABDKMathQuad.ONE.sub(crp.maxLpTokenDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
-            console.log("maxLpTokenSupply 1: %s", maxLpTokenSupply);
-            console.log("minLpTokenSupply 1: %s", minLpTokenSupply);
-            console.log("maxLpTokenSupply 2: %s", lastLpTokenSupply * (CAP_PRECISION + 0.05e18) / CAP_PRECISION);
-            console.log("minLpTokenSupply 2: %s", lastLpTokenSupply * (CAP_PRECISION - 0.04761904762e18) / CAP_PRECISION);
-            // uint256 maxLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION + crp.maxLpTokenIncrease) / CAP_PRECISION;
-            // uint256 minLpTokenSupply = lastLpTokenSupply * (CAP_PRECISION - crp.maxLpTokenDecrease) / CAP_PRECISION;
 
             if (lpTokenSupply > maxLpTokenSupply) {
                 console.log("Supply Capped!!!!");
-                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, data);
                 if (cappedReserves[0] == 0) cappedReserves[0] = 1;
                 if (cappedReserves[1] == 0) cappedReserves[1] = 1;
-            } else if (lpTokenSupply < minLpTokenSupply) {
+            }
+        // If LP Token Suppply decreased, check that it didn't increase below the min.
+        } else if (lpTokenSupply < lastLpTokenSupply) {
+            uint256 minLpTokenSupply = lastLpTokenSupply * (ABDKMathQuad.ONE.sub(crp.maxLpTokenDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
+            if (lpTokenSupply < minLpTokenSupply) {
+                if (returnIfBelowMin) return cappedReserves;
                 console.log("Supply Capped!!!!");
-                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, wf.data);
+                cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, data);
                 if (cappedReserves[0] == 0) cappedReserves[0] = 1;
                 if (cappedReserves[1] == 0) cappedReserves[1] = 1;
             }
         }
-
-        console.log("Final Capped Reserve 0: %s", cappedReserves[0]);
-        console.log("Final Capped Reserve 1: %s", cappedReserves[1]);
     }
 
     //////////////////// EMA RESERVES ////////////////////

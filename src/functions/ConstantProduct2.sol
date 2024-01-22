@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
+import {Math} from "oz/utils/math/Math.sol";
 
 import {console} from "forge-std/Test.sol";
 
@@ -20,7 +21,7 @@ import {console} from "forge-std/Test.sol";
  *  `b_i` is the reserve at index `i`
  */
 contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
-    using LibMath for uint256;
+    using Math for uint256;
 
     uint256 constant EXP_PRECISION = 1e12;
     uint256 constant CALC_RATE_PRECISION = 1e18;
