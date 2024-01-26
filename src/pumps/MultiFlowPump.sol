@@ -15,7 +15,7 @@ import {Math} from "oz/utils/math/Math.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
-import {console} from "forge-std/console.sol";
+// import {console} from "forge-std/console.sol";
 
 /**
  * @title MultiFlowPump
@@ -203,12 +203,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         uint256 capExponent,
         CapReservesParameters memory crp
     ) internal view returns (uint256[] memory cappedReserves) {
-        console.log("-----------------------------------------");
-        console.log("LR0: %s", lastReserves[0]);
-        console.log("LR1: %s", lastReserves[1]);
-        console.log("R0: %s", reserves[0]);
-        console.log("R1: %s", reserves[1]);
-        console.log("CE: %s", capExponent);
+        // console.log("-----------------------------------------");
+        // console.log("LR0: %s", lastReserves[0]);
+        // console.log("LR1: %s", lastReserves[1]);
+        // console.log("R0: %s", reserves[0]);
+        // console.log("R1: %s", reserves[1]);
+        // console.log("CE: %s", capExponent);
         // Assume two token well
         if (reserves.length != 2) {
             revert TooManyTokens();
@@ -224,20 +224,20 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, true);
 
         if (cappedReserves.length == 0) {
-            console.log("Reversing Order");
+            // console.log("Reversing Order");
             cappedReserves = _capRatios(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
-            console.log("Partial Capped Reserve 0: %s", cappedReserves[0]);
-            console.log("Partial Capped Reserve 0: %s", cappedReserves[1]);
+            // console.log("Partial Capped Reserve 0: %s", cappedReserves[0]);
+            // console.log("Partial Capped Reserve 0: %s", cappedReserves[1]);
 
             cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, false);
         } else {
-            console.log("Partial Capped Reserve 0: %s", cappedReserves[0]);
-            console.log("Partial Capped Reserve 1: %s", cappedReserves[1]);
+            // console.log("Partial Capped Reserve 0: %s", cappedReserves[0]);
+            // console.log("Partial Capped Reserve 1: %s", cappedReserves[1]);
             cappedReserves = _capRatios(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
         }
 
-        console.log("Final Capped Reserve 0: %s", cappedReserves[0]);
-        console.log("Final Capped Reserve 1: %s", cappedReserves[1]);
+        // console.log("Final Capped Reserve 0: %s", cappedReserves[0]);
+        // console.log("Final Capped Reserve 1: %s", cappedReserves[1]);
     }
 
     struct CapRatiosVariables {
@@ -265,8 +265,8 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         CapRatiosVariables memory crv;
         crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
         crv.r = mfpWf.calcRate(cappedReserves, i, j, data);
-        console.log("rLast: %s", crv.rLast);
-        console.log("r: %s", crv.r);
+        // console.log("rLast: %s", crv.rLast);
+        // console.log("r: %s", crv.r);
 
         // If the ratio increased, check that it didn't increase above the max.
         if (crv.r > crv.rLast) {
@@ -275,12 +275,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 crv.rLimit = type(uint256).max :
                 crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
             if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rLimit) {
-                console.log("Ratio Above Max");
+                // console.log("Ratio Above Max");
                 crv.ratios = new uint256[](2);
                 crv.ratios[i] = crv.rLimit;
                 crv.ratios[j] = CAP_PRECISION;
-                console.log("Ratio 0: %s", crv.ratios[0]);
-                console.log("Ratio 1: %s", crv.ratios[1]);
+                // console.log("Ratio 0: %s", crv.ratios[0]);
+                // console.log("Ratio 1: %s", crv.ratios[1]);
                 // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
                 // TODO: Make sure this works.
                 uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
@@ -291,12 +291,12 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         } else if (crv.r < crv.rLast) {
             crv.rLimit = crv.rLast.mulDiv(ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128().toUint256(), CAP_PRECISION2);
             if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rLimit) {
-                console.log("Ratio Below Max");
+                // console.log("Ratio Below Max");
                 crv.ratios = new uint256[](2);
                 crv.ratios[i] = crv.rLimit;
                 crv.ratios[j] = CAP_PRECISION;
-                console.log("Ratio 0: %s", crv.ratios[0]);
-                console.log("Ratio 1: %s", crv.ratios[1]);
+                // console.log("Ratio 0: %s", crv.ratios[0]);
+                // console.log("Ratio 1: %s", crv.ratios[1]);
                 // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
                 uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
                 cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
@@ -321,8 +321,8 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         // Part 2: Cap LP Token Supply Change
         uint256 lastLpTokenSupply = tryCalcLpTokenSupply(mfpWf, lastReserves, data);
         uint256 lpTokenSupply = tryCalcLpTokenSupply(mfpWf, cappedReserves, data);
-        console.log("lastLpTokenSupply: %s", lastLpTokenSupply);
-        console.log("lpTokenSupply: %s", lpTokenSupply);
+        // console.log("lastLpTokenSupply: %s", lastLpTokenSupply);
+        // console.log("lpTokenSupply: %s", lpTokenSupply);
 
         // If LP Token Supply increased, check that it didn't increase above the max.
         if (lpTokenSupply > lastLpTokenSupply) {
@@ -334,7 +334,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             if (lpTokenSupply > maxLpTokenSupply) {
                 // If `_capLpTokenSupply` decreases the reserves, cap the ratio first, to maximize precision.
                 if (returnIfBelowMin) return new uint256[](0);
-                console.log("Supply Capped!!!!");
+                // console.log("Supply Capped!!!!");
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, data);
                 if (cappedReserves[0] == 0) cappedReserves[0] = 1;
                 if (cappedReserves[1] == 0) cappedReserves[1] = 1;
@@ -343,7 +343,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         } else if (lpTokenSupply < lastLpTokenSupply) {
             uint256 minLpTokenSupply = lastLpTokenSupply * (ABDKMathQuad.ONE.sub(crp.maxLpSupplyDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
             if (lpTokenSupply < minLpTokenSupply) {
-                console.log("Supply Capped!!!!");
+                // console.log("Supply Capped!!!!");
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, data);
                 if (cappedReserves[0] == 0) cappedReserves[0] = 1;
                 if (cappedReserves[1] == 0) cappedReserves[1] = 1;
@@ -517,6 +517,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         try wf.calcReserveAtRatioSwap(reserves, i, ratios, data) returns (uint256 _reserve) {
             reserve = _reserve;
         } catch {
+            // console.log("Capping CalcReserveAtRatioSwap");
             reserve = type(uint256).max;
         }
     }
@@ -533,6 +534,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         try wf.calcLpTokenSupply(reserves, data) returns (uint256 _lpTokenSupply) {
             lpTokenSupply = _lpTokenSupply;
         } catch {
+            // console.log("Capping CalcLpTokenSupply");
             lpTokenSupply = MAX_UINT256_SQRT;
         }
     }
@@ -552,6 +554,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         try wf.calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, data) returns (uint256[] memory _underlyingAmounts) {
             underlyingAmounts = _underlyingAmounts;
         } catch {
+            // console.log("capping CalcLPTokenUnderlying");
             underlyingAmounts = new uint256[](reserves.length);
             for (uint256 i; i < reserves.length; ++i) {
                 underlyingAmounts[i] = type(uint256).max;

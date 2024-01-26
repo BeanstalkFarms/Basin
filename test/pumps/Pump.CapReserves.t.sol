@@ -24,7 +24,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
     bytes16[][] maxRatioChanges;
     bytes16 maxLpSupplyIncrease;
     bytes16 maxLpSupplyDecrease;
-    // uint256 MAX_RESERVE = 1e32;
+    // uint256 MAX_RESERVE = 1e30;
     uint256 MAX_RESERVE = 1e24;
     CapReservesParameters crp;
 
@@ -202,9 +202,9 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
     function testFuzzInstance_capReserve() public {
         testFuzz_capReserve_xBlock(
-            [uint(999999999999999999000130), 828423816706611064734033],
-            [uint(1881740364), 500421358448722497965991],
-            609
+            [uint(668374840427059908583306633348), 999999999999999993316251595735],
+            [uint(935068122923189688180993425409), 944816668711320003773400140733],
+            3
         );
     }
 
@@ -262,6 +262,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         uint256 lpTokenSupplyCapped = wf.calcLpTokenSupply(cappedReserves, new bytes(0));
         uint256 ratioDigits = getRatioDigits(address(_well), lastReserves, reserves, capExponent, crp);
 
+        console.log("LP Token Supply Capped: %s", lpTokenSupplyCapped);
         uint256 precision = numDigits(cappedReserves[0])
             .min(numDigits(cappedReserves[1]))
             .min(numDigits(reserves[0]))
