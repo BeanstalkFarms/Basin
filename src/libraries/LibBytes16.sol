@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title LibBytes16
- * @author Publius
+ * @author Brendan
  * @notice Contains byte operations used during storage reads & writes for Pumps.
  *
  * {LibBytes16} tightly packs an array of `bytes16` values into `n / 2` storage

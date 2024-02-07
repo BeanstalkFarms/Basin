@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title LibLastReserveBytes
- * @author Publius
+ * @author Brendan
  * @notice  Contains byte operations used during storage reads & writes for Pumps.
  *
  * @dev {LibLastReserveBytes} tightly packs a `uint8 n`, `uint40 timestamp` and `bytes16[] reserves`

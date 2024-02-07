@@ -7,7 +7,6 @@ import {IWell, Call} from "src/interfaces/IWell.sol";
 
 /**
  * @title IAquifer
- * @author Publius
  * @notice Interface for the Aquifer, a permissionless Well deployer and registry.
  */
 interface IAquifer {

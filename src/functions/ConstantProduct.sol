@@ -8,7 +8,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
  * @title ConstantProduct
- * @author Publius
+ * @author Brendan
  * @notice Constant product pricing function for Wells with N tokens.
  * @dev Constant Product Wells use the formula:
  *  `π(b_i) = (s / n)^n`

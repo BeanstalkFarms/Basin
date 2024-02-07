@@ -14,7 +14,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
 
 /**
  * @title Well
- * @author Publius, Silo Chad, Brean
+ * @author Brendan, Silo Chad, Brean
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
  *
