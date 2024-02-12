@@ -108,9 +108,8 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
 
         // readTwaReserves reverts if no time has passed.
         if (timeIncrease > 0) {
-            (uint256[] memory twaReserves,) = pump.readTwaReserves(
-                address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, data
-            );
+            (uint256[] memory twaReserves,) =
+                pump.readTwaReserves(address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, data);
             for (uint256 i; i < n; ++i) {
                 console.log("TWA RESERVES", i, twaReserves[i]);
                 if (lastReserves[i] > 1e24) {

@@ -13,7 +13,6 @@ import {Math} from "oz/utils/math/Math.sol";
  * recieves `s * b_i / S` of each underlying token.
  */
 abstract contract ProportionalLPToken is IWellFunction {
-
     using Math for uint256;
 
     function calcLPTokenUnderlying(

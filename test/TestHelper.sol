@@ -312,7 +312,7 @@ abstract contract TestHelper is Test, WellDeployer {
             uint256 denom = 10 ** (numDigits(a) - precision);
             uint256 maxB = b / denom;
             console.log("Max B", maxB);
-            console.log("Max B", maxB+absoluteError);
+            console.log("Max B", maxB + absoluteError);
             if (maxB + absoluteError < type(uint256).max) {
                 assertLe(a / denom, maxB + absoluteError);
             }

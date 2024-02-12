@@ -17,7 +17,6 @@ import {ABDKMathQuad} from "src/libraries/ABDKMathQuad.sol";
  * in reserves for manipulation resistance purposes, the gas savings is worth the lose of precision.
  */
 library LibLastReserveBytes {
-
     using ABDKMathQuad for uint256;
     using ABDKMathQuad for bytes16;
 
@@ -135,7 +134,7 @@ library LibLastReserveBytes {
         }
 
         lastReserves = new uint256[](n);
-        for (uint i; i < n; ++i) {
+        for (uint256 i; i < n; ++i) {
             lastReserves[i] = reserves[i].toUInt();
         }
     }

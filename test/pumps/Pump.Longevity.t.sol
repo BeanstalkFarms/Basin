@@ -40,7 +40,7 @@ contract PumpLongevityTest is TestHelper {
         uint256[] memory balances;
         uint40 timeStep;
         uint256 timestamp = block.timestamp;
-        for (uint256 i; i < 4_000; ++i) {
+        for (uint256 i; i < 4000; ++i) {
             if (i % 1000 == 0) {
                 console.log(i);
             }

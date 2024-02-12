@@ -32,9 +32,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
     ConstantProduct2 public wf;
 
-    constructor()
-        MultiFlowPump()
-    {
+    constructor() MultiFlowPump() {
         lastReserves = new uint256[](2);
         reserves = new uint256[](2);
 
@@ -47,21 +45,19 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         maxRatioChanges[0][1] = from18(0.05e18);
         maxRatioChanges[1][0] = from18(0.05e18);
 
-        crp = MultiFlowPump.CapReservesParameters(
-            maxRatioChanges,
-            maxLpSupplyIncrease,
-            maxLpSupplyDecrease
-        );
+        crp = MultiFlowPump.CapReservesParameters(maxRatioChanges, maxLpSupplyIncrease, maxLpSupplyDecrease);
 
         wf = new ConstantProduct2();
 
-        _well = address(new MockStaticWell(
+        _well = address(
+            new MockStaticWell(
             deployMockTokens(2),
             Call(address(wf), new bytes(0)),
             deployPumps(1),
             address(0),
             new bytes(0)
-        ));
+            )
+        );
     }
 
     function test_capReserve_belowCap() public {
@@ -76,13 +72,9 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
             lastReserves,
             reserves,
             1, // capExponent
-            CapReservesParameters(
-                maxRatioChanges,
-                maxLpSupplyIncrease,
-                maxLpSupplyDecrease
-            )
+            CapReservesParameters(maxRatioChanges, maxLpSupplyIncrease, maxLpSupplyDecrease)
         );
-        
+
         assertEq(cappedReserves[0], 101);
         assertEq(cappedReserves[1], 102);
     }
@@ -125,10 +117,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         assertEq(cappedReserves[1], 1028);
     }
 
-    function testFuzz_capReserve_oneBlock(
-        uint256[2] memory _lastReserves,
-        uint256[2] memory _reserves
-    ) public {
+    function testFuzz_capReserve_oneBlock(uint256[2] memory _lastReserves, uint256[2] memory _reserves) public {
         lastReserves = new uint256[](2);
         lastReserves[0] = bound(_lastReserves[0], 1e6, MAX_RESERVE);
         lastReserves[1] = bound(
@@ -154,12 +143,9 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         );
 
         uint256 ratioDigits = getRatioDigits(address(_well), lastReserves, reserves, 1, crp);
-        uint256 precision = numDigits(cappedReserves[0])
-            .min(numDigits(cappedReserves[1]))
-            .min(numDigits(reserves[0]))
-            .min(numDigits(reserves[1]))
-            .min(ratioDigits);
-    
+        uint256 precision = numDigits(cappedReserves[0]).min(numDigits(cappedReserves[1])).min(numDigits(reserves[0]))
+            .min(numDigits(reserves[1])).min(ratioDigits);
+
         if (precision >= 2) precision = precision - 2;
         else precision = 1;
         console.log("Digit precision: %s", precision);
@@ -202,8 +188,8 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
     function testFuzzInstance_capReserve() public {
         testFuzz_capReserve_xBlock(
-            [uint(668374840427059908583306633348), 999999999999999993316251595735],
-            [uint(935068122923189688180993425409), 944816668711320003773400140733],
+            [uint256(668_374_840_427_059_908_583_306_633_348), 999_999_999_999_999_993_316_251_595_735],
+            [uint256(935_068_122_923_189_688_180_993_425_409), 944_816_668_711_320_003_773_400_140_733],
             3
         );
     }
@@ -230,15 +216,9 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         );
 
         // TODO: Increase bound!!!
-        capExponent = bound(capExponent, 1, 10000);
+        capExponent = bound(capExponent, 1, 10_000);
 
-        uint256[] memory cappedReserves = _capReserves(
-            address(_well),
-            lastReserves,
-            reserves,
-            capExponent,
-            crp
-        );
+        uint256[] memory cappedReserves = _capReserves(address(_well), lastReserves, reserves, capExponent, crp);
 
         assertNotEq(cappedReserves[0], 0);
         assertNotEq(cappedReserves[1], 0);
@@ -263,11 +243,8 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         uint256 ratioDigits = getRatioDigits(address(_well), lastReserves, reserves, capExponent, crp);
 
         console.log("LP Token Supply Capped: %s", lpTokenSupplyCapped);
-        uint256 precision = numDigits(cappedReserves[0])
-            .min(numDigits(cappedReserves[1]))
-            .min(numDigits(reserves[0]))
-            .min(numDigits(reserves[1]))
-            .min(numDigits(lpTokenSupplyCapped.sqrt()));
+        uint256 precision = numDigits(cappedReserves[0]).min(numDigits(cappedReserves[1])).min(numDigits(reserves[0]))
+            .min(numDigits(reserves[1])).min(numDigits(lpTokenSupplyCapped.sqrt()));
         precision = precision.min(ratioDigits);
         if (precision >= 1) precision = precision - 1;
         console.log("Digit precision: %s", precision);
@@ -293,7 +270,11 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         uint256 rLast = mfpWf.calcRate(_lastReserves, i, j, _wf.data);
         uint256 r = mfpWf.calcRate(_reserves, i, j, _wf.data);
         if (r < rLast) {
-            ratioDigits = rLast.mulDiv(ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(_crp.maxRatioChanges[j][i])).powu(capExponent).to128x128().toUint256(), CAP_PRECISION2);
+            ratioDigits = rLast.mulDiv(
+                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(_crp.maxRatioChanges[j][i])).powu(capExponent).to128x128()
+                    .toUint256(),
+                CAP_PRECISION2
+            );
             ratioDigits = numDigits(ratioDigits);
         } else {
             ratioDigits = type(uint256).max;

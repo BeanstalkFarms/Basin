@@ -42,19 +42,14 @@ function simCapReserve50Percent(
     console.log("lastReserve", lastReserve);
     console.log("reserve", reserve);
 
-    cappedReserve = (lastReserve < reserve && limitReserve < reserve) ||
-        (lastReserve > reserve && limitReserve > reserve)
-        ? limitReserve
-        : reserve;
+    cappedReserve = (lastReserve < reserve && limitReserve < reserve)
+        || (lastReserve > reserve && limitReserve > reserve) ? limitReserve : reserve;
 }
 
 function generateRandomUpdate(
     uint256 n,
     bytes32 seed
-)
-    pure
-    returns (uint256[] memory balances, uint40 timeIncrease, bytes32 newSeed)
-{
+) pure returns (uint256[] memory balances, uint40 timeIncrease, bytes32 newSeed) {
     balances = new uint256[](n);
     seed = stepSeed(seed);
     timeIncrease = uint40(uint256(seed)) % 50_000_000;
@@ -69,12 +64,6 @@ function stepSeed(bytes32 seed) pure returns (bytes32 newSeed) {
     newSeed = keccak256(abi.encode(seed));
 }
 
-// {
-//         bytes16[][] maxRatioChanges;
-//         bytes16 maxLpTokenIncrease;
-//         bytes16 maxLpTokenDecrease;
-//     }
-
 function encodePumpData(
     bytes16 alpha,
     uint256 capInterval,
@@ -83,7 +72,7 @@ function encodePumpData(
     data = abi.encode(alpha, capInterval, crp);
 }
 
-function mockPumpData() pure returns (bytes memory data) {
+function mockPumpData() view returns (bytes memory data) {
     bytes16[][] memory maxRatioChanges = new bytes16[][](2);
     maxRatioChanges[0] = new bytes16[](2);
     maxRatioChanges[1] = new bytes16[](2);
@@ -93,10 +82,6 @@ function mockPumpData() pure returns (bytes memory data) {
     data = encodePumpData(
         from18(0.9e18),
         12,
-        MultiFlowPump.CapReservesParameters(
-            maxRatioChanges,
-            from18(0.5e18),
-            from18(0.4761904762e18)
-        )
+        MultiFlowPump.CapReservesParameters(maxRatioChanges, from18(0.5e18), from18(0.4761904762e18))
     );
 }

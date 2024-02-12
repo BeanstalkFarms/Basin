@@ -17,10 +17,7 @@ abstract contract IntegrationTestHelper is TestHelper {
 
     function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](1);
-        _pumps[0] = Call(
-            address(new MultiFlowPump()),
-            new bytes(0)
-        );
+        _pumps[0] = Call(address(new MultiFlowPump()), new bytes(0));
 
         return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }

@@ -42,7 +42,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
      *
      *  ∴ X >= (1/N) * (77 - ln(P)/ln(10))
      *
-    * ConstantProduct2 sets the constraints `N = 2` and `EXP_PRECISION = 1e12`,
+     * ConstantProduct2 sets the constraints `N = 2` and `EXP_PRECISION = 1e12`,
      * resulting in an upper bound of X = 32.5.
      *
      * In other words, {calcLpTokenSupply} overflows if all reserves are simultaneously
