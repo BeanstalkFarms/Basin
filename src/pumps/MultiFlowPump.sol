@@ -279,7 +279,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 crv.ratios[i] = crv.rLimit;
                 crv.ratios[j] = CAP_PRECISION;
                 // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                // TODO: Make sure this works.
                 uint256 cappedReserveI =
                     Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
                 cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
