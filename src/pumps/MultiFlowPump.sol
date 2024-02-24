@@ -242,7 +242,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         }
     }
 
-    struct CapRatiosVariables {
+    struct CapRatesVariables {
         uint256 r;
         uint256 rLast;
         uint256 rLimit;
@@ -261,16 +261,16 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         bytes memory data
     ) internal view returns (uint256[] memory cappedReserves) {
         cappedReserves = reserves;
-        // Part 1: Cap Ratios
+        // Part 1: Cap Rates
         // Use the larger reserve as the numerator for the ratio to maximize precision
         (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
-        CapRatiosVariables memory crv;
+        CapRatesVariables memory crv;
         crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
         crv.r = mfpWf.calcRate(cappedReserves, i, j, data);
 
         // If the ratio increased, check that it didn't increase above the max.
         if (crv.r > crv.rLast) {
-            bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent);
+            bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxRateChanges[i][j]).powu(capExponent);
             crv.rLimit = tempExp.cmp(MAX_CONVERT_TO_128x128) != -1
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
@@ -287,7 +287,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             // If the ratio decreased, check that it didn't decrease below the max.
         } else if (crv.r < crv.rLast) {
             crv.rLimit = crv.rLast.mulDiv(
-                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128()
+                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRateChanges[j][i])).powu(capExponent).to128x128()
                     .toUint256(),
                 CAP_PRECISION2
             );
