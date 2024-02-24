@@ -91,7 +91,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             alphaN = alpha.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
             // Round up in case capInterval > block time to guarantee capExponent > 0 if time has passed since the last update.
-            capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+            capExponent = calcCapExponent(deltaTimestamp, capInterval);
         }
 
         pumpState.lastReserves = _capReserves(msg.sender, pumpState.lastReserves, reserves, capExponent, crp);
@@ -197,7 +197,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return cappedReserves;
         }
 
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         cappedReserves = _capReserves(well, cappedReserves, currentReserves, capExponent, crp);
     }
 
@@ -393,7 +393,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             }
             return emaReserves;
         }
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
         bytes16 alphaN = alpha.powu(deltaTimestamp);
         for (uint256 i; i < numberOfReserves; ++i) {
@@ -455,7 +455,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return cumulativeReserves;
         }
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
@@ -487,6 +487,13 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     }
 
     //////////////////// HELPERS ////////////////////
+
+    /**
+     * @dev Calculate the cap exponent for a given `deltaTimestamp` and `capInterval`.
+     */
+    function calcCapExponent(uint256 deltaTimestamp, uint256 capInterval) internal pure returns (uint256 capExponent) {
+        capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+    }
 
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
