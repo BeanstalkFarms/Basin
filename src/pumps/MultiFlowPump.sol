@@ -94,7 +94,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             capExponent = ((deltaTimestamp - 1) / capInterval + 1);
         }
 
-        (numberOfReserves, pumpState.lastTimestamp, pumpState.lastReserves) = slot.readLastReserves();
         pumpState.lastReserves = _capReserves(msg.sender, pumpState.lastReserves, reserves, capExponent, crp);
 
         // Read: Cumulative & EMA Reserves
@@ -202,6 +201,17 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         cappedReserves = _capReserves(well, cappedReserves, currentReserves, capExponent, crp);
     }
 
+    /**
+     * @notice Cap `reserves` to have at most a maximum % increase/decrease in rate and a maximum % increase/decrease in total liquidity
+     * in relation to `lastReserves` based on the parameters defined in `crp` and the time passed since the last update, which is used
+     * to calculate `capExponent`.
+     * @param well The address of the Well
+     * @param lastReserves The last capped reserves.
+     * @param reserves The current reserves being capped.
+     * @param capExponent The exponent to raise the all % changes to.
+     * @param crp The parameters for capping reserves. See {CapReservesParameters}.
+     * @return cappedReserves The current reserves capped to the maximum % changes defined by `crp`.
+     */
     function _capReserves(
         address well,
         uint256[] memory lastReserves,
