@@ -72,7 +72,7 @@ function encodePumpData(
     data = abi.encode(alpha, capInterval, crp);
 }
 
-function mockPumpData() view returns (bytes memory data) {
+function mockPumpData() pure returns (bytes memory data) {
     bytes16[][] memory maxRatioChanges = new bytes16[][](2);
     maxRatioChanges[0] = new bytes16[](2);
     maxRatioChanges[1] = new bytes16[](2);

@@ -234,11 +234,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, true);
 
         if (cappedReserves.length == 0) {
-            cappedReserves = _capRatios(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
+            cappedReserves = _capRates(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
 
             cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, false);
         } else {
-            cappedReserves = _capRatios(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
+            cappedReserves = _capRates(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
         }
     }
 
@@ -252,7 +252,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Cap the change in ratio of `reserves` to a maximum % change from `lastReserves`.
      */
-    function _capRatios(
+    function _capRates(
         uint256[] memory lastReserves,
         uint256[] memory reserves,
         uint256 capExponent,
