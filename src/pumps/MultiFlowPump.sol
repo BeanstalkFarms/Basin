@@ -258,6 +258,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
         CapRatiosVariables memory crv;
         crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
+        crv.r = mfpWf.calcRate(cappedReserves, i, j, data);
 
         // If the ratio increased, check that it didn't increase above the max.
         if (crv.r > crv.rLast) {
