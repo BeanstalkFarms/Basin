@@ -15,8 +15,6 @@ import {Math} from "oz/utils/math/Math.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 
-// import {console} from "forge-std/console.sol";
-
 /**
  * @title MultiFlowPump
  * @author Publius
@@ -41,10 +39,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     using Math for uint256;
     using LibMath for uint256;
 
-    uint256 CAP_PRECISION = 1e18;
-    uint256 CAP_PRECISION2 = 2 ** 128;
-    bytes16 MAX_CONVERT_TO_128x128 = 0x407dffffffffffffffffffffffffffff;
-    uint256 MAX_UINT256_SQRT = 340_282_366_920_938_463_463_374_607_431_768_211_455;
+    uint256 constant CAP_PRECISION = 1e18;
+    uint256 constant CAP_PRECISION2 = 2 ** 128;
+    bytes16 constant MAX_CONVERT_TO_128x128 = 0x407dffffffffffffffffffffffffffff;
+    uint256 constant MAX_UINT256_SQRT = 340_282_366_920_938_463_463_374_607_431_768_211_455;
 
     struct PumpState {
         uint40 lastTimestamp;
