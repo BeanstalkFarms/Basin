@@ -224,15 +224,13 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             revert TooManyTokens();
         }
 
-        cappedReserves = new uint256[](2);
-        cappedReserves[0] = reserves[0];
-        cappedReserves[1] = reserves[1];
-
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 
-        cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, true);
+        // The order that the LP token supply and the rates are capped are dependent upon the values of the reserves to maximize precision.
+        cappedReserves = _capLpTokenSupply(lastReserves, reserves, capExponent, crp, mfpWf, wf.data, true);
 
+        // If `_capLpTokenSupply` returns an empty array, then the rates should be capped first.
         if (cappedReserves.length == 0) {
             cappedReserves = _capRates(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
 
