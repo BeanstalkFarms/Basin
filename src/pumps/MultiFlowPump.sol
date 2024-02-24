@@ -52,7 +52,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     }
 
     struct CapReservesParameters {
-        bytes16[][] maxRatioChanges;
+        bytes16[][] maxRateChanges;
         bytes16 maxLpSupplyIncrease;
         bytes16 maxLpSupplyDecrease;
     }

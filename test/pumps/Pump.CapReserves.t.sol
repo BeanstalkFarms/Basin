@@ -21,7 +21,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
     uint256[] lastReserves;
     uint256[] reserves;
-    bytes16[][] maxRatioChanges;
+    bytes16[][] maxRateChanges;
     bytes16 maxLpSupplyIncrease;
     bytes16 maxLpSupplyDecrease;
     // uint256 MAX_RESERVE = 1e30;
@@ -39,13 +39,13 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         maxLpSupplyIncrease = from18(0.05e18);
         maxLpSupplyDecrease = from18(0.04761904762e18);
 
-        maxRatioChanges = new bytes16[][](2);
-        maxRatioChanges[0] = new bytes16[](2);
-        maxRatioChanges[1] = new bytes16[](2);
-        maxRatioChanges[0][1] = from18(0.05e18);
-        maxRatioChanges[1][0] = from18(0.05e18);
+        maxRateChanges = new bytes16[][](2);
+        maxRateChanges[0] = new bytes16[](2);
+        maxRateChanges[1] = new bytes16[](2);
+        maxRateChanges[0][1] = from18(0.05e18);
+        maxRateChanges[1][0] = from18(0.05e18);
 
-        crp = MultiFlowPump.CapReservesParameters(maxRatioChanges, maxLpSupplyIncrease, maxLpSupplyDecrease);
+        crp = MultiFlowPump.CapReservesParameters(maxRateChanges, maxLpSupplyIncrease, maxLpSupplyDecrease);
 
         wf = new ConstantProduct2();
 
@@ -72,7 +72,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
             lastReserves,
             reserves,
             1, // capExponent
-            CapReservesParameters(maxRatioChanges, maxLpSupplyIncrease, maxLpSupplyDecrease)
+            CapReservesParameters(maxRateChanges, maxLpSupplyIncrease, maxLpSupplyDecrease)
         );
 
         assertEq(cappedReserves[0], 101);
@@ -174,8 +174,8 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
         (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
 
-        uint256 rIJMax = lastReserves[i] * (1e18 + to18(maxRatioChanges[i][j])) / lastReserves[j];
-        uint256 rIJMin = lastReserves[i] * 1e18 / (1 + to18(maxRatioChanges[i][j])) / lastReserves[j];
+        uint256 rIJMax = lastReserves[i] * (1e18 + to18(maxRateChanges[i][j])) / lastReserves[j];
+        uint256 rIJMin = lastReserves[i] * 1e18 / (1 + to18(maxRateChanges[i][j])) / lastReserves[j];
         uint256 rIJCapped = cappedReserves[i] * 1e18 / cappedReserves[j];
         console.log("Max R: %s", rIJMax);
         console.log("Min R: %s", rIJMin);
@@ -271,7 +271,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
         uint256 r = mfpWf.calcRate(_reserves, i, j, _wf.data);
         if (r < rLast) {
             ratioDigits = rLast.mulDiv(
-                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(_crp.maxRatioChanges[j][i])).powu(capExponent).to128x128()
+                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(_crp.maxRateChanges[j][i])).powu(capExponent).to128x128()
                     .toUint256(),
                 CAP_PRECISION2
             );
