@@ -57,6 +57,13 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         bytes16 maxLpSupplyDecrease;
     }
 
+    struct CapRatesVariables {
+        uint256 r;
+        uint256 rLast;
+        uint256 rLimit;
+        uint256[] ratios;
+    }
+
     //////////////////// PUMP ////////////////////
 
     /**
@@ -238,13 +245,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         } else {
             cappedReserves = _capRates(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
         }
-    }
-
-    struct CapRatesVariables {
-        uint256 r;
-        uint256 rLast;
-        uint256 rLimit;
-        uint256[] ratios;
     }
 
     /**
