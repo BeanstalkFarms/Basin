@@ -330,8 +330,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 // If `_capLpTokenSupply` decreases the reserves, cap the ratio first, to maximize precision.
                 if (returnIfBelowMin) return new uint256[](0);
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, data);
-                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
-                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
             }
             // If LP Token Suppply decreased, check that it didn't increase below the min.
         } else if (lpTokenSupply < lastLpTokenSupply) {
@@ -339,8 +337,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 * (ABDKMathQuad.ONE.sub(crp.maxLpSupplyDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
             if (lpTokenSupply < minLpTokenSupply) {
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, data);
-                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
-                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
             }
         }
     }
@@ -553,6 +549,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Assumes that if `calcLPTokenUnderlying` fails, it fails because of overflow.
      * If the call fails, returns the maximum possible return value for `calcLPTokenUnderlying`.
+     * Also, enforces a minimum of 1 for each reserve.
      */
     function tryCalcLPTokenUnderlying(
         IMultiFlowPumpWellFunction wf,
@@ -565,6 +562,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             uint256[] memory _underlyingAmounts
         ) {
             underlyingAmounts = _underlyingAmounts;
+            for (uint256 i; i < underlyingAmounts.length; ++i) {
+                if (underlyingAmounts[i] == 0) {
+                    underlyingAmounts[i] = 1;
+                }
+            }
         } catch {
             underlyingAmounts = new uint256[](reserves.length);
             for (uint256 i; i < reserves.length; ++i) {
