@@ -273,14 +273,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
             if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) > crv.rLimit) {
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rLimit;
-                crv.ratios[j] = CAP_PRECISION;
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                uint256 cappedReserveI =
-                    Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
-                cappedReserves[i] = cappedReserveI;
+                calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
             // If the ratio decreased, check that it didn't decrease below the max.
         } else if (crv.r < crv.rLast) {
@@ -290,14 +283,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 CAP_PRECISION2
             );
             if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) < crv.rLimit) {
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rLimit;
-                crv.ratios[j] = CAP_PRECISION;
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                uint256 cappedReserveI =
-                    Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
-                cappedReserves[i] = cappedReserveI;
+                calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
         }
     }
@@ -487,8 +473,29 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Calculate the cap exponent for a given `deltaTimestamp` and `capInterval`.
      */
-    function calcCapExponent(uint256 deltaTimestamp, uint256 capInterval) internal pure returns (uint256 capExponent) {
+    function calcCapExponent(uint256 deltaTimestamp, uint256 capInterval) private pure returns (uint256 capExponent) {
         capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+    }
+
+    /**
+     * @dev Calculates the capped reserves given a rate limit.
+     */
+    function calcReservesAtRatioSwap(
+        IMultiFlowPumpWellFunction mfpWf,
+        uint256 rLimit,
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        bytes memory data
+    ) private view returns (uint256[] memory) {
+        uint256[] memory ratios = new uint256[](2);
+        ratios[i] = rLimit;
+        ratios[j] = CAP_PRECISION;
+        // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+        uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, i, ratios, data), 1);
+        reserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, j, ratios, data), 1);
+        reserves[i] = cappedReserveI;
+        return reserves;
     }
 
     /**
