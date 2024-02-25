@@ -52,9 +52,16 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     }
 
     struct CapReservesParameters {
-        bytes16[][] maxRatioChanges;
+        bytes16[][] maxRateChanges;
         bytes16 maxLpSupplyIncrease;
         bytes16 maxLpSupplyDecrease;
+    }
+
+    struct CapRatesVariables {
+        uint256 r;
+        uint256 rLast;
+        uint256 rLimit;
+        uint256[] ratios;
     }
 
     //////////////////// PUMP ////////////////////
@@ -91,10 +98,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             alphaN = alpha.powu(deltaTimestamp);
             deltaTimestampBytes = deltaTimestamp.fromUInt();
             // Round up in case capInterval > block time to guarantee capExponent > 0 if time has passed since the last update.
-            capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+            capExponent = calcCapExponent(deltaTimestamp, capInterval);
         }
 
-        (numberOfReserves, pumpState.lastTimestamp, pumpState.lastReserves) = slot.readLastReserves();
         pumpState.lastReserves = _capReserves(msg.sender, pumpState.lastReserves, reserves, capExponent, crp);
 
         // Read: Cumulative & EMA Reserves
@@ -198,10 +204,21 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return cappedReserves;
         }
 
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         cappedReserves = _capReserves(well, cappedReserves, currentReserves, capExponent, crp);
     }
 
+    /**
+     * @notice Cap `reserves` to have at most a maximum % increase/decrease in rate and a maximum % increase/decrease in total liquidity
+     * in relation to `lastReserves` based on the parameters defined in `crp` and the time passed since the last update, which is used
+     * to calculate `capExponent`.
+     * @param well The address of the Well
+     * @param lastReserves The last capped reserves.
+     * @param reserves The current reserves being capped.
+     * @param capExponent The exponent to raise the all % changes to.
+     * @param crp The parameters for capping reserves. See {CapReservesParameters}.
+     * @return cappedReserves The current reserves capped to the maximum % changes defined by `crp`.
+     */
     function _capReserves(
         address well,
         uint256[] memory lastReserves,
@@ -214,35 +231,26 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             revert TooManyTokens();
         }
 
-        cappedReserves = new uint256[](2);
-        cappedReserves[0] = reserves[0];
-        cappedReserves[1] = reserves[1];
-
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 
-        cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, true);
+        // The order that the LP token supply and the rates are capped are dependent upon the values of the reserves to maximize precision.
+        cappedReserves = _capLpTokenSupply(lastReserves, reserves, capExponent, crp, mfpWf, wf.data, true);
 
+        // If `_capLpTokenSupply` returns an empty array, then the rates should be capped first.
         if (cappedReserves.length == 0) {
-            cappedReserves = _capRatios(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
+            cappedReserves = _capRates(lastReserves, reserves, capExponent, crp, mfpWf, wf.data);
 
             cappedReserves = _capLpTokenSupply(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data, false);
         } else {
-            cappedReserves = _capRatios(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
+            cappedReserves = _capRates(lastReserves, cappedReserves, capExponent, crp, mfpWf, wf.data);
         }
-    }
-
-    struct CapRatiosVariables {
-        uint256 r;
-        uint256 rLast;
-        uint256 rLimit;
-        uint256[] ratios;
     }
 
     /**
      * @dev Cap the change in ratio of `reserves` to a maximum % change from `lastReserves`.
      */
-    function _capRatios(
+    function _capRates(
         uint256[] memory lastReserves,
         uint256[] memory reserves,
         uint256 capExponent,
@@ -251,46 +259,31 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         bytes memory data
     ) internal view returns (uint256[] memory cappedReserves) {
         cappedReserves = reserves;
-        // Part 1: Cap Ratios
+        // Part 1: Cap Rates
         // Use the larger reserve as the numerator for the ratio to maximize precision
         (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
-        CapRatiosVariables memory crv;
+        CapRatesVariables memory crv;
         crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
         crv.r = mfpWf.calcRate(cappedReserves, i, j, data);
 
         // If the ratio increased, check that it didn't increase above the max.
         if (crv.r > crv.rLast) {
-            bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxRatioChanges[i][j]).powu(capExponent);
+            bytes16 tempExp = ABDKMathQuad.ONE.add(crp.maxRateChanges[i][j]).powu(capExponent);
             crv.rLimit = tempExp.cmp(MAX_CONVERT_TO_128x128) != -1
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
-            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rLimit) {
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rLimit;
-                crv.ratios[j] = CAP_PRECISION;
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                // TODO: Make sure this works.
-                uint256 cappedReserveI =
-                    Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
-                cappedReserves[i] = cappedReserveI;
+            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) > crv.rLimit) {
+                calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
             // If the ratio decreased, check that it didn't decrease below the max.
         } else if (crv.r < crv.rLast) {
             crv.rLimit = crv.rLast.mulDiv(
-                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRatioChanges[j][i])).powu(capExponent).to128x128()
+                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRateChanges[j][i])).powu(capExponent).to128x128()
                     .toUint256(),
                 CAP_PRECISION2
             );
-            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rLimit) {
-                crv.ratios = new uint256[](2);
-                crv.ratios[i] = crv.rLimit;
-                crv.ratios[j] = CAP_PRECISION;
-                // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
-                uint256 cappedReserveI =
-                    Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, i, crv.ratios, data), 1);
-                cappedReserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, cappedReserves, j, crv.ratios, data), 1);
-                cappedReserves[i] = cappedReserveI;
+            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) < crv.rLimit) {
+                calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
         }
     }
@@ -323,8 +316,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 // If `_capLpTokenSupply` decreases the reserves, cap the ratio first, to maximize precision.
                 if (returnIfBelowMin) return new uint256[](0);
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, data);
-                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
-                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
             }
             // If LP Token Suppply decreased, check that it didn't increase below the min.
         } else if (lpTokenSupply < lastLpTokenSupply) {
@@ -332,8 +323,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 * (ABDKMathQuad.ONE.sub(crp.maxLpSupplyDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
             if (lpTokenSupply < minLpTokenSupply) {
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, minLpTokenSupply, cappedReserves, lpTokenSupply, data);
-                if (cappedReserves[0] == 0) cappedReserves[0] = 1;
-                if (cappedReserves[1] == 0) cappedReserves[1] = 1;
             }
         }
     }
@@ -386,7 +375,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             }
             return emaReserves;
         }
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
         bytes16 alphaN = alpha.powu(deltaTimestamp);
         for (uint256 i; i < numberOfReserves; ++i) {
@@ -448,7 +437,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             return cumulativeReserves;
         }
         bytes16 deltaTimestampBytes = deltaTimestamp.fromUInt();
-        uint256 capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+        uint256 capExponent = calcCapExponent(deltaTimestamp, capInterval);
         lastReserves = _capReserves(well, lastReserves, reserves, capExponent, crp);
         // Currently, there is so support for overflow.
         for (uint256 i; i < cumulativeReserves.length; ++i) {
@@ -480,6 +469,34 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     }
 
     //////////////////// HELPERS ////////////////////
+
+    /**
+     * @dev Calculate the cap exponent for a given `deltaTimestamp` and `capInterval`.
+     */
+    function calcCapExponent(uint256 deltaTimestamp, uint256 capInterval) private pure returns (uint256 capExponent) {
+        capExponent = ((deltaTimestamp - 1) / capInterval + 1);
+    }
+
+    /**
+     * @dev Calculates the capped reserves given a rate limit.
+     */
+    function calcReservesAtRatioSwap(
+        IMultiFlowPumpWellFunction mfpWf,
+        uint256 rLimit,
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        bytes memory data
+    ) private view returns (uint256[] memory) {
+        uint256[] memory ratios = new uint256[](2);
+        ratios[i] = rLimit;
+        ratios[j] = CAP_PRECISION;
+        // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
+        uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, i, ratios, data), 1);
+        reserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, j, ratios, data), 1);
+        reserves[i] = cappedReserveI;
+        return reserves;
+    }
 
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
@@ -539,6 +556,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Assumes that if `calcLPTokenUnderlying` fails, it fails because of overflow.
      * If the call fails, returns the maximum possible return value for `calcLPTokenUnderlying`.
+     * Also, enforces a minimum of 1 for each reserve.
      */
     function tryCalcLPTokenUnderlying(
         IMultiFlowPumpWellFunction wf,
@@ -547,11 +565,15 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         uint256 lpTokenSupply,
         bytes memory data
     ) internal view returns (uint256[] memory underlyingAmounts) {
-        // return wf.calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, data);
         try wf.calcLPTokenUnderlying(lpTokenAmount, reserves, lpTokenSupply, data) returns (
             uint256[] memory _underlyingAmounts
         ) {
             underlyingAmounts = _underlyingAmounts;
+            for (uint256 i; i < underlyingAmounts.length; ++i) {
+                if (underlyingAmounts[i] == 0) {
+                    underlyingAmounts[i] = 1;
+                }
+            }
         } catch {
             underlyingAmounts = new uint256[](reserves.length);
             for (uint256 i; i < reserves.length; ++i) {

@@ -72,16 +72,14 @@ function encodePumpData(
     data = abi.encode(alpha, capInterval, crp);
 }
 
-function mockPumpData() view returns (bytes memory data) {
-    bytes16[][] memory maxRatioChanges = new bytes16[][](2);
-    maxRatioChanges[0] = new bytes16[](2);
-    maxRatioChanges[1] = new bytes16[](2);
-    maxRatioChanges[0][1] = from18(0.5e18);
-    maxRatioChanges[1][0] = from18(0.5e18);
+function mockPumpData() pure returns (bytes memory data) {
+    bytes16[][] memory maxRateChanges = new bytes16[][](2);
+    maxRateChanges[0] = new bytes16[](2);
+    maxRateChanges[1] = new bytes16[](2);
+    maxRateChanges[0][1] = from18(0.5e18);
+    maxRateChanges[1][0] = from18(0.5e18);
 
     data = encodePumpData(
-        from18(0.9e18),
-        12,
-        MultiFlowPump.CapReservesParameters(maxRatioChanges, from18(0.5e18), from18(0.4761904762e18))
+        from18(0.9e18), 12, MultiFlowPump.CapReservesParameters(maxRateChanges, from18(0.5e18), from18(0.4761904762e18))
     );
 }
