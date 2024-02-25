@@ -1,5 +1,5 @@
 import argparse
-from eth_abi import encode_single
+from eth_abi import encode
 from decimal import *
 getcontext().prec = 40
 
@@ -8,7 +8,7 @@ def powuFraction(num, denom, exp):
 
 def main(args):
     powu = powuFraction(args.numerator, args.denominator, args.exponent) * (2**128)
-    powu_enc = encode_single('int256', int(powu))
+    powu_enc = encode(['int256'], [int(powu)])
     print("0x" + powu_enc.hex())
 
 # def test(args):

@@ -10,14 +10,7 @@ contract PumpHelpersTest is TestHelper, MultiFlowPump {
     uint256[5] testCasesInput = [1, 2, 3, 4, 5];
     uint256[5] testCasesOutput = [32, 32, 64, 64, 96];
 
-    constructor()
-        MultiFlowPump(
-            from18(0.5e18), // cap reserves if changed +/- 50% per block
-            from18(0.5e18), // cap reserves if changed +/- 50% per block
-            12, // EVM block time
-            from18(0.9994445987e18) // geometric EMA constant
-        )
-    {}
+    constructor() MultiFlowPump() {}
 
     function test_getSlotForAddress() public {
         address addr = address(0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79);

@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
+import {Math} from "oz/utils/math/Math.sol";
 
 /**
  * @title ConstantProduct2
@@ -18,9 +19,10 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `b_i` is the reserve at index `i`
  */
 contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
-    using LibMath for uint256;
+    using Math for uint256;
 
     uint256 constant EXP_PRECISION = 1e12;
+    uint256 constant CALC_RATE_PRECISION = 1e18;
 
     /**
      * @dev `s = (b_0 * b_1)^(1/2)`
@@ -102,5 +104,14 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     ) external pure override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
         reserve = reserves[i] * ratios[j] / ratios[i];
+    }
+
+    function calcRate(
+        uint256[] calldata reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata
+    ) external pure returns (uint256 rate) {
+        return reserves[i] * CALC_RATE_PRECISION / reserves[j];
     }
 }

@@ -15,25 +15,25 @@ contract LibLastReserveBytesTest is TestHelper {
     function testEmaFuzz_storeAndRead(
         uint8 n,
         uint40 lastTimestamp,
-        bytes13[NUM_RESERVES_MAX] memory _reserves
+        uint256[NUM_RESERVES_MAX] memory _reserves
     ) public {
         vm.assume(n <= NUM_RESERVES_MAX);
 
         // Use the first `n` reserves. Cast uint104 reserves -> uint256
-        bytes16[] memory reserves = new bytes16[](n);
+        uint256[] memory reserves = new uint256[](n);
         for (uint256 i; i < n; i++) {
-            reserves[i] = bytes16(_reserves[i]) << 24;
+            reserves[i] = _reserves[i];
         }
         RESERVES_STORAGE_SLOT.storeLastReserves(lastTimestamp, reserves);
 
         // Re-read reserves and compare
-        (uint8 _n, uint40 _lastTimestamp, bytes16[] memory reserves2) = RESERVES_STORAGE_SLOT.readLastReserves();
+        (uint8 _n, uint40 _lastTimestamp, uint256[] memory reserves2) = RESERVES_STORAGE_SLOT.readLastReserves();
         uint8 __n = RESERVES_STORAGE_SLOT.readNumberOfReserves();
         assertEq(__n, n, "ByteStorage: n mismatch");
         assertEq(_n, n, "ByteStorage: n mismatch");
         assertEq(_lastTimestamp, lastTimestamp, "ByteStorage: lastTimestamp mismatch");
         for (uint256 i; i < reserves2.length; i++) {
-            assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
+            assertApproxEqRelN(reserves2[i], reserves[i], 1);
         }
     }
 }

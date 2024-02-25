@@ -19,8 +19,7 @@ contract ConstantProductTest is WellFunctionHelper {
 
     /// @dev calcLpTokenSupply: `n` equal reserves should summate with the token supply
     function testLpTokenSupplySmall(uint256 n) public {
-        vm.assume(n < 16);
-        vm.assume(n >= 2);
+        n = bound(n, 2, 15);
         uint256[] memory reserves = new uint256[](n);
         for (uint256 i; i < n; ++i) {
             reserves[i] = 1;
