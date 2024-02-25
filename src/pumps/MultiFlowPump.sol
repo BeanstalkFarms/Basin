@@ -272,7 +272,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             crv.rLimit = tempExp.cmp(MAX_CONVERT_TO_128x128) != -1
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
-            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] > crv.rLimit) {
+            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) > crv.rLimit) {
                 crv.ratios = new uint256[](2);
                 crv.ratios[i] = crv.rLimit;
                 crv.ratios[j] = CAP_PRECISION;
@@ -289,7 +289,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                     .toUint256(),
                 CAP_PRECISION2
             );
-            if (cappedReserves[i] * CAP_PRECISION / cappedReserves[j] < crv.rLimit) {
+            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) < crv.rLimit) {
                 crv.ratios = new uint256[](2);
                 crv.ratios[i] = crv.rLimit;
                 crv.ratios[j] = CAP_PRECISION;
