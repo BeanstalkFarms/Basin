@@ -6,8 +6,7 @@ import {Well} from "src/Well.sol";
 import {UUPSUpgradeable} from "ozu/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "ozu/access/OwnableUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
-
-
+import {IAquifer} from "src/interfaces/IAquifer.sol";
 /**
  * @title Well
  * @author Publius, Silo Chad, Brean, Deadmanwalking
@@ -29,14 +28,8 @@ import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
  *   INCLUDE the fee that is taken on transfer when calculating amount out values.
  */
 contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
-    
-    /**
-    * Perform an upgrade of an ERC1967Proxy, when this contract.
-    * is set as the implementation behind such a proxy.
-    * The _authorizeUpgrade function must be overridden.
-    * to include access restriction to the upgrade mechanism.
-    */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    address private immutable ___self = address(this);
 
     function init(string memory _name, string memory _symbol, address owner) external initializer {
         // owner of well param as the aquifier address will be the owner initially
@@ -65,5 +58,66 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
     
     function getVersion() external virtual pure returns (uint256) {
         return 1;
+    }
+
+    // Wells deployed by aquifers use the EIP-1167 minimal proxy pattern for gas-efficent deployments.
+    // This pattern breaks the UUPS upgrade pattern, as the `__self` variable is set to the initial well implmentation.
+    // `_authorizeUpgrade` and `upgradeTo` are modified to allow for upgrades to the Well implementation.
+    // verification is done by verifying the ERC1967 implmentation (the well address) maps to the aquifers well -> implmentation mapping.
+
+    /**
+     * @notice Check that the execution is being performed through a delegatecall call and that the execution context is
+     * a proxy contract with an ERC1167 minimal proxy from an aquifier, pointing to a well implmentation.
+     */
+    function _authorizeUpgrade(address newImplmentation) internal view override {
+        // verify the function is called through a delegatecall.
+        require(address(this) != ___self, "Function must be called through delegatecall");
+
+        // verify the function is called through an active proxy bored by an aquifer.
+        address activeProxy = IAquifer(aquifer()).wellImplementation(_getImplementation());
+        require(activeProxy == ___self, "Function must be called through active proxy bored by an aquifer");
+
+        // verify the new implmentation is a well bored by an aquifier.
+        address aquifer = Well(newImplmentation).aquifer();
+        require(
+            IAquifer(aquifer).wellImplementation(newImplmentation) != address(0),
+            "New implementation must be a well implmentation"
+        );
+
+        // verify the new implmentation is a valid ERC-1967 implmentation.
+        require(
+            UUPSUpgradeable(newImplmentation).proxiableUUID() == _IMPLEMENTATION_SLOT, 
+            "New implementation must be a valid ERC-1967 implmentation"
+        );
+    }
+
+    /**
+     * @notice Upgrade the implementation of the proxy to `newImplementation`.
+     * @dev replaces 'onlyProxy' with `_authorizeUpgrade` restriction.
+     *
+     * Calls {_authorizeUpgrade}.
+     *
+     * Emits an {Upgraded} event.
+     * 
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeTo(address newImplementation) public override {
+        _authorizeUpgrade(newImplementation);
+        _upgradeToAndCallUUPS(newImplementation, new bytes(0), false);
+    }
+
+    /**
+     * @notice Upgrade the implementation of the proxy to `newImplementation`, and subsequently execute the function call
+     * encoded in `data`.
+     *
+     * Calls {_authorizeUpgrade}.
+     *
+     * Emits an {Upgraded} event.
+     *
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeToAndCall(address newImplementation, bytes memory data) public payable override {
+        _authorizeUpgrade(newImplementation);
+        _upgradeToAndCallUUPS(newImplementation, data, true);
     }
 }
