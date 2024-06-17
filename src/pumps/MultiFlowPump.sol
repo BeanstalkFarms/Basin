@@ -272,7 +272,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             crv.rLimit = tempExp.cmp(MAX_CONVERT_TO_128x128) != -1
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
-            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) > crv.rLimit) {
+            if (crv.r > crv.rLimit) {
                 calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
             // If the ratio decreased, check that it didn't decrease below the max.
@@ -282,7 +282,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                     .toUint256(),
                 CAP_PRECISION2
             );
-            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) < crv.rLimit) {
+            if (crv.r < crv.rLimit) {
                 calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
         }
