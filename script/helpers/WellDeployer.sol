@@ -40,7 +40,6 @@ abstract contract WellDeployer {
      * @param _wellFunction A single Call struct representing a call to the Well Function.
      * @param _pumps An array of Call structs representings calls to Pumps.
      * @param _salt The salt to deploy the Well with (`bytes32(0)` for none). See {LibClone}.
-     * @param owner The address of the owner of the Well.
      */
     function encodeAndBoreWellUpgradeable(
         address _aquifer,
@@ -48,11 +47,10 @@ abstract contract WellDeployer {
         IERC20[] memory _tokens,
         Call memory _wellFunction,
         Call[] memory _pumps,
-        bytes32 _salt,
-        address owner
+        bytes32 _salt
     ) internal returns (WellUpgradeable _well) {
         (bytes memory immutableData, bytes memory initData) =
-            LibWellUpgradeableConstructor.encodeWellDeploymentData(_aquifer, _tokens, _wellFunction, _pumps, owner);
+            LibWellUpgradeableConstructor.encodeWellDeploymentData(_aquifer, _tokens, _wellFunction, _pumps);
         _well = WellUpgradeable(Aquifer(_aquifer).boreWell(_wellImplementation, immutableData, initData, _salt));
     }
 }

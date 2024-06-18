@@ -7,11 +7,17 @@ import {UUPSUpgradeable} from "ozu/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "ozu/access/OwnableUpgradeable.sol";
 import {IERC20, SafeERC20} from "oz/token/ERC20/utils/SafeERC20.sol";
 import {IAquifer} from "src/interfaces/IAquifer.sol";
+import {console} from "forge-std/console.sol";
+
 /**
- * @title Well
+ * @title WellUpgradeable
  * @author Publius, Silo Chad, Brean, Deadmanwalking
  * @dev A Well is a constant function AMM allowing the provisioning of liquidity
  * into a single pooled on-chain liquidity position.
+ *
+ * Given the dynamic storage layout of Wells initialized by an minimal proxy,
+ * Creating an upgradeable Well requires a custom initializer function that allows the Well
+ * to be initialized with immutable storage, but does not deploy a Well token.
  *
  * Rebasing Tokens:
  * - Positive rebasing tokens are supported by Wells, but any tokens recieved from a
@@ -27,23 +33,34 @@ import {IAquifer} from "src/interfaces/IAquifer.sol";
  * - When recieving fee on transfer tokens from a Well (swapping to and removing liquidity),
  *   INCLUDE the fee that is taken on transfer when calculating amount out values.
  */
-contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
-
+contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
     address private immutable ___self = address(this);
 
-    function init(string memory _name, string memory _symbol, address owner) external initializer {
-        // owner of well param as the aquifier address will be the owner initially
+    /**
+     * @notice verifies that the execution is called through an minimal proxy or is not a delegate call.
+     */
+    modifier notDelegatedOrIsMinimalProxy() {
+        if (address(this) != ___self) { 
+            address aquifer = aquifer();
+            address wellImplmentation = IAquifer(aquifer).wellImplementation(address(this));
+            require(wellImplmentation == ___self, "Function must be called by a Well bored by an aquifer");
+        } else {
+            revert("UUPSUpgradeable: must not be called through delegatecall");
+        }
+        _;
+    }
+
+    function init(
+        string memory _name,
+        string memory _symbol
+    ) external override reinitializer(2) {
+        // owner of Well param as the aquifier address will be the owner initially
         // ownable init transfers ownership to msg.sender
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
-        // first time this is called the owner will be the msg.sender
-        // which is the aquifer that bore the well
         __Ownable_init();
-        // then ownership can be transfered to the wanted address 
-        // note: to init owner with __Ownable_init(ownerAddress); we would need to adjust the lib code
-        transferOwnership(owner);
 
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
@@ -55,10 +72,13 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
             }
         }
     }
-    
-    function getVersion() external virtual pure returns (uint256) {
-        return 1;
-    }
+
+    /**
+     * @notice `initClone` allows for the Well to be initialized without deploying a Well token.
+     * @dev This function is required given intializing with the Well token would create two valid Wells.
+     * Sets ReentraryGuard to true to prevent users from interacting with the Well.
+     */
+    function initNoWellToken() external initializer {}
 
     // Wells deployed by aquifers use the EIP-1167 minimal proxy pattern for gas-efficent deployments.
     // This pattern breaks the UUPS upgrade pattern, as the `__self` variable is set to the initial well implmentation.
@@ -74,32 +94,31 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
         require(address(this) != ___self, "Function must be called through delegatecall");
 
         // verify the function is called through an active proxy bored by an aquifer.
-        address activeProxy = IAquifer(aquifer()).wellImplementation(_getImplementation());
+        address aquifer = aquifer();
+        address activeProxy = IAquifer(aquifer).wellImplementation(_getImplementation());
         require(activeProxy == ___self, "Function must be called through active proxy bored by an aquifer");
 
         // verify the new implmentation is a well bored by an aquifier.
-        address aquifer = Well(newImplmentation).aquifer();
         require(
-            IAquifer(aquifer).wellImplementation(newImplmentation) != address(0),
+            IAquifer(aquifer).wellImplementation(newImplmentation) !=
+                address(0),
             "New implementation must be a well implmentation"
         );
 
         // verify the new implmentation is a valid ERC-1967 implmentation.
+        console.log("here");
         require(
-            UUPSUpgradeable(newImplmentation).proxiableUUID() == _IMPLEMENTATION_SLOT, 
+            UUPSUpgradeable(newImplmentation).proxiableUUID() ==
+                _IMPLEMENTATION_SLOT,
             "New implementation must be a valid ERC-1967 implmentation"
         );
     }
 
     /**
-     * @notice Upgrade the implementation of the proxy to `newImplementation`.
-     * @dev replaces 'onlyProxy' with `_authorizeUpgrade` restriction.
-     *
+     * @notice Upgrades the implementation of the proxy to `newImplementation`.
      * Calls {_authorizeUpgrade}.
-     *
-     * Emits an {Upgraded} event.
-     * 
-     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     * @dev `upgradeTo` was modified to support ERC-1167 minimal proxies 
+     * cloned (Bored) by an Aquifer.
      */
     function upgradeTo(address newImplementation) public override {
         _authorizeUpgrade(newImplementation);
@@ -107,17 +126,38 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable  {
     }
 
     /**
-     * @notice Upgrade the implementation of the proxy to `newImplementation`, and subsequently execute the function call
-     * encoded in `data`.
-     *
+     * @notice Upgrades the implementation of the proxy to `newImplementation`.
      * Calls {_authorizeUpgrade}.
-     *
-     * Emits an {Upgraded} event.
-     *
-     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     * @dev `upgradeTo` was modified to support ERC-1167 minimal proxies 
+     * cloned (Bored) by an Aquifer.
      */
-    function upgradeToAndCall(address newImplementation, bytes memory data) public payable override {
+    function upgradeToAndCall(address newImplementation, bytes memory data) public payable override  {
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, data, true);
+    }
+
+    /**
+     * @dev Implementation of the ERC1822 {proxiableUUID} function. This returns the storage slot used by the
+     * implementation. It is used to validate the implementation's compatibility when performing an upgrade.
+     *
+     * IMPORTANT: A proxy pointing at a proxiable contract should not be considered proxiable itself, because this risks
+     * bricking a proxy that upgrades to it, by delegating to itself until out of gas. However, Wells bored by Aquifers
+     * are ERC-1167 minimal immutable clones and cannot delgate to another proxy. Thus, `proxiableUUID` was updated to support 
+     * this specific usecase.
+     */
+    function proxiableUUID() external view override notDelegatedOrIsMinimalProxy returns (bytes32) {
+        return _IMPLEMENTATION_SLOT;
+    }
+
+    function getImplementation() external view returns (address) {
+        return _getImplementation();
+    }
+
+     function getVersion() external pure virtual returns (uint256) {
+        return 1;
+    }
+
+    function getInitializerVersion() external view returns (uint256) {
+        return _getInitializedVersion();
     }
 }

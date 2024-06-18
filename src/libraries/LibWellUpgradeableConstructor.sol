@@ -5,21 +5,21 @@ pragma solidity ^0.8.20;
 
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Call, IERC20} from "src/Well.sol";
+import {WellUpgradeable} from "src/WellUpgradeable.sol";
 
 library LibWellUpgradeableConstructor {
 
     /**
-     * @notice Encode the Well's immutable data and init data with an owner.
+     * @notice Encode the Well's immutable data.
      */
     function encodeWellDeploymentData(
         address _aquifer,
         IERC20[] memory _tokens,
         Call memory _wellFunction,
-        Call[] memory _pumps,
-        address owner
-    ) internal view returns (bytes memory immutableData, bytes memory initData) {
+        Call[] memory _pumps
+    ) internal pure returns (bytes memory immutableData, bytes memory initData) {
         immutableData = encodeWellImmutableData(_aquifer, _tokens, _wellFunction, _pumps);
-        initData = encodeWellInitFunctionCall(_tokens, _wellFunction, owner);
+        initData = abi.encodeWithSelector(WellUpgradeable.initNoWellToken.selector);
     }
 
     /**
@@ -63,8 +63,7 @@ library LibWellUpgradeableConstructor {
 
     function encodeWellInitFunctionCall(
         IERC20[] memory _tokens,
-        Call memory _wellFunction,
-        address owner
+        Call memory _wellFunction
     ) public view returns (bytes memory initFunctionCall) {
         string memory name = LibContractInfo.getSymbol(address(_tokens[0]));
         string memory symbol = name;
@@ -72,11 +71,11 @@ library LibWellUpgradeableConstructor {
             name = string.concat(name, ":", LibContractInfo.getSymbol(address(_tokens[i])));
             symbol = string.concat(symbol, LibContractInfo.getSymbol(address(_tokens[i])));
         }
-        name = string.concat(name, " ", LibContractInfo.getName(_wellFunction.target), " Well");
-        symbol = string.concat(symbol, LibContractInfo.getSymbol(_wellFunction.target), "w");
+        name = string.concat(name, " ", LibContractInfo.getName(_wellFunction.target), " Upgradeable Well");
+        symbol = string.concat(symbol, LibContractInfo.getSymbol(_wellFunction.target), "uw");
 
         // See {Well.init}.
-        initFunctionCall = abi.encodeWithSignature("init(string,string,address)", name, symbol, owner);
+        initFunctionCall = abi.encodeWithSelector(WellUpgradeable.init.selector, name, symbol);
     }
 
     /**
