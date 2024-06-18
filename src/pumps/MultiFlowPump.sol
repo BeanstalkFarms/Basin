@@ -14,7 +14,6 @@ import {LibLastReserveBytes} from "src/libraries/LibLastReserveBytes.sol";
 import {Math} from "oz/utils/math/Math.sol";
 import {SafeCast} from "oz/utils/math/SafeCast.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
-import {console} from "test/TestHelper.sol";
 
 /**
  * @title MultiFlowPump
@@ -282,10 +281,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             // Check for overflow before converting to 128x128
             if (tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
                 crv.rLimit = 0; // Set limit to 0 in case of overflow
-                console.log("overflow happened, so setting to zero");
-                revert("overflow");
             } else {
-                console.log("there was no overflow");
                 crv.rLimit = crv.rLast.mulDiv(tempExp.to128x128().toUint256(), CAP_PRECISION2);
             }
             if (crv.r < crv.rLimit) {
