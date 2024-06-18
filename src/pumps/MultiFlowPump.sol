@@ -71,6 +71,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Update the Pump's manipulation resistant reserve balances for a given `well` with `reserves`.
      */
     function update(uint256[] calldata reserves, bytes calldata data) external {
+        // Require two token well
+        if (reserves.length != 2) {
+            revert TooManyTokens();
+        }
+
         (bytes16 alpha, uint256 capInterval, CapReservesParameters memory crp) =
             abi.decode(data, (bytes16, uint256, CapReservesParameters));
         uint256 numberOfReserves = reserves.length;
@@ -227,11 +232,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         uint256 capExponent,
         CapReservesParameters memory crp
     ) internal view returns (uint256[] memory cappedReserves) {
-        // Assume two token well
-        if (reserves.length != 2) {
-            revert TooManyTokens();
-        }
-
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 

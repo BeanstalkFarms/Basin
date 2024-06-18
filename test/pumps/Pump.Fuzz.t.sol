@@ -59,7 +59,7 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
             reserves[i] = bound(reserves[i], 1e6, 1e32);
         }
 
-        timeIncrease = 1099511627775; //1099511627775 is max uint40
+        // timeIncrease = 1099511627775; //1099511627775 is max uint40
 
         vm.assume(block.timestamp + timeIncrease <= type(uint40).max);
 
