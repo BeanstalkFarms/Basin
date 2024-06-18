@@ -8,7 +8,7 @@ import {console, TestHelper} from "test/TestHelper.sol";
 
 contract PumpHelpersTest is TestHelper, MultiFlowPump {
     uint256[5] testCasesInput = [1, 2, 3, 4, 5];
-    uint256[5] testCasesOutput = [32, 32, 64, 64, 96];
+    uint256[5] testCasesOutput = [1, 1, 2, 2, 3];
 
     constructor() MultiFlowPump() {}
 
