@@ -83,8 +83,6 @@ contract WellUpgradeTest is Test, WellDeployer {
         // We encode and bore a well upgradeable from the aquifer
         // The well upgradeable additionally takes in an owner address so we modify the init function call
         // to include the owner address.
-        // When the new well is deployed, all init data are stored in the implementation storage
-        // including pump and well function data --> NOTE: This could be an issue but how do we solve this?
         // Then we deploy a ERC1967Proxy proxy for the well upgradeable and call the init function on the proxy
         // When we deploy the proxy, the init data is stored in the proxy storage and the well is initialized
         // for the second time. We can now control the well via delegate calls to the proxy address.
