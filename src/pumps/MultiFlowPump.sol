@@ -512,7 +512,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Get the slot number that contains the `n`th element of an array.
      */
     function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
-        _slotsOffset = ((numberOfReserves - 1) / 2 + 1);
+        _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
     }
 
     /**
