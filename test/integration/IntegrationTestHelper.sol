@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {Test, console, stdError} from "forge-std/Test.sol";
 import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
-import {GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Users} from "test/helpers/Users.sol";
 import {TestHelper, Balances, ConstantProduct2, StableSwap2} from "test/TestHelper.sol";
@@ -16,10 +16,7 @@ abstract contract IntegrationTestHelper is TestHelper {
 
     function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](1);
-        _pumps[0] = Call(
-            address(new GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18))),
-            new bytes(0)
-        );
+        _pumps[0] = Call(address(new MultiFlowPump()), new bytes(0));
 
         return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }

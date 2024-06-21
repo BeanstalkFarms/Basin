@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // forgefmt: disable-start
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Call, IERC20} from "src/Well.sol";
@@ -39,15 +39,6 @@ library LibWellConstructor {
         Call memory _wellFunction,
         Call[] memory _pumps
     ) internal pure returns (bytes memory immutableData) {
-        bytes memory packedPumps;
-        for (uint256 i; i < _pumps.length; ++i) {
-            packedPumps = abi.encodePacked(
-                packedPumps,            // previously packed pumps
-                _pumps[i].target,       // pump address
-                _pumps[i].data.length,  // pump data length
-                _pumps[i].data          // pump data (bytes)
-            );
-        }
         
         immutableData = abi.encodePacked(
             _aquifer,                   // aquifer address
@@ -56,9 +47,16 @@ library LibWellConstructor {
             _wellFunction.data.length,  // well function data length
             _pumps.length,              // number of pumps
             _tokens,                    // tokens array
-            _wellFunction.data,         // well function data (bytes)
-            packedPumps                 // packed pumps (bytes)
+            _wellFunction.data         // well function data (bytes)
         );
+        for (uint256 i; i < _pumps.length; ++i) {
+            immutableData = abi.encodePacked(
+                immutableData,            // previously packed pumps
+                _pumps[i].target,       // pump address
+                _pumps[i].data.length,  // pump data length
+                _pumps[i].data          // pump data (bytes)
+            );
+        }
     }
 
     /**

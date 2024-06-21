@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console} from "test/TestHelper.sol";
 import {ReentrancyGuardUpgradeable} from "ozu/security/ReentrancyGuardUpgradeable.sol";
@@ -99,5 +99,9 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
             ++i;
         }
         return result;
+    }
+
+    function isInitialized() external view returns (bool) {
+        return _getInitializedVersion() > 0;
     }
 }

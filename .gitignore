@@ -17,3 +17,6 @@ stash
 lcov.info
 .DS_Store
 test/output/
+
+# Python
+__pycache__

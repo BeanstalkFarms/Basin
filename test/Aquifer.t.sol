@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // forgefmt: disable-start
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, Well, IERC20, console} from "test/TestHelper.sol";
 import {MockStaticWell} from "mocks/wells/MockStaticWell.sol";
@@ -56,7 +56,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Bore a Well with immutable data and salt.
     function test_bore_cloneDeterministic_withImmutableData() public {
-        address destination = LibClone.predictDeterministicAddress(wellImplementation, immutableData, salt, address(aquifer));
+        address destination = aquifer.predictWellAddress(wellImplementation, immutableData, salt);
 
         vm.expectEmit(true, true, true, true, address(aquifer));
         emit BoreWell(destination, wellImplementation, tokens, wellFunction, pumps, wellData);
@@ -91,7 +91,7 @@ contract AquiferTest is TestHelper {
 
     /// @dev Bore a Well with salt, no immutable data.
     function test_bore_cloneDeterministic() public {
-        address destination = LibClone.predictDeterministicAddress(wellImplementation, salt, address(aquifer));
+        address destination = aquifer.predictWellAddress(wellImplementation, "", salt);
 
         vm.expectEmit(true, true, true, true, address(aquifer));
         emit BoreWell(destination, wellImplementation, tokens, wellFunction, pumps, wellData);
@@ -163,6 +163,11 @@ contract AquiferTest is TestHelper {
         );
     }
 
+    /// @dev Check that `predictWellAddress` fails with a salt of 0.
+    function test_predictDeterministAddress_zeroSalt() public {
+        vm.expectRevert(IAquifer.InvalidSalt.selector);
+        aquifer.predictWellAddress(wellImplementation, "", bytes32(0));
+    }
 
     /// @dev Reversion during init uses default message if no revert message is returned. 
     /// See {MockInitFailWell.sol}
@@ -172,6 +177,17 @@ contract AquiferTest is TestHelper {
             initFailImplementation,
             "",
             abi.encodeWithSignature("initNoMessage()"),
+            bytes32(0)
+        );
+    }
+
+    /// @dev Reversion if Well is not initialized after being bored.
+    function test_bore_initRevert_notInitialized() public {
+        vm.expectRevert(IAquifer.WellNotInitialized.selector);
+        aquifer.boreWell(
+            wellImplementation,
+            "",
+            "",
             bytes32(0)
         );
     }

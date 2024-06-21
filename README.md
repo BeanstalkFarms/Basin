@@ -2,14 +2,23 @@
 
 # Basin
 
-Code Version: `DRAFT` <br>
-Whitepaper Version: `DRAFT`
+Code Version: `1.0.0` <br>
+Whitepaper Version: `1.0.0`
+
+<img src="https://github.com/BeanstalkFarms/Beanstalk-Brand-Assets/blob/main/multi-flow/512x512-MF.png" alt="Multi Flow logo" align="right" width="60" />
+
+### Multi Flow
+
+The Multi Flow Pump implementation is also included in this repository at [MultiFlowPump.sol](/src/pumps/MultiFlowPump.sol).
+
+Code Version: `1.0.0` <br>
+Whitepaper Version: `1.0.0`
 
 ## About
 
 Basin is a composable EVM-native decentralized exchange protocol.
 
-- [Audits](#repository)
+- [Audits](#audits)
 - [Documentation](#documentation)
     - [Motivation](#motivation)
 - [License](#license)
@@ -21,9 +30,9 @@ Basin is a composable EVM-native decentralized exchange protocol.
 
 ## Documentation
 
-A draft of the Basin whitepaper is available [here](https://basin.exchange/basin.pdf).
-
-A draft of the Multi Flow Pump whitepaper (GeoEmaAndCumSmaPump) is available [here](https://basin.exchange/multi-flow-pump.pdf).
+* [Basin Whitepaper](https://basin.exchange/basin.pdf)
+* [Multi Flow Whitepaper](https://basin.exchange/multi-flow-pump.pdf)
+* [Basin Docs](https://docs.basin.exchange)
 
 A [{Well}](/src/Well.sol) is a constant function AMM that allows the provisioning of liquidity into a single pooled on-chain liquidity position.
 
@@ -56,7 +65,7 @@ However, this architecture shifts much of the attack surface area to the Well's 
 
 The Wells architecture aims to outline a simple interface for composable AMMs and leave the process of evaluating a given Well's trustworthiness as the responsibility of the user. To this end, future work may focus on development of on-chain Well registries and factories which create or highlight Wells composed of known components.
 
-An example factory implementation is provided in [{Aquifer}](/src/Auquifer.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
+An example factory implementation is provided in [{Aquifer}](/src/Aquifer.sol) without any opinion regarding the trustworthiness of Well functions and the Pumps using it. Wells are not required to be deployed via this mechanism.
 
 ## License
 

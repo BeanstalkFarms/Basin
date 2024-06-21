@@ -1,4 +1,4 @@
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import "test/TestHelper.sol";
 import "src/libraries/ABDKMathQuad.sol";
@@ -17,7 +17,7 @@ contract ABDKTest is TestHelper {
      * @dev no hysteresis: 2^(log2(a)) == a +/- 1 (due to library rounding)
      */
     function testFuzz_log2Pow2(uint256 a) public {
-        vm.assume(a > 0);
+        a = bound(a, 1, type(uint256).max);
         uint256 b = (a.fromUInt().log_2()).pow_2().toUInt();
         if (a <= 1e18) {
             assertApproxEqAbs(a, b, 1);
@@ -68,12 +68,12 @@ contract ABDKTest is TestHelper {
     }
 
     function testFuzz_FromUIntToLog2(uint256 x) public {
-        vm.assume(x > 0); // log2(0) is undefined.
+        x = bound(x, 1, type(uint256).max);
         assertEq(ABDKMathQuad.fromUInt(x).log_2(), ABDKMathQuad.fromUIntToLog2(x));
     }
 
     function testFuzz_pow_2ToUInt(uint256 x) public {
-        vm.assume(x < 256); // the max value of an uint256 is 2^256 - 1.
+        x = bound(x, 0, 255);
 
         // test the pow_2ToUInt function
         bytes16 _x = x.fromUInt();

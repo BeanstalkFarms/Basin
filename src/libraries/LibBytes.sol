@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 /**
  * @title LibBytes
@@ -13,21 +13,7 @@ pragma solidity ^0.8.17;
  * Each value must be `<= type(uint128).max` in order pack properly.
  */
 library LibBytes {
-    bytes32 private constant ZERO_BYTES = bytes32(0);
-
-    /**
-     * @dev Read the `i`th 32-byte chunk from `data`.
-     */
-    function getBytes32FromBytes(bytes memory data, uint256 i) internal pure returns (bytes32 _bytes) {
-        uint256 index = i * 32;
-        if (index > data.length) {
-            _bytes = ZERO_BYTES;
-        } else {
-            assembly {
-                _bytes := mload(add(add(data, index), 32))
-            }
-        }
-    }
+    uint256 constant MAX_UINT128 = 340_282_366_920_938_463_463_374_607_431_768_211_455; // type(uint128).max
 
     /**
      * @dev Store packed uint128 `reserves` starting at storage position `slot`.
@@ -37,8 +23,8 @@ library LibBytes {
     function storeUint128(bytes32 slot, uint256[] memory reserves) internal {
         // Shortcut: two reserves can be packed into one slot without a loop
         if (reserves.length == 2) {
-            require(reserves[0] <= type(uint128).max, "ByteStorage: too large");
-            require(reserves[1] <= type(uint128).max, "ByteStorage: too large");
+            require(reserves[0] <= MAX_UINT128, "ByteStorage: too large");
+            require(reserves[1] <= MAX_UINT128, "ByteStorage: too large");
             assembly {
                 sstore(slot, add(mload(add(reserves, 32)), shl(128, mload(add(reserves, 64)))))
             }
@@ -46,26 +32,26 @@ library LibBytes {
             uint256 maxI = reserves.length / 2; // number of fully-packed slots
             uint256 iByte; // byte offset of the current reserve
             for (uint256 i; i < maxI; ++i) {
-                require(reserves[2 * i] <= type(uint128).max, "ByteStorage: too large");
-                require(reserves[2 * i + 1] <= type(uint128).max, "ByteStorage: too large");
+                require(reserves[2 * i] <= MAX_UINT128, "ByteStorage: too large");
+                require(reserves[2 * i + 1] <= MAX_UINT128, "ByteStorage: too large");
                 iByte = i * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(i, 32)),
+                        add(slot, i),
                         add(mload(add(reserves, add(iByte, 32))), shl(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
             // If there is an odd number of reserves, create a slot with the last reserve
             // Since `i < maxI` above, the next byte offset `maxI * 64`
-            // Equivalent to "i % 2 == 1", but cheaper.
+            // Equivalent to "reserves.length % 2 == 1", but cheaper.
             if (reserves.length & 1 == 1) {
-                require(reserves[reserves.length - 1] <= type(uint128).max, "ByteStorage: too large");
+                require(reserves[reserves.length - 1] <= MAX_UINT128, "ByteStorage: too large");
                 iByte = maxI * 64;
                 assembly {
                     sstore(
-                        add(slot, mul(maxI, 32)),
-                        add(mload(add(reserves, add(iByte, 32))), shl(128, shr(128, sload(add(slot, mul(maxI, 32))))))
+                        add(slot, maxI),
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, shl(128, sload(add(slot, maxI)))))
                     )
                 }
             }
@@ -93,7 +79,7 @@ library LibBytes {
             // `iByte` is the byte position for the current slot:
             // i        1 2 3 4 5 6
             // iByte    0 0 1 1 2 2
-            iByte = (i - 1) / 2 * 32;
+            iByte = (i - 1) / 2;
             // Equivalent to "i % 2 == 1", but cheaper.
             if (i & 1 == 1) {
                 assembly {

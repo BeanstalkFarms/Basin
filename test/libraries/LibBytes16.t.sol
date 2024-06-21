@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  *
  */
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import "test/TestHelper.sol";
 
@@ -14,7 +14,7 @@ contract LibBytes16Test is TestHelper {
 
     /// @dev Store fuzzed reserves, re-read and compare.
     function testFuzz_storeAndReadBytes16(uint256 n, bytes16[8] memory _reserves) public {
-        vm.assume(n <= NUM_RESERVES_MAX);
+        n = bound(n, 0, NUM_RESERVES_MAX);
 
         // Use the first `n` reserves. Cast uint128 reserves -> uint256
         bytes16[] memory reserves = new bytes16[](n);

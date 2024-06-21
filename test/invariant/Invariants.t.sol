@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
-import {IPump, GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {IPump, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {Handler} from "./Handler.t.sol";
 import "../pumps/PumpHelpers.sol";
 import "forge-std/Test.sol";
@@ -19,12 +19,7 @@ contract Invariants is LiquidityHelper {
 
     function setUp() public {
         // setup the pump
-        IPump pump = new GeoEmaAndCumSmaPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        );
+        IPump pump = new MultiFlowPump();
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call({target: address(pump), data: new bytes(0)});
 
@@ -67,6 +62,7 @@ contract Invariants is LiquidityHelper {
         if (precision == 0) return;
 
         assertApproxEqRelN(well.totalSupply(), functionCalc, precision);
+        assertLe(well.totalSupply(), functionCalc);
     }
 
     /// @dev The reserves calculated by the well function should equal the reserves of the well

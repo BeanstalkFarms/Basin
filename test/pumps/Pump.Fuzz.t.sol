@@ -2,35 +2,39 @@
  * SPDX-License-Identifier: MIT
  *
  */
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {ABDKMathQuad, GeoEmaAndCumSmaPump} from "src/pumps/GeoEmaAndCumSmaPump.sol";
+import {ABDKMathQuad, MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
 
-import {from18, to18} from "test/pumps/PumpHelpers.sol";
+import {mockPumpData, from18, to18} from "test/pumps/PumpHelpers.sol";
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
+import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 
-contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
+import {Math} from "oz/utils/math/Math.sol";
+
+contract PumpFuzzTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
     using ABDKMathQuad for uint256;
+    using Math for uint256;
 
-    GeoEmaAndCumSmaPump pump;
+    uint256 constant capInterval = 12;
+    MultiFlowPump pump;
+    bytes data;
     MockReserveWell mWell;
     uint256[] b = new uint256[](2);
 
-    constructor() GeoEmaAndCumSmaPump(from18(0.5e18), from18(0.333333333333333333e18), 12, from18(0.9e18)) {}
+    constructor() MultiFlowPump() {}
 
     function setUp() public {
         mWell = new MockReserveWell();
         initUser();
-        pump = new GeoEmaAndCumSmaPump(
-            from18(0.5e18),
-            from18(0.333333333333333333e18),
-            12,
-            from18(0.9e18)
-        );
+        pump = new MultiFlowPump();
+        data = mockPumpData();
+        wellFunction.target = address(new ConstantProduct2());
+        mWell.setWellFunction(wellFunction);
     }
 
     /**
@@ -47,11 +51,16 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
         uint8 n,
         uint40 timeIncrease
     ) public prank(user) {
-        n = uint8(bound(n, 1, 8));
+        // n is bound to 2 in the current iteration of the well.
+        // n = uint8(bound(n, 1, 8));
+        n = 2;
         for (uint256 i; i < n; i++) {
-            initReserves[i] = bound(initReserves[i], 1e6, type(uint128).max);
-            reserves[i] = bound(reserves[i], 1e6, type(uint128).max);
+            initReserves[i] = bound(initReserves[i], 1e6, 1e32);
+            reserves[i] = bound(reserves[i], 1e6, 1e32);
         }
+
+        // timeIncrease = 1099511627775; //1099511627775 is max uint40
+
         vm.assume(block.timestamp + timeIncrease <= type(uint40).max);
 
         // Start by updating the Pump with the initial reserves. Also initializes the Pump.
@@ -59,40 +68,51 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
         for (uint256 i; i < n; i++) {
             updateReserves[i] = initReserves[i];
         }
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        mWell.update(address(pump), updateReserves, data);
         for (uint256 i; i < n; i++) {
             updateReserves[i] = reserves[i];
         }
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        mWell.update(address(pump), updateReserves, data);
 
         // Read a snapshot from the Pump
-        bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), new bytes(0));
-        uint256 startTimestamp = block.timestamp;
+        bytes memory startCumulativeReserves = pump.readCumulativeReserves(address(mWell), data);
+
+        uint256[] memory expectedCappedReserves = pump.readLastCappedReserves(address(mWell), data);
 
         // Fast-forward time and update the Pump with new reserves.
         increaseTime(timeIncrease);
-        mWell.update(address(pump), updateReserves, new bytes(0));
+        uint256[] memory cappedReserves = pump.readCappedReserves(address(mWell), data);
 
-        uint256[] memory lastReserves = pump.readLastReserves(address(mWell));
+        mWell.update(address(pump), updateReserves, data);
+
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell), data);
+
+        uint256[] memory _reserves = new uint256[](n);
 
         for (uint256 i; i < n; ++i) {
-            uint256 capReserve = _capReserve(
-                initReserves[i].fromUIntToLog2(),
-                updateReserves[i].fromUIntToLog2(),
-                (timeIncrease / BLOCK_TIME).fromUInt()
-            ).pow_2ToUInt();
+            _reserves[i] = reserves[i];
+        }
 
+        (,, CapReservesParameters memory crp) = abi.decode(data, (uint256, uint256, CapReservesParameters));
+        if (timeIncrease > 0) {
+            uint256 capExponent = (timeIncrease - 1) / capInterval + 1;
+            expectedCappedReserves = _capReserves(address(mWell), expectedCappedReserves, _reserves, capExponent, crp);
+        }
+
+        for (uint256 i; i < n; ++i) {
             if (lastReserves[i] > 1e24) {
-                assertApproxEqRelN(capReserve, lastReserves[i], 1, 24);
+                assertApproxEqRelN(expectedCappedReserves[i], lastReserves[i], 1, 24);
+                assertApproxEqRelN(expectedCappedReserves[i], cappedReserves[i], 1, 24);
             } else {
-                assertApproxEqAbs(capReserve, lastReserves[i], 1);
+                assertApproxEqAbs(expectedCappedReserves[i], lastReserves[i], 1);
+                assertApproxEqAbs(expectedCappedReserves[i], cappedReserves[i], 1);
             }
         }
 
         // readTwaReserves reverts if no time has passed.
         if (timeIncrease > 0) {
             (uint256[] memory twaReserves,) =
-                pump.readTwaReserves(address(mWell), startCumulativeReserves, startTimestamp, new bytes(0));
+                pump.readTwaReserves(address(mWell), startCumulativeReserves, block.timestamp - timeIncrease, data);
             for (uint256 i; i < n; ++i) {
                 console.log("TWA RESERVES", i, twaReserves[i]);
                 if (lastReserves[i] > 1e24) {
@@ -102,5 +122,8 @@ contract PumpFuzzTest is TestHelper, GeoEmaAndCumSmaPump {
                 }
             }
         }
+        // assertTrue(false);
     }
+
+
 }

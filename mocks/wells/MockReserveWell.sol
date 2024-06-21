@@ -2,18 +2,29 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IPump} from "src/interfaces/pumps/IPump.sol";
+import {Call} from "src/interfaces/IWell.sol";
 
 /**
  * @notice Mock Well that allows setting of reserves.
  */
 contract MockReserveWell {
     uint256[] reserves;
+    Call _wellFunction;
+
 
     constructor() {
         reserves = new uint256[](2);
+    }
+
+    function setWellFunction(Call calldata __wellFunction) external {
+        _wellFunction = __wellFunction;
+    }
+
+    function wellFunction() external view returns (Call memory) {
+        return _wellFunction;
     }
 
     function setReserves(uint256[] memory _reserves) public {

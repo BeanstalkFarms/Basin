@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken} from "src/functions/ProportionalLPToken.sol";
@@ -17,9 +17,13 @@ import {LibMath} from "src/libraries/LibMath.sol";
  *  `s` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
  *  `n` is the number of tokens in the Well
+ *
+ * Note: Using too many tokens in a Constant Product Well may result in overflow.
  */
 contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
     using LibMath for uint256;
+
+    uint256 constant CALC_RATE_PRECISION = 1e18;
 
     /// @dev `s = π(b_i)^(1/n) * n`
     function calcLpTokenSupply(
@@ -37,7 +41,7 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         bytes calldata
     ) external pure override returns (uint256 reserve) {
         uint256 n = reserves.length;
-        reserve = uint256((lpTokenSupply / n) ** n);
+        reserve = (lpTokenSupply / n) ** n;
         for (uint256 i; i < n; ++i) {
             if (i != j) reserve = reserve / reserves[i];
         }
@@ -89,5 +93,14 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
             }
         }
         reserve /= reserves.length - 1;
+    }
+
+    function calcRate(
+        uint256[] calldata reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata
+    ) external pure returns (uint256 rate) {
+        return reserves[i] * CALC_RATE_PRECISION / reserves[j];
     }
 }

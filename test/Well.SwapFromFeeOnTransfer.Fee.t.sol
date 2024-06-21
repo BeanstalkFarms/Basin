@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {MockTokenFeeOnTransfer, TestHelper, IERC20, Balances, Call, MockToken, Well} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";

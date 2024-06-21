@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IERC20, Balances, Call, MockToken, Well, console} from "test/TestHelper.sol";
 import {SwapHelper, SwapAction, Snapshot} from "test/SwapHelper.sol";
@@ -22,7 +22,7 @@ contract WellSwapFromTest is SwapHelper {
 
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint256 amountIn, uint256 i) public prank(user) {
         // Swap token `i` -> all other tokens
-        vm.assume(i < tokens.length);
+        i = bound(i, 0, tokens.length);
 
         // Find an input amount that produces an output amount higher than what the Well has.
         // When the Well is deployed it has zero reserves, so any nonzero value should revert.
@@ -80,7 +80,7 @@ contract WellSwapFromTest is SwapHelper {
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
     function testFuzz_swapFrom_equalSwap(uint256 token0AmtIn) public prank(user) {
-        vm.assume(token0AmtIn < tokens[0].balanceOf(user));
+        token0AmtIn = bound(token0AmtIn, 0, tokens[0].balanceOf(user));
         uint256 token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user, type(uint256).max);
         uint256 token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user, type(uint256).max);
         assertEq(token0Out, token0AmtIn);
