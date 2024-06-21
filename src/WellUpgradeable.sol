@@ -106,7 +106,6 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
         );
 
         // verify the new implmentation is a valid ERC-1967 implmentation.
-        console.log("here");
         require(
             UUPSUpgradeable(newImplmentation).proxiableUUID() ==
                 _IMPLEMENTATION_SLOT,

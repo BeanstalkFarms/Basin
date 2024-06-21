@@ -326,7 +326,6 @@ abstract contract TestHelper is Test, WellDeployer {
         uint256 numDigitsA = numDigits(a);
         uint256 numDigitsB = numDigits(b);
         if (numDigitsA != numDigitsB || numDigitsA < precision) {
-            console.log("Here for some reason");
             if (b > absoluteError) {
                 assertGe(a, b - absoluteError);
             }
