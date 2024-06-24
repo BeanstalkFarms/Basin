@@ -3,10 +3,10 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
-import {StableSwap2} from "src/functions/StableSwap2.sol";
+import {CurveStableSwap2} from "src/functions/CurveStableSwap2.sol";
 
 contract WellBoreStableSwapTest is TestHelper {
-    /// @dev Bore a 2-token Well with StableSwap2 & several pumps.
+    /// @dev Bore a 2-token Well with CurveStableSwap2 & several pumps.
     function setUp() public {
         // setup a StableSwap Well with an A parameter of 10.
         setupStableSwapWell(10);
@@ -91,13 +91,13 @@ contract WellBoreStableSwapTest is TestHelper {
         // Get the first `nTokens` mock tokens
         IERC20[] memory wellTokens = getTokens(nTokens);
         bytes memory wellFunctionBytes = abi.encode(
-            a, 
+            a,
             address(wellTokens[0]),
             address(wellTokens[1])
         );
 
         // Deploy a Well Function
-        wellFunction = Call(address(new StableSwap2()), wellFunctionBytes);
+        wellFunction = Call(address(new CurveStableSwap2()), wellFunctionBytes);
 
         // Etch the MockPump at each `target`
         Call[] memory pumps = new Call[](numberOfPumps);
@@ -107,11 +107,21 @@ contract WellBoreStableSwapTest is TestHelper {
         }
 
         // Deploy the Well
-        Well _well =
-            encodeAndBoreWell(address(aquifer), wellImplementation, wellTokens, wellFunction, pumps, bytes32(0));
+        Well _well = encodeAndBoreWell(
+            address(aquifer),
+            wellImplementation,
+            wellTokens,
+            wellFunction,
+            pumps,
+            bytes32(0)
+        );
 
         // Check Pumps
-        assertEq(_well.numberOfPumps(), numberOfPumps, "number of pumps mismatch");
+        assertEq(
+            _well.numberOfPumps(),
+            numberOfPumps,
+            "number of pumps mismatch"
+        );
         Call[] memory _pumps = _well.pumps();
 
         if (numberOfPumps > 0) {
@@ -130,6 +140,9 @@ contract WellBoreStableSwapTest is TestHelper {
         assertEq(_well.wellFunctionAddress(), wellFunction.target);
 
         // Check that Aquifer recorded the deployment
-        assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
+        assertEq(
+            aquifer.wellImplementation(address(_well)),
+            wellImplementation
+        );
     }
 }

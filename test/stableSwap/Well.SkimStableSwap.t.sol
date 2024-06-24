@@ -8,7 +8,7 @@ contract WellSkimTest is TestHelper {
         setupStableSwapWell(10);
     }
 
-    function test_initialized() public {
+    function test_initialized() public view {
         // Well should have liquidity
         Balances memory wellBalance = getBalances(address(well), well);
         assertEq(wellBalance.tokens[0], 1000e18);
@@ -23,7 +23,10 @@ contract WellSkimTest is TestHelper {
         tokens[0].transfer(address(well), amounts[0]);
         tokens[1].transfer(address(well), amounts[1]);
 
-        Balances memory wellBalanceBeforeSkim = getBalances(address(well), well);
+        Balances memory wellBalanceBeforeSkim = getBalances(
+            address(well),
+            well
+        );
         // Verify that the Well has received the tokens
         assertEq(wellBalanceBeforeSkim.tokens[0], 1000e18 + amounts[0]);
         assertEq(wellBalanceBeforeSkim.tokens[1], 1000e18 + amounts[1]);
