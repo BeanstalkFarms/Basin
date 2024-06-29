@@ -13,15 +13,13 @@ contract WellSwapToStableSwapTest is SwapHelper {
         setupStableSwapWell(10);
     }
 
-    function test_getSwapIn() public view {
+    function test_getSwapIn() public {
         uint256 amountOut = 100 * 1e18;
         uint256 amountIn = well.getSwapIn(tokens[0], tokens[1], amountOut);
         assertEq(amountIn, 100_482_889_020_651_556_292); // ~0.4% slippage
     }
 
-    function testFuzz_getSwapIn_revertIf_insufficientWellBalance(
-        uint256 i
-    ) public prank(user) {
+    function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint256 i) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
         Balances memory wellBalances = getBalances(address(well), well);
         vm.assume(i < _tokens.length);
@@ -41,14 +39,7 @@ contract WellSwapToStableSwapTest is SwapHelper {
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
     function test_swapTo_revertIf_sameToken() public prank(user) {
         vm.expectRevert(IWellErrors.InvalidTokens.selector);
-        well.swapTo(
-            tokens[0],
-            tokens[0],
-            100 * 1e18,
-            0,
-            user,
-            type(uint256).max
-        );
+        well.swapTo(tokens[0], tokens[0], 100 * 1e18, 0, user, type(uint256).max);
     }
 
     /// @dev Slippage revert occurs if maxAmountIn is too low
@@ -57,21 +48,8 @@ contract WellSwapToStableSwapTest is SwapHelper {
         uint256 amountIn = 100_482_889_020_651_556_292;
         uint256 maxAmountIn = (amountIn * 99) / 100;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IWellErrors.SlippageIn.selector,
-                amountIn,
-                maxAmountIn
-            )
-        );
-        well.swapTo(
-            tokens[0],
-            tokens[1],
-            maxAmountIn,
-            amountOut,
-            user,
-            type(uint256).max
-        );
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageIn.selector, amountIn, maxAmountIn));
+        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user, type(uint256).max);
     }
 
     /// @dev Note: this covers the case where there is a fee as well
@@ -91,9 +69,7 @@ contract WellSwapToStableSwapTest is SwapHelper {
         Balances memory wellBalancesBefore = getBalances(address(well), well);
 
         // Decrease reserve of token 1 by `amountOut` which is paid to user
-        uint256[] memory calcBalances = new uint256[](
-            wellBalancesBefore.tokens.length
-        );
+        uint256[] memory calcBalances = new uint256[](wellBalancesBefore.tokens.length);
         calcBalances[0] = wellBalancesBefore.tokens[0];
         calcBalances[1] = wellBalancesBefore.tokens[1] - amountOut;
 
@@ -106,63 +82,28 @@ contract WellSwapToStableSwapTest is SwapHelper {
 
         vm.expectEmit(true, true, true, true);
         emit Swap(tokens[0], tokens[1], calcAmountIn, amountOut, user);
-        well.swapTo(
-            tokens[0],
-            tokens[1],
-            maxAmountIn,
-            amountOut,
-            user,
-            type(uint256).max
-        );
+        well.swapTo(tokens[0], tokens[1], maxAmountIn, amountOut, user, type(uint256).max);
 
         Balances memory userBalancesAfter = getBalances(user, well);
         Balances memory wellBalancesAfter = getBalances(address(well), well);
 
         assertEq(
-            userBalancesBefore.tokens[0] - userBalancesAfter.tokens[0],
-            calcAmountIn,
-            "Incorrect token0 user balance"
+            userBalancesBefore.tokens[0] - userBalancesAfter.tokens[0], calcAmountIn, "Incorrect token0 user balance"
         );
+        assertEq(userBalancesAfter.tokens[1] - userBalancesBefore.tokens[1], amountOut, "Incorrect token1 user balance");
         assertEq(
-            userBalancesAfter.tokens[1] - userBalancesBefore.tokens[1],
-            amountOut,
-            "Incorrect token1 user balance"
+            wellBalancesAfter.tokens[0], wellBalancesBefore.tokens[0] + calcAmountIn, "Incorrect token0 well reserve"
         );
-        assertEq(
-            wellBalancesAfter.tokens[0],
-            wellBalancesBefore.tokens[0] + calcAmountIn,
-            "Incorrect token0 well reserve"
-        );
-        assertEq(
-            wellBalancesAfter.tokens[1],
-            wellBalancesBefore.tokens[1] - amountOut,
-            "Incorrect token1 well reserve"
-        );
+        assertEq(wellBalancesAfter.tokens[1], wellBalancesBefore.tokens[1] - amountOut, "Incorrect token1 well reserve");
         checkStableSwapInvariant(address(well));
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
-    function testFuzz_swapTo_equalSwap(
-        uint256 token0AmtOut
-    ) public prank(user) {
+    function testFuzz_swapTo_equalSwap(uint256 token0AmtOut) public prank(user) {
         // assume amtOut is lower due to slippage
         vm.assume(token0AmtOut < 500e18);
-        uint256 token1In = well.swapTo(
-            tokens[0],
-            tokens[1],
-            1000e18,
-            token0AmtOut,
-            user,
-            type(uint256).max
-        );
-        uint256 token0In = well.swapTo(
-            tokens[1],
-            tokens[0],
-            1000e18,
-            token1In,
-            user,
-            type(uint256).max
-        );
+        uint256 token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut, user, type(uint256).max);
+        uint256 token0In = well.swapTo(tokens[1], tokens[0], 1000e18, token1In, user, type(uint256).max);
         assertEq(token0In, token0AmtOut);
         checkInvariant(address(well));
     }

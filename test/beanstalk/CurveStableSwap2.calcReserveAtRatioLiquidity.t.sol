@@ -26,18 +26,8 @@ contract CurveStableSwap2LiquidityTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            0,
-            ratios,
-            data
-        );
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            1,
-            ratios,
-            data
-        );
+        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
         assertEq(reserve0, 100);
         assertEq(reserve1, 100);
@@ -51,18 +41,8 @@ contract CurveStableSwap2LiquidityTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            0,
-            ratios,
-            data
-        );
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            1,
-            ratios,
-            data
-        );
+        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
         assertEq(reserve0, 100);
         assertEq(reserve1, 50);
@@ -76,18 +56,8 @@ contract CurveStableSwap2LiquidityTest is TestHelper {
         ratios[0] = 2;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            0,
-            ratios,
-            data
-        );
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            1,
-            ratios,
-            data
-        );
+        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
         assertEq(reserve0, 200);
         assertEq(reserve1, 50);
@@ -101,27 +71,14 @@ contract CurveStableSwap2LiquidityTest is TestHelper {
         ratios[0] = 2;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            0,
-            ratios,
-            data
-        );
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(
-            reserves,
-            1,
-            ratios,
-            data
-        );
+        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
         assertEq(reserve0, 200);
         assertEq(reserve1, 25);
     }
 
-    function test_calcReserveAtRatioLiquidity_fuzz(
-        uint256[2] memory reserves,
-        uint256[2] memory ratios
-    ) public {
+    function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public {
         for (uint256 i; i < 2; ++i) {
             // Upper bound is limited by stableSwap,
             // due to the stableswap reserves being extremely far apart.
@@ -129,63 +86,34 @@ contract CurveStableSwap2LiquidityTest is TestHelper {
             ratios[i] = bound(ratios[i], 1e6, 1e18);
         }
 
-        uint256 lpTokenSupply = _f.calcLpTokenSupply(
-            uint2ToUintN(reserves),
-            data
-        );
+        uint256 lpTokenSupply = _f.calcLpTokenSupply(uint2ToUintN(reserves), data);
         console.log(lpTokenSupply);
 
         uint256[] memory reservesOut = new uint256[](2);
         for (uint256 i; i < 2; ++i) {
-            reservesOut[i] = _f.calcReserveAtRatioLiquidity(
-                uint2ToUintN(reserves),
-                i,
-                uint2ToUintN(ratios),
-                data
-            );
+            reservesOut[i] = _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), data);
         }
 
         // Precision is set to the minimum number of digits of the reserves out.
-        uint256 precision = numDigits(reservesOut[0]) >
-            numDigits(reservesOut[1])
+        uint256 precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1])
             ? numDigits(reservesOut[1])
             : numDigits(reservesOut[0]);
 
         // Check ratio of each `reserveOut` to `reserve` with the ratio of `ratios`.
         // If inequality doesn't hold, then reserves[1] will be zero
         if (ratios[0] * reserves[1] >= ratios[1]) {
-            assertApproxEqRelN(
-                reservesOut[0] * ratios[1],
-                ratios[0] * reserves[1],
-                1,
-                precision
-            );
+            assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reserves[1], 1, precision);
         } else {
             // Because `roundedDiv` is used. It could round up to 1.
-            assertApproxEqAbs(
-                reservesOut[0],
-                0,
-                1,
-                "reservesOut[0] should be zero"
-            );
+            assertApproxEqAbs(reservesOut[0], 0, 1, "reservesOut[0] should be zero");
         }
 
         // If inequality doesn't hold, then reserves[1] will be zero
         if (reserves[0] * ratios[1] >= ratios[0]) {
-            assertApproxEqRelN(
-                reserves[0] * ratios[1],
-                ratios[0] * reservesOut[1],
-                1,
-                precision
-            );
+            assertApproxEqRelN(reserves[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
         } else {
             // Because `roundedDiv` is used. It could round up to 1.
-            assertApproxEqAbs(
-                reservesOut[1],
-                0,
-                1,
-                "reservesOut[1] should be zero"
-            );
+            assertApproxEqAbs(reservesOut[1], 0, 1, "reservesOut[1] should be zero");
         }
     }
 

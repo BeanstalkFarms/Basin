@@ -14,20 +14,11 @@ import {from18, to18} from "test/pumps/PumpHelpers.sol";
 abstract contract IntegrationTestHelper is TestHelper {
     using LibContractInfo for address;
 
-    function setupWell(
-        IERC20[] memory _tokens,
-        Well _well
-    ) internal returns (Well) {
+    function setupWell(IERC20[] memory _tokens, Well _well) internal returns (Well) {
         Call[] memory _pumps = new Call[](1);
         _pumps[0] = Call(address(new MultiFlowPump()), new bytes(0));
 
-        return
-            setupWell(
-                _tokens,
-                Call(address(new ConstantProduct2()), new bytes(0)),
-                _pumps,
-                _well
-            );
+        return setupWell(_tokens, Call(address(new ConstantProduct2()), new bytes(0)), _pumps, _well);
     }
 
     function setupWell(
@@ -42,14 +33,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
 
-        _well = encodeAndBoreWell(
-            address(aquifer),
-            wellImplementation,
-            _tokens,
-            wellFunction,
-            _pumps,
-            bytes32(0)
-        );
+        _well = encodeAndBoreWell(address(aquifer), wellImplementation, _tokens, wellFunction, _pumps, bytes32(0));
 
         // Mint mock tokens to user
         mintTokens(_tokens, user, initialLiquidity);
@@ -63,33 +47,20 @@ abstract contract IntegrationTestHelper is TestHelper {
         approveMaxTokens(_tokens, address(this), address(_well));
 
         // Add initial liquidity from TestHelper
-        addLiquidityEqualAmount(
-            _tokens,
-            address(this),
-            initialLiquidity,
-            Well(_well)
-        );
+        addLiquidityEqualAmount(_tokens, address(this), initialLiquidity, Well(_well));
 
         return _well;
     }
 
     /// @dev mint mock tokens to each recipient
-    function mintTokens(
-        IERC20[] memory _tokens,
-        address recipient,
-        uint256 amount
-    ) internal {
+    function mintTokens(IERC20[] memory _tokens, address recipient, uint256 amount) internal {
         for (uint256 i; i < _tokens.length; i++) {
             deal(address(_tokens[i]), recipient, amount);
         }
     }
 
     /// @dev approve `spender` to use `owner` tokens
-    function approveMaxTokens(
-        IERC20[] memory _tokens,
-        address owner,
-        address spender
-    ) internal prank(owner) {
+    function approveMaxTokens(IERC20[] memory _tokens, address owner, address spender) internal prank(owner) {
         for (uint256 i; i < _tokens.length; i++) {
             _tokens[i].approve(spender, type(uint256).max);
         }
@@ -137,10 +108,7 @@ abstract contract IntegrationTestHelper is TestHelper {
         clipboardData = clipboardData | (uint256(_type) << 248);
 
         clipboardData =
-            clipboardData |
-            (returnDataIndex << 160) |
-            (((copyIndex * 32) + 32) << 80) |
-            ((pasteIndex * 32) + 36);
+            clipboardData | (returnDataIndex << 160) | (((copyIndex * 32) + 32) << 80) | ((pasteIndex * 32) + 36);
         if (useEther) {
             // put 0x1 in second byte
             // shift left 30 bytes

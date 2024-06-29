@@ -24,20 +24,20 @@ import "forge-std/console.sol";
  * @dev Limited to tokens with a maximum of 18 decimals.
  */
 contract CurveStableSwap2 is IBeanstalkWellFunction {
-    using LibMath for uint;
-    using SafeMath for uint;
+    using LibMath for uint256;
+    using SafeMath for uint256;
 
     // 2 token Pool.
-    uint constant N = 2;
+    uint256 constant N = 2;
 
     // A precision
-    uint constant A_PRECISION = 100;
+    uint256 constant A_PRECISION = 100;
 
     // Precision that all pools tokens will be converted to.
-    uint constant POOL_PRECISION_DECIMALS = 18;
+    uint256 constant POOL_PRECISION_DECIMALS = 18;
 
     // Maximum A parameter.
-    uint constant MAX_A = 10000 * A_PRECISION;
+    uint256 constant MAX_A = 10_000 * A_PRECISION;
 
     // Calc Rate Precision.
     uint256 constant CALC_RATE_PRECISION = 1e24;
@@ -82,9 +82,9 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
      * D[j+1] = (4 * A * sum(b_i) - (D[j] ** 3) / (4 * prod(b_i))) / (4 * A - 1)
      */
     function calcLpTokenSupply(
-        uint[] memory reserves,
+        uint256[] memory reserves,
         bytes calldata data
-    ) public view returns (uint lpTokenSupply) {
+    ) public view returns (uint256 lpTokenSupply) {
         (uint256 Ann, uint256[] memory precisions) = decodeWFData(data);
         console.log(precisions[0], precisions[1]);
         reserves = getScaledReserves(reserves, precisions);
@@ -93,24 +93,15 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         if (sumReserves == 0) return 0;
         lpTokenSupply = sumReserves;
 
-        for (uint i = 0; i < 255; i++) {
+        for (uint256 i = 0; i < 255; i++) {
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
             dP = dP.mul(lpTokenSupply).div(reserves[0].mul(N));
             dP = dP.mul(lpTokenSupply).div(reserves[1].mul(N));
             uint256 prevReserves = lpTokenSupply;
-            lpTokenSupply = Ann
-                .mul(sumReserves)
-                .div(A_PRECISION)
-                .add(dP.mul(N))
-                .mul(lpTokenSupply)
-                .div(
-                    Ann
-                        .sub(A_PRECISION)
-                        .mul(lpTokenSupply)
-                        .div(A_PRECISION)
-                        .add(N.add(1).mul(dP))
-                );
+            lpTokenSupply = Ann.mul(sumReserves).div(A_PRECISION).add(dP.mul(N)).mul(lpTokenSupply).div(
+                Ann.sub(A_PRECISION).mul(lpTokenSupply).div(A_PRECISION).add(N.add(1).mul(dP))
+            );
             // Equality with the precision of 1
             if (lpTokenSupply > prevReserves) {
                 if (lpTokenSupply - prevReserves <= 1) return lpTokenSupply;
@@ -130,34 +121,32 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
      * which may round in favor of the well or the user.
      */
     function calcReserve(
-        uint[] memory reserves,
-        uint j,
-        uint lpTokenSupply,
+        uint256[] memory reserves,
+        uint256 j,
+        uint256 lpTokenSupply,
         bytes calldata data
-    ) public view returns (uint reserve) {
+    ) public view returns (uint256 reserve) {
         (uint256 Ann, uint256[] memory precisions) = decodeWFData(data);
         reserves = getScaledReserves(reserves, precisions);
 
         // avoid stack too deep errors.
-        (uint256 c, uint256 b) = getBandC(
-            Ann,
-            lpTokenSupply,
-            j == 0 ? reserves[1] : reserves[0]
-        );
+        (uint256 c, uint256 b) = getBandC(Ann, lpTokenSupply, j == 0 ? reserves[1] : reserves[0]);
         reserve = lpTokenSupply;
         uint256 prevReserve;
 
-        for (uint i; i < 255; ++i) {
+        for (uint256 i; i < 255; ++i) {
             prevReserve = reserve;
             reserve = _calcReserve(reserve, b, c, lpTokenSupply);
             // Equality with the precision of 1
             // scale reserve down to original precision
             if (reserve > prevReserve) {
-                if (reserve - prevReserve <= 1)
+                if (reserve - prevReserve <= 1) {
                     return reserve.div(precisions[j]);
+                }
             } else {
-                if (prevReserve - reserve <= 1)
+                if (prevReserve - reserve <= 1) {
                     return reserve.div(precisions[j]);
+                }
             }
         }
         revert("did not find convergence");
@@ -171,12 +160,12 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
      * reserves are scaled as needed based on tknXScalar
      */
     function calcLPTokenUnderlying(
-        uint lpTokenAmount,
-        uint[] memory reserves,
-        uint lpTokenSupply,
+        uint256 lpTokenAmount,
+        uint256[] memory reserves,
+        uint256 lpTokenSupply,
         bytes calldata
-    ) external view returns (uint[] memory underlyingAmounts) {
-        underlyingAmounts = new uint[](2);
+    ) external view returns (uint256[] memory underlyingAmounts) {
+        underlyingAmounts = new uint256[](2);
         underlyingAmounts[0] = (lpTokenAmount * reserves[0]) / lpTokenSupply;
         underlyingAmounts[1] = (lpTokenAmount * reserves[1]) / lpTokenSupply;
     }
@@ -228,10 +217,8 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         db.poolPrice = calcRate(reserves, i, j, data);
         console.log("db.poolPrice", db.poolPrice);
 
-        for (uint k; k < 2; k++) {
-            db.deltaPriceToTarget =
-                int256(db.targetPrice) -
-                int256(db.poolPrice);
+        for (uint256 k; k < 2; k++) {
+            db.deltaPriceToTarget = int256(db.targetPrice) - int256(db.poolPrice);
             console.log("deltaPriceToTarget");
             console.logInt(db.deltaPriceToTarget);
             db.deltaPriceToPeg = 1e18 - int256(db.poolPrice);
@@ -247,12 +234,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
             console.logInt(db.estDeltaB);
 
             if (db.deltaPriceToPeg != 0) {
-                db.estDeltaB =
-                    (db.deltaBToPeg *
-                        int256(
-                            (db.deltaPriceToTarget * 1e18) / db.deltaPriceToPeg
-                        )) /
-                    1e18;
+                db.estDeltaB = (db.deltaBToPeg * int256((db.deltaPriceToTarget * 1e18) / db.deltaPriceToPeg)) / 1e18;
             } else {
                 db.estDeltaB = 0;
             }
@@ -270,7 +252,9 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
             db.poolPrice = calcRate(reserves, i, j, data);
             if (prevPrice > db.poolPrice) {
                 if (prevPrice - db.poolPrice <= 1) break;
-            } else if (db.poolPrice - prevPrice <= 1) break;
+            } else if (db.poolPrice - prevPrice <= 1) {
+                break;
+            }
         }
         return reserves[j];
     }
@@ -295,12 +279,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         // console.log("_reserves[j]", _reserves[j]);
         // console.log("_reserves[i]", _reserves[i]);
         // add the precision of opposite token to the reserve.
-        (uint256 padding, uint256 divPadding) = getPadding(
-            _reserves,
-            i,
-            j,
-            data
-        );
+        (uint256 padding, uint256 divPadding) = getPadding(_reserves, i, j, data);
         // console.log("padding", padding);
         // console.log("reserves[j]", _reserves[j]);
         _reserves[j] = _reserves[j] + padding;
@@ -316,10 +295,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         // console.log("Check", (18 + tokenIDecimal - tokenJDecimal));
         // console.log("divPadding", divPadding);
 
-        rate =
-            ((oldReserve - newReserve) *
-                (10 ** (18 + tokenIDecimal - tokenJDecimal))) /
-            divPadding;
+        rate = ((oldReserve - newReserve) * (10 ** (18 + tokenIDecimal - tokenJDecimal))) / divPadding;
     }
 
     /**
@@ -349,13 +325,12 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
      * @return precisions the value used to scale each token such that
      * each token has 18 decimals.
      */
-    function decodeWFData(
-        bytes memory data
-    ) public view virtual returns (uint256 Ann, uint256[] memory precisions) {
+    function decodeWFData(bytes memory data) public view virtual returns (uint256 Ann, uint256[] memory precisions) {
         WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
         if (wfd.a == 0) revert InvalidAParameter(wfd.a);
-        if (wfd.token0 == address(0) || wfd.token1 == address(0))
+        if (wfd.token0 == address(0) || wfd.token1 == address(0)) {
             revert InvalidTokens();
+        }
 
         uint8 token0Decimals = IERC20(wfd.token0).decimals();
         uint8 token1Decimals = IERC20(wfd.token1).decimals();
@@ -366,21 +341,13 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         Ann = wfd.a * N * N * A_PRECISION;
 
         precisions = new uint256[](2);
-        precisions[0] =
-            10 ** (POOL_PRECISION_DECIMALS - uint256(token0Decimals));
-        precisions[1] =
-            10 ** (POOL_PRECISION_DECIMALS - uint256(token1Decimals));
+        precisions[0] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token0Decimals));
+        precisions[1] = 10 ** (POOL_PRECISION_DECIMALS - uint256(token1Decimals));
     }
 
-    function getTokenDecimal(
-        uint256 i,
-        bytes memory data
-    ) internal view returns (uint256 decimals) {
+    function getTokenDecimal(uint256 i, bytes memory data) internal view returns (uint256 decimals) {
         WellFunctionData memory wfd = abi.decode(data, (WellFunctionData));
-        return
-            i == 0
-                ? IERC20(wfd.token0).decimals()
-                : IERC20(wfd.token1).decimals();
+        return i == 0 ? IERC20(wfd.token0).decimals() : IERC20(wfd.token1).decimals();
     }
 
     function getPadding(
@@ -430,10 +397,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         // 100001/99999999 = 0.00100001001 -> 4 zeroes
     }
 
-    function getNumDigits(
-        uint256[] memory reserves,
-        uint256 i
-    ) internal pure returns (uint256 numDigits) {
+    function getNumDigits(uint256[] memory reserves, uint256 i) internal pure returns (uint256 numDigits) {
         numDigits = 0;
         uint256 reserve = reserves[i];
         while (reserve != 0) {
@@ -447,9 +411,9 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
      * @dev this sets both reserves to 18 decimals.
      */
     function getScaledReserves(
-        uint[] memory reserves,
+        uint256[] memory reserves,
         uint256[] memory precisions
-    ) internal pure returns (uint[] memory) {
+    ) internal pure returns (uint256[] memory) {
         reserves[0] = reserves[0].mul(precisions[0]);
         reserves[1] = reserves[1].mul(precisions[1]);
         return reserves;
@@ -461,10 +425,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         uint256 c,
         uint256 lpTokenSupply
     ) private pure returns (uint256) {
-        return
-            reserve.mul(reserve).add(c).div(
-                reserve.mul(2).add(b).sub(lpTokenSupply)
-            );
+        return reserve.mul(reserve).add(c).div(reserve.mul(2).add(b).sub(lpTokenSupply));
     }
 
     function getBandC(
@@ -472,12 +433,7 @@ contract CurveStableSwap2 is IBeanstalkWellFunction {
         uint256 lpTokenSupply,
         uint256 reserves
     ) private pure returns (uint256 c, uint256 b) {
-        c = lpTokenSupply
-            .mul(lpTokenSupply)
-            .div(reserves.mul(N))
-            .mul(lpTokenSupply)
-            .mul(A_PRECISION)
-            .div(Ann.mul(N));
+        c = lpTokenSupply.mul(lpTokenSupply).div(reserves.mul(N)).mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
         b = reserves.add(lpTokenSupply.mul(A_PRECISION).div(Ann));
     }
 }

@@ -74,15 +74,10 @@ contract WellBoreStableSwapTest is TestHelper {
 
     /// @dev Fuzz different combinations of Well configuration data and check
     /// that the Aquifer deploys everything correctly.
-    function testFuzz_bore(
-        uint numberOfPumps,
-        bytes[4] memory pumpData,
-        uint nTokens,
-        uint a
-    ) public {
+    function testFuzz_bore(uint256 numberOfPumps, bytes[4] memory pumpData, uint256 nTokens, uint256 a) public {
         // Constraints
         numberOfPumps = bound(numberOfPumps, 0, 4);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             vm.assume(pumpData[i].length <= 4 * 32);
         }
         nTokens = bound(nTokens, 2, tokens.length);
@@ -90,45 +85,31 @@ contract WellBoreStableSwapTest is TestHelper {
         vm.assume(a > 0);
         // Get the first `nTokens` mock tokens
         IERC20[] memory wellTokens = getTokens(nTokens);
-        bytes memory wellFunctionBytes = abi.encode(
-            a,
-            address(wellTokens[0]),
-            address(wellTokens[1])
-        );
+        bytes memory wellFunctionBytes = abi.encode(a, address(wellTokens[0]), address(wellTokens[1]));
 
         // Deploy a Well Function
         wellFunction = Call(address(new CurveStableSwap2()), wellFunctionBytes);
 
         // Etch the MockPump at each `target`
         Call[] memory pumps = new Call[](numberOfPumps);
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             pumps[i].target = address(new MockPump());
             pumps[i].data = pumpData[i];
         }
 
         // Deploy the Well
-        Well _well = encodeAndBoreWell(
-            address(aquifer),
-            wellImplementation,
-            wellTokens,
-            wellFunction,
-            pumps,
-            bytes32(0)
-        );
+        Well _well =
+            encodeAndBoreWell(address(aquifer), wellImplementation, wellTokens, wellFunction, pumps, bytes32(0));
 
         // Check Pumps
-        assertEq(
-            _well.numberOfPumps(),
-            numberOfPumps,
-            "number of pumps mismatch"
-        );
+        assertEq(_well.numberOfPumps(), numberOfPumps, "number of pumps mismatch");
         Call[] memory _pumps = _well.pumps();
 
         if (numberOfPumps > 0) {
             assertEq(_well.firstPump(), pumps[0], "pump mismatch");
         }
 
-        for (uint i = 0; i < numberOfPumps; i++) {
+        for (uint256 i = 0; i < numberOfPumps; i++) {
             assertEq(_pumps[i], pumps[i], "pump mismatch");
         }
 
@@ -140,9 +121,6 @@ contract WellBoreStableSwapTest is TestHelper {
         assertEq(_well.wellFunctionAddress(), wellFunction.target);
 
         // Check that Aquifer recorded the deployment
-        assertEq(
-            aquifer.wellImplementation(address(_well)),
-            wellImplementation
-        );
+        assertEq(aquifer.wellImplementation(address(_well)), wellImplementation);
     }
 }

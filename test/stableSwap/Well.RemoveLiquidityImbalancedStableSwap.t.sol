@@ -6,11 +6,7 @@ import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
-    event RemoveLiquidity(
-        uint256 lpAmountIn,
-        uint256[] tokenAmountsOut,
-        address recipient
-    );
+    event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
     uint256[] tokenAmountsOut;
     uint256 requiredLpAmountIn;
@@ -25,13 +21,7 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
         ss = new CurveStableSwap2();
         setupStableSwapWell(10);
 
-        _data = abi.encode(
-            CurveStableSwap2.WellFunctionData(
-                10,
-                address(tokens[0]),
-                address(tokens[1])
-            )
-        );
+        _data = abi.encode(CurveStableSwap2.WellFunctionData(10, address(tokens[0]), address(tokens[1])));
 
         // Add liquidity. `user` now has (2 * 1000 * 1e18) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);
@@ -43,41 +33,20 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
 
     /// @dev Assumes use of ConstantProduct2
     function test_getRemoveLiquidityImbalancedIn() public {
-        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(
-            tokenAmountsOut
-        );
+        uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
         assertEq(lpAmountIn, requiredLpAmountIn);
     }
 
     /// @dev not enough LP to receive `tokenAmountsOut`
-    function test_removeLiquidityImbalanced_revertIf_notEnoughLP()
-        public
-        prank(user)
-    {
+    function test_removeLiquidityImbalanced_revertIf_notEnoughLP() public prank(user) {
         uint256 maxLpAmountIn = 5 * 1e18;
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IWellErrors.SlippageIn.selector,
-                requiredLpAmountIn,
-                maxLpAmountIn
-            )
-        );
-        well.removeLiquidityImbalanced(
-            maxLpAmountIn,
-            tokenAmountsOut,
-            user,
-            type(uint256).max
-        );
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageIn.selector, requiredLpAmountIn, maxLpAmountIn));
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint256).max);
     }
 
     function test_removeLiquidityImbalanced_revertIf_expired() public {
         vm.expectRevert(IWellErrors.Expired.selector);
-        well.removeLiquidityImbalanced(
-            0,
-            new uint256[](2),
-            user,
-            block.timestamp - 1
-        );
+        well.removeLiquidityImbalanced(0, new uint256[](2), user, block.timestamp - 1);
     }
 
     /// @dev Base case
@@ -89,12 +58,7 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
 
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(maxLpAmountIn, tokenAmountsOut, user);
-        well.removeLiquidityImbalanced(
-            maxLpAmountIn,
-            tokenAmountsOut,
-            user,
-            type(uint256).max
-        );
+        well.removeLiquidityImbalanced(maxLpAmountIn, tokenAmountsOut, user, type(uint256).max);
 
         Balances memory userBalanceAfter = getBalances(user, well);
         Balances memory wellBalanceAfter = getBalances(address(well), well);
@@ -104,51 +68,26 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
 
         // `user` balance of underlying tokens increases
         // assumes initial balance of zero
-        assertEq(
-            userBalanceAfter.tokens[0],
-            tokenAmountsOut[0],
-            "Incorrect token0 user balance"
-        );
-        assertEq(
-            userBalanceAfter.tokens[1],
-            tokenAmountsOut[1],
-            "Incorrect token1 user balance"
-        );
+        assertEq(userBalanceAfter.tokens[0], tokenAmountsOut[0], "Incorrect token0 user balance");
+        assertEq(userBalanceAfter.tokens[1], tokenAmountsOut[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
-        assertEq(
-            wellBalanceAfter.tokens[0],
-            1500 * 1e18,
-            "Incorrect token0 well reserve"
-        );
-        assertEq(
-            wellBalanceAfter.tokens[1],
-            19_494 * 1e17,
-            "Incorrect token1 well reserve"
-        );
+        assertEq(wellBalanceAfter.tokens[0], 1500 * 1e18, "Incorrect token0 well reserve");
+        assertEq(wellBalanceAfter.tokens[1], 19_494 * 1e17, "Incorrect token1 well reserve");
         checkInvariant(address(well));
     }
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
     /// The Well contains equal reserves of all underlying tokens before execution.
-    function testFuzz_removeLiquidityImbalanced(
-        uint256 a0,
-        uint256 a1
-    ) public prank(user) {
+    function testFuzz_removeLiquidityImbalanced(uint256 a0, uint256 a1) public prank(user) {
         // Setup amounts of liquidity to remove
         // NOTE: amounts may or may not be equal
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(a0, 0, 750e18);
         amounts[1] = bound(a1, 0, 750e18);
 
-        Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(
-            address(well),
-            well
-        );
-        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(
-            user,
-            well
-        );
+        Balances memory wellBalanceBeforeRemoveLiquidity = getBalances(address(well), well);
+        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
         // Calculate change in Well reserves after removing liquidity
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = wellBalanceBeforeRemoveLiquidity.tokens[0] - amounts[0];
@@ -167,40 +106,17 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
         // Remove all of `user`'s liquidity and deliver them the tokens
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(
-            maxLpAmountIn,
-            amounts,
-            user,
-            type(uint256).max
-        );
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint256).max);
 
-        Balances memory userBalanceAfterRemoveLiquidity = getBalances(
-            user,
-            well
-        );
-        Balances memory wellBalanceAfterRemoveLiquidity = getBalances(
-            address(well),
-            well
-        );
+        Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
+        Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
 
         // `user` balance of LP tokens decreases
-        assertEq(
-            userBalanceAfterRemoveLiquidity.lp,
-            maxLpAmountIn - lpAmountIn,
-            "Incorrect lp output"
-        );
+        assertEq(userBalanceAfterRemoveLiquidity.lp, maxLpAmountIn - lpAmountIn, "Incorrect lp output");
 
         // `user` balance of underlying tokens increases
-        assertEq(
-            userBalanceAfterRemoveLiquidity.tokens[0],
-            amounts[0],
-            "Incorrect token0 user balance"
-        );
-        assertEq(
-            userBalanceAfterRemoveLiquidity.tokens[1],
-            amounts[1],
-            "Incorrect token1 user balance"
-        );
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[0], amounts[0], "Incorrect token0 user balance");
+        assertEq(userBalanceAfterRemoveLiquidity.tokens[1], amounts[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
         // Equal amount of liquidity of 1000e18 were added in the setup function hence the
@@ -222,10 +138,7 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
     /// @dev Fuzz test: UNEQUAL token reserves, IMBALANCED removal
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias`
     /// before liquidity is removed by `user`.
-    function testFuzz_removeLiquidityImbalanced_withSwap(
-        uint256 a0,
-        uint256 imbalanceBias
-    ) public {
+    function testFuzz_removeLiquidityImbalanced_withSwap(uint256 a0, uint256 imbalanceBias) public {
         // Setup amounts of liquidity to remove
         // NOTE: amounts[0] is bounded at 1 to prevent slippage overflow
         // failure, bug fix in progress
@@ -236,14 +149,7 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(
-            tokens[0],
-            tokens[1],
-            imbalanceBias,
-            0,
-            user2,
-            type(uint256).max
-        );
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint256).max);
 
         // `user` has LP tokens and will perform a `removeLiquidityImbalanced` call
         vm.startPrank(user);
@@ -269,46 +175,21 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
         uint256 maxLpAmountIn = userBalanceBefore.lp;
         vm.expectEmit(true, true, true, true);
         emit RemoveLiquidity(lpAmountBurned, amounts, user);
-        well.removeLiquidityImbalanced(
-            maxLpAmountIn,
-            amounts,
-            user,
-            type(uint256).max
-        );
+        well.removeLiquidityImbalanced(maxLpAmountIn, amounts, user, type(uint256).max);
 
         Balances memory wellBalanceAfter = getBalances(address(well), well);
         Balances memory userBalanceAfter = getBalances(user, well);
 
         // `user` balance of LP tokens decreases
-        assertEq(
-            userBalanceAfter.lp,
-            maxLpAmountIn - lpAmountIn,
-            "Incorrect lp output"
-        );
+        assertEq(userBalanceAfter.lp, maxLpAmountIn - lpAmountIn, "Incorrect lp output");
 
         // `user` balance of underlying tokens increases
-        assertEq(
-            userBalanceAfter.tokens[0],
-            userBalanceBefore.tokens[0] + amounts[0],
-            "Incorrect token0 user balance"
-        );
-        assertEq(
-            userBalanceAfter.tokens[1],
-            userBalanceBefore.tokens[1] + amounts[1],
-            "Incorrect token1 user balance"
-        );
+        assertEq(userBalanceAfter.tokens[0], userBalanceBefore.tokens[0] + amounts[0], "Incorrect token0 user balance");
+        assertEq(userBalanceAfter.tokens[1], userBalanceBefore.tokens[1] + amounts[1], "Incorrect token1 user balance");
 
         // Well's reserve of underlying tokens decreases
-        assertEq(
-            wellBalanceAfter.tokens[0],
-            wellBalanceBefore.tokens[0] - amounts[0],
-            "Incorrect token0 well reserve"
-        );
-        assertEq(
-            wellBalanceAfter.tokens[1],
-            wellBalanceBefore.tokens[1] - amounts[1],
-            "Incorrect token1 well reserve"
-        );
+        assertEq(wellBalanceAfter.tokens[0], wellBalanceBefore.tokens[0] - amounts[0], "Incorrect token0 well reserve");
+        assertEq(wellBalanceAfter.tokens[1], wellBalanceBefore.tokens[1] - amounts[1], "Incorrect token1 well reserve");
         checkInvariant(address(well));
     }
 }

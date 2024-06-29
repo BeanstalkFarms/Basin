@@ -24,11 +24,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
     function test_liquidityInitialized() public {
         IERC20[] memory tokens = well.tokens();
         for (uint256 i; i < tokens.length; i++) {
-            assertEq(
-                tokens[i].balanceOf(address(well)),
-                initialLiquidity + addedLiquidity,
-                "incorrect token reserve"
-            );
+            assertEq(tokens[i].balanceOf(address(well)), initialLiquidity + addedLiquidity, "incorrect token reserve");
         }
         assertEq(well.totalSupply(), 4000 * 1e18, "incorrect totalSupply");
     }
@@ -38,38 +34,20 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
     function test_getRemoveLiquidityOut() public {
         uint256[] memory amountsOut = well.getRemoveLiquidityOut(1000 * 1e18);
         for (uint256 i; i < tokens.length; i++) {
-            assertEq(
-                amountsOut[i],
-                500 * 1e18,
-                "incorrect getRemoveLiquidityOut"
-            );
+            assertEq(amountsOut[i], 500 * 1e18, "incorrect getRemoveLiquidityOut");
         }
     }
 
     /// @dev removeLiquidity: reverts when user tries to remove too much of an underlying token
-    function test_removeLiquidity_revertIf_minAmountOutTooHigh()
-        public
-        prank(user)
-    {
+    function test_removeLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {
         uint256 lpAmountIn = 1000 * 1e18;
 
         uint256[] memory minTokenAmountsOut = new uint256[](2);
         minTokenAmountsOut[0] = 501 * 1e18; // too high
         minTokenAmountsOut[1] = 500 * 1e18;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IWellErrors.SlippageOut.selector,
-                500 * 1e18,
-                minTokenAmountsOut[0]
-            )
-        );
-        well.removeLiquidity(
-            lpAmountIn,
-            minTokenAmountsOut,
-            user,
-            type(uint256).max
-        );
+        vm.expectRevert(abi.encodeWithSelector(IWellErrors.SlippageOut.selector, 500 * 1e18, minTokenAmountsOut[0]));
+        well.removeLiquidity(lpAmountIn, minTokenAmountsOut, user, type(uint256).max);
     }
 
     function test_removeLiquidity_revertIf_expired() public {
@@ -123,10 +101,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
 
         assertLe(
             well.totalSupply(),
-            CurveStableSwap2(wellFunction.target).calcLpTokenSupply(
-                well.getReserves(),
-                wellFunction.data
-            )
+            CurveStableSwap2(wellFunction.target).calcLpTokenSupply(well.getReserves(), wellFunction.data)
         );
         checkInvariant(address(well));
     }
@@ -134,14 +109,8 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
     /// @dev Fuzz test: UNEQUAL token reserves, BALANCED removal
     /// A Swap is performed by `user2` that imbalances the pool by `imbalanceBias`
     /// before liquidity is removed by `user`.
-    function test_removeLiquidity_fuzzSwapBias(
-        uint256 lpAmountBurned,
-        uint256 imbalanceBias
-    ) public {
-        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(
-            user,
-            well
-        );
+    function test_removeLiquidity_fuzzSwapBias(uint256 lpAmountBurned, uint256 imbalanceBias) public {
+        Balances memory userBalanceBeforeRemoveLiquidity = getBalances(user, well);
 
         uint256 maxLpAmountIn = userBalanceBeforeRemoveLiquidity.lp;
         lpAmountBurned = bound(lpAmountBurned, 100, maxLpAmountIn);
@@ -149,14 +118,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
 
         // `user2` performs a swap to imbalance the pool by `imbalanceBias`
         vm.prank(user2);
-        well.swapFrom(
-            tokens[0],
-            tokens[1],
-            imbalanceBias,
-            0,
-            user2,
-            type(uint256).max
-        );
+        well.swapFrom(tokens[0], tokens[1], imbalanceBias, 0, user2, type(uint256).max);
 
         // `user` has LP tokens and will perform a `removeLiquidity` call
         vm.startPrank(user);
@@ -173,12 +135,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
         action.fees = new uint256[](2);
 
         (before, action) = beforeRemoveLiquidity(action);
-        well.removeLiquidity(
-            lpAmountBurned,
-            tokenAmountsOut,
-            user,
-            type(uint256).max
-        );
+        well.removeLiquidity(lpAmountBurned, tokenAmountsOut, user, type(uint256).max);
         afterRemoveLiquidity(before, action);
         checkStableSwapInvariant(address(well));
     }
