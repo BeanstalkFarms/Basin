@@ -29,7 +29,6 @@ import {LibMath} from "src/libraries/LibMath.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
@@ -275,7 +274,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             if (crv.r > crv.rLimit) {
                 calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
-        // If the ratio decreased, check that it didn't overflow during calculation
+            // If the ratio decreased, check that it didn't overflow during calculation
         } else if (crv.r < crv.rLast) {
             bytes16 tempExp = ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRateChanges[j][i])).powu(capExponent);
             // Check for overflow before converting to 128x128
@@ -289,7 +288,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             }
         }
     }
-
 
     /**
      * @dev Cap the change in LP Token Supply of `reserves` to a maximum % change from `lastReserves`.
@@ -510,6 +508,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     /**
      * @dev Get the slot number that contains the `n`th element of an array.
+     * slots are seperated by 32 bytes to allow for future expansion of the Pump (i.e supporting Well with more than 3 tokens).
      */
     function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
         _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
