@@ -29,7 +29,6 @@ import {LibMath} from "src/libraries/LibMath.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
@@ -70,6 +69,11 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Update the Pump's manipulation resistant reserve balances for a given `well` with `reserves`.
      */
     function update(uint256[] calldata reserves, bytes calldata data) external {
+        // Require two token well
+        if (reserves.length != 2) {
+            revert TooManyTokens();
+        }
+
         (bytes16 alpha, uint256 capInterval, CapReservesParameters memory crp) =
             abi.decode(data, (bytes16, uint256, CapReservesParameters));
         uint256 numberOfReserves = reserves.length;
@@ -226,11 +230,6 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         uint256 capExponent,
         CapReservesParameters memory crp
     ) internal view returns (uint256[] memory cappedReserves) {
-        // Assume two token well
-        if (reserves.length != 2) {
-            revert TooManyTokens();
-        }
-
         Call memory wf = IWell(well).wellFunction();
         IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wf.target);
 
@@ -272,17 +271,19 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             crv.rLimit = tempExp.cmp(MAX_CONVERT_TO_128x128) != -1
                 ? crv.rLimit = type(uint256).max
                 : crv.rLast.mulDivOrMax(tempExp.to128x128().toUint256(), CAP_PRECISION2);
-            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) > crv.rLimit) {
+            if (crv.r > crv.rLimit) {
                 calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
-            // If the ratio decreased, check that it didn't decrease below the max.
+            // If the ratio decreased, check that it didn't overflow during calculation
         } else if (crv.r < crv.rLast) {
-            crv.rLimit = crv.rLast.mulDiv(
-                ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRateChanges[j][i])).powu(capExponent).to128x128()
-                    .toUint256(),
-                CAP_PRECISION2
-            );
-            if (cappedReserves[i].mulDiv(CAP_PRECISION, cappedReserves[j]) < crv.rLimit) {
+            bytes16 tempExp = ABDKMathQuad.ONE.div(ABDKMathQuad.ONE.add(crp.maxRateChanges[j][i])).powu(capExponent);
+            // Check for overflow before converting to 128x128
+            if (tempExp.cmp(MAX_CONVERT_TO_128x128) != -1) {
+                crv.rLimit = 0; // Set limit to 0 in case of overflow
+            } else {
+                crv.rLimit = crv.rLast.mulDiv(tempExp.to128x128().toUint256(), CAP_PRECISION2);
+            }
+            if (crv.r < crv.rLimit) {
                 calcReservesAtRatioSwap(mfpWf, crv.rLimit, cappedReserves, i, j, data);
             }
         }
@@ -506,7 +507,8 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     }
 
     /**
-     * @dev Get the starting byte of the slot that contains the `n`th element of an array.
+     * @dev Get the slot number that contains the `n`th element of an array.
+     * slots are seperated by 32 bytes to allow for future expansion of the Pump (i.e supporting Well with more than 3 tokens).
      */
     function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
         _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
