@@ -5,15 +5,16 @@ pragma solidity ^0.8.17;
 import {TestHelper, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
+import {Math} from "oz/utils/math/Math.sol";
 
-contract WellAddLiquidityStableSwapTest is LiquidityHelper {
+contract WellStable2AddLiquidityTest is LiquidityHelper {
     function setUp() public {
         setupStableSwapWell();
     }
 
     /// @dev Liquidity is initially added in {TestHelper}; ensure that subsequent
     /// tests will run correctly.
-    function test_liquidityInitialized() public {
+    function test_liquidityInitialized() public view {
         IERC20[] memory tokens = well.tokens();
         Balances memory userBalance = getBalances(user, well);
         Balances memory wellBalance = getBalances(address(well), well);
@@ -25,16 +26,16 @@ contract WellAddLiquidityStableSwapTest is LiquidityHelper {
 
     /// @dev Adding liquidity in equal proportions should summate and be scaled
     /// up by sqrt(ConstantProduct2.EXP_PRECISION)
-    function test_getAddLiquidityOut_equalAmounts() public {
+    function test_getAddLiquidityOut_equalAmounts() public view {
         uint256[] memory amounts = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             amounts[i] = 1000 * 1e18;
         }
         uint256 lpAmountOut = well.getAddLiquidityOut(amounts);
-        assertEq(lpAmountOut, 2000 * 1e18, "Incorrect AmountOut");
+        assertEq(lpAmountOut, well.totalSupply(), "Incorrect AmountOut");
     }
 
-    function test_getAddLiquidityOut_oneToken() public {
+    function test_getAddLiquidityOut_oneToken() public view {
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 10 * 1e18;
         amounts[1] = 0;

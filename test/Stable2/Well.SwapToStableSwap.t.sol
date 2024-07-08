@@ -13,7 +13,7 @@ contract WellSwapToStableSwapTest is SwapHelper {
         setupStableSwapWell();
     }
 
-    function test_getSwapIn() public view {
+    function test_getSwapIn() public {
         uint256 amountOut = 100 * 1e18;
         uint256 amountIn = well.getSwapIn(tokens[0], tokens[1], amountOut);
         assertEq(amountIn, 100_482_889_020_651_556_292); // ~0.4% slippage

@@ -13,7 +13,7 @@ contract BeanstalkStableSwapSwapTest is TestHelper {
     //////////// SETUP ////////////
 
     function setUp() public {
-        _f = new CurveStableSwap2();
+        _f = new CurveStableSwap2(address(1));
         IERC20[] memory _token = deployMockTokens(2);
         data = abi.encode(10, address(_token[0]), address(_token[1]));
     }
