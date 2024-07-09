@@ -1,241 +1,393 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.17;
 
-import {IMultiFlowPumpWellFunction} from "src/interfaces/IMultiFlowPumpWellFunction.sol";
+import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 import {SafeMath} from "oz/utils/math/SafeMath.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {Math} from "oz/utils/math/Math.sol";
-import {console} from "forge-std/console.sol";
+import "forge-std/console.sol";
 
+interface ILookupTable {
+    /**
+     * @notice the lookup table returns a series of data, given a price point:
+     * @param highPrice the closest price to the targetPrice, where targetPrice < highPrice.
+     * @param highPriceI reserve i such that `calcRate(reserve, i, j, data)` == highPrice.
+     * @param highPriceJ reserve j such that `calcRate(reserve, i, j, data)` == highPrice.
+     * @param lowPrice the closest price to the targetPrice, where targetPrice > lowPrice.
+     * @param lowPriceI reserve i such that `calcRate(reserve, i, j, data)` == lowPrice.
+     * @param lowPriceJ reserve j such that `calcRate(reserve, i, j, data)` == lowPrice.
+     * @param precision precision of reserve.
+     */
+    struct PriceData {
+        uint256 highPrice;
+        uint256 highPriceI;
+        uint256 highPriceJ;
+        uint256 lowPrice;
+        uint256 lowPriceI;
+        uint256 lowPriceJ;
+        uint256 precision;
+    }
+
+    // for liquidity, x stays the same, y changes (D changes)
+    // for swap, x changes, y changes, (D stays the same)
+    function getRatiosFromPriceLiquidity(uint256) external view returns (PriceData memory);
+    function getRatiosFromPriceSwap(uint256) external view returns (PriceData memory);
+    function getAParameter() external view returns (uint256);
+}
 /**
  * @author Brean
- * @title Stable pricing function for Wells with 2 tokens.
- * developed by Solidly/Aerodome: https://github.com/aerodrome-finance/contracts
+ * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
+ * developed by curve.
  *
- * Stable2 Wells with 2 tokens use the formula:
- *  `d^2 = (b_0^3 * b_1) + (b_0 ^ 3 + b_1)`
+ * Stableswap Wells with 2 tokens use the formula:
+ *  `4 * A * (b_0+b_1) + D = 4 * A * D + D^3/(4 * b_0 * b_1)`
  *
  * Where:
- *  `d` is the supply of LP tokens
+ *  `A` is the Amplication parameter.
+ *  `D` is the supply of LP tokens
  *  `b_i` is the reserve at index `i`
+ *
+ * @dev Limited to tokens with a maximum of 18 decimals.
  */
-contract Stable2 is ProportionalLPToken2, IMultiFlowPumpWellFunction {
-    using Math for uint256;
 
-    uint256 constant PRECISION = 1e18;
+contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
+    struct PriceData {
+        uint256 targetPrice;
+        uint256 currentPrice;
+        uint256 maxStepSize;
+        ILookupTable.PriceData lutData;
+    }
 
-    mapping(address well => uint256 liquidityIndex) public liquidityIndexForWell;
+    using LibMath for uint256;
+    using SafeMath for uint256;
+
+    // 2 token Pool.
+    uint256 constant N = 2;
+
+    // A precision
+    uint256 constant A_PRECISION = 100;
+
+    // Precision that all pools tokens will be converted to.
+    uint256 constant POOL_PRECISION_DECIMALS = 18;
+
+    // Calc Rate Precision.
+    uint256 constant CALC_RATE_PRECISION = 1e24;
+
+    // price Precision.
+    uint256 constant PRICE_PRECISION = 1e6;
+
+    address immutable lookupTable;
+    uint256 immutable a;
+
+    // Errors
+    error InvalidAParameter(uint256);
+    error InvalidTokens();
+    error InvalidTokenDecimals();
+    error InvalidLUT();
+
+    // Due to the complexity of `calcReserveAtRatioLiquidity` and `calcReserveAtRatioSwap`,
+    // a LUT table is used to reduce the complexity of the calculations on chain.
+    // the lookup table contract implements 3 functions:
+    // 1. getRatiosFromPriceLiquidity(uint256) -> PriceData memory
+    // 2. getRatiosFromPriceSwap(uint256) -> PriceData memory
+    // 3. getAParameter() -> uint256
+    // Lookup tables are a function of the A parameter.
+    constructor(address lut) {
+        if (lut == address(0)) revert InvalidLUT();
+        lookupTable = lut;
+        // a = ILookupTable(lut).getAParameter();
+        a = 10;
+    }
 
     /**
-     * @notice Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`.
-     * @param reserves A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided.
-     * @param j The index of the reserve to solve for
-     * @param data Extra Well function data provided on every call
-     * @return reserve The resulting reserve at the jth index
-     * @dev Should round up to ensure that Well reserves are marginally higher to enforce calcLpTokenSupply(...) >= totalSupply()
+     * @notice Calculate the amount of LP tokens minted when adding liquidity.
+     * D invariant calculation in non-overflowing integer operations iteratively
+     * A * sum(x_i) * n**n + D = A * D * n**n + D**(n+1) / (n**n * prod(x_i))
+     *
+     * Converging solution:
+     * D[j+1] = (4 * A * sum(b_i) - (D[j] ** 3) / (4 * prod(b_i))) / (4 * A - 1)
+     */
+    function calcLpTokenSupply(
+        uint256[] memory reserves,
+        bytes memory data
+    ) public view returns (uint256 lpTokenSupply) {
+        uint256[] memory decimals = decodeWellData(data);
+        // scale reserves to 18 decimals.
+        uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
+
+        uint256 Ann = a * N * N * A_PRECISION;
+
+        uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
+        if (sumReserves == 0) return 0;
+        lpTokenSupply = sumReserves;
+        for (uint256 i = 0; i < 255; i++) {
+            uint256 dP = lpTokenSupply;
+            // If division by 0, this will be borked: only withdrawal will work. And that is good
+            dP = dP.mul(lpTokenSupply).div(scaledReserves[0].mul(N));
+            dP = dP.mul(lpTokenSupply).div(scaledReserves[1].mul(N));
+            uint256 prevReserves = lpTokenSupply;
+            lpTokenSupply = Ann.mul(sumReserves).div(A_PRECISION).add(dP.mul(N)).mul(lpTokenSupply).div(
+                Ann.sub(A_PRECISION).mul(lpTokenSupply).div(A_PRECISION).add(N.add(1).mul(dP))
+            );
+            // Equality with the precision of 1
+            if (lpTokenSupply > prevReserves) {
+                if (lpTokenSupply - prevReserves <= 1) return lpTokenSupply;
+            } else {
+                if (prevReserves - lpTokenSupply <= 1) return lpTokenSupply;
+            }
+        }
+    }
+
+    /**
+     * @notice Calculate x[i] if one reduces D from being calculated for reserves to D
+     * Done by solving quadratic equation iteratively.
+     * x_1**2 + x_1 * (sum' - (A*n**n - 1) * D / (A * n**n)) = D ** (n + 1) / (n ** (2 * n) * prod' * A)
+     * x_1**2 + b*x_1 = c
+     * x_1 = (x_1**2 + c) / (2*x_1 + b)
+     * @dev This function has a precision of +/- 1,
+     * which may round in favor of the well or the user.
      */
     function calcReserve(
         uint256[] memory reserves,
         uint256 j,
-        uint256,
-        bytes calldata data
-    ) external pure returns (uint256 reserve) {
-        uint256 i = j == 0 ? 1 : 0;
-        (uint256 decimals0, uint256 decimals1) = decodeWellData(data);
-        uint256 xy;
-        uint256 y = reserves[j];
-        uint256 x0 = reserves[i];
-        // if j is 0, swap decimals0 and decimals1
-        if (j == 0) {
-            (decimals0, decimals1) = (decimals1, decimals0);
-        }
-        xy = _k(x0, y, decimals0, decimals1);
+        uint256 lpTokenSupply,
+        bytes memory data
+    ) public view returns (uint256 reserve) {
+        uint256[] memory decimals = decodeWellData(data);
+        uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
-        for (uint256 l = 0; l < 255; l++) {
-            uint256 k = _f(reserves[i], j);
-            if (k < xy) {
-                // there are two cases where dy == 0
-                // case 1: The y is converged and we find the correct answer
-                // case 2: _d(x0, y) is too large compare to (xy - k) and the rounding error
-                //         screwed us.
-                //         In this case, we need to increase y by 1
-                uint256 dy = ((xy - k) * PRECISION) / _d(x0, y);
-                if (dy == 0) {
-                    if (k == xy) {
-                        // We found the correct answer. Return y
-                        return y;
-                    }
-                    if (_k(x0, y + 1, decimals0, decimals1) > xy) {
-                        // If _k(x0, y + 1) > xy, then we are close to the correct answer.
-                        // There's no closer answer than y + 1
-                        return y + 1;
-                    }
-                    dy = 1;
+        // avoid stack too deep errors.
+        (uint256 c, uint256 b) =
+            getBandC(a * N * N * A_PRECISION, lpTokenSupply, j == 0 ? scaledReserves[1] : scaledReserves[0]);
+        reserve = lpTokenSupply;
+        uint256 prevReserve;
+
+        for (uint256 i; i < 255; ++i) {
+            prevReserve = reserve;
+            reserve = _calcReserve(reserve, b, c, lpTokenSupply);
+            // Equality with the precision of 1
+            // scale reserve down to original precision
+            if (reserve > prevReserve) {
+                if (reserve - prevReserve <= 1) {
+                    return reserve.div(10 ** (18 - decimals[j]));
                 }
-                y = y + dy;
             } else {
-                uint256 dy = ((k - xy) * PRECISION) / _d(x0, y);
-                if (dy == 0) {
-                    if (k == xy || _f(x0, y - 1) < xy) {
-                        // Likewise, if k == xy, we found the correct answer.
-                        // If _f(x0, y - 1) < xy, then we are close to the correct answer.
-                        // There's no closer answer than "y"
-                        // It's worth mentioning that we need to find y where f(x0, y) >= xy
-                        // As a result, we can't return y - 1 even it's closer to the correct answer
-                        return y;
-                    }
-                    dy = 1;
+                if (prevReserve - reserve <= 1) {
+                    return reserve.div(10 ** (18 - decimals[j]));
                 }
-                y = y - dy;
             }
         }
-        revert("!y");
+        revert("did not find convergence");
     }
-
-    /**
-     * @notice Gets the LP token supply given a list of reserves.
-     * @param reserves A list of token reserves
-     * @param data Extra Well function data provided on every call
-     * @return lpTokenSupply The resulting supply of LP tokens
-     * @dev Should round down to ensure so that the Well Token supply is marignally lower to enforce calcLpTokenSupply(...) >= totalSupply()
-     * @dev `s^2 = (b_0^3 * b_1) + (b_0 ^ 3 + b_1)`
-     * The further apart the reserve values, the greater the loss of precision in the `sqrt` function.
-     */
-    function calcLpTokenSupply(
-        uint256[] memory reserves,
-        bytes calldata data
-    ) external pure returns (uint256 lpTokenSupply) {
-        console.log("calcLpTokenSupply");
-        (uint256 decimals0, uint256 decimals1) = decodeWellData(data);
-        console.log(_k(reserves[0], reserves[1], decimals0, decimals1).sqrt());
-        return _k(reserves[0], reserves[1], decimals0, decimals1).sqrt();
-    }
-
-    /**
-     * @notice Calculates the `j` reserve such that `π_{i | i != j} (d reserves_j / d reserves_i) = π_{i | i != j}(ratios_j / ratios_i)`.
-     * assumes that reserve_j is being swapped for other reserves in the Well.
-     * @dev used by Beanstalk to calculate the deltaB every Season
-     * @param reserves The reserves of the Well
-     * @param j The index of the reserve to solve for
-     * @param ratios The ratios of reserves to solve for
-     * @param data Well function data provided on every call
-     * @return reserve The resulting reserve at the jth index
-     */
-    function calcReserveAtRatioSwap(
-        uint256[] calldata reserves,
-        uint256 j,
-        uint256[] calldata ratios,
-        bytes calldata data
-    ) external view returns (uint256 reserve) {}
 
     /**
      * @inheritdoc IMultiFlowPumpWellFunction
-     * @notice Calculates the exchange rate of the Well.
-     * @dev used by Beanstalk to calculate the exchange rate of the Well.
-     * The maximum value of each reserves cannot exceed max(uint128)/ 2.
-     * Returns with 18 decimal precision.
+     * @dev `calcReserveAtRatioSwap` fetches the closes approxeimate ratios from the target price,
+     * and performs neuwtons method in order to
      */
-    function calcRate(
-        uint256[] calldata reserves,
-        uint256 i,
+    function calcReserveAtRatioSwap(
+        uint256[] memory reserves,
         uint256 j,
+        uint256[] memory ratios,
         bytes calldata data
-    ) external pure returns (uint256 rate) {
-        (uint256 precision0, uint256 precision1) = decodeWellData(data);
-        if (i == 1) {
-            (precision0, precision1) = (precision1, precision0);
+    ) external view returns (uint256 reserve) {
+        uint256 i = j == 1 ? 0 : 1;
+        // scale reserves and ratios:
+        uint256[] memory decimals = decodeWellData(data);
+        uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
+
+        PriceData memory pd;
+
+        {
+            uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
+            // calc target price with 6 decimal precision:
+            pd.targetPrice = scaledRatios[1] * PRICE_PRECISION / scaledRatios[0];
         }
-        uint256 reservesI = uint256(reserves[i]) * precision0;
-        uint256 reservesJ = uint256(reserves[j]) * precision1;
-        rate = reservesJ.mulDiv(_g(reservesI, reservesJ), _g(reservesJ, reservesI)).mulDiv(PRECISION, reservesI);
+
+        // get ratios and price from the closest highest and lowest price from targetPrice:
+        pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceSwap(pd.targetPrice);
+
+        // perform an initial update on the reserves, such that `calcRate(reserves, i, j, data) == pd.lutData.lowPrice.
+
+        // calculate lp token supply:
+        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
+
+        // lpTokenSupply / 2 gives the reserves at parity:
+        uint256 parityReserve = lpTokenSupply / 2;
+
+        // update `scaledReserves`.
+        scaledReserves[0] = parityReserve * pd.lutData.lowPriceI / pd.lutData.precision;
+        scaledReserves[1] = parityReserve * pd.lutData.lowPriceJ / pd.lutData.precision;
+
+        // calculate max step size:
+        pd.maxStepSize = (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ * reserves[j];
+
+        // initialize currentPrice:
+        pd.currentPrice = pd.lutData.lowPrice;
+
+        for (uint256 k; k < 255; k++) {
+            // scale stepSize proporitional to distance from price:
+            uint256 stepSize =
+                pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
+            // increment reserve by stepSize:
+            scaledReserves[j] = reserves[j] + stepSize;
+            // calculate scaledReserve[i]:
+            scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
+
+            // check if new price is within 1 of target price:
+            if (pd.currentPrice > pd.targetPrice) {
+                if (pd.currentPrice - pd.targetPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+            } else {
+                if (pd.targetPrice - pd.currentPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+            }
+
+            // calc currentPrice:
+            pd.currentPrice = calcRate(reserves, i, j, data);
+        }
     }
 
     /**
-     * @notice Calculates the `j` reserve such that `π_{i | i != j} (d reserves_j / d reserves_i) = π_{i | i != j}(ratios_j / ratios_i)`.
-     * assumes that reserve_j is being added or removed in exchange for LP Tokens.
-     * @dev used by Beanstalk to calculate the max deltaB that can be converted in/out of a Well.
-     * @param reserves The reserves of the Well
-     * @param j The index of the reserve to solve for
-     * @param ratios The ratios of reserves to solve for
-     * @return reserve The resulting reserve at the jth index
+     * @inheritdoc IMultiFlowPumpWellFunction
+     * @dev Returns a rate with 6 decimal precision.
+     * Requires a minimum scaled reserves of 1e12.
+     * 6 decimals was chosen as higher decimals would require a higher minimum scaled reserve,
+     * which is prohibtive for large value tokens.
+     */
+    function calcRate(
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata data
+    ) public view returns (uint256 rate) {
+        uint256[] memory decimals = decodeWellData(data);
+        uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
+
+        // calc lp token supply (note: `scaledReserves` is scaled up, and does not require bytes).
+        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
+
+        // reverse if i is not 0.
+
+        // add 1e6 to reserves:
+        scaledReserves[j] += PRICE_PRECISION;
+
+        // calculate new reserve 1:
+        uint256 new_reserve1 = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
+        rate = (scaledReserves[0] - new_reserve1);
+    }
+
+    /**
+     * @inheritdoc IBeanstalkWellFunction
+     * @notice Calculates the amount of each reserve token underlying a given amount of LP tokens.
+     * @dev `calcReserveAtRatioLiquidity` fetches the closest approximate ratios from the target price, and
+     * perform an neutonian-estimation to calculate the reserves.
      */
     function calcReserveAtRatioLiquidity(
         uint256[] calldata reserves,
         uint256 j,
         uint256[] calldata ratios,
-        bytes calldata
-    ) external pure returns (uint256 reserve) {
-        // TODO
-        // start at current reserves, increases reserves j until the ratio is correct
+        bytes calldata data
+    ) external view returns (uint256 reserve) {
+        uint256 i = j == 1 ? 0 : 1;
+        // scale reserves and ratios:
+        uint256[] memory decimals = decodeWellData(data);
+        uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
+
+        PriceData memory pd;
+        {
+            uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
+            // calc target price with 6 decimal precision:
+            pd.targetPrice = scaledRatios[j] * PRICE_PRECISION / scaledRatios[i];
+        }
+
+        // calc currentPrice:
+        pd.currentPrice = calcRate(reserves, i, j, data);
+
+        // get ratios and price from the closest highest and lowest price from targetPrice:
+        pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceLiquidity(pd.targetPrice);
+
+        // update scaledReserve[j] based on lowPrice:
+        scaledReserves[j] = scaledReserves[i] * pd.lutData.lowPriceJ / pd.lutData.precision;
+
+        // calculate max step size:
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.lowPriceJ;
+
+        for (uint256 k; k < 255; k++) {
+            // scale stepSize proporitional to distance from price:
+            uint256 stepSize =
+                pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
+            // increment reserve by stepSize:
+            scaledReserves[j] = scaledReserves[j] + stepSize;
+            // calculate new price from reserves:
+            pd.currentPrice = calcRate(scaledReserves, i, j, data);
+
+            // check if new price is within 1 of target price:
+            if (pd.currentPrice > pd.targetPrice) {
+                if (pd.currentPrice - pd.targetPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+            } else {
+                if (pd.targetPrice - pd.currentPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+            }
+        }
+    }
+
+    function name() external pure returns (string memory) {
+        return "StableSwap";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "SS2";
     }
 
     /**
-     * @notice returns k, based on the reserves of x/y.
-     * @param x the reserves of `x`
-     * @param y the reserves of `y`.
-     *
-     * @dev Implmentation from:
-     * https://github.com/aerodrome-finance/contracts/blob/main/contracts/Pool.sol#L315
+     * @notice decodes the data encoded in the well.
+     * @return decimals an array of the decimals of the tokens in the well.
      */
-    function _k(uint256 x, uint256 y, uint256 xDecimals, uint256 yDecimals) internal pure returns (uint256) {
-        console.log("x: %s, y: %s", x, y);
-        // scale x and y to 18 decimals
-        uint256 _x = (x * PRECISION) / xDecimals;
-        uint256 _y = (y * PRECISION) / yDecimals;
-        uint256 _a = (_x * _y) / PRECISION;
-        uint256 _b = ((_x * _x) / PRECISION + (_y * _y) / PRECISION);
-        console.log("k: %s", (_a * _b) / PRECISION);
-        return (_a * _b) / PRECISION; // x3y+y3x >= k
+    function decodeWellData(bytes memory data) public view virtual returns (uint256[] memory decimals) {
+        (uint256 decimal0, uint256 decimal1) = abi.decode(data, (uint256, uint256));
+
+        // if well data returns 0, assume 18 decimals.
+        if (decimal0 == 0) {
+            decimal0 = 18;
+        }
+        if (decimal0 == 0) {
+            decimal1 = 18;
+        }
+        if (decimal0 > 18 || decimal1 > 18) revert InvalidTokenDecimals();
+
+        decimals = new uint256[](2);
+        decimals[0] = decimal0;
+        decimals[1] = decimal1;
     }
 
     /**
-     * https://github.com/aerodrome-finance/contracts/blob/main/contracts/Pool.sol#L401C5-L405C6
+     * @notice scale `reserves` by `precision`.
+     * @dev this sets both reserves to 18 decimals.
      */
-    function _f(uint256 x0, uint256 y) internal pure returns (uint256) {
-        uint256 _a = (x0 * y) / PRECISION;
-        uint256 _b = ((x0 * x0) / PRECISION + (y * y) / PRECISION);
-        return (_a * _b) / PRECISION;
+    function getScaledReserves(
+        uint256[] memory reserves,
+        uint256[] memory decimals
+    ) internal pure returns (uint256[] memory scaledReserves) {
+        scaledReserves = new uint256[](2);
+        scaledReserves[0] = reserves[0] * 10 ** (18 - decimals[0]);
+        scaledReserves[1] = reserves[1] * 10 ** (18 - decimals[1]);
     }
 
-    /**
-     * https://github.com/aerodrome-finance/contracts/blob/main/contracts/Pool.sol#L401C5-L405C6
-     */
-    function _d(uint256 x0, uint256 y) internal pure returns (uint256) {
-        return (3 * x0 * ((y * y) / PRECISION)) / PRECISION + ((((x0 * x0) / PRECISION) * x0) / PRECISION);
+    function _calcReserve(
+        uint256 reserve,
+        uint256 b,
+        uint256 c,
+        uint256 lpTokenSupply
+    ) private pure returns (uint256) {
+        return reserve.mul(reserve).add(c).div(reserve.mul(2).add(b).sub(lpTokenSupply));
     }
 
-    /**
-     * @notice returns g(x, y) = 3x^2 + y^2
-     * @dev used in `calcRate` to calculate the exchange rate of the well.
-     */
-    function _g(uint256 x, uint256 y) internal pure returns (uint256) {
-        return (3 * x ** 2) + y ** 2;
-    }
-
-    /**
-     * @notice The stableswap requires 2 parameters to be encoded in the well:
-     * Incorrect encoding may result in incorrect calculations.
-     * @dev tokens with more than 18 decimals are not supported.
-     * @return precision0 precision of token0
-     * @return precision1 precision of token1
-     *
-     */
-    function decodeWellData(bytes calldata data) public pure returns (uint256 precision0, uint256 precision1) {
-        (precision0, precision1) = abi.decode(data, (uint256, uint256));
-        console.log(precision0, precision1);
-        precision0 = 10 ** (precision0);
-        precision1 = 10 ** (precision1);
-        console.log(precision0, precision1);
-    }
-
-    function name() external pure override returns (string memory) {
-        return "Stable2";
-    }
-
-    function symbol() external pure override returns (string memory) {
-        return "S2";
+    function getBandC(
+        uint256 Ann,
+        uint256 lpTokenSupply,
+        uint256 reserves
+    ) private pure returns (uint256 c, uint256 b) {
+        c = lpTokenSupply.mul(lpTokenSupply).div(reserves.mul(N)).mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
+        b = reserves.add(lpTokenSupply.mul(A_PRECISION).div(Ann));
     }
 }

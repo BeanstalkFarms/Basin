@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {console, TestHelper, IERC20} from "test/TestHelper.sol";
-import {CurveStableSwap2} from "src/functions/CurveStableSwap2.sol";
+import {Stable2} from "src/functions/Stable2.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
@@ -13,7 +13,7 @@ contract BeanstalkStableSwapSwapTest is TestHelper {
     //////////// SETUP ////////////
 
     function setUp() public {
-        _f = new CurveStableSwap2(address(1));
+        _f = new Stable2(address(1));
         IERC20[] memory _token = deployMockTokens(2);
         data = abi.encode(10, address(_token[0]), address(_token[1]));
     }

@@ -13,7 +13,7 @@ import {Users} from "test/helpers/Users.sol";
 import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-import {CurveStableSwap2} from "src/functions/CurveStableSwap2.sol";
+import {Stable2} from "src/functions/Stable2.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
@@ -135,10 +135,10 @@ abstract contract TestHelper is Test, WellDeployer {
         // encode wellFunction Data
         bytes memory wellFunctionData =
             abi.encode(MockToken(address(_tokens[0])).decimals(), MockToken(address(_tokens[1])).decimals());
-        Call memory _wellFunction = Call(address(new CurveStableSwap2(address(1))), wellFunctionData);
+        Call memory _wellFunction = Call(address(new Stable2(address(1))), wellFunctionData);
         tokens = _tokens;
         wellFunction = _wellFunction;
-        vm.label(address(wellFunction.target), "CurveStableSwap2 WF");
+        vm.label(address(wellFunction.target), "Stable2 WF");
         for (uint256 i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
         }
@@ -148,7 +148,7 @@ abstract contract TestHelper is Test, WellDeployer {
         wellImplementation = deployWellImplementation();
         aquifer = new Aquifer();
         well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
-        vm.label(address(well), "CurveStableSwap2Well");
+        vm.label(address(well), "Stable2Well");
 
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
@@ -316,11 +316,11 @@ abstract contract TestHelper is Test, WellDeployer {
 
     //////////// Assertions ////////////
 
-    function assertEq(IERC20 a, IERC20 b) internal {
+    function assertEq(IERC20 a, IERC20 b) internal pure {
         assertEq(a, b, "Address mismatch");
     }
 
-    function assertEq(IERC20 a, IERC20 b, string memory err) internal {
+    function assertEq(IERC20 a, IERC20 b, string memory err) internal pure {
         assertEq(address(a), address(b), err);
     }
 
@@ -328,7 +328,7 @@ abstract contract TestHelper is Test, WellDeployer {
         assertEq(a, b, "IERC20[] mismatch");
     }
 
-    function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
+    function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal pure {
         assertEq(a.length, b.length, err);
         for (uint256 i; i < a.length; i++) {
             assertEq(a[i], b[i], err); // uses the prev overload
@@ -339,7 +339,7 @@ abstract contract TestHelper is Test, WellDeployer {
         assertEq(a, b, "Call mismatch");
     }
 
-    function assertEq(Call memory a, Call memory b, string memory err) internal {
+    function assertEq(Call memory a, Call memory b, string memory err) internal pure {
         assertEq(a.target, b.target, err);
         assertEq(a.data, b.data, err);
     }
@@ -359,7 +359,7 @@ abstract contract TestHelper is Test, WellDeployer {
         assertApproxEqRelN(a, b, 1, precision);
     }
 
-    function assertApproxLeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal {
+    function assertApproxLeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal pure {
         console.log("A: %s", a);
         console.log("B: %s", b);
         console.log(precision);
@@ -380,7 +380,7 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function assertApproxGeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal {
+    function assertApproxGeRelN(uint256 a, uint256 b, uint256 precision, uint256 absoluteError) internal pure {
         console.log("A: %s", a);
         console.log("B: %s", b);
         console.log(precision);
@@ -433,7 +433,7 @@ abstract contract TestHelper is Test, WellDeployer {
         snapshot.reserves = well.getReserves();
     }
 
-    function checkInvariant(address _well) internal {
+    function checkInvariant(address _well) internal view {
         uint256[] memory _reserves = IWell(_well).getReserves();
         Call memory _wellFunction = IWell(_well).wellFunction();
         assertLe(
@@ -443,7 +443,7 @@ abstract contract TestHelper is Test, WellDeployer {
         );
     }
 
-    function checkStableSwapInvariant(address _well) internal {
+    function checkStableSwapInvariant(address _well) internal view {
         uint256[] memory _reserves = IWell(_well).getReserves();
         Call memory _wellFunction = IWell(_well).wellFunction();
         assertApproxEqAbs(

@@ -3,12 +3,11 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
-import {CurveStableSwap2} from "src/functions/CurveStableSwap2.sol";
+import {Stable2} from "src/functions/Stable2.sol";
 
 contract WellBoreStableSwapTest is TestHelper {
-    /// @dev Bore a 2-token Well with CurveStableSwap2 & several pumps.
+    /// @dev Bore a 2-token Well with Stable2 & several pumps.
     function setUp() public {
-        // setup a StableSwap Well with an A parameter of 10.
         setupStableSwapWell();
         // Well.sol doesn't use wellData, so it should always return empty bytes
         wellData = new bytes(0);
@@ -28,7 +27,7 @@ contract WellBoreStableSwapTest is TestHelper {
         assertEq(well.pumps(), pumps);
     }
 
-    function test_wellData() public {
+    function test_wellData() public view {
         assertEq(well.wellData(), wellData);
     }
 
@@ -88,7 +87,7 @@ contract WellBoreStableSwapTest is TestHelper {
         bytes memory wellFunctionBytes = abi.encode(a, address(wellTokens[0]), address(wellTokens[1]));
 
         // Deploy a Well Function
-        wellFunction = Call(address(new CurveStableSwap2(address(1))), wellFunctionBytes);
+        wellFunction = Call(address(new Stable2(address(1))), wellFunctionBytes);
 
         // Etch the MockPump at each `target`
         Call[] memory pumps = new Call[](numberOfPumps);

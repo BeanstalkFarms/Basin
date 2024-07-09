@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, CurveStableSwap2, IERC20, Balances} from "test/TestHelper.sol";
+import {TestHelper, Stable2, IERC20, Balances} from "test/TestHelper.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
 contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
-    CurveStableSwap2 ss;
+    Stable2 ss;
     bytes constant data = "";
     uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
-        ss = new CurveStableSwap2(address(1));
+        ss = new Stable2(address(1));
         setupStableSwapWell();
 
         // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
@@ -100,8 +100,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
         afterRemoveLiquidity(before, action);
 
         assertLe(
-            well.totalSupply(),
-            CurveStableSwap2(wellFunction.target).calcLpTokenSupply(well.getReserves(), wellFunction.data)
+            well.totalSupply(), Stable2(wellFunction.target).calcLpTokenSupply(well.getReserves(), wellFunction.data)
         );
         checkInvariant(address(well));
     }

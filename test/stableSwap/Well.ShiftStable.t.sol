@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, Balances, ConstantProduct2, IERC20, CurveStableSwap2} from "test/TestHelper.sol";
+import {TestHelper, Balances, ConstantProduct2, IERC20, Stable2} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 

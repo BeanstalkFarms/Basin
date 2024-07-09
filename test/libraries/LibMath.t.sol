@@ -47,39 +47,39 @@ contract LibMathTest is TestHelper {
     //////////// SQRT ////////////
 
     /// @dev zero case
-    function testSqrt0() public {
+    function testSqrt0() public pure {
         assertEq(LibMath.sqrt(0), 0);
     }
 
     /// @dev perfect square case, small number
-    function testSqrtPerfectSmall() public {
+    function testSqrtPerfectSmall() public pure {
         assertEq(LibMath.sqrt(4), 2);
     }
 
     /// @dev perfect square case, large number
     /// 4e6 = sqrt(1.6e13)
-    function testSqrtPerfectLarge() public {
+    function testSqrtPerfectLarge() public pure {
         assertEq(LibMath.sqrt(16 * 1e12), 4 * 1e6);
     }
 
     /// @dev imperfect square case, small number with decimal < 0.5
-    function testSqrtImperfectSmallLt() public {
+    function testSqrtImperfectSmallLt() public pure {
         assertEq(LibMath.sqrt(2), 1); // rounds down from 1.414...
     }
 
     /// @dev imperfect square case, large number with decimal < 0.5
-    function testSqrtImperfectLargeLt() public {
+    function testSqrtImperfectLargeLt() public pure {
         assertEq(LibMath.sqrt(1250 * 1e6), 35_355); // rounds down from 35355.339...
     }
 
     /// @dev imperfect square case, small number with decimal >= 0.5
-    function testSqrtImperfectSmallGte() public {
+    function testSqrtImperfectSmallGte() public pure {
         assertEq(LibMath.sqrt(3), 1); // rounds down from 1.732...
     }
 
     /// @dev imperfect square case, small number with decimal >= 0.5
     /// 2828427124 = sqrt(8e18)
-    function testSqrtImperfectLargeGte() public {
+    function testSqrtImperfectLargeGte() public pure {
         assertEq(LibMath.sqrt(8 * 1e18), 2_828_427_124); // rounds down from 2.828...e9
     }
 
@@ -89,7 +89,7 @@ contract LibMathTest is TestHelper {
         LibMath.roundUpDiv(1, 0);
     }
 
-    function test_roundUpDiv() public {
+    function test_roundUpDiv() public pure {
         assertEq(LibMath.roundUpDiv(1, 3), 1);
         assertEq(LibMath.roundUpDiv(1, 2), 1);
         assertEq(LibMath.roundUpDiv(2, 3), 1);

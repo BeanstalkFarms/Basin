@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {TestHelper, CurveStableSwap2, Balances} from "test/TestHelper.sol";
+import {TestHelper, Stable2, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
@@ -13,12 +13,12 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
     bytes _data;
 
     // Setup
-    CurveStableSwap2 ss;
+    Stable2 ss;
 
     uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
-        ss = new CurveStableSwap2(address(1));
+        ss = new Stable2(address(1));
         setupStableSwapWell();
 
         _data = abi.encode(18, 18);

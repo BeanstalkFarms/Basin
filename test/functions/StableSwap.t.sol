@@ -3,9 +3,9 @@ pragma solidity ^0.8.17;
 
 import {console, TestHelper, IERC20} from "test/TestHelper.sol";
 import {WellFunctionHelper, IMultiFlowPumpWellFunction} from "./WellFunctionHelper.sol";
-import {CurveStableSwap2} from "src/functions/CurveStableSwap2.sol";
+import {Stable2} from "src/functions/Stable2.sol";
 
-/// @dev Tests the {CurveStableSwap2} Well function directly.
+/// @dev Tests the {Stable2} Well function directly.
 contract CurveStableSwapTest is WellFunctionHelper {
     /**
      * State A: Same decimals
@@ -44,7 +44,7 @@ contract CurveStableSwapTest is WellFunctionHelper {
     function setUp() public {
         IERC20[] memory _tokens = deployMockTokens(2);
         tokens = _tokens;
-        _function = IMultiFlowPumpWellFunction(new CurveStableSwap2(address(1)));
+        _function = IMultiFlowPumpWellFunction(new Stable2(address(1)));
 
         // encode well data with:
         // A parameter of 10,
