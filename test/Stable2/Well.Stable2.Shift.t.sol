@@ -5,11 +5,11 @@ import {TestHelper, Balances, ConstantProduct2, IERC20, Stable2} from "test/Test
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
-contract WellShiftStableTest is TestHelper {
+contract WellStable2ShiftTest is TestHelper {
     event Shift(uint256[] reserves, IERC20 toToken, uint256 minAmountOut, address recipient);
 
     function setUp() public {
-        setupStableSwapWell();
+        setupStable2Well();
     }
 
     /// @dev Shift excess token0 into token1.

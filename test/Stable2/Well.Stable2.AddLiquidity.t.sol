@@ -9,7 +9,7 @@ import {Math} from "oz/utils/math/Math.sol";
 
 contract WellStable2AddLiquidityTest is LiquidityHelper {
     function setUp() public {
-        setupStableSwapWell();
+        setupStable2Well();
     }
 
     /// @dev Liquidity is initially added in {TestHelper}; ensure that subsequent
@@ -41,7 +41,7 @@ contract WellStable2AddLiquidityTest is LiquidityHelper {
         amounts[1] = 0;
 
         uint256 amountOut = well.getAddLiquidityOut(amounts);
-        assertEq(amountOut, 9_998_815_419_300_522_901, "incorrect amt out");
+        assertEq(amountOut, 9_991_708_006_311_592_653, "incorrect amt out");
     }
 
     function test_addLiquidity_revertIf_minAmountOutTooHigh() public prank(user) {

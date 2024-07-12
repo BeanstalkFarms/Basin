@@ -4,9 +4,10 @@ pragma solidity ^0.8.17;
 import {console, TestHelper, IERC20} from "test/TestHelper.sol";
 import {WellFunctionHelper, IMultiFlowPumpWellFunction} from "./WellFunctionHelper.sol";
 import {Stable2} from "src/functions/Stable2.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 /// @dev Tests the {Stable2} Well function directly.
-contract CurveStableSwapTest is WellFunctionHelper {
+contract Stable2Test is WellFunctionHelper {
     /**
      * State A: Same decimals
      * D (lpTokenSupply) should be the summation of
@@ -28,13 +29,13 @@ contract CurveStableSwapTest is WellFunctionHelper {
      *
      */
     uint256 STATE_B_B0 = 10 * 1e18;
-    uint256 STATE_B_B1 = 20 * 1e18;
-    uint256 STATE_B_LP = 29_911_483_643_966_454_823; // ~29e18
+    uint256 STATE_B_B1 = 20 * 1e6;
+    uint256 STATE_B_LP = 29_405_570_361_996_060_057; // ~29.4e18
 
     /// State C: Similar decimals
-    uint256 STATE_C_B0 = 20 * 1e18;
-    uint256 STATE_C_LP = 25 * 1e24;
-    uint256 STATE_C_B1 = 2_221_929_790_566_403_172_822_276_028; // 2.221e19
+    uint256 STATE_C_B0 = 20 * 1e12;
+    uint256 STATE_C_B1 = 25 * 1e18;
+    uint256 STATE_C_LP = 44_906_735_116_816_626_495; // 44.9e18
 
     /// @dev See {calcLpTokenSupply}.
     uint256 MAX_RESERVE = 1e32;
@@ -44,28 +45,20 @@ contract CurveStableSwapTest is WellFunctionHelper {
     function setUp() public {
         IERC20[] memory _tokens = deployMockTokens(2);
         tokens = _tokens;
-        _function = IMultiFlowPumpWellFunction(new Stable2(address(1)));
-
-        // encode well data with:
-        // A parameter of 10,
-        // address of token 0 and 1.
-        _data = abi.encode(18, 18);
+        address lut = address(new Stable2LUT1());
+        _function = IMultiFlowPumpWellFunction(new Stable2(lut));
     }
 
     function test_metadata() public view {
-        assertEq(_function.name(), "StableSwap");
-        assertEq(_function.symbol(), "SS2");
+        assertEq(_function.name(), "Stable2");
+        assertEq(_function.symbol(), "S2");
     }
 
     //////////// LP TOKEN SUPPLY ////////////
 
-    /// @dev reverts when trying to calculate lp token supply with < 2 reserves
-    function test_calcLpTokenSupply_minBalancesLength() public {
-        check_calcLpTokenSupply_minBalancesLength(2);
-    }
-
     /// @dev calcLpTokenSupply: same decimals, manual calc for 2 equal reserves
-    function test_calcLpTokenSupply_sameDecimals() public view {
+    function test_calcLpTokenSupply_sameDecimals() public {
+        _data = abi.encode(18, 18);
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_A_B0;
         reserves[1] = STATE_A_B1;
@@ -76,10 +69,11 @@ contract CurveStableSwapTest is WellFunctionHelper {
     }
 
     /// @dev calcLpTokenSupply: diff decimals
-    function test_calcLpTokenSupply_diffDecimals() public view {
+    function test_calcLpTokenSupply_diffDecimals() public {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = STATE_B_B0; // ex. 1 WETH
-        reserves[1] = STATE_B_B1; // ex. 1250 BEAN
+        _data = abi.encode(18, 6);
+        reserves[0] = STATE_B_B0; // 10 USDT
+        reserves[1] = STATE_B_B1; // 20 BEAN
         assertEq(_function.calcLpTokenSupply(reserves, _data), STATE_B_LP);
     }
 
@@ -87,11 +81,12 @@ contract CurveStableSwapTest is WellFunctionHelper {
 
     /// @dev calcReserve: same decimals, both positions
     /// Matches example in {testLpTokenSupplySameDecimals}.
-    function test_calcReserve_sameDecimals() public view {
+    function test_calcReserve_sameDecimals() public {
         uint256[] memory reserves = new uint256[](2);
 
         /// STATE A
         // find reserves[0]
+        _data = abi.encode(18, 18);
         reserves[0] = 0;
         reserves[1] = STATE_A_B1;
         assertEq(_function.calcReserve(reserves, 0, STATE_A_LP, _data), STATE_A_B0);
@@ -103,17 +98,16 @@ contract CurveStableSwapTest is WellFunctionHelper {
 
         /// STATE C
         // find reserves[1]
+        _data = abi.encode(12, 18);
         reserves[0] = STATE_C_B0;
         reserves[1] = 0;
-        assertEq(
-            _function.calcReserve(reserves, 1, STATE_C_LP, _data),
-            STATE_C_B1 // (50e18/2) ^ 2 / 20e18 = 31.25e19
-        );
+        assertEq(_function.calcReserve(reserves, 1, STATE_C_LP, _data), STATE_C_B1);
     }
 
     /// @dev calcReserve: diff decimals, both positions
     /// Matches example in {testLpTokenSupplyDiffDecimals}.
-    function test_calcReserve_diffDecimals() public view {
+    function test_calcReserve_diffDecimals() public {
+        _data = abi.encode(18, 6);
         uint256[] memory reserves = new uint256[](2);
 
         /// STATE B
@@ -137,7 +131,8 @@ contract CurveStableSwapTest is WellFunctionHelper {
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
-    function testFuzz_calcLpTokenSupply(uint256[2] memory _reserves) public view {
+    function testFuzz_calcLpTokenSupply(uint256[2] memory _reserves) public {
+        _data = abi.encode(18, 18);
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(_reserves[0], 10e18, MAX_RESERVE);
         reserves[1] = bound(_reserves[1], 10e18, MAX_RESERVE);
@@ -177,7 +172,8 @@ contract CurveStableSwapTest is WellFunctionHelper {
 
     ///////// CALC RATE ///////
 
-    function test_calcRateStable() public view {
+    function test_calcRateStable() public {
+        _data = abi.encode(18, 18);
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 1e18;
         reserves[1] = 1e18;

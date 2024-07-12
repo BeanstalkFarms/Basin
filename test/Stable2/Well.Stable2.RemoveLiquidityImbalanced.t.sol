@@ -4,8 +4,9 @@ pragma solidity ^0.8.17;
 import {TestHelper, Stable2, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
+contract WellStable2RemoveLiquidityImbalancedTest is TestHelper {
     event RemoveLiquidity(uint256 lpAmountIn, uint256[] tokenAmountsOut, address recipient);
 
     uint256[] tokenAmountsOut;
@@ -18,8 +19,9 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
     uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
-        ss = new Stable2(address(1));
-        setupStableSwapWell();
+        address lut = address(new Stable2LUT1());
+        ss = new Stable2(lut);
+        setupStable2Well();
 
         _data = abi.encode(18, 18);
 
@@ -28,11 +30,11 @@ contract WellRemoveLiquidityImbalancedTestStableSwap is TestHelper {
         // Shared removal amounts
         tokenAmountsOut.push(500 * 1e18); // 500   token0
         tokenAmountsOut.push(506 * 1e17); //  50.6 token1
-        requiredLpAmountIn = 552_016_399_701_327_563_972; // ~552e18 LP needed to remove `tokenAmountsOut`
+        requiredLpAmountIn = 560_455_949_926_809_426_750; // ~552e18 LP needed to remove `tokenAmountsOut`
     }
 
     /// @dev Assumes use of ConstantProduct2
-    function test_getRemoveLiquidityImbalancedIn() public {
+    function test_getRemoveLiquidityImbalancedIn() public view {
         uint256 lpAmountIn = well.getRemoveLiquidityImbalancedIn(tokenAmountsOut);
         assertEq(lpAmountIn, requiredLpAmountIn);
     }

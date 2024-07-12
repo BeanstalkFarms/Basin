@@ -8,16 +8,16 @@ import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
 
-contract WellSwapFromStableSwapTest is SwapHelper {
+contract WellStable2SwapFromTest is SwapHelper {
     function setUp() public {
-        setupStableSwapWell();
+        setupStable2Well();
     }
 
     function test_getSwapOut() public view {
         uint256 amountIn = 10 * 1e18;
         uint256 amountOut = well.getSwapOut(tokens[0], tokens[1], amountIn);
 
-        assertEq(amountOut, 9_995_239_930_393_036_263); // ~0.05% slippage
+        assertEq(amountOut, 9_966_775_941_840_933_593);
     }
 
     function testFuzz_getSwapOut_revertIf_insufficientWellBalance(uint256 amountIn, uint256 i) public prank(user) {

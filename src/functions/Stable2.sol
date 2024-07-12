@@ -3,39 +3,12 @@
 pragma solidity ^0.8.17;
 
 import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
+import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
 import {SafeMath} from "oz/utils/math/SafeMath.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import "forge-std/console.sol";
-
-interface ILookupTable {
-    /**
-     * @notice the lookup table returns a series of data, given a price point:
-     * @param highPrice the closest price to the targetPrice, where targetPrice < highPrice.
-     * @param highPriceI reserve i such that `calcRate(reserve, i, j, data)` == highPrice.
-     * @param highPriceJ reserve j such that `calcRate(reserve, i, j, data)` == highPrice.
-     * @param lowPrice the closest price to the targetPrice, where targetPrice > lowPrice.
-     * @param lowPriceI reserve i such that `calcRate(reserve, i, j, data)` == lowPrice.
-     * @param lowPriceJ reserve j such that `calcRate(reserve, i, j, data)` == lowPrice.
-     * @param precision precision of reserve.
-     */
-    struct PriceData {
-        uint256 highPrice;
-        uint256 highPriceI;
-        uint256 highPriceJ;
-        uint256 lowPrice;
-        uint256 lowPriceI;
-        uint256 lowPriceJ;
-        uint256 precision;
-    }
-
-    // for liquidity, x stays the same, y changes (D changes)
-    // for swap, x changes, y changes, (D stays the same)
-    function getRatiosFromPriceLiquidity(uint256) external view returns (PriceData memory);
-    function getRatiosFromPriceSwap(uint256) external view returns (PriceData memory);
-    function getAParameter() external view returns (uint256);
-}
+import {console} from "forge-std/console.sol";
 /**
  * @author Brean
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
@@ -69,12 +42,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     // A precision
     uint256 constant A_PRECISION = 100;
 
-    // Precision that all pools tokens will be converted to.
-    uint256 constant POOL_PRECISION_DECIMALS = 18;
-
-    // Calc Rate Precision.
-    uint256 constant CALC_RATE_PRECISION = 1e24;
-
     // price Precision.
     uint256 constant PRICE_PRECISION = 1e6;
 
@@ -82,8 +49,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     uint256 immutable a;
 
     // Errors
-    error InvalidAParameter(uint256);
-    error InvalidTokens();
     error InvalidTokenDecimals();
     error InvalidLUT();
 
@@ -97,8 +62,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     constructor(address lut) {
         if (lut == address(0)) revert InvalidLUT();
         lookupTable = lut;
-        // a = ILookupTable(lut).getAParameter();
-        a = 10;
+        a = ILookupTable(lut).getAParameter();
     }
 
     /**
@@ -113,6 +77,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory reserves,
         bytes memory data
     ) public view returns (uint256 lpTokenSupply) {
+        if (reserves[0] == 0 && reserves[1] == 0) return 0;
         uint256[] memory decimals = decodeWellData(data);
         // scale reserves to 18 decimals.
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
@@ -250,7 +215,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     /**
      * @inheritdoc IMultiFlowPumpWellFunction
-     * @dev Returns a rate with 6 decimal precision.
+     * @dev Returns a rate with  decimal precision.
      * Requires a minimum scaled reserves of 1e12.
      * 6 decimals was chosen as higher decimals would require a higher minimum scaled reserve,
      * which is prohibtive for large value tokens.
@@ -267,14 +232,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // calc lp token supply (note: `scaledReserves` is scaled up, and does not require bytes).
         uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
 
-        // reverse if i is not 0.
-
         // add 1e6 to reserves:
         scaledReserves[j] += PRICE_PRECISION;
 
         // calculate new reserve 1:
         uint256 new_reserve1 = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
-        rate = (scaledReserves[0] - new_reserve1);
+        rate = (scaledReserves[i] - new_reserve1);
     }
 
     /**
@@ -307,18 +270,33 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // get ratios and price from the closest highest and lowest price from targetPrice:
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceLiquidity(pd.targetPrice);
 
+        // scale down lutData POC:
+        // TODO: remove
+        pd.lutData.precision = pd.lutData.precision * 1e6;
+        pd.lutData.highPriceJ = pd.lutData.highPriceJ / 1e18;
+        pd.lutData.lowPriceJ = pd.lutData.lowPriceJ / 1e18;
+
         // update scaledReserve[j] based on lowPrice:
+        console.log("scaledReserve[j] b4", scaledReserves[j]);
         scaledReserves[j] = scaledReserves[i] * pd.lutData.lowPriceJ / pd.lutData.precision;
+        console.log("scaledReserve[j] afta", scaledReserves[j]);
 
         // calculate max step size:
+        console.log("pd.lutData.highPriceJ", pd.lutData.highPriceJ);
+        console.log("pd.lutData.lowPriceJ", pd.lutData.lowPriceJ);
+
         pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.lowPriceJ;
+        console.log("pd.maxStepSize", pd.maxStepSize);
 
         for (uint256 k; k < 255; k++) {
+            console.log("i", i);
             // scale stepSize proporitional to distance from price:
             uint256 stepSize =
                 pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
+            console.log("stepSize", stepSize);
             // increment reserve by stepSize:
             scaledReserves[j] = scaledReserves[j] + stepSize;
+            console.log("scaledReserves[j]", scaledReserves[j]);
             // calculate new price from reserves:
             pd.currentPrice = calcRate(scaledReserves, i, j, data);
 
@@ -332,11 +310,11 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     }
 
     function name() external pure returns (string memory) {
-        return "StableSwap";
+        return "Stable2";
     }
 
     function symbol() external pure returns (string memory) {
-        return "SS2";
+        return "S2";
     }
 
     /**

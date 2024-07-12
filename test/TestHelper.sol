@@ -14,6 +14,7 @@ import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {Stable2} from "src/functions/Stable2.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 
@@ -127,15 +128,17 @@ abstract contract TestHelper is Test, WellDeployer {
         user2 = _user[1];
     }
 
-    function setupStableSwapWell() internal {
-        setupStableSwapWell(deployPumps(1), deployMockTokens(2));
+    function setupStable2Well() internal {
+        setupStable2Well(deployPumps(1), deployMockTokens(2));
     }
 
-    function setupStableSwapWell(Call[] memory _pumps, IERC20[] memory _tokens) internal {
+    function setupStable2Well(Call[] memory _pumps, IERC20[] memory _tokens) internal {
+        // deploy new LUT:
+        address lut = address(new Stable2LUT1());
         // encode wellFunction Data
         bytes memory wellFunctionData =
             abi.encode(MockToken(address(_tokens[0])).decimals(), MockToken(address(_tokens[1])).decimals());
-        Call memory _wellFunction = Call(address(new Stable2(address(1))), wellFunctionData);
+        Call memory _wellFunction = Call(address(new Stable2(lut)), wellFunctionData);
         tokens = _tokens;
         wellFunction = _wellFunction;
         vm.label(address(wellFunction.target), "Stable2 WF");
@@ -324,7 +327,7 @@ abstract contract TestHelper is Test, WellDeployer {
         assertEq(address(a), address(b), err);
     }
 
-    function assertEq(IERC20[] memory a, IERC20[] memory b) internal {
+    function assertEq(IERC20[] memory a, IERC20[] memory b) internal pure {
         assertEq(a, b, "IERC20[] mismatch");
     }
 
@@ -335,7 +338,7 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function assertEq(Call memory a, Call memory b) internal {
+    function assertEq(Call memory a, Call memory b) internal pure {
         assertEq(a, b, "Call mismatch");
     }
 
@@ -344,11 +347,11 @@ abstract contract TestHelper is Test, WellDeployer {
         assertEq(a.data, b.data, err);
     }
 
-    function assertEq(Call[] memory a, Call[] memory b) internal {
+    function assertEq(Call[] memory a, Call[] memory b) internal pure {
         assertEq(a, b, "Call[] mismatch");
     }
 
-    function assertEq(Call[] memory a, Call[] memory b, string memory err) internal {
+    function assertEq(Call[] memory a, Call[] memory b, string memory err) internal pure {
         assertEq(a.length, b.length, err);
         for (uint256 i; i < a.length; i++) {
             assertEq(a[i], b[i], err); // uses the prev overload

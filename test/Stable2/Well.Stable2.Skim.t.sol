@@ -3,12 +3,12 @@ pragma solidity ^0.8.17;
 
 import {TestHelper, Balances} from "test/TestHelper.sol";
 
-contract WellSkimTest is TestHelper {
+contract WellStable2SkimTest is TestHelper {
     function setUp() public {
-        setupStableSwapWell();
+        setupStable2Well();
     }
 
-    function test_initialized() public view {
+    function test_initialized() public {
         // Well should have liquidity
         Balances memory wellBalance = getBalances(address(well), well);
         assertEq(wellBalance.tokens[0], 1000e18);

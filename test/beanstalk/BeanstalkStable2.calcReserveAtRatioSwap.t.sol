@@ -4,21 +4,22 @@ pragma solidity ^0.8.17;
 import {console, TestHelper, IERC20} from "test/TestHelper.sol";
 import {Stable2} from "src/functions/Stable2.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
-contract BeanstalkStableSwapSwapTest is TestHelper {
+contract BeanstalkStable2SwapTest is TestHelper {
     IBeanstalkWellFunction _f;
     bytes data;
 
     //////////// SETUP ////////////
 
     function setUp() public {
-        _f = new Stable2(address(1));
-        IERC20[] memory _token = deployMockTokens(2);
-        data = abi.encode(10, address(_token[0]), address(_token[1]));
+        address lut = address(new Stable2LUT1());
+        _f = new Stable2(lut);
+        data = abi.encode(18, 18);
     }
 
-    function test_calcReserveAtRatioSwap_equal_equal() public {
+    function test_calcReserveAtRatioSwap_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         // calcReserveAtRatioSwap requires a minimum value of 10 ** token decimals.
         reserves[0] = 100e18;
@@ -34,7 +35,7 @@ contract BeanstalkStableSwapSwapTest is TestHelper {
         assertEq(reserve1, 100e18);
     }
 
-    function test_calcReserveAtRatioSwap_equal_diff() public {
+    function test_calcReserveAtRatioSwap_equal_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 50e18;
         reserves[1] = 100e18;
@@ -51,7 +52,7 @@ contract BeanstalkStableSwapSwapTest is TestHelper {
         console.log("reserve1", reserve1);
     }
 
-    function test_calcReserveAtRatioSwap_diff_equal() public {
+    function test_calcReserveAtRatioSwap_diff_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 100e18;
         reserves[1] = 100e18;
@@ -68,7 +69,7 @@ contract BeanstalkStableSwapSwapTest is TestHelper {
         console.log("reserve1", reserve1);
     }
 
-    function test_calcReserveAtRatioSwap_diff_diff() public {
+    function test_calcReserveAtRatioSwap_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 90; // bean
         reserves[1] = 110; // usdc

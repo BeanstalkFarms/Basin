@@ -4,24 +4,26 @@ pragma solidity ^0.8.20;
 import {console, TestHelper, IERC20} from "test/TestHelper.sol";
 import {Stable2} from "src/functions/Stable2.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 /// @dev Tests the {ConstantProduct2} Well function directly.
-contract Stable2LiquidityTest is TestHelper {
+contract BeanstalkStable2LiquidityTest is TestHelper {
     IBeanstalkWellFunction _f;
     bytes data;
 
     //////////// SETUP ////////////
 
     function setUp() public {
-        _f = new Stable2(address(1));
+        address lut = address(new Stable2LUT1());
+        _f = new Stable2(lut);
         deployMockTokens(2);
         data = abi.encode(18, 18);
     }
 
     function test_calcReserveAtRatioLiquidity_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 100;
-        reserves[1] = 100;
+        reserves[0] = 100e12;
+        reserves[1] = 100e12;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 1;
         ratios[1] = 1;
@@ -35,8 +37,8 @@ contract Stable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_equal_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 50;
-        reserves[1] = 100;
+        reserves[0] = 50e12;
+        reserves[1] = 100e12;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 1;
         ratios[1] = 1;
@@ -50,8 +52,8 @@ contract Stable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_diff_equal() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 100;
-        reserves[1] = 100;
+        reserves[0] = 100e12;
+        reserves[1] = 100e12;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 2;
         ratios[1] = 1;
@@ -65,8 +67,8 @@ contract Stable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 50;
-        reserves[1] = 100;
+        reserves[0] = 50e12;
+        reserves[1] = 100e12;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 2;
         ratios[1] = 1;

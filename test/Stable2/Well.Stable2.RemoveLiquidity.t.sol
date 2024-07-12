@@ -5,15 +5,17 @@ import {TestHelper, Stable2, IERC20, Balances} from "test/TestHelper.sol";
 import {Snapshot, AddLiquidityAction, RemoveLiquidityAction, LiquidityHelper} from "test/LiquidityHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
+contract WellStable2RemoveLiquidityTest is LiquidityHelper {
     Stable2 ss;
     bytes constant data = "";
     uint256 constant addedLiquidity = 1000 * 1e18;
 
     function setUp() public {
-        ss = new Stable2(address(1));
-        setupStableSwapWell();
+        address lut = address(new Stable2LUT1());
+        ss = new Stable2(lut);
+        setupStable2Well();
 
         // Add liquidity. `user` now has (2 * 1000 * 1e27) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);
@@ -21,7 +23,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
 
     /// @dev ensure that Well liq was initialized correctly in {setUp}
     /// currently, liquidity is added in {TestHelper} and above
-    function test_liquidityInitialized() public {
+    function test_liquidityInitialized() public view {
         IERC20[] memory tokens = well.tokens();
         for (uint256 i; i < tokens.length; i++) {
             assertEq(tokens[i].balanceOf(address(well)), initialLiquidity + addedLiquidity, "incorrect token reserve");
@@ -31,7 +33,7 @@ contract WellRemoveLiquidityTestStableSwap is LiquidityHelper {
 
     /// @dev getRemoveLiquidityOut: remove to equal amounts of underlying
     /// since the tokens in the Well are balanced, user receives equal amounts
-    function test_getRemoveLiquidityOut() public {
+    function test_getRemoveLiquidityOut() public view {
         uint256[] memory amountsOut = well.getRemoveLiquidityOut(1000 * 1e18);
         for (uint256 i; i < tokens.length; i++) {
             assertEq(amountsOut[i], 500 * 1e18, "incorrect getRemoveLiquidityOut");

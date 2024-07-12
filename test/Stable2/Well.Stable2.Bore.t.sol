@@ -4,11 +4,12 @@ pragma solidity ^0.8.17;
 import {TestHelper, Well, IERC20, Call, Balances} from "test/TestHelper.sol";
 import {MockPump} from "mocks/pumps/MockPump.sol";
 import {Stable2} from "src/functions/Stable2.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-contract WellBoreStableSwapTest is TestHelper {
+contract WellStable2BoreTest is TestHelper {
     /// @dev Bore a 2-token Well with Stable2 & several pumps.
     function setUp() public {
-        setupStableSwapWell();
+        setupStable2Well();
         // Well.sol doesn't use wellData, so it should always return empty bytes
         wellData = new bytes(0);
     }
@@ -31,7 +32,7 @@ contract WellBoreStableSwapTest is TestHelper {
         assertEq(well.wellData(), wellData);
     }
 
-    function test_aquifer() public {
+    function test_aquifer() public view {
         assertEq(well.aquifer(), address(aquifer));
     }
 
@@ -51,21 +52,21 @@ contract WellBoreStableSwapTest is TestHelper {
         assertEq(_aquifer, address(aquifer));
     }
 
-    function test_getReserves() public {
+    function test_getReserves() public view {
         assertEq(well.getReserves(), getBalances(address(well), well).tokens);
     }
 
     //////////// ERC20 LP Token ////////////
 
-    function test_name() public {
-        assertEq(well.name(), "TOKEN0:TOKEN1 StableSwap Well");
+    function test_name() public view {
+        assertEq(well.name(), "TOKEN0:TOKEN1 Stable2 Well");
     }
 
-    function test_symbol() public {
-        assertEq(well.symbol(), "TOKEN0TOKEN1SS2w");
+    function test_symbol() public view {
+        assertEq(well.symbol(), "TOKEN0TOKEN1S2w");
     }
 
-    function test_decimals() public {
+    function test_decimals() public view {
         assertEq(well.decimals(), 18);
     }
 
@@ -87,7 +88,8 @@ contract WellBoreStableSwapTest is TestHelper {
         bytes memory wellFunctionBytes = abi.encode(a, address(wellTokens[0]), address(wellTokens[1]));
 
         // Deploy a Well Function
-        wellFunction = Call(address(new Stable2(address(1))), wellFunctionBytes);
+        address lut = address(new Stable2LUT1());
+        wellFunction = Call(address(new Stable2(lut)), wellFunctionBytes);
 
         // Etch the MockPump at each `target`
         Call[] memory pumps = new Call[](numberOfPumps);

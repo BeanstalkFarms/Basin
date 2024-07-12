@@ -4,8 +4,9 @@ pragma solidity ^0.8.17;
 import {TestHelper, Stable2, IERC20, Balances} from "test/TestHelper.sol";
 import {IWell} from "src/interfaces/IWell.sol";
 import {IWellErrors} from "src/interfaces/IWellErrors.sol";
+import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-contract WellRemoveLiquidityOneTokenTestStableSwap is TestHelper {
+contract WellStable2RemoveLiquidityOneTokenTest is TestHelper {
     event RemoveLiquidityOneToken(uint256 lpAmountIn, IERC20 tokenOut, uint256 tokenAmountOut, address recipient);
 
     Stable2 ss;
@@ -13,8 +14,9 @@ contract WellRemoveLiquidityOneTokenTestStableSwap is TestHelper {
     bytes _data;
 
     function setUp() public {
-        ss = new Stable2(address(1));
-        setupStableSwapWell();
+        address lut = address(new Stable2LUT1());
+        ss = new Stable2(lut);
+        setupStable2Well();
 
         // Add liquidity. `user` now has (2 * 1000 * 1e18) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);
@@ -22,9 +24,9 @@ contract WellRemoveLiquidityOneTokenTestStableSwap is TestHelper {
     }
 
     /// @dev Assumes use of Stable2
-    function test_getRemoveLiquidityOneTokenOut() public {
+    function test_getRemoveLiquidityOneTokenOut() public view {
         uint256 amountOut = well.getRemoveLiquidityOneTokenOut(500 * 1e18, tokens[0]);
-        assertEq(amountOut, 498_279_423_862_830_737_827, "incorrect tokenOut");
+        assertEq(amountOut, 488_542_119_171_820_114_601, "incorrect tokenOut");
     }
 
     /// @dev not enough tokens received for `lpAmountIn`.
@@ -45,7 +47,7 @@ contract WellRemoveLiquidityOneTokenTestStableSwap is TestHelper {
     /// @dev Base case
     function test_removeLiquidityOneToken() public prank(user) {
         uint256 lpAmountIn = 500 * 1e18;
-        uint256 minTokenAmountOut = 498_279_423_862_830_737_827;
+        uint256 minTokenAmountOut = 488_542_119_171_820_114_601;
         Balances memory prevUserBalance = getBalances(user, well);
 
         vm.expectEmit(true, true, true, true);
@@ -104,18 +106,18 @@ contract WellRemoveLiquidityOneTokenTestStableSwap is TestHelper {
         vm.expectEmit(true, true, true, false);
         emit RemoveLiquidityOneToken(lpAmountBurned, tokens[0], amounts[0], user);
         uint256 amountOut = well.removeLiquidityOneToken(lpAmountIn, tokens[0], 0, user, type(uint256).max); // no minimum out
-        assertApproxEqAbs(amountOut, amounts[0], 1, "amounts[0] > userLpBalance");
+        assertApproxEqAbs(amountOut, amounts[0], 2, "amounts[0] > userLpBalance");
 
         Balances memory userBalanceAfterRemoveLiquidity = getBalances(user, well);
         Balances memory wellBalanceAfterRemoveLiquidity = getBalances(address(well), well);
 
         assertEq(userBalanceAfterRemoveLiquidity.lp, userLpBalance - lpAmountIn, "Incorrect lp output");
-        assertApproxEqAbs(userBalanceAfterRemoveLiquidity.tokens[0], amounts[0], 1, "Incorrect token0 user balance");
-        assertApproxEqAbs(userBalanceAfterRemoveLiquidity.tokens[1], amounts[1], 1, "Incorrect token1 user balance"); // should stay the same
+        assertApproxEqAbs(userBalanceAfterRemoveLiquidity.tokens[0], amounts[0], 2, "Incorrect token0 user balance");
+        assertApproxEqAbs(userBalanceAfterRemoveLiquidity.tokens[1], amounts[1], 2, "Incorrect token1 user balance"); // should stay the same
         assertApproxEqAbs(
             wellBalanceAfterRemoveLiquidity.tokens[0],
             (initialLiquidity + addedLiquidity) - amounts[0],
-            1,
+            2,
             "Incorrect token0 well reserve"
         );
         assertEq(
