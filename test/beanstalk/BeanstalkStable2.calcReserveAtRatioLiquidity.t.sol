@@ -67,8 +67,8 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 50e12;
-        reserves[1] = 100e12;
+        reserves[0] = 50e18;
+        reserves[1] = 100e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 2;
         ratios[1] = 1;

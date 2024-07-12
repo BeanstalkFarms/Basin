@@ -53,7 +53,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     error InvalidLUT();
 
     // Due to the complexity of `calcReserveAtRatioLiquidity` and `calcReserveAtRatioSwap`,
-    // a LUT table is used to reduce the complexity of the calculations on chain.
+    // a LUT is used to reduce the complexity of the calculations on chain.
     // the lookup table contract implements 3 functions:
     // 1. getRatiosFromPriceLiquidity(uint256) -> PriceData memory
     // 2. getRatiosFromPriceSwap(uint256) -> PriceData memory
@@ -66,7 +66,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     }
 
     /**
-     * @notice Calculate the amount of LP tokens minted when adding liquidity.
+     * @notice Calculate the amount of lp tokens given reserves.
      * D invariant calculation in non-overflowing integer operations iteratively
      * A * sum(x_i) * n**n + D = A * D * n**n + D**(n+1) / (n**n * prod(x_i))
      *
@@ -224,7 +224,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory reserves,
         uint256 i,
         uint256 j,
-        bytes calldata data
+        bytes memory data
     ) public view returns (uint256 rate) {
         uint256[] memory decimals = decodeWellData(data);
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
@@ -264,17 +264,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             pd.targetPrice = scaledRatios[j] * PRICE_PRECISION / scaledRatios[i];
         }
 
-        // calc currentPrice:
-        pd.currentPrice = calcRate(reserves, i, j, data);
-
         // get ratios and price from the closest highest and lowest price from targetPrice:
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceLiquidity(pd.targetPrice);
-
-        // scale down lutData POC:
-        // TODO: remove
-        pd.lutData.precision = pd.lutData.precision * 1e6;
-        pd.lutData.highPriceJ = pd.lutData.highPriceJ / 1e18;
-        pd.lutData.lowPriceJ = pd.lutData.lowPriceJ / 1e18;
 
         // update scaledReserve[j] based on lowPrice:
         console.log("scaledReserve[j] b4", scaledReserves[j]);
@@ -285,22 +276,34 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         console.log("pd.lutData.highPriceJ", pd.lutData.highPriceJ);
         console.log("pd.lutData.lowPriceJ", pd.lutData.lowPriceJ);
 
-        pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.lowPriceJ;
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.highPriceJ;
         console.log("pd.maxStepSize", pd.maxStepSize);
 
-        for (uint256 k; k < 255; k++) {
-            console.log("i", i);
+        // calc currentPrice:
+        console.log("scaledReserve[j]", scaledReserves[j]);
+        console.log("scaledReserve[i]", scaledReserves[i]);
+        pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+        console.log("initial currentPrice", pd.currentPrice);
+
+        for (uint256 k; k < 10; k++) {
+            console.log("k", k);
             // scale stepSize proporitional to distance from price:
+            console.log("pd.targetPrice", pd.targetPrice);
+            console.log("pd.currentPrice before stepping", pd.currentPrice);
             uint256 stepSize =
                 pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
             console.log("stepSize", stepSize);
             // increment reserve by stepSize:
+            console.log("scaledReserves[j] b4", scaledReserves[j]);
             scaledReserves[j] = scaledReserves[j] + stepSize;
-            console.log("scaledReserves[j]", scaledReserves[j]);
+            console.log("scaledReserves[i] af", scaledReserves[i]);
+            console.log("scaledReserves[j] af", scaledReserves[j]);
             // calculate new price from reserves:
-            pd.currentPrice = calcRate(scaledReserves, i, j, data);
+            pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
 
             // check if new price is within 1 of target price:
+            console.log("pd.currentPrice after step size", pd.currentPrice);
+            console.log("pd.targetPrice", pd.targetPrice);
             if (pd.currentPrice > pd.targetPrice) {
                 if (pd.currentPrice - pd.targetPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
             } else {
