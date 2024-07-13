@@ -42,8 +42,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     // A precision
     uint256 constant A_PRECISION = 100;
 
-    // price Precision.
+    // price precision.
     uint256 constant PRICE_PRECISION = 1e6;
+
+    // price threshold. more accurate pricing requires a lower threshold,
+    // at the cost of higher execution costs.
+    uint256 constant PRICE_THRESHOLD = 100; // 0.001%
 
     address immutable lookupTable;
     uint256 immutable a;
@@ -149,8 +153,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     /**
      * @inheritdoc IMultiFlowPumpWellFunction
-     * @dev `calcReserveAtRatioSwap` fetches the closes approxeimate ratios from the target price,
-     * and performs neuwtons method in order to
+     * @dev `calcReserveAtRatioSwap` fetches the closes approximate ratios from the target price,
+     * and performs newtons method in order to converge into a reserve.
      */
     function calcReserveAtRatioSwap(
         uint256[] memory reserves,
@@ -203,9 +207,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
             // check if new price is within 1 of target price:
             if (pd.currentPrice > pd.targetPrice) {
-                if (pd.currentPrice - pd.targetPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) return scaledReserves[j] / (10 ** decimals[j]);
             } else {
-                if (pd.targetPrice - pd.currentPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.targetPrice - pd.currentPrice <= PRICE_THRESHOLD) return scaledReserves[j] / (10 ** decimals[j]);
             }
 
             // calc currentPrice:
@@ -268,46 +272,51 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceLiquidity(pd.targetPrice);
 
         // update scaledReserve[j] based on lowPrice:
-        console.log("scaledReserve[j] b4", scaledReserves[j]);
+        // console.log("scaledReserve[j] b4", scaledReserves[j]);
         scaledReserves[j] = scaledReserves[i] * pd.lutData.lowPriceJ / pd.lutData.precision;
-        console.log("scaledReserve[j] afta", scaledReserves[j]);
+        // console.log("scaledReserve[j] afta", scaledReserves[j]);
 
-        // calculate max step size:
-        console.log("pd.lutData.highPriceJ", pd.lutData.highPriceJ);
-        console.log("pd.lutData.lowPriceJ", pd.lutData.lowPriceJ);
+        // calculatde max step size:
+        // console.log("pd.lutData.highPriceJ", pd.lutData.highPriceJ);
+        // console.log("pd.lutData.lowPriceJ", pd.lutData.lowPriceJ);
 
-        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.highPriceJ;
-        console.log("pd.maxStepSize", pd.maxStepSize);
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
+        // console.log("pd.maxStepSize", pd.maxStepSize);
 
         // calc currentPrice:
-        console.log("scaledReserve[j]", scaledReserves[j]);
-        console.log("scaledReserve[i]", scaledReserves[i]);
-        pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
-        console.log("initial currentPrice", pd.currentPrice);
+        // console.log("scaledReserve[j]", scaledReserves[j]);
+        // console.log("scaledReserve[i]", scaledReserves[i]);
+        pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
+        // console.log("initial currentPrice", pd.currentPrice);
 
-        for (uint256 k; k < 10; k++) {
-            console.log("k", k);
+        for (uint256 k; k < 255; k++) {
+            // console.log("----------------", k);
             // scale stepSize proporitional to distance from price:
-            console.log("pd.targetPrice", pd.targetPrice);
-            console.log("pd.currentPrice before stepping", pd.currentPrice);
+            // console.log("pd.targetPrice", pd.targetPrice);
+            // console.log("pd.currentPrice before stepping", pd.currentPrice);
             uint256 stepSize =
                 pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
-            console.log("stepSize", stepSize);
+            // console.log("stepSize", stepSize);
             // increment reserve by stepSize:
-            console.log("scaledReserves[j] b4", scaledReserves[j]);
+            // console.log("scaledReserves[j] b4", scaledReserves[j]);
             scaledReserves[j] = scaledReserves[j] + stepSize;
-            console.log("scaledReserves[i] af", scaledReserves[i]);
-            console.log("scaledReserves[j] af", scaledReserves[j]);
+            // console.log("scaledReserves[i] af", scaledReserves[i]);
+            // console.log("scaledReserves[j] af", scaledReserves[j]);
             // calculate new price from reserves:
-            pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+            // todo: j and i needs to be switched. Current LUT has it inverted
+            pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
 
-            // check if new price is within 1 of target price:
-            console.log("pd.currentPrice after step size", pd.currentPrice);
-            console.log("pd.targetPrice", pd.targetPrice);
+            // check if new price is within PRICE_THRESHOLD:
+            // console.log("pd.currentPrice after stepping", pd.currentPrice);
+            // console.log("target price:", pd.targetPrice);
             if (pd.currentPrice > pd.targetPrice) {
-                if (pd.currentPrice - pd.targetPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
+                    return scaledReserves[j] / (10 ** (18 - decimals[j]));
+                }
             } else {
-                if (pd.targetPrice - pd.currentPrice <= 1) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.targetPrice - pd.currentPrice <= PRICE_THRESHOLD) {
+                    return scaledReserves[j] / (10 ** (18 - decimals[j]));
+                }
             }
         }
     }

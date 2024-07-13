@@ -6,7 +6,7 @@ import {Stable2} from "src/functions/Stable2.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-/// @dev Tests the {ConstantProduct2} Well function directly.
+/// @dev Tests the {Stable2.CalcReserveAtRatioLiquidity} Well function directly.
 contract BeanstalkStable2LiquidityTest is TestHelper {
     IBeanstalkWellFunction _f;
     bytes data;
@@ -22,8 +22,8 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 100e12;
-        reserves[1] = 100e12;
+        reserves[0] = 100e18;
+        reserves[1] = 100e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 1;
         ratios[1] = 1;
@@ -31,14 +31,14 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 100);
-        assertEq(reserve1, 100);
+        assertEq(reserve0, 99.997220935618347533e18);
+        assertEq(reserve1, 99.997220935618347533e18);
     }
 
     function test_calcReserveAtRatioLiquidity_equal_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 50e12;
-        reserves[1] = 100e12;
+        reserves[0] = 50e18;
+        reserves[1] = 100e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 1;
         ratios[1] = 1;
@@ -46,14 +46,14 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 100);
-        assertEq(reserve1, 50);
+        assertEq(reserve0, 99.997220935618347533e18);
+        assertEq(reserve1, 49.998610467809173766e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_equal() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 100e12;
-        reserves[1] = 100e12;
+        reserves[0] = 1e18;
+        reserves[1] = 1e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 2;
         ratios[1] = 1;
@@ -61,61 +61,58 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 200);
-        assertEq(reserve1, 50);
+        assertEq(reserve0, 4.576172337359416271e18);
+        assertEq(reserve1, 0.218464636709548541e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 50e18;
-        reserves[1] = 100e18;
+        reserves[0] = 1e18;
+        reserves[1] = 1e18;
         uint256[] memory ratios = new uint256[](2);
-        ratios[0] = 2;
-        ratios[1] = 1;
+        ratios[0] = 12;
+        ratios[1] = 10;
+        // p = 1.2
 
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 200);
-        assertEq(reserve1, 25);
+        assertEq(reserve0, 1.685434381143450467e18);
+        assertEq(reserve1, 0.593220305288953143e18);
     }
 
-    function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public {
+    function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {
         for (uint256 i; i < 2; ++i) {
             // Upper bound is limited by stableSwap,
             // due to the stableswap reserves being extremely far apart.
             reserves[i] = bound(reserves[i], 1e18, 1e31);
-            ratios[i] = bound(ratios[i], 1e6, 1e18);
+            ratios[i] = bound(ratios[i], 1e18, 4e18);
         }
 
-        uint256 lpTokenSupply = _f.calcLpTokenSupply(uint2ToUintN(reserves), data);
-        console.log(lpTokenSupply);
-
-        uint256[] memory reservesOut = new uint256[](2);
+        // create 2 new reserves, one where reserve[0] is updated, and one where reserve[1] is updated.
+        uint256[] memory r0Updated = new uint256[](2);
+        r0Updated[1] = reserves[1];
+        uint256[] memory r1Updated = new uint256[](2);
+        r1Updated[0] = reserves[0];
         for (uint256 i; i < 2; ++i) {
-            reservesOut[i] = _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), data);
+            uint256 reserve = _f.calcReserveAtRatioLiquidity(uint2ToUintN(reserves), i, uint2ToUintN(ratios), data);
+            // update reserves.
+            if (i == 0) {
+                r0Updated[0] = reserve;
+            } else {
+                r1Updated[1] = reserve;
+            }
         }
 
-        // Precision is set to the minimum number of digits of the reserves out.
-        uint256 precision = numDigits(reservesOut[0]) > numDigits(reservesOut[1])
-            ? numDigits(reservesOut[1])
-            : numDigits(reservesOut[0]);
+        {
+            uint256 targetPrice = ratios[0] * 1e6 / ratios[1];
+            uint256 reservePrice0 = _f.calcRate(r0Updated, 0, 1, data);
+            uint256 reservePrice1 = _f.calcRate(r1Updated, 0, 1, data);
 
-        // Check ratio of each `reserveOut` to `reserve` with the ratio of `ratios`.
-        // If inequality doesn't hold, then reserves[1] will be zero
-        if (ratios[0] * reserves[1] >= ratios[1]) {
-            assertApproxEqRelN(reservesOut[0] * ratios[1], ratios[0] * reserves[1], 1, precision);
-        } else {
-            // Because `roundedDiv` is used. It could round up to 1.
-            assertApproxEqAbs(reservesOut[0], 0, 1, "reservesOut[0] should be zero");
-        }
-
-        // If inequality doesn't hold, then reserves[1] will be zero
-        if (reserves[0] * ratios[1] >= ratios[0]) {
-            assertApproxEqRelN(reserves[0] * ratios[1], ratios[0] * reservesOut[1], 1, precision);
-        } else {
-            // Because `roundedDiv` is used. It could round up to 1.
-            assertApproxEqAbs(reservesOut[1], 0, 1, "reservesOut[1] should be zero");
+            // estimated price and actual price are within 0.04% in the worst case.
+            assertApproxEqRel(targetPrice, reservePrice0, 0.0004e18, "targetPrice <> reservePrice0");
+            assertApproxEqRel(targetPrice, reservePrice1, 0.0004e18, "targetPrice <> reservePrice1");
+            assertApproxEqRel(reservePrice0, reservePrice1, 0.0004e18, "reservePrice0 <> reservePrice1");
         }
     }
 
