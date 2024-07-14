@@ -67,7 +67,7 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 1e18;
+        reserves[0] = 2e18;
         reserves[1] = 1e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 12;
@@ -108,6 +108,10 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
             uint256 targetPrice = ratios[0] * 1e6 / ratios[1];
             uint256 reservePrice0 = _f.calcRate(r0Updated, 0, 1, data);
             uint256 reservePrice1 = _f.calcRate(r1Updated, 0, 1, data);
+
+            uint256 targetPriceInverted = ratios[1] * 1e6 / ratios[0];
+            uint256 reservePrice0Inverted = _f.calcRate(r0Updated, 1, 0, data);
+            uint256 reservePrice1Inverted = _f.calcRate(r1Updated, 1, 0, data);
 
             // estimated price and actual price are within 0.04% in the worst case.
             assertApproxEqRel(targetPrice, reservePrice0, 0.0004e18, "targetPrice <> reservePrice0");

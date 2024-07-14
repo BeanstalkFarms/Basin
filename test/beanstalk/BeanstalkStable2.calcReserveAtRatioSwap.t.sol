@@ -6,7 +6,7 @@ import {Stable2} from "src/functions/Stable2.sol";
 import {IBeanstalkWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
-/// @dev Tests the {ConstantProduct2} Well function directly.
+/// @dev Tests the {Stable2} Well function directly.
 contract BeanstalkStable2SwapTest is TestHelper {
     IBeanstalkWellFunction _f;
     bytes data;

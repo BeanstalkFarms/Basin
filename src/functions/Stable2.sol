@@ -47,7 +47,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     // price threshold. more accurate pricing requires a lower threshold,
     // at the cost of higher execution costs.
-    uint256 constant PRICE_THRESHOLD = 100; // 0.001%
+    uint256 constant PRICE_THRESHOLD = 100; // 0.01%
 
     address immutable lookupTable;
     uint256 immutable a;
@@ -172,7 +172,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         {
             uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
             // calc target price with 6 decimal precision:
-            pd.targetPrice = scaledRatios[1] * PRICE_PRECISION / scaledRatios[0];
+            pd.targetPrice = scaledRatios[j] * PRICE_PRECISION / scaledRatios[i];
         }
 
         // get ratios and price from the closest highest and lowest price from targetPrice:
@@ -181,39 +181,73 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // perform an initial update on the reserves, such that `calcRate(reserves, i, j, data) == pd.lutData.lowPrice.
 
         // calculate lp token supply:
+        console.log("scaledReserves[i]", scaledReserves[i]);
+        console.log("scaledReserves[j]", scaledReserves[j]);
         uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
+        console.log("lpTokenSupply", lpTokenSupply);
 
         // lpTokenSupply / 2 gives the reserves at parity:
         uint256 parityReserve = lpTokenSupply / 2;
 
         // update `scaledReserves`.
-        scaledReserves[0] = parityReserve * pd.lutData.lowPriceI / pd.lutData.precision;
-        scaledReserves[1] = parityReserve * pd.lutData.lowPriceJ / pd.lutData.precision;
+        scaledReserves[i] = parityReserve * pd.lutData.lowPriceI / pd.lutData.precision;
+        scaledReserves[j] = parityReserve * pd.lutData.lowPriceJ / pd.lutData.precision;
+        console.log("scaledReserves[i]", scaledReserves[i]);
+        console.log("scaledReserves[j]", scaledReserves[j]);
+        console.log("pd.lutData.lowPriceI", pd.lutData.lowPriceI);
+        console.log("pd.lutData.lowPriceJ", pd.lutData.lowPriceJ);
+        console.log("pd.lutData.highPriceI", pd.lutData.highPriceI);
+        console.log("pd.lutData.highPriceJ", pd.lutData.highPriceJ);
 
         // calculate max step size:
-        pd.maxStepSize = (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ * reserves[j];
+        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
+        } else {
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
+        }
+        console.log("pd.maxStepSize", pd.maxStepSize);
 
         // initialize currentPrice:
         pd.currentPrice = pd.lutData.lowPrice;
+        console.log(pd.currentPrice);
+        console.log(calcRate(scaledReserves, j, i, abi.encode(18, 18))); // does not give lowPrice
+        console.log(calcRate(scaledReserves, i, j, abi.encode(18, 18))); // gives low price
 
         for (uint256 k; k < 255; k++) {
+            console.log("k", k);
+            console.log("pd.currentPrice", pd.currentPrice);
+            console.log("pd.targetPrice", pd.targetPrice);
             // scale stepSize proporitional to distance from price:
+
             uint256 stepSize =
                 pd.maxStepSize * (pd.targetPrice - pd.currentPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
+            scaledReserves[j] = scaledReserves[j] + stepSize;
+            console.log("stepSize", stepSize);
             // increment reserve by stepSize:
-            scaledReserves[j] = reserves[j] + stepSize;
+            scaledReserves[j] = scaledReserves[j] + stepSize;
+            console.log("scaledReserves[i]", scaledReserves[i]);
+            console.log("scaledReserves[j]", scaledReserves[j]);
+            console.log("here");
             // calculate scaledReserve[i]:
             scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
+            console.log("scaledReserves[i]", scaledReserves[i]);
+            console.log("scaledReserves[j]", scaledReserves[j]);
 
             // check if new price is within 1 of target price:
             if (pd.currentPrice > pd.targetPrice) {
-                if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
+                    return scaledReserves[j] / (10 ** (18 - decimals[j]));
+                }
             } else {
-                if (pd.targetPrice - pd.currentPrice <= PRICE_THRESHOLD) return scaledReserves[j] / (10 ** decimals[j]);
+                if (pd.targetPrice - pd.currentPrice <= PRICE_THRESHOLD) {
+                    return scaledReserves[j] / (10 ** (18 - decimals[j]));
+                }
             }
 
             // calc currentPrice:
-            pd.currentPrice = calcRate(reserves, i, j, data);
+            pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
+            console.log("pd.currentPrice", pd.currentPrice);
+            console.log("here");
         }
     }
 
@@ -266,6 +300,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
             // calc target price with 6 decimal precision:
             pd.targetPrice = scaledRatios[j] * PRICE_PRECISION / scaledRatios[i];
+            console.log("pd.targetPrice", pd.targetPrice);
         }
 
         // get ratios and price from the closest highest and lowest price from targetPrice:
@@ -284,10 +319,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // console.log("pd.maxStepSize", pd.maxStepSize);
 
         // calc currentPrice:
-        // console.log("scaledReserve[j]", scaledReserves[j]);
-        // console.log("scaledReserve[i]", scaledReserves[i]);
-        pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
-        // console.log("initial currentPrice", pd.currentPrice);
+        console.log("scaledReserve[j]", scaledReserves[j]);
+        console.log("scaledReserve[i]", scaledReserves[i]);
+        // BEAN/USDC -> BEAN is i, USDC is j
+        // pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
+        pd.currentPrice = pd.lutData.lowPrice;
+        console.log("initial currentPrice", pd.currentPrice);
 
         for (uint256 k; k < 255; k++) {
             // console.log("----------------", k);
@@ -307,8 +344,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             pd.currentPrice = calcRate(scaledReserves, j, i, abi.encode(18, 18));
 
             // check if new price is within PRICE_THRESHOLD:
-            // console.log("pd.currentPrice after stepping", pd.currentPrice);
-            // console.log("target price:", pd.targetPrice);
+            console.log("pd.currentPrice after stepping", pd.currentPrice);
+            console.log("target price:", pd.targetPrice);
             if (pd.currentPrice > pd.targetPrice) {
                 if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
                     return scaledReserves[j] / (10 ** (18 - decimals[j]));
