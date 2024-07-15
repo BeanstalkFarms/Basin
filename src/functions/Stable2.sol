@@ -6,9 +6,7 @@ import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces
 import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {LibMath} from "src/libraries/LibMath.sol";
-import {SafeMath} from "oz/utils/math/SafeMath.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {console} from "forge-std/console.sol";
 /**
  * @author Brean
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
@@ -34,7 +32,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     }
 
     using LibMath for uint256;
-    using SafeMath for uint256;
 
     // 2 token Pool.
     uint256 constant N = 2;
@@ -94,12 +91,11 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         for (uint256 i = 0; i < 255; i++) {
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
-            dP = dP.mul(lpTokenSupply).div(scaledReserves[0].mul(N));
-            dP = dP.mul(lpTokenSupply).div(scaledReserves[1].mul(N));
+            dP = dP * lpTokenSupply / (scaledReserves[0] * N);
+            dP = dP * lpTokenSupply / (scaledReserves[1] * N);
             uint256 prevReserves = lpTokenSupply;
-            lpTokenSupply = Ann.mul(sumReserves).div(A_PRECISION).add(dP.mul(N)).mul(lpTokenSupply).div(
-                Ann.sub(A_PRECISION).mul(lpTokenSupply).div(A_PRECISION).add(N.add(1).mul(dP))
-            );
+            lpTokenSupply = (Ann * sumReserves / A_PRECISION + (dP * N)) * lpTokenSupply
+                / (((Ann - A_PRECISION) * lpTokenSupply / A_PRECISION) + ((N + 1) * dP));
             // Equality with the precision of 1
             if (lpTokenSupply > prevReserves) {
                 if (lpTokenSupply - prevReserves <= 1) return lpTokenSupply;
@@ -140,11 +136,11 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             // scale reserve down to original precision
             if (reserve > prevReserve) {
                 if (reserve - prevReserve <= 1) {
-                    return reserve.div(10 ** (18 - decimals[j]));
+                    return reserve / (10 ** (18 - decimals[j]));
                 }
             } else {
                 if (prevReserve - reserve <= 1) {
-                    return reserve.div(10 ** (18 - decimals[j]));
+                    return reserve / (10 ** (18 - decimals[j]));
                 }
             }
         }
@@ -208,12 +204,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
         PriceData memory pd;
-
-        {
-            uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
-            // calc target price with 6 decimal precision:
-            pd.targetPrice = scaledRatios[i] * PRICE_PRECISION / scaledRatios[j];
-        }
+        uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
+        // calc target price with 6 decimal precision:
+        pd.targetPrice = scaledRatios[i] * PRICE_PRECISION / scaledRatios[j];
 
         // get ratios and price from the closest highest and lowest price from targetPrice:
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceSwap(pd.targetPrice);
@@ -285,11 +278,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
         PriceData memory pd;
-        {
-            uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
-            // calc target price with 6 decimal precision:
-            pd.targetPrice = scaledRatios[i] * PRICE_PRECISION / scaledRatios[j];
-        }
+        uint256[] memory scaledRatios = getScaledReserves(ratios, decimals);
+        // calc target price with 6 decimal precision:
+        pd.targetPrice = scaledRatios[i] * PRICE_PRECISION / scaledRatios[j];
 
         // get ratios and price from the closest highest and lowest price from targetPrice:
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceLiquidity(pd.targetPrice);
@@ -383,7 +374,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 c,
         uint256 lpTokenSupply
     ) private pure returns (uint256) {
-        return reserve.mul(reserve).add(c).div(reserve.mul(2).add(b).sub(lpTokenSupply));
+        return (reserve * reserve + c) / (reserve * 2 + b - lpTokenSupply);
     }
 
     function getBandC(
@@ -391,8 +382,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 lpTokenSupply,
         uint256 reserves
     ) private pure returns (uint256 c, uint256 b) {
-        c = lpTokenSupply.mul(lpTokenSupply).div(reserves.mul(N)).mul(lpTokenSupply).mul(A_PRECISION).div(Ann.mul(N));
-        b = reserves.add(lpTokenSupply.mul(A_PRECISION).div(Ann));
+        c = lpTokenSupply * lpTokenSupply / (reserves * N) * lpTokenSupply * A_PRECISION / (Ann * N);
+        b = reserves + (lpTokenSupply * A_PRECISION / Ann);
     }
 
     /**
