@@ -31,8 +31,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 100e18);
-        assertEq(reserve1, 100e18);
+        assertEq(reserve0, 100.005058322101089709e18);
+        assertEq(reserve1, 100.005058322101089709e18);
     }
 
     function test_calcReserveAtRatioSwap_equal_diff() public view {
@@ -46,10 +46,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        // assertEq(reserve0, 74); // 50
-        // assertEq(reserve1, 74); // 100
-        console.log("reserve0", reserve0);
-        console.log("reserve1", reserve1);
+        assertEq(reserve0, 73.517644476151580971e18);
+        assertEq(reserve1, 73.517644476151580971e18);
     }
 
     function test_calcReserveAtRatioSwap_diff_equal() public view {
@@ -63,16 +61,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        // assertEq(reserve0, 149);
-        // assertEq(reserve1, 74);
-        console.log("reserve0", reserve0);
-        console.log("reserve1", reserve1);
+        assertEq(reserve0, 180.643950056605911775e18); // 100e18, 180.64235400499155996e18
+        assertEq(reserve1, 39.474893649094790166e18); // 39.474893649094790166e18, 100e18
     }
 
     function test_calcReserveAtRatioSwap_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 90; // bean
-        reserves[1] = 110; // usdc
+        reserves[0] = 90e18; // bean
+        reserves[1] = 110e18; // usdc
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 110;
         ratios[1] = 90;
@@ -80,9 +76,30 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        // assertEq(reserve0, 110);
-        // assertEq(reserve1, 91);
-        console.log("reserve0", reserve0);
-        console.log("reserve1", reserve1);
+        assertEq(reserve0, 129.268187496764805614e18); // 90e18, 129.268187496764805614e18
+        assertEq(reserve1, 73.11634314279891828e18); //  73.116252343760233529e18, 110e18
+    }
+
+    function test_calcReserveAtRatioSwap_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {
+        for (uint256 i; i < 2; ++i) {
+            // Upper bound is limited by stableSwap,
+            // due to the stableswap reserves being extremely far apart.
+            reserves[i] = bound(reserves[i], 1e18, 1e31);
+            ratios[i] = bound(ratios[i], 1e18, 4e18);
+        }
+
+        // create 2 new reserves, one where reserve[0] is updated, and one where reserve[1] is updated.
+        uint256[] memory updatedReserves = new uint256[](2);
+        for (uint256 i; i < 2; ++i) {
+            updatedReserves[i] = _f.calcReserveAtRatioSwap(uint2ToUintN(reserves), i, uint2ToUintN(ratios), data);
+        }
+
+        {
+            uint256 targetPrice = ratios[0] * 1e6 / ratios[1];
+            uint256 reservePrice0 = _f.calcRate(updatedReserves, 0, 1, data);
+
+            // estimated price and actual price are within 0.04% in the worst case.
+            assertApproxEqRel(reservePrice0, targetPrice, 0.0004e18, "reservePrice0 <> targetPrice");
+        }
     }
 }

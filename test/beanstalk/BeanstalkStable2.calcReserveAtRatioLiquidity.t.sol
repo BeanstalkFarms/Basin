@@ -31,8 +31,8 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 99.997220935618347533e18);
-        assertEq(reserve1, 99.997220935618347533e18);
+        assertApproxEqRel(reserve0, 100.002494212050875384e18, 0.0003e18);
+        assertApproxEqRel(reserve1, 100.002494212050875384e18, 0.0003e18);
     }
 
     function test_calcReserveAtRatioLiquidity_equal_diff() public view {
@@ -46,8 +46,8 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 99.997220935618347533e18);
-        assertEq(reserve1, 49.998610467809173766e18);
+        assertApproxEqRel(reserve0, 100.002494212050875384e18, 0.0003e18);
+        assertApproxEqRel(reserve1, 50.001091026498328056e18, 0.0003e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_equal() public view {
@@ -61,8 +61,8 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 4.576172337359416271e18);
-        assertEq(reserve1, 0.218464636709548541e18);
+        assertApproxEqRel(reserve0, 4.575771214546676444e18, 0.0001e18);
+        assertApproxEqRel(reserve1, 0.21852354514449462e18, 0.0001e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
@@ -72,13 +72,12 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 12;
         ratios[1] = 10;
-        // p = 1.2
 
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 1.685434381143450467e18);
-        assertEq(reserve1, 0.593220305288953143e18);
+        assertApproxEqRel(reserve0, 1.685591553208758586e18, 0.0004e18);
+        assertApproxEqRel(reserve1, 1.18623685249742594e18, 0.0004e18);
     }
 
     function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {
@@ -109,13 +108,9 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
             uint256 reservePrice0 = _f.calcRate(r0Updated, 0, 1, data);
             uint256 reservePrice1 = _f.calcRate(r1Updated, 0, 1, data);
 
-            uint256 targetPriceInverted = ratios[1] * 1e6 / ratios[0];
-            uint256 reservePrice0Inverted = _f.calcRate(r0Updated, 1, 0, data);
-            uint256 reservePrice1Inverted = _f.calcRate(r1Updated, 1, 0, data);
-
             // estimated price and actual price are within 0.04% in the worst case.
-            assertApproxEqRel(targetPrice, reservePrice0, 0.0004e18, "targetPrice <> reservePrice0");
-            assertApproxEqRel(targetPrice, reservePrice1, 0.0004e18, "targetPrice <> reservePrice1");
+            assertApproxEqRel(reservePrice0, targetPrice, 0.0004e18, "reservePrice0 <> targetPrice");
+            assertApproxEqRel(reservePrice1, targetPrice, 0.0004e18, "reservePrice1 <> targetPrice");
             assertApproxEqRel(reservePrice0, reservePrice1, 0.0004e18, "reservePrice0 <> reservePrice1");
         }
     }

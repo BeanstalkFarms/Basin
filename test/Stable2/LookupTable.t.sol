@@ -12,7 +12,7 @@ contract LookupTableTest is TestHelper {
         lookupTable = new Stable2LUT1();
     }
 
-    function test_getAParameter() public {
+    function test_getAParameter() public view {
         uint256 a = lookupTable.getAParameter();
         assertEq(a, 1);
     }
@@ -45,16 +45,12 @@ contract LookupTableTest is TestHelper {
         // pick a value close to the min (P=0.01)
         uint256 currentPrice = 0.015e6;
         pd = lookupTable.getRatiosFromPriceSwap(currentPrice);
-        console.log("pd.lowPrice: %e", pd.lowPrice);
-        console.log("pd.highPrice: %e", pd.highPrice);
     }
 
     function test_getRatiosFromPriceSwapExtremeHigh() public {
         // pick a value close to the max (P=9.85)
         uint256 currentPrice = 9.84e6;
         pd = lookupTable.getRatiosFromPriceSwap(currentPrice);
-        console.log("pd.lowPrice: %e", pd.lowPrice);
-        console.log("pd.highPrice: %e", pd.highPrice);
     }
 
     function testFail_getRatiosFromPriceSwapExtremeLow() public {
@@ -64,8 +60,8 @@ contract LookupTableTest is TestHelper {
     }
 
     function testFail_getRatiosFromPriceSwapExtremeHigh() public {
-        // pick an out of bounds value (P>9.85)
-        uint256 currentPrice = 10e6;
+        // pick an out of bounds value (P>10.37)
+        uint256 currentPrice = 11e6;
         pd = lookupTable.getRatiosFromPriceSwap(currentPrice);
     }
 
@@ -97,16 +93,12 @@ contract LookupTableTest is TestHelper {
         // pick a value close to the min (P=0.01)
         uint256 currentPrice = 0.015e6;
         pd = lookupTable.getRatiosFromPriceLiquidity(currentPrice);
-        console.log("pd.lowPrice: %e", pd.lowPrice);
-        console.log("pd.highPrice: %e", pd.highPrice);
     }
 
     function test_getRatiosFromPriceLiquidityExtremeHigh() public {
         // pick a value close to the max (P=9.92)
         uint256 currentPrice = 9.91e6;
         pd = lookupTable.getRatiosFromPriceLiquidity(currentPrice);
-        console.log("pd.lowPrice: %e", pd.lowPrice);
-        console.log("pd.highPrice: %e", pd.highPrice);
     }
 
     function testFail_getRatiosFromPriceLiquidityExtremeLow() public {
@@ -116,8 +108,8 @@ contract LookupTableTest is TestHelper {
     }
 
     function testFail_getRatiosFromPriceLiquidityExtremeHigh() public {
-        // pick an out of bounds value (P>9.85)
-        uint256 currentPrice = 10e6;
+        // pick an out of bounds value (P>10.37)
+        uint256 currentPrice = 11e6;
         pd = lookupTable.getRatiosFromPriceLiquidity(currentPrice);
     }
 
@@ -141,6 +133,7 @@ contract LookupTableTest is TestHelper {
             pd = lookupTable.getRatiosFromPriceLiquidity(currentPrice);
             assertGe(pd.highPrice, currentPrice);
             assertLt(pd.lowPrice, currentPrice);
+            assertLt(pd.highPriceJ / pd.precision, 1e18);
             currentPrice += 0.01e6;
         }
     }
