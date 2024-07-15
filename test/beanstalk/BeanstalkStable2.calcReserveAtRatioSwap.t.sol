@@ -21,7 +21,6 @@ contract BeanstalkStable2SwapTest is TestHelper {
 
     function test_calcReserveAtRatioSwap_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
-        // calcReserveAtRatioSwap requires a minimum value of 10 ** token decimals.
         reserves[0] = 100e18;
         reserves[1] = 100e18;
         uint256[] memory ratios = new uint256[](2);
@@ -98,8 +97,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
             uint256 targetPrice = ratios[0] * 1e6 / ratios[1];
             uint256 reservePrice0 = _f.calcRate(updatedReserves, 0, 1, data);
 
-            // estimated price and actual price are within 0.04% in the worst case.
-            assertApproxEqRel(reservePrice0, targetPrice, 0.0004e18, "reservePrice0 <> targetPrice");
+            // estimated price and actual price are within 0.01% in the worst case.
+            assertApproxEqRel(reservePrice0, targetPrice, 0.0001e18, "reservePrice0 <> targetPrice");
         }
     }
 }
