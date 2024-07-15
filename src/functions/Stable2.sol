@@ -170,12 +170,25 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // calc lp token supply (note: `scaledReserves` is scaled up, and does not require bytes).
         uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
 
-        // add 1e6 to reserves:
-        scaledReserves[j] += PRICE_PRECISION;
+        rate = _calcRate(scaledReserves, i, j, lpTokenSupply);
+    }
 
-        // calculate new reserve 1:
-        uint256 new_reserve1 = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
-        rate = (scaledReserves[i] - new_reserve1);
+    /**
+     * @notice internal calcRate function.
+     */
+    function _calcRate(
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        uint256 lpTokenSupply
+    ) internal view returns (uint256 rate) {
+        // add 1e6 to reserves:
+        uint256[] memory _reserves = new uint256[](2);
+        _reserves[i] = reserves[i];
+        _reserves[j] = reserves[j] + PRICE_PRECISION;
+
+        // calculate rate:
+        rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, abi.encode(18, 18));
     }
 
     /**
@@ -234,14 +247,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         for (uint256 k; k < 255; k++) {
-            // scale stepSize proporitional to distance from price:
-
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
+
             // calculate scaledReserve[i]:
             scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
-
             // calc currentPrice:
-            pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+            pd.currentPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
 
             // check if new price is within 1 of target price:
             if (pd.currentPrice > pd.targetPrice) {

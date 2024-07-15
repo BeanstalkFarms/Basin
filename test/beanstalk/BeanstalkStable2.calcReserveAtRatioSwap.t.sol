@@ -61,14 +61,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 180.643950056605911775e18); // 100e18, 180.64235400499155996e18
-        assertEq(reserve1, 39.474893649094790166e18); // 39.474893649094790166e18, 100e18
+        assertEq(reserve0, 180.643950056605911775e18); // 180.64235400499155996e18, 100e18
+        assertEq(reserve1, 39.474875366590812867e18); // 100e18, 39.474875366590812867e18
     }
 
     function test_calcReserveAtRatioSwap_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
-        reserves[0] = 90e18; // bean
-        reserves[1] = 110e18; // usdc
+        reserves[0] = 90e18;
+        reserves[1] = 110e18;
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 110;
         ratios[1] = 90;
@@ -76,8 +76,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 129.268187496764805614e18); // 90e18, 129.268187496764805614e18
-        assertEq(reserve1, 73.11634314279891828e18); //  73.116252343760233529e18, 110e18
+        assertEq(reserve0, 129.268187496764805614e18); // 129.268187496764805614e18, 90e18
+        assertEq(reserve1, 73.11634314279891828e18); // 110e18, 73.116252343760233529e18
     }
 
     function test_calcReserveAtRatioSwap_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {
