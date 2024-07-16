@@ -17,7 +17,7 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         address lut = address(new Stable2LUT1());
         _f = new Stable2(lut);
         deployMockTokens(2);
-        data = abi.encode(18, 18);
+        data = abi.encode(18, 18, 0, 0);
     }
 
     function test_calcReserveAtRatioLiquidity_equal_equal() public view {
@@ -28,11 +28,20 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+        uint256[] memory reserves0 = new uint256[](2);
+        reserves0[0] = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        reserves0[1] = reserves[1];
 
-        assertApproxEqRel(reserve0, 100.002494212050875384e18, 0.0003e18);
-        assertApproxEqRel(reserve1, 100.002494212050875384e18, 0.0003e18);
+        uint256[] memory reserves1 = new uint256[](2);
+        reserves1[0] = reserves[0];
+        reserves1[1] = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+
+        assertApproxEqRel(reserves0[0], 100.002494212050875384e18, 0.0003e18);
+        assertApproxEqRel(reserves1[1], 100.002494212050875384e18, 0.0003e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves1, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
     }
 
     function test_calcReserveAtRatioLiquidity_equal_diff() public view {
@@ -43,11 +52,20 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+        uint256[] memory reserves0 = new uint256[](2);
+        reserves0[0] = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        reserves0[1] = reserves[1];
 
-        assertApproxEqRel(reserve0, 100.002494212050875384e18, 0.0003e18);
-        assertApproxEqRel(reserve1, 50.001091026498328056e18, 0.0003e18);
+        uint256[] memory reserves1 = new uint256[](2);
+        reserves1[0] = reserves[0];
+        reserves1[1] = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+
+        assertApproxEqRel(reserves0[0], 100.002494212050875384e18, 0.0003e18);
+        assertApproxEqRel(reserves1[1], 50.001091026498328056e18, 0.0003e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves1, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_equal() public view {
@@ -58,11 +76,20 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         ratios[0] = 2;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+        uint256[] memory reserves0 = new uint256[](2);
+        reserves0[0] = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        reserves0[1] = reserves[1];
 
-        assertApproxEqRel(reserve0, 4.575771214546676444e18, 0.0001e18);
-        assertApproxEqRel(reserve1, 0.21852354514449462e18, 0.0001e18);
+        uint256[] memory reserves1 = new uint256[](2);
+        reserves1[0] = reserves[0];
+        reserves1[1] = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+
+        assertApproxEqRel(reserves0[0], 4.575771214546676444e18, 0.0001e18);
+        assertApproxEqRel(reserves1[1], 0.21852354514449462e18, 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves1, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
     }
 
     function test_calcReserveAtRatioLiquidity_diff_diff() public view {
@@ -73,11 +100,20 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         ratios[0] = 12;
         ratios[1] = 10;
 
-        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+        uint256[] memory reserves0 = new uint256[](2);
+        reserves0[0] = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+        reserves0[1] = reserves[1];
 
-        assertApproxEqRel(reserve0, 1.685591553208758586e18, 0.0004e18);
-        assertApproxEqRel(reserve1, 1.18623685249742594e18, 0.0004e18);
+        uint256[] memory reserves1 = new uint256[](2);
+        reserves1[0] = reserves[0];
+        reserves1[1] = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
+
+        assertApproxEqRel(reserves0[0], 1.685591553208758586e18, 0.0004e18);
+        assertApproxEqRel(reserves1[1], 1.18623685249742594e18, 0.0004e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves1, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(reserves0, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
     }
 
     function test_calcReserveAtRatioLiquidity_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {

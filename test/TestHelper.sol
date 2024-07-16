@@ -129,15 +129,20 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     function setupStable2Well() internal {
-        setupStable2Well(deployPumps(1), deployMockTokens(2));
+        setupStable2Well(deployPumps(1), deployMockTokens(2), 0, 0);
     }
 
-    function setupStable2Well(Call[] memory _pumps, IERC20[] memory _tokens) internal {
+    function setupStable2WellWithVirtualPrice(uint256 vp, uint256 vpIndex) internal {
+        setupStable2Well(deployPumps(1), deployMockTokens(2), vp, vpIndex);
+    }
+
+    function setupStable2Well(Call[] memory _pumps, IERC20[] memory _tokens, uint256 vp, uint256 vpIndex) internal {
         // deploy new LUT:
         address lut = address(new Stable2LUT1());
         // encode wellFunction Data
-        bytes memory wellFunctionData =
-            abi.encode(MockToken(address(_tokens[0])).decimals(), MockToken(address(_tokens[1])).decimals());
+        bytes memory wellFunctionData = abi.encode(
+            MockToken(address(_tokens[0])).decimals(), MockToken(address(_tokens[1])).decimals(), vp, vpIndex
+        );
         Call memory _wellFunction = Call(address(new Stable2(lut)), wellFunctionData);
         tokens = _tokens;
         wellFunction = _wellFunction;

@@ -16,7 +16,7 @@ contract BeanstalkStable2SwapTest is TestHelper {
     function setUp() public {
         address lut = address(new Stable2LUT1());
         _f = new Stable2(lut);
-        data = abi.encode(18, 18);
+        data = abi.encode(18, 18, 0, 0);
     }
 
     function test_calcReserveAtRatioSwap_equal_equal() public view {
@@ -27,11 +27,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
+        uint256[] memory new_reserves = new uint256[](2);
+        new_reserves[0] = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
+        new_reserves[1] = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 100.005058322101089709e18);
-        assertEq(reserve1, 100.005058322101089709e18);
+        assertEq(new_reserves[0], 100.005058322101089709e18);
+        assertEq(new_reserves[1], 100.005058322101089709e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
     }
 
     function test_calcReserveAtRatioSwap_equal_diff() public view {
@@ -42,11 +45,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         ratios[0] = 1;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
+        uint256[] memory new_reserves = new uint256[](2);
+        new_reserves[0] = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
+        new_reserves[1] = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 73.517644476151580971e18);
-        assertEq(reserve1, 73.517644476151580971e18);
+        assertEq(new_reserves[0], 73.517644476151580971e18);
+        assertEq(new_reserves[1], 73.517644476151580971e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
     }
 
     function test_calcReserveAtRatioSwap_diff_equal() public view {
@@ -57,11 +63,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         ratios[0] = 2;
         ratios[1] = 1;
 
-        uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
+        uint256[] memory new_reserves = new uint256[](2);
+        new_reserves[0] = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
+        new_reserves[1] = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 180.643950056605911775e18); // 180.64235400499155996e18, 100e18
-        assertEq(reserve1, 39.474875366590812867e18); // 100e18, 39.474875366590812867e18
+        assertEq(new_reserves[0], 180.643950056605911775e18); // 180.64235400499155996e18, 100e18
+        assertEq(new_reserves[1], 39.474875366590812867e18); // 100e18, 39.474875366590812867e18
+        assertApproxEqRel(_f.calcRate(new_reserves, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
     }
 
     function test_calcReserveAtRatioSwap_diff_diff() public view {
@@ -72,11 +81,14 @@ contract BeanstalkStable2SwapTest is TestHelper {
         ratios[0] = 110;
         ratios[1] = 90;
 
-        uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
-        uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
+        uint256[] memory new_reserves = new uint256[](2);
+        new_reserves[0] = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
+        new_reserves[1] = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 129.268187496764805614e18); // 129.268187496764805614e18, 90e18
-        assertEq(reserve1, 73.11634314279891828e18); // 110e18, 73.116252343760233529e18
+        assertEq(new_reserves[0], 129.268187496764805614e18); // 129.268187496764805614e18, 90e18
+        assertEq(new_reserves[1], 73.11634314279891828e18); // 110e18, 73.116252343760233529e18
+        assertApproxEqRel(_f.calcRate(new_reserves, 0, 1, data), ratios[0] * 1e6 / ratios[1], 0.0001e18);
+        assertApproxEqRel(_f.calcRate(new_reserves, 1, 0, data), ratios[1] * 1e6 / ratios[0], 0.0001e18);
     }
 
     function test_calcReserveAtRatioSwap_fuzz(uint256[2] memory reserves, uint256[2] memory ratios) public view {
