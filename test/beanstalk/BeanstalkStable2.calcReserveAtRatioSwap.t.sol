@@ -16,7 +16,10 @@ contract BeanstalkStable2SwapTest is TestHelper {
     function setUp() public {
         address lut = address(new Stable2LUT1());
         _f = new Stable2(lut);
-        data = abi.encode(18, 18, 0, 0);
+        uint256[] memory _data = new uint256[](2);
+        _data[0] = 18;
+        _data[1] = 18;
+        data = abi.encode(_data);
     }
 
     function test_calcReserveAtRatioSwap_equal_equal() public view {

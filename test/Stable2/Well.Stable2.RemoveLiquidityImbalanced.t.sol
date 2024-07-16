@@ -23,7 +23,10 @@ contract WellStable2RemoveLiquidityImbalancedTest is TestHelper {
         ss = new Stable2(lut);
         setupStable2Well();
 
-        _data = abi.encode(18, 18);
+        uint256[] memory data = new uint256[](2);
+        data[0] = 18;
+        data[1] = 18;
+        _data = abi.encode(data);
 
         // Add liquidity. `user` now has (2 * 1000 * 1e18) LP tokens
         addLiquidityEqualAmount(user, addedLiquidity);

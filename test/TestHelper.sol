@@ -140,9 +140,15 @@ abstract contract TestHelper is Test, WellDeployer {
         // deploy new LUT:
         address lut = address(new Stable2LUT1());
         // encode wellFunction Data
-        bytes memory wellFunctionData = abi.encode(
-            MockToken(address(_tokens[0])).decimals(), MockToken(address(_tokens[1])).decimals(), vp, vpIndex
-        );
+        uint256[] memory data = new uint256[](2);
+        data[0] = MockToken(address(_tokens[0])).decimals();
+        data[1] = MockToken(address(_tokens[1])).decimals();
+        bytes memory wellFunctionData;
+        if (vp == 0) {
+            wellFunctionData = abi.encode(data);
+        } else {
+            wellFunctionData = abi.encode(data, vp, vpIndex);
+        }
         Call memory _wellFunction = Call(address(new Stable2(lut)), wellFunctionData);
         tokens = _tokens;
         wellFunction = _wellFunction;

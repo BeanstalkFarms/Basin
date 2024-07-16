@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ILookupTable} from "src/interfaces/ILookupTable.sol";
@@ -9,7 +9,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {console} from "forge-std/console.sol";
 /**
- * @author Brean
+ * @author Brean, DeadManWalking
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
  * developed by curve.
  *
@@ -23,15 +23,9 @@ import {console} from "forge-std/console.sol";
  *
  * @dev Limited to tokens with a maximum of 18 decimals.
  * The Stable2 Well Function takes in the following data from the well:
- * - Token0 decimals
- * - Token1 decimals
- * - VirtualPrice
- * - VirtualPriceIndex
- * if `virtualPrice` is 0, it is assumed to be 1e6.
- * Data is encoded as `(uint256, uint256, uint256, uint256)`.
- * a `virtualPrice` parameter is used to allow for the pairing of like-valued tokens.
- * Future development can be done to implement a virtual price that changes over time
- * (For example, to support a token that accures fees).
+ * - Token[0,1] decimals
+ * Data is encoded as `(uint256[])`.
+ * if no data is encoded, defaults to ([18,18]).
  */
 
 contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
@@ -55,9 +49,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     // price threshold. more accurate pricing requires a lower threshold,
     // at the cost of higher execution costs.
-    uint256 constant PRICE_THRESHOLD = 100; // 0.01%
-
-    bytes constant DEFAULT_DATA = abi.encode(18, 18, 0, 0);
+    uint256 constant PRICE_THRESHOLD = 100; // 0.01%;
 
     address immutable lookupTable;
     uint256 immutable a;
@@ -93,7 +85,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     ) public view returns (uint256 lpTokenSupply) {
         if (reserves[0] == 0 && reserves[1] == 0) return 0;
         // scale reserves to 18 decimals.
-        (uint256[] memory scaledReserves,) = getScaledReservesAndDecimals(reserves, data);
+        uint256[] memory scaledReserves;
+        if (data.length == 0) {
+            scaledReserves = reserves;
+        } else {
+            (scaledReserves,) = getScaledReservesAndDecimals(reserves, data);
+        }
 
         uint256 Ann = a * N * N * A_PRECISION;
 
@@ -132,7 +129,16 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 lpTokenSupply,
         bytes memory data
     ) public view returns (uint256 reserve) {
-        (uint256[] memory scaledReserves, uint256[] memory decimals) = getScaledReservesAndDecimals(reserves, data);
+        uint256[] memory scaledReserves;
+        uint256[] memory decimals;
+        if (data.length == 0) {
+            scaledReserves = reserves;
+            decimals = new uint256[](2);
+            decimals[0] = 18;
+            decimals[1] = 18;
+        } else {
+            (scaledReserves, decimals) = getScaledReservesAndDecimals(reserves, data);
+        }
 
         // avoid stack too deep errors.
         (uint256 c, uint256 b) =
@@ -171,11 +177,13 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 j,
         bytes memory data
     ) public view returns (uint256 rate) {
-        (uint256[] memory scaledReserves,) = getScaledReservesAndDecimals(reserves, data);
-
-        // calc lp token supply (note: `scaledReserves` is scaled up, and does not require bytes).
-        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, DEFAULT_DATA);
-
+        uint256[] memory scaledReserves;
+        if (data.length == 0) {
+            scaledReserves = reserves;
+        } else {
+            (scaledReserves,) = getScaledReservesAndDecimals(reserves, data);
+        }
+        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, new bytes(0));
         rate = _calcRate(scaledReserves, i, j, lpTokenSupply);
     }
 
@@ -194,7 +202,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         _reserves[j] = reserves[j] + PRICE_PRECISION;
 
         // calculate rate:
-        rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, DEFAULT_DATA);
+        rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, new bytes(0));
     }
 
     /**
@@ -221,7 +229,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         pd.lutData = ILookupTable(lookupTable).getRatiosFromPriceSwap(pd.targetPrice);
 
         // calculate lp token supply:
-        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, DEFAULT_DATA);
+        uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, new bytes(0));
 
         // lpTokenSupply / 2 gives the reserves at parity:
         uint256 parityReserve = lpTokenSupply / 2;
@@ -252,7 +260,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
 
             // calculate scaledReserve[i]:
-            scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, DEFAULT_DATA);
+            scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, new bytes(0));
             // calc currentPrice:
             pd.currentPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
 
@@ -315,11 +323,10 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         } else {
             pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
         }
-
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
             // calculate new price from reserves:
-            pd.currentPrice = calcRate(scaledReserves, i, j, DEFAULT_DATA);
+            pd.currentPrice = calcRate(scaledReserves, i, j, new bytes(0));
 
             // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
@@ -334,41 +341,30 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
     }
 
-    function name() external pure returns (string memory) {
+    function name() external pure virtual returns (string memory) {
         return "Stable2";
     }
 
-    function symbol() external pure returns (string memory) {
+    function symbol() external pure virtual returns (string memory) {
         return "S2";
     }
 
     /**
      * @notice decodes the data encoded in the well.
      * @return decimals an array of the decimals of the tokens in the well.
-     * @dev `virtualPrice` must have 6 decimal precision.
      */
-    function decodeWellData(bytes memory data)
-        public
-        pure
-        returns (uint256[] memory decimals, uint256 virtualPrice, uint256 virtualPriceIndex)
-    {
-        uint256 decimal0;
-        uint256 decimal1;
-        (decimal0, decimal1, virtualPrice, virtualPriceIndex) = abi.decode(data, (uint256, uint256, uint256, uint256));
+    function getDecimalsFromData(bytes memory data) public pure virtual returns (uint256[] memory decimals) {
+        if (data.length == 0) {
+            decimals = new uint256[](2);
+            decimals[0] = 18;
+            decimals[1] = 18;
+        }
+        (decimals) = abi.decode(data, (uint256[]));
 
         // if decimals returns 0, assume 18 decimals.
-        if (decimal0 == 0) {
-            decimal0 = 18;
+        for (uint256 i; i < 2; i++) {
+            if (decimals[i] > 18) revert InvalidTokenDecimals();
         }
-        if (decimal0 == 0) {
-            decimal1 = 18;
-        }
-        // if decimals exceed 18, revert.
-        if (decimal0 > 18 || decimal1 > 18) revert InvalidTokenDecimals();
-
-        decimals = new uint256[](2);
-        decimals[0] = decimal0;
-        decimals[1] = decimal1;
     }
 
     /**
@@ -378,18 +374,11 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     function getScaledReservesAndDecimals(
         uint256[] memory reserves,
         bytes memory data
-    ) internal pure returns (uint256[] memory scaledReserves, uint256[] memory decimals) {
-        uint256 virtualPrice;
-        uint256 virtualPriceIndex;
-        (decimals, virtualPrice, virtualPriceIndex) = decodeWellData(data);
-        if (virtualPrice == 0) virtualPrice = PRICE_PRECISION;
+    ) internal pure virtual returns (uint256[] memory scaledReserves, uint256[] memory decimals) {
+        decimals = getDecimalsFromData(data);
         scaledReserves = new uint256[](2);
         for (uint256 i; i < 2; i++) {
-            if (i == virtualPriceIndex) {
-                scaledReserves[i] = reserves[i] * virtualPrice / PRICE_PRECISION * 10 ** (18 - decimals[i]);
-            } else {
-                scaledReserves[i] = reserves[i] * 10 ** (18 - decimals[i]);
-            }
+            scaledReserves[i] = reserves[i] * 10 ** (18 - decimals[i]);
         }
     }
 

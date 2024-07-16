@@ -56,7 +56,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     /// @dev calcLpTokenSupply: diff decimals
-    function test_calcLpTokenSupply_diffDecimals() public {
+    function test_calcLpTokenSupply_diffDecimals() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_B_B0; // ex. 1 WETH
         reserves[1] = STATE_B_B1; // ex. 1250 BEAN
@@ -70,7 +70,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
 
     /// @dev calcReserve: same decimals, both positions
     /// Matches example in {testLpTokenSupplySameDecimals}.
-    function test_calcReserve_sameDecimals() public {
+    function test_calcReserve_sameDecimals() public view {
         uint256[] memory reserves = new uint256[](2);
 
         /// STATE A

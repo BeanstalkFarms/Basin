@@ -6,6 +6,7 @@ import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 
 /**
  * @title BasinStableswapLookupTable
+ * @author DeadmanWalking
  * @dev This contract implements a lookup table of estimations used in the stableswap well function
  * to calculate the token ratios in a stableswap pool to return to peg.
  * It uses an if ladder structured as a binary tree to store and retrieve
