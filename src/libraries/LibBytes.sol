@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title LibBytes
- * @author Publius
+ * @author Brendan
  * @notice Contains byte operations used during storage reads & writes.
  *
  * {LibBytes} tightly packs an array of `uint256` values into `n / 2` storage

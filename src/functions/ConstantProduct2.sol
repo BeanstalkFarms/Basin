@@ -9,7 +9,7 @@ import {Math} from "oz/utils/math/Math.sol";
 
 /**
  * @title ConstantProduct2
- * @author Publius
+ * @author Brendan
  * @notice Gas efficient Constant Product pricing function for Wells with 2 tokens.
  * @dev Constant Product Wells with 2 tokens use the formula:
  *  `b_0 * b_1 = s^2`

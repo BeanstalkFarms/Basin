@@ -5,7 +5,7 @@ import {IERC20} from "test/integration/IntegrationTestHelper.sol";
 
 /**
  * @title IPipeline
- * @author Publius
+ * @author Brendan
  * @notice Pipeline Interface – Pipeline creates a sandbox to execute any series of function calls on any series of protocols through \term{Pipe} functions.
  * Any assets left in Pipeline between transactions can be transferred out by any account.
  * Users Pipe a series of PipeCalls that each execute a function call to another protocol through Pipeline.

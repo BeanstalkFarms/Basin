@@ -17,7 +17,7 @@ import {LibMath} from "src/libraries/LibMath.sol";
 
 /**
  * @title MultiFlowPump
- * @author Publius
+ * @author Brendan
  * @notice Stores a geometric EMA and cumulative geometric SMA for each reserve.
  * @dev A Pump designed for use in Beanstalk with 2 tokens.
  *

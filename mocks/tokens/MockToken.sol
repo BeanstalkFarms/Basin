@@ -8,7 +8,7 @@ import "oz/token/ERC20/extensions/ERC20Burnable.sol";
 import "oz/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 /**
- * @author Publius
+ * @author Brendan
  * @title Mock Token
  */
 contract MockToken is ERC20Burnable, ERC20Permit {

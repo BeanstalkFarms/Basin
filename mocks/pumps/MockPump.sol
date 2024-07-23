@@ -7,7 +7,7 @@ pragma solidity ^0.8.20;
 import "src/interfaces/pumps/IPump.sol";
 
 /**
- * @author Publius
+ * @author Brendan
  * @title Mock Pump
  */
 contract MockPump is IPump {

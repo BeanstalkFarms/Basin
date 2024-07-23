@@ -10,7 +10,7 @@ import {LibClone} from "src/libraries/LibClone.sol";
 
 /**
  * @title Aquifer
- * @author Publius, Silo Chad, Brean
+ * @author Brendan, Silo Chad, Brean
  * @notice Aquifer is a permissionless Well registry and factory.
  * @dev Aquifer deploys Wells by cloning a pre-deployed Well implementation.
  */

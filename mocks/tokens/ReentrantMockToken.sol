@@ -7,7 +7,7 @@ pragma solidity ^0.8.20;
 import "mocks/tokens/MockToken.sol";
 
 /**
- * @author Publius
+ * @author Brendan
  * @title Reentrant Mock Token
  */
 contract ReentrantMockToken is MockToken {
