@@ -31,7 +31,6 @@ abstract contract WellDeployer {
         _well = Well(Aquifer(_aquifer).boreWell(_wellImplementation, immutableData, initData, _salt));
     }
 
-
     /**
      * @notice Encode the Well's immutable data, and deploys the well. Modified for upgradeable wells.
      * @param _aquifer The address of the Aquifer which will deploy this Well.

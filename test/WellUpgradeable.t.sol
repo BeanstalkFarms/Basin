@@ -12,7 +12,6 @@ import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 import {LibWellUpgradeableConstructor} from "src/libraries/LibWellUpgradeableConstructor.sol";
-import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {MockToken} from "mocks/tokens/MockToken.sol";
 import {WellDeployer} from "script/helpers/WellDeployer.sol";
 import {ERC1967Proxy} from "oz/proxy/ERC1967/ERC1967Proxy.sol";
@@ -44,16 +43,13 @@ contract WellUpgradeTest is Test, WellDeployer {
         user = makeAddr("user");
 
         // Mint tokens
-        MockToken(address(tokens[0])).mint(user, 10000000000000000);
-        MockToken(address(tokens[1])).mint(user, 10000000000000000);
+        MockToken(address(tokens[0])).mint(user, 10_000_000_000_000_000);
+        MockToken(address(tokens[1])).mint(user, 10_000_000_000_000_000);
         // Well Function
         IWellFunction cp2 = new ConstantProduct2();
         vm.label(address(cp2), "CP2");
         wellFunctionAddress = address(cp2);
-        Call memory wellFunction = Call(
-            address(cp2),
-            abi.encode("beanstalkFunction")
-        );
+        Call memory wellFunction = Call(address(cp2), abi.encode("beanstalkFunction"));
 
         // Pump
         IPump mockPump = new MockPump();
@@ -69,14 +65,8 @@ contract WellUpgradeTest is Test, WellDeployer {
         initialOwner = makeAddr("owner");
 
         // Well
-        WellUpgradeable well = encodeAndBoreWellUpgradeable(
-            aquifer,
-            wellImplementation,
-            tokens,
-            wellFunction,
-            pumps,
-            bytes32(0)
-        );
+        WellUpgradeable well =
+            encodeAndBoreWellUpgradeable(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
         wellAddress = address(well);
         vm.label(wellAddress, "upgradeableWell");
         // Sum up of what is going on here
@@ -102,10 +92,7 @@ contract WellUpgradeTest is Test, WellDeployer {
         vm.startPrank(initialOwner);
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(well), // implementation address
-            LibWellUpgradeableConstructor.encodeWellInitFunctionCall(
-                tokens,
-                wellFunction
-            )  // init data
+            LibWellUpgradeableConstructor.encodeWellInitFunctionCall(tokens, wellFunction) // init data
         );
         vm.stopPrank();
         proxyAddress = address(proxy);
@@ -140,12 +127,8 @@ contract WellUpgradeTest is Test, WellDeployer {
     }
 
     function testProxyGetWellFunction() public {
-        Call memory proxyWellFunction = WellUpgradeable(proxyAddress)
-            .wellFunction();
-        assertEq(
-            address(proxyWellFunction.target),
-            address(wellFunctionAddress)
-        );
+        Call memory proxyWellFunction = WellUpgradeable(proxyAddress).wellFunction();
+        assertEq(address(proxyWellFunction.target), address(wellFunctionAddress));
         assertEq(proxyWellFunction.data, abi.encode("beanstalkFunction"));
     }
 
@@ -160,10 +143,7 @@ contract WellUpgradeTest is Test, WellDeployer {
 
     function testProxyNumTokens() public {
         uint256 expectedNumTokens = 2;
-        assertEq(
-            expectedNumTokens,
-            WellUpgradeable(proxyAddress).numberOfTokens()
-        );
+        assertEq(expectedNumTokens, WellUpgradeable(proxyAddress).numberOfTokens());
     }
 
     ///////////////// Interaction test //////////////////
@@ -173,18 +153,8 @@ contract WellUpgradeTest is Test, WellDeployer {
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1000;
         amounts[1] = 1000;
-        WellUpgradeable(wellAddress).addLiquidity(
-            amounts,
-            0,
-            user,
-            type(uint256).max
-        );
-        WellUpgradeable(proxyAddress).addLiquidity(
-            amounts,
-            0,
-            user,
-            type(uint256).max
-        );
+        WellUpgradeable(wellAddress).addLiquidity(amounts, 0, user, type(uint256).max);
+        WellUpgradeable(proxyAddress).addLiquidity(amounts, 0, user, type(uint256).max);
         assertEq(amounts, WellUpgradeable(proxyAddress).getReserves());
         vm.stopPrank();
     }
@@ -218,16 +188,10 @@ contract WellUpgradeTest is Test, WellDeployer {
         Call memory wellFunction = Call(wellFunctionAddress, abi.encode("2"));
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call(mockPumpAddress, abi.encode("2"));
-        // create new mock Well Implementation: 
+        // create new mock Well Implementation:
         address wellImpl = address(new MockWellUpgradeable());
-        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
-            aquifer,
-            wellImpl,
-            tokens,
-            wellFunction,
-            pumps,
-            bytes32(abi.encode("2"))
-        );
+        WellUpgradeable well2 =
+            encodeAndBoreWellUpgradeable(aquifer, wellImpl, tokens, wellFunction, pumps, bytes32(abi.encode("2")));
         vm.label(address(well2), "upgradeableWell2");
 
         vm.startPrank(initialOwner);

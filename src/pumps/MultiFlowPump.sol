@@ -29,7 +29,6 @@ import {LibMath} from "src/libraries/LibMath.sol";
  * Note: If an `update` call is made with a reserve of 0, the Geometric mean oracles will be set to 0.
  * Each Well is responsible for ensuring that an `update` call cannot be made with a reserve of 0.
  */
-
 contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumulativePump {
     using LibLastReserveBytes for bytes32;
     using LibBytes16 for bytes32;
