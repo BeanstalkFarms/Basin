@@ -14,9 +14,10 @@ contract Stable2LUT1 is ILookupTable {
     /**
      * @notice Returns the amplification coefficient (A parameter) used to calculate the estimates.
      * @return The amplification coefficient.
+     * @dev 2 decimal precision.
      */
     function getAParameter() external pure returns (uint256) {
-        return 1;
+        return 100;
     }
 
     /**

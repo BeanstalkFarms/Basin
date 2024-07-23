@@ -80,7 +80,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         // scale reserves to 18 decimals.
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
-        uint256 Ann = a * N * N * A_PRECISION;
+        uint256 Ann = a * N * N;
 
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
         if (sumReserves == 0) return 0;
@@ -121,8 +121,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
         // avoid stack too deep errors.
-        (uint256 c, uint256 b) =
-            getBandC(a * N * N * A_PRECISION, lpTokenSupply, j == 0 ? scaledReserves[1] : scaledReserves[0]);
+        (uint256 c, uint256 b) = getBandC(a * N * N, lpTokenSupply, j == 0 ? scaledReserves[1] : scaledReserves[0]);
         reserve = lpTokenSupply;
         uint256 prevReserve;
 

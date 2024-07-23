@@ -15,9 +15,9 @@ contract LookupTableTest is TestHelper {
         lookupTable = new Stable2LUT1();
     }
 
-    function test_getAParameter() public {
+    function test_getAParameter() public view {
         uint256 a = lookupTable.getAParameter();
-        assertEq(a , 1);
+        assertEq(a , 100);
     }
 
     //////////////// getRatiosFromPriceSwap ////////////////
