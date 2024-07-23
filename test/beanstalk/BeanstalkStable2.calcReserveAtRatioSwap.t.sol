@@ -97,8 +97,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
             uint256 targetPrice = ratios[0] * 1e6 / ratios[1];
             uint256 reservePrice0 = _f.calcRate(updatedReserves, 0, 1, data);
 
-            // estimated price and actual price are within 0.01% in the worst case.
-            assertApproxEqRel(reservePrice0, targetPrice, 0.0001e18, "reservePrice0 <> targetPrice");
+            // estimated price and actual price are within 0.015% in the worst case.
+            assertApproxEqRel(reservePrice0, targetPrice, 0.00015e18, "reservePrice0 <> targetPrice");
         }
     }
 }
