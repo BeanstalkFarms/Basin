@@ -62,10 +62,7 @@ contract Stable2Test is WellFunctionHelper {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_A_B0;
         reserves[1] = STATE_A_B1;
-        assertEq(
-            _function.calcLpTokenSupply(reserves, _data),
-            STATE_A_LP // sqrt(10e18 * 10e18) * 2
-        );
+        assertEq(_function.calcLpTokenSupply(reserves, _data), STATE_A_LP);
     }
 
     /// @dev calcLpTokenSupply: diff decimals
@@ -114,18 +111,12 @@ contract Stable2Test is WellFunctionHelper {
         // find reserves[0]
         reserves[0] = 0;
         reserves[1] = STATE_B_B1;
-        assertEq(
-            _function.calcReserve(reserves, 0, STATE_B_LP, _data),
-            STATE_B_B0 // (70710678118654 / 2)^2 / 1250e6 = ~1e18
-        );
+        assertEq(_function.calcReserve(reserves, 0, STATE_B_LP, _data), STATE_B_B0);
 
         // find reserves[1]
-        reserves[0] = STATE_B_B0; // placeholder
-        reserves[1] = 0; // ex. 1250 BEAN
-        assertEq(
-            _function.calcReserve(reserves, 1, STATE_B_LP, _data),
-            STATE_B_B1 // (70710678118654 / 2)^2 / 1e18 = 1250e6
-        );
+        reserves[0] = STATE_B_B0;
+        reserves[1] = 0;
+        assertEq(_function.calcReserve(reserves, 1, STATE_B_LP, _data), STATE_B_B1);
     }
 
     //////////// LP TOKEN SUPPLY ////////////

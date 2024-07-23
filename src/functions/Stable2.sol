@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces/IBeanstalkWellFunction.sol";
 import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
-import {LibMath} from "src/libraries/LibMath.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 /**
  * @author Brean
@@ -30,8 +29,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 maxStepSize;
         ILookupTable.PriceData lutData;
     }
-
-    using LibMath for uint256;
 
     // 2 token Pool.
     uint256 constant N = 2;
@@ -167,24 +164,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 lpTokenSupply = calcLpTokenSupply(scaledReserves, abi.encode(18, 18));
 
         rate = _calcRate(scaledReserves, i, j, lpTokenSupply);
-    }
-
-    /**
-     * @notice internal calcRate function.
-     */
-    function _calcRate(
-        uint256[] memory reserves,
-        uint256 i,
-        uint256 j,
-        uint256 lpTokenSupply
-    ) internal view returns (uint256 rate) {
-        // add 1e6 to reserves:
-        uint256[] memory _reserves = new uint256[](2);
-        _reserves[i] = reserves[i];
-        _reserves[j] = reserves[j] + PRICE_PRECISION;
-
-        // calculate rate:
-        rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, abi.encode(18, 18));
     }
 
     /**
@@ -326,14 +305,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
     }
 
-    function name() external pure returns (string memory) {
-        return "Stable2";
-    }
-
-    function symbol() external pure returns (string memory) {
-        return "S2";
-    }
-
     /**
      * @notice decodes the data encoded in the well.
      * @return decimals an array of the decimals of the tokens in the well.
@@ -353,6 +324,32 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         decimals = new uint256[](2);
         decimals[0] = decimal0;
         decimals[1] = decimal1;
+    }
+
+    function name() external pure returns (string memory) {
+        return "Stable2";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "S2";
+    }
+
+    /**
+     * @notice internal calcRate function.
+     */
+    function _calcRate(
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        uint256 lpTokenSupply
+    ) internal view returns (uint256 rate) {
+        // add 1e6 to reserves:
+        uint256[] memory _reserves = new uint256[](2);
+        _reserves[i] = reserves[i];
+        _reserves[j] = reserves[j] + PRICE_PRECISION;
+
+        // calculate rate:
+        rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, abi.encode(18, 18));
     }
 
     /**
