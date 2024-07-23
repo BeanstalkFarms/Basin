@@ -44,7 +44,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         _disableInitializers();
     }
 
-    function init(string memory _name, string memory _symbol) external initializer {
+    function init(string memory _name, string memory _symbol) external virtual initializer {
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ReentrancyGuard_init();
