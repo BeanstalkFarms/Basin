@@ -11,6 +11,7 @@ import {IPump} from "src/interfaces/pumps/IPump.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {LibBytes} from "src/libraries/LibBytes.sol";
 import {ClonePlus} from "src/utils/ClonePlus.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Well
@@ -297,13 +298,16 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         IERC20[] memory _tokens = tokens();
         (uint256 i, uint256 j) = _getIJ(_tokens, fromToken, toToken);
         uint256[] memory reserves = _updatePumps(_tokens.length);
-
+        console.log("initial reserves", reserves[i], reserves[j]);
         reserves[j] -= amountOut;
+        console.log("reserves after removing amount out, before calcReserve", reserves[i], reserves[j]);
         uint256 reserveIBefore = reserves[i];
         reserves[i] = _calcReserve(wellFunction(), reserves, i, totalSupply());
+        console.log("reserves after calcReserve", reserves[i], reserves[j]);
 
         // Note: The rounding approach of the Well function determines whether
         // slippage from imprecision goes to the Well or to the User.
+
         amountIn = reserves[i] - reserveIBefore;
 
         if (amountIn > maxAmountIn) {
@@ -341,10 +345,15 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         IERC20[] memory _tokens = tokens();
         (uint256 i, uint256 j) = _getIJ(_tokens, fromToken, toToken);
         uint256[] memory reserves = _getReserves(_tokens.length);
+        console.log("reserves", reserves[0], reserves[1]);
+        console.log("reserves i", reserves[i]);
 
         reserves[j] -= amountOut;
 
-        amountIn = _calcReserve(wellFunction(), reserves, i, totalSupply()) - reserves[i];
+        console.log("reserves after removing", reserves[0], reserves[1]);
+        uint256 reserve___ = _calcReserve(wellFunction(), reserves, i, totalSupply());
+        console.log("calc reserve calc:", reserve___);
+        amountIn = reserve___ - reserves[i];
     }
 
     //////////////////// SHIFT ////////////////////

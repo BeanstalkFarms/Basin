@@ -32,7 +32,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
         _data = "";
     }
 
-    function test_metadata() public {
+    function test_metadata() public view {
         assertEq(_function.name(), "Constant Product 2");
         assertEq(_function.symbol(), "CP2");
     }
@@ -45,7 +45,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
     }
 
     /// @dev calcLpTokenSupply: same decimals, manual calc for 2 equal reserves
-    function test_calcLpTokenSupply_sameDecimals() public {
+    function test_calcLpTokenSupply_sameDecimals() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = STATE_A_B0;
         reserves[1] = STATE_A_B1;
@@ -99,7 +99,7 @@ contract ConstantProduct2Test is WellFunctionHelper {
 
     /// @dev calcReserve: diff decimals, both positions
     /// Matches example in {testLpTokenSupplyDiffDecimals}.
-    function test_calcReserve_diffDecimals() public {
+    function test_calcReserve_diffDecimals() public view {
         uint256[] memory reserves = new uint256[](2);
 
         /// STATE B

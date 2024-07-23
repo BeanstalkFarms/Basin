@@ -13,6 +13,7 @@ import {Users} from "test/helpers/Users.sol";
 import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
+import {Stable2VP} from "src/functions/Stable2VP.sol";
 import {Stable2} from "src/functions/Stable2.sol";
 import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
@@ -144,15 +145,20 @@ abstract contract TestHelper is Test, WellDeployer {
         data[0] = MockToken(address(_tokens[0])).decimals();
         data[1] = MockToken(address(_tokens[1])).decimals();
         bytes memory wellFunctionData;
+        Call memory _wellFunction;
         if (vp == 0) {
             wellFunctionData = abi.encode(data);
+            _wellFunction = Call(address(new Stable2(lut)), wellFunctionData);
         } else {
             wellFunctionData = abi.encode(data, vp, vpIndex);
+            _wellFunction = Call(address(new Stable2VP(lut)), wellFunctionData);
         }
-        Call memory _wellFunction = Call(address(new Stable2(lut)), wellFunctionData);
         tokens = _tokens;
         wellFunction = _wellFunction;
         vm.label(address(wellFunction.target), "Stable2 WF");
+        if (vp != 0) {
+            vm.label(address(wellFunction.target), "Stable2VP WF");
+        }
         for (uint256 i = 0; i < _pumps.length; i++) {
             pumps.push(_pumps[i]);
         }
@@ -163,6 +169,9 @@ abstract contract TestHelper is Test, WellDeployer {
         aquifer = new Aquifer();
         well = encodeAndBoreWell(address(aquifer), wellImplementation, tokens, _wellFunction, _pumps, bytes32(0));
         vm.label(address(well), "Stable2Well");
+        if (vp != 0) {
+            vm.label(address(well), "Stable2VPWell");
+        }
 
         // Mint mock tokens to user
         mintTokens(user, initialLiquidity);
@@ -176,6 +185,15 @@ abstract contract TestHelper is Test, WellDeployer {
 
         // Add initial liquidity from TestHelper
         addLiquidityEqualAmount(address(this), initialLiquidity);
+
+        // if vp > 1e6 add more liquidity to the non vpIndex side:
+        if (vp > 1e6) {
+            uint256[] memory amounts = new uint256[](2);
+            amounts[vpIndex == 0 ? 1 : 0] = (initialLiquidity * vp / 1e6) - initialLiquidity;
+            console.log(amounts[vpIndex == 0 ? 1 : 0] = (initialLiquidity * vp / 1e6) - initialLiquidity);
+            mintTokens(address(this), amounts);
+            well.addLiquidity(amounts, 0, address(this), type(uint256).max);
+        }
     }
 
     //////////// Test Tokens ////////////

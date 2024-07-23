@@ -16,7 +16,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         _f = new ConstantProduct();
     }
 
-    function test_calcReserveAtRatioLiquidity_equal_equal() public {
+    function test_calcReserveAtRatioLiquidity_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 100;
         reserves[1] = 100;
@@ -31,7 +31,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         assertEq(reserve1, 100);
     }
 
-    function test_calcReserveAtRatioLiquidity_equal_diff() public {
+    function test_calcReserveAtRatioLiquidity_equal_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 50;
         reserves[1] = 100;
@@ -46,7 +46,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         assertEq(reserve1, 50);
     }
 
-    function test_calcReserveAtRatioLiquidity_diff_equal() public {
+    function test_calcReserveAtRatioLiquidity_diff_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 100;
         reserves[1] = 100;
@@ -61,7 +61,7 @@ contract BeanstalkConstantProductLiquidityTest is TestHelper {
         assertEq(reserve1, 50);
     }
 
-    function test_calcReserveAtRatioLiquidity_diff_diff() public {
+    function test_calcReserveAtRatioLiquidity_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 500_000_000;
         reserves[1] = 100_000_000;

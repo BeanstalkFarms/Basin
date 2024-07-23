@@ -15,7 +15,7 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         _f = new ConstantProduct2();
     }
 
-    function test_calcReserveAtRatioSwap_equal_equal() public {
+    function test_calcReserveAtRatioSwap_equal_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 100;
         reserves[1] = 100;
@@ -30,7 +30,7 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         assertEq(reserve1, 100);
     }
 
-    function test_calcReserveAtRatioSwap_equal_diff() public {
+    function test_calcReserveAtRatioSwap_equal_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 50;
         reserves[1] = 100;
@@ -45,7 +45,7 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         assertEq(reserve1, 70);
     }
 
-    function test_calcReserveAtRatioSwap_diff_equal() public {
+    function test_calcReserveAtRatioSwap_diff_equal() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 100;
         reserves[1] = 100;
@@ -60,7 +60,7 @@ contract BeanstalkConstantProduct2SwapTest is TestHelper {
         assertEq(reserve1, 70);
     }
 
-    function test_calcReserveAtRatioSwap_diff_diff() public {
+    function test_calcReserveAtRatioSwap_diff_diff() public view {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = 50;
         reserves[1] = 100;

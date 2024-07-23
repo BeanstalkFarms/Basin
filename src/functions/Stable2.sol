@@ -128,9 +128,10 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 j,
         uint256 lpTokenSupply,
         bytes memory data
-    ) public view returns (uint256 reserve) {
+    ) public view virtual returns (uint256 reserve) {
         uint256[] memory scaledReserves;
         uint256[] memory decimals;
+        console.log("reserves", reserves[0], reserves[1]);
         if (data.length == 0) {
             scaledReserves = reserves;
             decimals = new uint256[](2);
@@ -139,6 +140,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         } else {
             (scaledReserves, decimals) = getScaledReservesAndDecimals(reserves, data);
         }
+        console.log("scaledReserves", scaledReserves[0], scaledReserves[1]);
 
         // avoid stack too deep errors.
         (uint256 c, uint256 b) =
@@ -153,10 +155,12 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             // scale reserve down to original precision
             if (reserve > prevReserve) {
                 if (reserve - prevReserve <= 1) {
+                    console.log("final reserve:", reserve / (10 ** (18 - decimals[j])));
                     return reserve / (10 ** (18 - decimals[j]));
                 }
             } else {
                 if (prevReserve - reserve <= 1) {
+                    console.log("final reserve:", reserve / (10 ** (18 - decimals[j])));
                     return reserve / (10 ** (18 - decimals[j]));
                 }
             }
