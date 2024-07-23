@@ -8,9 +8,9 @@ import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 /**
  * Stable2 well function simulation and precalculations used
- * to produce the token ratios for the lookup table needed for the initial 
+ * to produce the token ratios for the lookup table needed for the initial
  * `calcReserveAtRatioSwap` estimates.
-*/
+ */
 contract StableswapCalcRatiosSwapSim is Script {
     function run() external {
         Stable2LUT1 stable2LUT1 = new Stable2LUT1();
@@ -37,7 +37,7 @@ contract StableswapCalcRatiosSwapSim is Script {
         // csv header
         console.log("Price (P),Reserve (x),Reserve (y)");
 
-        for (uint256 i; i < 20 ; i++) {
+        for (uint256 i; i < 20; i++) {
             // update reserve x
             reserve_x = reserve_x * 92 / 100;
             reserves[0] = reserve_x;
@@ -53,7 +53,7 @@ contract StableswapCalcRatiosSwapSim is Script {
         // reset reserves
         reserve_x = init_reserve_x;
 
-        for (uint256 i; i < 40 ; i++) {
+        for (uint256 i; i < 40; i++) {
             // update reserve x
             reserve_x = reserve_x * 99 / 100;
             reserves[0] = reserve_x;
@@ -69,7 +69,7 @@ contract StableswapCalcRatiosSwapSim is Script {
         // reset reserves
         reserve_x = init_reserve_x;
 
-        for (uint256 i; i < 40 ; i++) {
+        for (uint256 i; i < 40; i++) {
             // update reserve x
             reserve_x = reserve_x * 101 / 100;
             reserves[0] = reserve_x;
@@ -85,7 +85,7 @@ contract StableswapCalcRatiosSwapSim is Script {
         // reset reserves
         reserve_x = init_reserve_x;
 
-        for (uint256 i; i < 18 ; i++) {
+        for (uint256 i; i < 18; i++) {
             // update reserve x
             reserve_x = reserve_x * 105 / 100;
             reserves[0] = reserve_x;
@@ -109,7 +109,7 @@ contract StableswapCalcRatiosSwapSim is Script {
         console.log("%d,%d,%d", price, reserve_x, reserve_y);
 
         // extreme high
-        reserve_x = init_reserve_x * 1/ 190;
+        reserve_x = init_reserve_x * 1 / 190;
         reserves[0] = reserve_x;
         reserve_y = stable2.calcReserve(reserves, 1, lpTokenSupply, data);
         reserves[1] = reserve_y;

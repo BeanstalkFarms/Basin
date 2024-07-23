@@ -8,9 +8,9 @@ import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
 /**
  * Stable2 well function simulation and precalculations used
- * to produce the token ratios for the lookup table needed for the initial 
+ * to produce the token ratios for the lookup table needed for the initial
  * `calcReserveAtRatioLiquidity` estimates.
-*/
+ */
 contract StableswapCalcRatiosLiqSim is Script {
     function run() external {
         Stable2LUT1 stable2LUT1 = new Stable2LUT1();
@@ -34,7 +34,7 @@ contract StableswapCalcRatiosLiqSim is Script {
         console.log("Price (P),Reserve (x),Reserve (y)");
 
         // calcReserveAtRatioLiquidity
-        for (uint256 i; i < 20 ; i++) {
+        for (uint256 i; i < 20; i++) {
             // update reserves
             reserve_y = reserve_y * 88 / 100;
             reserves[1] = reserve_y;
@@ -47,7 +47,7 @@ contract StableswapCalcRatiosLiqSim is Script {
         reserve_y = init_reserve_y;
 
         // calcReserveAtRatioLiquidity
-        for (uint256 i; i < 20 ; i++) {
+        for (uint256 i; i < 20; i++) {
             // update reserves
             reserve_y = reserve_y * 98 / 100;
             reserves[1] = reserve_y;
@@ -60,7 +60,7 @@ contract StableswapCalcRatiosLiqSim is Script {
         reserve_y = init_reserve_y;
 
         // calcReserveAtRatioLiquidity
-        for (uint256 i; i < 20 ; i++) {
+        for (uint256 i; i < 20; i++) {
             // update reserves
             reserve_y = reserve_y * 102 / 100;
             reserves[1] = reserve_y;
@@ -72,9 +72,8 @@ contract StableswapCalcRatiosLiqSim is Script {
         // reset reserves
         reserve_y = init_reserve_y;
 
-
         // calcReserveAtRatioLiquidity
-        for (uint256 i; i < 20 ; i++) {
+        for (uint256 i; i < 20; i++) {
             // update reserves
             reserve_y = reserve_y * 112 / 100;
             reserves[1] = reserve_y;
