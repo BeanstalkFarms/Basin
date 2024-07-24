@@ -6,7 +6,7 @@ import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 
 /**
  * @title Stable2LUT1
- * @author DeadManWalking, Brean
+ * @author Deadmanwalking, brean
  * @notice Implements a lookup table of estimations used in the Stableswap Well Function
  * to calculate the token ratios in a Stableswap pool for a given price.
  */

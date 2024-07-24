@@ -6,8 +6,9 @@ import {IBeanstalkWellFunction, IMultiFlowPumpWellFunction} from "src/interfaces
 import {ILookupTable} from "src/interfaces/ILookupTable.sol";
 import {ProportionalLPToken2} from "src/functions/ProportionalLPToken2.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+
 /**
- * @author Brean
+ * @author brean, deadmanwalking
  * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
  * developed by curve.
  *
@@ -21,7 +22,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
  *
  * @dev Limited to tokens with a maximum of 18 decimals.
  */
-
 contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     struct PriceData {
         uint256 targetPrice;
