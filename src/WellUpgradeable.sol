@@ -31,8 +31,6 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     function init(string memory _name, string memory _symbol) external override reinitializer(2) {
-        // owner of Well param as the aquifier address will be the owner initially
-        // ownable init transfers ownership to msg.sender
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ReentrancyGuard_init();

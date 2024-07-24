@@ -240,9 +240,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     /**
      * @inheritdoc IBeanstalkWellFunction
-     * @notice Calculates the amount of each reserve token underlying a given amount of LP tokens.
-     * @dev `calcReserveAtRatioLiquidity` fetches the closest approximate ratios from the target price, and
-     * perform an neutonian-estimation to calculate the reserves.
+     * @dev `calcReserveAtRatioLiquidity` fetches the closes approximate ratios from the target price,
+     * and performs newtons method in order to converge into a reserve.
      */
     function calcReserveAtRatioLiquidity(
         uint256[] calldata reserves,
