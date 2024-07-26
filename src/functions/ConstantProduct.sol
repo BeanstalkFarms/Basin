@@ -23,6 +23,8 @@ import {LibMath} from "src/libraries/LibMath.sol";
 contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
     using LibMath for uint256;
 
+    uint256 constant CALC_RATE_PRECISION = 1e18;
+
     /// @dev `s = π(b_i)^(1/n) * n`
     function calcLpTokenSupply(
         uint256[] calldata reserves,
@@ -91,5 +93,14 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
             }
         }
         reserve /= reserves.length - 1;
+    }
+
+    function calcRate(
+        uint256[] calldata reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata
+    ) external pure returns (uint256 rate) {
+        return reserves[i] * CALC_RATE_PRECISION / reserves[j];
     }
 }

@@ -22,7 +22,7 @@ contract WellSwapToTest is SwapHelper {
     function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint256 i) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
         Balances memory wellBalances = getBalances(address(well), well);
-        vm.assume(i < _tokens.length);
+        i = bound(i, 0, _tokens.length);
 
         // Swap token `i` -> all other tokens
         for (uint256 j; j < _tokens.length; ++j) {
