@@ -508,9 +508,10 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
 
     /**
      * @dev Get the slot number that contains the `n`th element of an array.
+     * slots are seperated by 32 bytes to allow for future expansion of the Pump (i.e supporting Well with more than 3 tokens).
      */
     function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
-        _slotsOffset = ((numberOfReserves - 1) / 2 + 1);
+        _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
     }
 
     /**
