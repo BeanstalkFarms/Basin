@@ -4,7 +4,7 @@ out = 'out'
 libs = ['lib', 'node_modules']
 fuzz = { runs = 256 }
 optimizer = true
-optimizer_runs = 800
+optimizer_runs = 400
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
 ]

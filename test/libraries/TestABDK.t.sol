@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import "test/TestHelper.sol";
@@ -67,12 +68,12 @@ contract ABDKTest is TestHelper {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 
-    function testFuzz_FromUIntToLog2(uint256 x) public {
+    function testFuzz_FromUIntToLog2(uint256 x) public pure {
         x = bound(x, 1, type(uint256).max);
         assertEq(ABDKMathQuad.fromUInt(x).log_2(), ABDKMathQuad.fromUIntToLog2(x));
     }
 
-    function testFuzz_pow_2ToUInt(uint256 x) public {
+    function testFuzz_pow_2ToUInt(uint256 x) public pure {
         x = bound(x, 0, 255);
 
         // test the pow_2ToUInt function

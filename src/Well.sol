@@ -44,7 +44,7 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         _disableInitializers();
     }
 
-    function init(string memory _name, string memory _symbol) external initializer {
+    function init(string memory _name, string memory _symbol) external virtual initializer {
         __ERC20Permit_init(_name);
         __ERC20_init(_name, _symbol);
         __ReentrancyGuard_init();
@@ -713,7 +713,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
      */
     function _setReserves(IERC20[] memory _tokens, uint256[] memory reserves) internal {
         for (uint256 i; i < reserves.length; ++i) {
-            if (reserves[i] > _tokens[i].balanceOf(address(this))) revert InvalidReserves();
+            if (reserves[i] > _tokens[i].balanceOf(address(this))) {
+                revert InvalidReserves();
+            }
         }
         LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
     }
