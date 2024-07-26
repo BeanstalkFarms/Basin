@@ -51,11 +51,7 @@ contract CapBalanceTest is TestHelper, MultiFlowPump {
 
         _well = address(
             new MockStaticWell(
-            deployMockTokens(2),
-            Call(address(wf), new bytes(0)),
-            deployPumps(1),
-            address(0),
-            new bytes(0)
+                deployMockTokens(2), Call(address(wf), new bytes(0)), deployPumps(1), address(0), new bytes(0)
             )
         );
     }
