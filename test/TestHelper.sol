@@ -13,7 +13,6 @@ import {Users} from "test/helpers/Users.sol";
 import {Well, Call, IERC20, IWell, IWellFunction} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
-import {ConstantProduct} from "src/functions/ConstantProduct.sol";
 import {Stable2} from "src/functions/Stable2.sol";
 import {Stable2LUT1} from "src/functions/StableLUT/Stable2LUT1.sol";
 
@@ -74,13 +73,6 @@ abstract contract TestHelper is Test, WellDeployer {
 
     function setupWell(uint256 n) internal {
         setupWell(n, deployWellFunction(), deployPumps(1));
-    }
-
-    function setup3Well() internal {
-        Call memory _wellFunction;
-        _wellFunction.target = address(new ConstantProduct());
-        _wellFunction.data = new bytes(0);
-        setupWell(3, deployWellFunction(), deployPumps(1));
     }
 
     function setupWell(uint256 n, Call[] memory _pumps) internal {
