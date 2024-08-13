@@ -26,6 +26,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     struct PriceData {
         uint256 targetPrice;
         uint256 currentPrice;
+        uint256 newPrice;
         uint256 maxStepSize;
         ILookupTable.PriceData lutData;
     }
@@ -222,8 +223,26 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
             // calculate scaledReserve[i]:
             scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
-            // calc currentPrice:
-            pd.currentPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
+            // calculate new price from reserves:
+            pd.newPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
+
+            // if the new current price is either lower or higher than both the previous current price and the target price,
+            // (i.e the target price lies between the current price and the previous current price),
+            // recalibrate high/low price.
+            if (pd.newPrice > pd.currentPrice && pd.newPrice > pd.targetPrice) {
+                pd.lutData.highPriceJ = scaledReserves[j] * 1e18 / parityReserve;
+                pd.lutData.highPriceI = scaledReserves[i] * 1e18 / parityReserve;
+                pd.lutData.highPrice = pd.newPrice;
+            } else if (pd.newPrice < pd.currentPrice && pd.newPrice < pd.targetPrice) {
+                pd.lutData.lowPriceJ = scaledReserves[j] * 1e18 / parityReserve;
+                pd.lutData.lowPriceI = scaledReserves[i] * 1e18 / parityReserve;
+                pd.lutData.lowPrice = pd.newPrice;
+            }
+
+            // update max step size based on new scaled reserve.
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
+
+            pd.currentPrice = pd.newPrice;
 
             // check if new price is within 1 of target price:
             if (pd.currentPrice > pd.targetPrice) {
@@ -288,7 +307,23 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
             // calculate new price from reserves:
-            pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+            pd.newPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+
+            // if the new current price is either lower or higher than both the previous current price and the target price,
+            // (i.e the target price lies between the current price and the previous current price),
+            // recalibrate high/lowPrice and continue.
+            if (pd.newPrice > pd.targetPrice && pd.targetPrice > pd.currentPrice) {
+                pd.lutData.highPriceJ = scaledReserves[j] * 1e18 / scaledReserves[i];
+                pd.lutData.highPrice = pd.newPrice;
+            } else if (pd.newPrice < pd.targetPrice && pd.targetPrice < pd.currentPrice) {
+                pd.lutData.lowPriceJ = scaledReserves[j] * 1e18 / scaledReserves[i];
+                pd.lutData.lowPrice = pd.newPrice;
+            }
+
+            // update max step size based on new scaled reserve.
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
+
+            pd.currentPrice = pd.newPrice;
 
             // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
