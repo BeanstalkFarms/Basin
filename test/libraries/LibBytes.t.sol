@@ -10,6 +10,7 @@ contract LibBytesTest is TestHelper {
     bytes32 constant RESERVES_STORAGE_SLOT = bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
 
     /// @dev Store fuzzed reserves, re-read and compare.
+    // Performs 3 iterations, so it checks that it overwrites the existing value properly in addition to just setting it.
     function testFuzz_storeAndRead(uint256 n, uint128[8] memory _reserves) public {
         n = bound(n, 0, NUM_RESERVES_MAX);
 
@@ -18,12 +19,15 @@ contract LibBytesTest is TestHelper {
         for (uint256 i; i < n; i++) {
             reserves[i] = uint256(_reserves[i]);
         }
-        LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
 
-        // Re-read reserves and compare
-        uint256[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
-        for (uint256 i; i < reserves2.length; i++) {
-            assertEq(reserves2[i], reserves[i], "ByteStorage: reserves mismatch");
+        for (uint256 i; i < 3; ++i) {
+            LibBytes.storeUint128(RESERVES_STORAGE_SLOT, reserves);
+
+            // Re-read reserves and compare
+            uint256[] memory reserves2 = LibBytes.readUint128(RESERVES_STORAGE_SLOT, n);
+            for (uint256 j; j < reserves2.length; j++) {
+                assertEq(reserves2[j], reserves[j], "ByteStorage: reserves mismatch");
+            }
         }
     }
 
