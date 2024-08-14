@@ -357,10 +357,9 @@ interface IWell {
      * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
      * @return lpAmountIn The amount of LP tokens burned
      */
-    function getRemoveLiquidityImbalancedIn(uint256[] calldata tokenAmountsOut)
-        external
-        view
-        returns (uint256 lpAmountIn);
+    function getRemoveLiquidityImbalancedIn(
+        uint256[] calldata tokenAmountsOut
+    ) external view returns (uint256 lpAmountIn);
 
     //////////////////// RESERVES ////////////////////
 
