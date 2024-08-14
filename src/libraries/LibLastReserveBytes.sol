@@ -82,11 +82,9 @@ library LibLastReserveBytes {
     /**
      * @dev Read `n` packed bytes16 reserves at storage position `slot`.
      */
-    function readLastReserves(bytes32 slot)
-        internal
-        view
-        returns (uint8 n, uint40 lastTimestamp, uint256[] memory lastReserves)
-    {
+    function readLastReserves(
+        bytes32 slot
+    ) internal view returns (uint8 n, uint40 lastTimestamp, uint256[] memory lastReserves) {
         // Shortcut: two reserves can be quickly unpacked from one slot
         bytes32 temp;
         assembly {

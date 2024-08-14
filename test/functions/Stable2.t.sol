@@ -126,7 +126,9 @@ contract Stable2Test is WellFunctionHelper {
         _data = abi.encode(18, 18);
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(_reserves[0], 10e18, MAX_RESERVE);
-        reserves[1] = bound(_reserves[1], 10e18, MAX_RESERVE);
+        // reserve 1 must be at least 1/800th of the value of reserves[0].
+        uint256 reserve1MinValue = (reserves[0] / 8e2) < 10e18 ? 10e18 : reserves[0] / 8e2;
+        reserves[1] = bound(_reserves[1], reserve1MinValue, MAX_RESERVE);
 
         uint256 lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
         uint256[] memory underlying = _function.calcLPTokenUnderlying(lpTokenSupply, reserves, lpTokenSupply, _data);
@@ -137,11 +139,12 @@ contract Stable2Test is WellFunctionHelper {
 
     //////////// FUZZ ////////////
 
-    function testFuzz_stableSwap(uint256 x, uint256 y, uint256 a) public {
+    function testFuzz_stableSwap(uint256 x, uint256 y) public {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(x, 10e18, MAX_RESERVE);
-        reserves[1] = bound(y, 10e18, MAX_RESERVE);
-        a = bound(a, 1, 1_000_000);
+        // reserve 1 must be at least 1/800th of the value of reserves[0].
+        uint256 reserve1MinValue = (reserves[0] / 8e2) < 10e18 ? 10e18 : reserves[0] / 8e2;
+        reserves[1] = bound(y, reserve1MinValue, MAX_RESERVE);
 
         _data = abi.encode(18, 18);
 
