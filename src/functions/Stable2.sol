@@ -213,11 +213,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
@@ -300,11 +297,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
