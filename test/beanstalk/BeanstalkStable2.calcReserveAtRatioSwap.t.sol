@@ -60,8 +60,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 180.643950056605911775e18); // 180.64235400499155996e18, 100e18
-        assertEq(reserve1, 39.474875366590812867e18); // 100e18, 39.474875366590812867e18
+        assertEq(reserve0, 180.644064978044534737e18); // 180.644064978044534737e18, 100e18
+        assertEq(reserve1, 39.475055811844664131e18); // 100e18, 39.475055811844664131e18
     }
 
     function test_calcReserveAtRatioSwap_diff_diff() public view {
@@ -106,5 +106,27 @@ contract BeanstalkStable2SwapTest is TestHelper {
             // estimated price and actual price are within 0.015% in the worst case.
             assertApproxEqRel(reservePrice0, targetPrice, 0.00015e18, "reservePrice0 <> targetPrice");
         }
+    }
+
+    /**
+     * @notice verifies calcReserveAtRatioSwapExtreme works in the extreme ranges.
+     */
+    function test_calcReserveAtRatioSwapExtreme() public view {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = 1e18;
+        reserves[1] = 1e18;
+        uint256[] memory ratios = new uint256[](2);
+        ratios[0] = 4202;
+        ratios[1] = 19_811;
+        uint256 targetPrice = uint256(ratios[0] * 1e6 / ratios[1]);
+
+        uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
+        uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
+
+        reserves[0] = reserve0;
+        reserves[1] = reserve1;
+
+        uint256 price = _f.calcRate(reserves, 0, 1, data);
+        assertApproxEqAbs(price, targetPrice, 1);
     }
 }
