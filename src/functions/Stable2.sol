@@ -100,6 +100,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 if (prevReserves - lpTokenSupply <= 1) return lpTokenSupply;
             }
         }
+        revert("Non convergence: calcLpTokenSupply");
     }
 
     /**
@@ -140,7 +141,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
-        revert("did not find convergence");
+        revert("Non convergence: calcReserve");
     }
 
     /**
@@ -236,6 +237,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
+        revert("Non convergence: calcReserveAtRatioSwap");
     }
 
     /**
@@ -301,6 +303,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
+        revert("Non convergence: calcReserveAtRatioLiquidity");
     }
 
     /**
@@ -314,7 +317,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         if (decimal0 == 0) {
             decimal0 = 18;
         }
-        if (decimal0 == 0) {
+        if (decimal1 == 0) {
             decimal1 = 18;
         }
         if (decimal0 > 18 || decimal1 > 18) revert InvalidTokenDecimals();

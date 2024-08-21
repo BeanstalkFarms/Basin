@@ -48,10 +48,9 @@ contract LiquidityHelper is TestHelper {
         return beforeAddLiquidity(action);
     }
 
-    function beforeAddLiquidity(AddLiquidityAction memory action)
-        internal
-        returns (Snapshot memory, AddLiquidityAction memory)
-    {
+    function beforeAddLiquidity(
+        AddLiquidityAction memory action
+    ) internal returns (Snapshot memory, AddLiquidityAction memory) {
         Snapshot memory beforeSnapshot = _newSnapshot();
 
         uint256[] memory amountToTransfer = new uint256[](tokens.length);
@@ -97,10 +96,9 @@ contract LiquidityHelper is TestHelper {
         return beforeRemoveLiquidity(action);
     }
 
-    function beforeRemoveLiquidity(RemoveLiquidityAction memory action)
-        internal
-        returns (Snapshot memory, RemoveLiquidityAction memory)
-    {
+    function beforeRemoveLiquidity(
+        RemoveLiquidityAction memory action
+    ) internal returns (Snapshot memory, RemoveLiquidityAction memory) {
         Snapshot memory beforeSnapshot = _newSnapshot();
 
         vm.expectEmit(true, true, true, true);

@@ -83,7 +83,13 @@ contract BeanstalkStable2SwapTest is TestHelper {
         for (uint256 i; i < 2; ++i) {
             // Upper bound is limited by stableSwap,
             // due to the stableswap reserves being extremely far apart.
-            reserves[i] = bound(reserves[i], 1e18, 1e31);
+
+            if (i == 1) {
+                uint256 reserve1MinValue = (reserves[0] / 6e2) < 10e18 ? 10e18 : reserves[0] / 6e2;
+                reserves[1] = bound(reserves[i], reserve1MinValue, 1e31);
+            } else {
+                reserves[i] = bound(reserves[i], 1e18, 1e31);
+            }
             ratios[i] = bound(ratios[i], 1e18, 4e18);
         }
 

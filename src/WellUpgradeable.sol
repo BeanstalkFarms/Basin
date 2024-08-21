@@ -17,15 +17,13 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
     address private immutable ___self = address(this);
 
     /**
-     * @notice verifies that the execution is called through an minimal proxy or is not a delegate call.
+     * @notice Verifies that the execution is called through an minimal proxy.
      */
     modifier notDelegatedOrIsMinimalProxy() {
         if (address(this) != ___self) {
             address aquifer = aquifer();
             address wellImplmentation = IAquifer(aquifer).wellImplementation(address(this));
             require(wellImplmentation == ___self, "Function must be called by a Well bored by an aquifer");
-        } else {
-            revert("UUPSUpgradeable: must not be called through delegatecall");
         }
         _;
     }
@@ -76,6 +74,14 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
             IAquifer(aquifer).wellImplementation(newImplmentation) != address(0),
             "New implementation must be a well implmentation"
         );
+
+        // verify the new well uses the same tokens in the same order.
+        IERC20[] memory _tokens = tokens();
+        IERC20[] memory newTokens = WellUpgradeable(newImplmentation).tokens();
+        require(_tokens.length == newTokens.length, "New well must use the same number of tokens");
+        for (uint256 i; i < _tokens.length; ++i) {
+            require(_tokens[i] == newTokens[i], "New well must use the same tokens in the same order");
+        }
 
         // verify the new implmentation is a valid ERC-1967 implmentation.
         require(
