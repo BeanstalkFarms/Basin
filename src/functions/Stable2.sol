@@ -82,9 +82,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
         uint256 Ann = a * N * N;
-
+        
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
-        if (sumReserves == 0) return 0;
         lpTokenSupply = sumReserves;
         for (uint256 i = 0; i < 255; i++) {
             uint256 dP = lpTokenSupply;
@@ -213,11 +212,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
@@ -245,7 +241,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
             pd.currentPrice = pd.newPrice;
 
-            // check if new price is within 1 of target price:
+            // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
                 if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
                     return scaledReserves[j] / (10 ** (18 - decimals[j]));
@@ -300,11 +296,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);

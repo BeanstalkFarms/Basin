@@ -60,7 +60,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Check that the execution is being performed through a delegatecall call and that the execution context is
      * a proxy contract with an ERC1167 minimal proxy from an aquifier, pointing to a well implmentation.
      */
-    function _authorizeUpgrade(address newImplmentation) internal view override onlyOwner {
+    function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
         // verify the function is called through a delegatecall.
         require(address(this) != ___self, "Function must be called through delegatecall");
 
@@ -71,13 +71,13 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
 
         // verify the new implmentation is a well bored by an aquifier.
         require(
-            IAquifer(aquifer).wellImplementation(newImplmentation) != address(0),
+            IAquifer(aquifer).wellImplementation(newImplementation) != address(0),
             "New implementation must be a well implmentation"
         );
 
         // verify the new well uses the same tokens in the same order.
         IERC20[] memory _tokens = tokens();
-        IERC20[] memory newTokens = WellUpgradeable(newImplmentation).tokens();
+        IERC20[] memory newTokens = WellUpgradeable(newImplementation).tokens();
         require(_tokens.length == newTokens.length, "New well must use the same number of tokens");
         for (uint256 i; i < _tokens.length; ++i) {
             require(_tokens[i] == newTokens[i], "New well must use the same tokens in the same order");
@@ -85,7 +85,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
 
         // verify the new implmentation is a valid ERC-1967 implmentation.
         require(
-            UUPSUpgradeable(newImplmentation).proxiableUUID() == _IMPLEMENTATION_SLOT,
+            UUPSUpgradeable(newImplementation).proxiableUUID() == _IMPLEMENTATION_SLOT,
             "New implementation must be a valid ERC-1967 implmentation"
         );
     }
@@ -121,7 +121,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * are ERC-1167 minimal immutable clones and cannot delgate to another proxy. Thus, `proxiableUUID` was updated to support
      * this specific usecase.
      */
-    function proxiableUUID() external view override notDelegatedOrIsMinimalProxy returns (bytes32) {
+    function proxiableUUID() public view override notDelegatedOrIsMinimalProxy returns (bytes32) {
         return _IMPLEMENTATION_SLOT;
     }
 
