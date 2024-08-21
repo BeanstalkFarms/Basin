@@ -121,7 +121,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * are ERC-1167 minimal immutable clones and cannot delgate to another proxy. Thus, `proxiableUUID` was updated to support
      * this specific usecase.
      */
-    function proxiableUUID() external view override notDelegatedOrIsMinimalProxy returns (bytes32) {
+    function proxiableUUID() public view override notDelegatedOrIsMinimalProxy returns (bytes32) {
         return _IMPLEMENTATION_SLOT;
     }
 
