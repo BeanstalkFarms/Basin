@@ -245,7 +245,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
             pd.currentPrice = pd.newPrice;
 
-            // check if new price is within 1 of target price:
+            // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
                 if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
                     return scaledReserves[j] / (10 ** (18 - decimals[j]));
