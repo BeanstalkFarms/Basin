@@ -75,6 +75,14 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
             "New implementation must be a well implmentation"
         );
 
+        // verify the new well uses the same tokens in the same order.
+        IERC20[] memory _tokens = tokens();
+        IERC20[] memory newTokens = WellUpgradeable(newImplmentation).tokens();
+        require(_tokens.length == newTokens.length, "New well must use the same number of tokens");
+        for (uint256 i; i < _tokens.length; ++i) {
+            require(_tokens[i] == newTokens[i], "New well must use the same tokens in the same order");
+        }
+
         // verify the new implmentation is a valid ERC-1967 implmentation.
         require(
             UUPSUpgradeable(newImplmentation).proxiableUUID() == _IMPLEMENTATION_SLOT,
