@@ -158,7 +158,9 @@ contract WellStable2AddLiquidityTest is LiquidityHelper {
         // amounts to add as liquidity
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(x, 0, type(uint104).max);
-        amounts[1] = bound(y, 0, type(uint104).max);
+        // reserve 1 must be at least 1/600th of the value of amounts[0].
+        uint256 reserve1MinValue = (amounts[0] / 6e2) < 10e18 ? 10e18 : amounts[0] / 6e2;
+        amounts[1] = bound(y, reserve1MinValue, type(uint104).max);
         mintTokens(user, amounts);
 
         Snapshot memory before;
