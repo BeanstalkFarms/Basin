@@ -51,7 +51,10 @@ contract WellUpgradeTest is Test, WellDeployer {
         IWellFunction cp2 = new ConstantProduct2();
         vm.label(address(cp2), "CP2");
         wellFunctionAddress = address(cp2);
-        Call memory wellFunction = Call(address(cp2), abi.encode("beanstalkFunction"));
+        Call memory wellFunction = Call(
+            address(cp2),
+            abi.encode("beanstalkFunction")
+        );
 
         // Pump
         IPump mockPump = new MockPump();
@@ -67,8 +70,14 @@ contract WellUpgradeTest is Test, WellDeployer {
         initialOwner = makeAddr("owner");
 
         // Well
-        WellUpgradeable well =
-            encodeAndBoreWellUpgradeable(aquifer, wellImplementation, tokens, wellFunction, pumps, bytes32(0));
+        WellUpgradeable well = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImplementation,
+            tokens,
+            wellFunction,
+            pumps,
+            bytes32(0)
+        );
         wellAddress = address(well);
         vm.label(wellAddress, "upgradeableWell");
         // Sum up of what is going on here
@@ -94,7 +103,10 @@ contract WellUpgradeTest is Test, WellDeployer {
         vm.startPrank(initialOwner);
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(well), // implementation address
-            LibWellUpgradeableConstructor.encodeWellInitFunctionCall(tokens, wellFunction) // init data
+            LibWellUpgradeableConstructor.encodeWellInitFunctionCall(
+                tokens,
+                wellFunction
+            ) // init data
         );
         vm.stopPrank();
         proxyAddress = address(proxy);
@@ -129,8 +141,12 @@ contract WellUpgradeTest is Test, WellDeployer {
     }
 
     function testProxyGetWellFunction() public {
-        Call memory proxyWellFunction = WellUpgradeable(proxyAddress).wellFunction();
-        assertEq(address(proxyWellFunction.target), address(wellFunctionAddress));
+        Call memory proxyWellFunction = WellUpgradeable(proxyAddress)
+            .wellFunction();
+        assertEq(
+            address(proxyWellFunction.target),
+            address(wellFunctionAddress)
+        );
         assertEq(proxyWellFunction.data, abi.encode("beanstalkFunction"));
     }
 
@@ -145,7 +161,10 @@ contract WellUpgradeTest is Test, WellDeployer {
 
     function testProxyNumTokens() public {
         uint256 expectedNumTokens = 2;
-        assertEq(expectedNumTokens, WellUpgradeable(proxyAddress).numberOfTokens());
+        assertEq(
+            expectedNumTokens,
+            WellUpgradeable(proxyAddress).numberOfTokens()
+        );
     }
 
     ///////////////// Interaction test //////////////////
@@ -155,8 +174,18 @@ contract WellUpgradeTest is Test, WellDeployer {
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1000;
         amounts[1] = 1000;
-        WellUpgradeable(wellAddress).addLiquidity(amounts, 0, user, type(uint256).max);
-        WellUpgradeable(proxyAddress).addLiquidity(amounts, 0, user, type(uint256).max);
+        WellUpgradeable(wellAddress).addLiquidity(
+            amounts,
+            0,
+            user,
+            type(uint256).max
+        );
+        WellUpgradeable(proxyAddress).addLiquidity(
+            amounts,
+            0,
+            user,
+            type(uint256).max
+        );
         assertEq(amounts, WellUpgradeable(proxyAddress).getReserves());
         vm.stopPrank();
     }
@@ -175,9 +204,9 @@ contract WellUpgradeTest is Test, WellDeployer {
     }
 
     function testRevertTransferOwnershipFromNotOnwer() public {
-        vm.expectRevert();
         address notOwner = makeAddr("notOwner");
         vm.prank(notOwner);
+        vm.expectRevert();
         WellUpgradeable(proxyAddress).transferOwnership(notOwner);
     }
 
@@ -189,20 +218,57 @@ contract WellUpgradeTest is Test, WellDeployer {
         pumps[0] = Call(mockPumpAddress, abi.encode("2"));
         // create new mock Well Implementation:
         address wellImpl = address(new MockWellUpgradeable());
-        // bore new well with the same 2 tokens 
-        WellUpgradeable well2 =
-            encodeAndBoreWellUpgradeable(aquifer, wellImpl, tokens, wellFunction, pumps, bytes32(abi.encode("2")));
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            tokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
         vm.label(address(well2), "upgradeableWell2");
         vm.startPrank(initialOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
         proxy.upgradeTo(address(well2));
         assertEq(initialOwner, MockWellUpgradeable(proxyAddress).owner());
         // verify proxy was upgraded.
-        assertEq(address(well2), MockWellUpgradeable(proxyAddress).getImplementation());
+        assertEq(
+            address(well2),
+            MockWellUpgradeable(proxyAddress).getImplementation()
+        );
         assertEq(1, MockWellUpgradeable(proxyAddress).getVersion());
         assertEq(100, MockWellUpgradeable(proxyAddress).getVersion(100));
         vm.stopPrank();
     }
+
+    ///////////////// Access Control ////////////////////
+
+    function testUpgradeToNewImplementationAccessControl() public {
+        Call memory wellFunction = Call(wellFunctionAddress, abi.encode("2"));
+        Call[] memory pumps = new Call[](1);
+        pumps[0] = Call(mockPumpAddress, abi.encode("2"));
+        // create new mock Well Implementation:
+        address wellImpl = address(new MockWellUpgradeable());
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            tokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
+        vm.label(address(well2), "upgradeableWell2");
+        // set caller to not be the owner
+        address notOwner = makeAddr("notOwner");
+        vm.startPrank(notOwner);
+        WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
+        // expect revert
+        vm.expectRevert("Ownable: caller is not the owner");
+        proxy.upgradeTo(address(well2));
+        vm.stopPrank();
+    }
+
+    ///////////////////// Token Check //////////////////////
 
     function testUpgradeToNewImplementationDiffTokens() public {
         // create 2 new tokens with new addresses
@@ -215,8 +281,14 @@ contract WellUpgradeTest is Test, WellDeployer {
         // create new mock Well Implementation:
         address wellImpl = address(new MockWellUpgradeable());
         // bore new well with the different tokens
-        WellUpgradeable well2 =
-            encodeAndBoreWellUpgradeable(aquifer, wellImpl, newTokens, wellFunction, pumps, bytes32(abi.encode("2")));
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            newTokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
         vm.label(address(well2), "upgradeableWell2");
         vm.startPrank(initialOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
@@ -237,8 +309,14 @@ contract WellUpgradeTest is Test, WellDeployer {
         // create new mock Well Implementation:
         address wellImpl = address(new MockWellUpgradeable());
         // bore new well with the different tokens
-        WellUpgradeable well2 =
-            encodeAndBoreWellUpgradeable(aquifer, wellImpl, newTokens, wellFunction, pumps, bytes32(abi.encode("2")));
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            newTokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
         vm.label(address(well2), "upgradeableWell2");
         vm.startPrank(initialOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
