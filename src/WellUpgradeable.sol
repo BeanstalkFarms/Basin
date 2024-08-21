@@ -17,15 +17,13 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
     address private immutable ___self = address(this);
 
     /**
-     * @notice verifies that the execution is called through an minimal proxy or is not a delegate call.
+     * @notice Verifies that the execution is called through an minimal proxy.
      */
     modifier notDelegatedOrIsMinimalProxy() {
         if (address(this) != ___self) {
             address aquifer = aquifer();
             address wellImplmentation = IAquifer(aquifer).wellImplementation(address(this));
             require(wellImplmentation == ___self, "Function must be called by a Well bored by an aquifer");
-        } else {
-            revert("UUPSUpgradeable: must not be called through delegatecall");
         }
         _;
     }
