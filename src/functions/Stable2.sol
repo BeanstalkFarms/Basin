@@ -82,9 +82,8 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256[] memory scaledReserves = getScaledReserves(reserves, decimals);
 
         uint256 Ann = a * N * N;
-
+        
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
-        if (sumReserves == 0) return 0;
         lpTokenSupply = sumReserves;
         for (uint256 i = 0; i < 255; i++) {
             uint256 dP = lpTokenSupply;
