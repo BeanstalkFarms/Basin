@@ -241,15 +241,9 @@ contract WellUpgradeTest is Test, WellDeployer {
         vm.stopPrank();
     }
 
+    ///////////////// Access Control ////////////////////
+
     function testUpgradeToNewImplementationAccessControl() public {
-        IERC20[] memory tokens = new IERC20[](2);
-        tokens[0] = new MockToken("BEAN", "BEAN", 6);
-        tokens[1] = new MockToken("WETH", "WETH", 18);
-    function testUpgradeToNewImplementationDiffTokens() public {
-        // create 2 new tokens with new addresses
-        IERC20[] memory newTokens = new IERC20[](2);
-        newTokens[0] = new MockToken("WBTC", "WBTC", 6);
-        newTokens[1] = new MockToken("WETH2", "WETH2", 18);
         Call memory wellFunction = Call(wellFunctionAddress, abi.encode("2"));
         Call[] memory pumps = new Call[](1);
         pumps[0] = Call(mockPumpAddress, abi.encode("2"));
@@ -269,10 +263,32 @@ contract WellUpgradeTest is Test, WellDeployer {
         vm.startPrank(notOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
         // expect revert
-        vm.expectRevert();
+        vm.expectRevert("Ownable: caller is not the owner");
+        proxy.upgradeTo(address(well2));
+        vm.stopPrank();
+    }
+
+    ///////////////////// Token Check //////////////////////
+
+    function testUpgradeToNewImplementationDiffTokens() public {
+        // create 2 new tokens with new addresses
+        IERC20[] memory newTokens = new IERC20[](2);
+        newTokens[0] = new MockToken("WBTC", "WBTC", 6);
+        newTokens[1] = new MockToken("WETH2", "WETH2", 18);
+        Call memory wellFunction = Call(wellFunctionAddress, abi.encode("2"));
+        Call[] memory pumps = new Call[](1);
+        pumps[0] = Call(mockPumpAddress, abi.encode("2"));
+        // create new mock Well Implementation:
+        address wellImpl = address(new MockWellUpgradeable());
         // bore new well with the different tokens
-        WellUpgradeable well2 =
-            encodeAndBoreWellUpgradeable(aquifer, wellImpl, newTokens, wellFunction, pumps, bytes32(abi.encode("2")));
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            newTokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
         vm.label(address(well2), "upgradeableWell2");
         vm.startPrank(initialOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
@@ -293,8 +309,14 @@ contract WellUpgradeTest is Test, WellDeployer {
         // create new mock Well Implementation:
         address wellImpl = address(new MockWellUpgradeable());
         // bore new well with the different tokens
-        WellUpgradeable well2 =
-            encodeAndBoreWellUpgradeable(aquifer, wellImpl, newTokens, wellFunction, pumps, bytes32(abi.encode("2")));
+        WellUpgradeable well2 = encodeAndBoreWellUpgradeable(
+            aquifer,
+            wellImpl,
+            newTokens,
+            wellFunction,
+            pumps,
+            bytes32(abi.encode("2"))
+        );
         vm.label(address(well2), "upgradeableWell2");
         vm.startPrank(initialOwner);
         WellUpgradeable proxy = WellUpgradeable(payable(proxyAddress));
