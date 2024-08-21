@@ -314,7 +314,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         if (decimal0 == 0) {
             decimal0 = 18;
         }
-        if (decimal0 == 0) {
+        if (decimal1 == 0) {
             decimal1 = 18;
         }
         if (decimal0 > 18 || decimal1 > 18) revert InvalidTokenDecimals();
