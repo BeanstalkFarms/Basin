@@ -90,9 +90,8 @@ contract WellUpgradeTest is Test, WellDeployer {
         // When we deploy the proxy, the init data is stored in the proxy storage and the well is initialized
         // for the second time. We can now control the well via delegate calls to the proxy address.
 
-        // Every time we call the init function, we init the owner to be the msg.sender and
-        // then immidiately transfer ownership
-        // to an address of our choice (see WellUpgradeable.sol for more details on the init function)
+        // Every time we call the init function, we init the owner to be the msg.sender
+        // (see WellUpgradeable.sol for more details on the init function)
 
         // FROM OZ
         // If _data is nonempty, it’s used as data in a delegate call to _logic.
