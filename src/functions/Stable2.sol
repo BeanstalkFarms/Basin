@@ -42,7 +42,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     // price threshold. more accurate pricing requires a lower threshold,
     // at the cost of higher execution costs.
-    uint256 constant PRICE_THRESHOLD = 100; // 0.01%
+    uint256 constant PRICE_THRESHOLD = 10; // 0.001%
 
     address immutable lookupTable;
     uint256 immutable a;
@@ -213,7 +213,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 parityReserve = lpTokenSupply / 2;
 
         // update `scaledReserves` based on whether targetPrice is closer to low or high price:
-        if (pd.lutData.highPrice - pd.targetPrice > pd.targetPrice - pd.lutData.lowPrice) {
+        if (percentDiff(pd.lutData.highPrice, pd.targetPrice) > percentDiff(pd.lutData.lowPrice, pd.targetPrice)) {
             // targetPrice is closer to lowPrice.
             scaledReserves[i] = parityReserve * pd.lutData.lowPriceI / pd.lutData.precision;
             scaledReserves[j] = parityReserve * pd.lutData.lowPriceJ / pd.lutData.precision;
@@ -297,7 +297,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
         // update scaledReserve[j] such that calcRate(scaledReserves, i, j) = low/high Price,
         // depending on which is closer to targetPrice.
-        if (pd.lutData.highPrice - pd.targetPrice > pd.targetPrice - pd.lutData.lowPrice) {
+        if (percentDiff(pd.lutData.highPrice, pd.targetPrice) > percentDiff(pd.lutData.lowPrice, pd.targetPrice)) {
             // targetPrice is closer to lowPrice.
             scaledReserves[j] = scaledReserves[i] * pd.lutData.lowPriceJ / pd.lutData.precision;
 
@@ -443,5 +443,20 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             return reserve
                 + pd.maxStepSize * (pd.currentPrice - pd.targetPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
         }
+    }
+
+    /**
+     * @notice Calculate the percentage difference between two numbers.
+     * @return The percentage difference as a fixed-point number with 18 decimals.
+     * @dev This function calculates the absolute percentage difference:
+     *      |(a - b)| / ((a + b) / 2) * 100
+     *      The result is scaled by 1e18 for precision.
+     */
+    function percentDiff(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        if (_a == _b) return 0;
+        uint256 difference = _a > _b ? _a - _b : _b - _a;
+        uint256 average = (_a + _b) / 2;
+        // Multiply by 100 * 1e18 to get percentage with 18 decimal places
+        return (difference * 100 * 1e18) / average;
     }
 }

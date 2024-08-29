@@ -61,7 +61,7 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertApproxEqRel(reserve0, 4.575771214546676444e18, 0.0001e18);
+        assertApproxEqRel(reserve0, 4.576236561359714812e18, 0.0001e18);
         assertApproxEqRel(reserve1, 0.21852354514449462e18, 0.0001e18);
     }
 

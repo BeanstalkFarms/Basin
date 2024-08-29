@@ -30,8 +30,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 100.005058322101089709e18);
-        assertEq(reserve1, 100.005058322101089709e18);
+        assertEq(reserve0, 99.999921040536083478e18);
+        assertEq(reserve1, 99.999921040536083478e18);
     }
 
     function test_calcReserveAtRatioSwap_equal_diff() public view {
@@ -45,8 +45,8 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioSwap(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
-        assertEq(reserve0, 73.517644476151580971e18);
-        assertEq(reserve1, 73.517644476151580971e18);
+        assertEq(reserve0, 73.513867858788351572e18);
+        assertEq(reserve1, 73.513867858788351572e18);
     }
 
     function test_calcReserveAtRatioSwap_diff_equal() public view {
@@ -61,7 +61,7 @@ contract BeanstalkStable2SwapTest is TestHelper {
         uint256 reserve1 = _f.calcReserveAtRatioSwap(reserves, 1, ratios, data);
 
         assertEq(reserve0, 180.644064978044534737e18); // 180.644064978044534737e18, 100e18
-        assertEq(reserve1, 39.475055811844664131e18); // 100e18, 39.475055811844664131e18
+        assertEq(reserve1, 39.474244037189430513e18); // 100e18, 39.475055811844664131e18
     }
 
     function test_calcReserveAtRatioSwap_diff_diff() public view {
