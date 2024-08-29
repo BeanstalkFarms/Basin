@@ -86,6 +86,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
         lpTokenSupply = sumReserves;
         for (uint256 i = 0; i < 255; i++) {
+            bool stableOscillation;
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
             dP = dP * lpTokenSupply / (scaledReserves[0] * N);
@@ -93,10 +94,25 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             uint256 prevReserves = lpTokenSupply;
             lpTokenSupply = (Ann * sumReserves / A_PRECISION + (dP * N)) * lpTokenSupply
                 / (((Ann - A_PRECISION) * lpTokenSupply / A_PRECISION) + ((N + 1) * dP));
+
             // Equality with the precision of 1
+            // If the difference between the current lpTokenSupply and the previous lpTokenSupply is 2,
+            // Check that the oscillation is stable, and if so, return the average between the two.
             if (lpTokenSupply > prevReserves) {
+                if (lpTokenSupply - prevReserves == 2) {
+                    if (stableOscillation) {
+                        return lpTokenSupply - 1;
+                    }
+                    stableOscillation = true;
+                }
                 if (lpTokenSupply - prevReserves <= 1) return lpTokenSupply;
             } else {
+                if (prevReserves - lpTokenSupply == 2) {
+                    if (stableOscillation) {
+                        return lpTokenSupply + 1;
+                    }
+                    stableOscillation = true;
+                }
                 if (prevReserves - lpTokenSupply <= 1) return lpTokenSupply;
             }
         }
