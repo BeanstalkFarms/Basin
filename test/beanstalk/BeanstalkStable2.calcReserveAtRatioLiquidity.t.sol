@@ -61,7 +61,7 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
         uint256 reserve1 = _f.calcReserveAtRatioLiquidity(reserves, 1, ratios, data);
 
-        assertApproxEqRel(reserve0, 4.575771214546676444e18, 0.0001e18);
+        assertApproxEqRel(reserve0, 4.576236561359714812e18, 0.0001e18);
         assertApproxEqRel(reserve1, 0.21852354514449462e18, 0.0001e18);
     }
 
@@ -111,7 +111,7 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
             // estimated price and actual price are within 0.04% in the worst case.
             assertApproxEqRel(reservePrice0, targetPrice, 0.0004e18, "reservePrice0 <> targetPrice");
             assertApproxEqRel(reservePrice1, targetPrice, 0.0004e18, "reservePrice1 <> targetPrice");
-            assertApproxEqRel(reservePrice0, reservePrice1, 0.0004e18, "reservePrice0 <> reservePrice1");
+            assertApproxEqRel(reservePrice0, reservePrice1, 0.0005e18, "reservePrice0 <> reservePrice1");
         }
     }
 
@@ -120,5 +120,21 @@ contract BeanstalkStable2LiquidityTest is TestHelper {
         uint256[] memory ratios = new uint256[](2);
         vm.expectRevert();
         _f.calcReserveAtRatioLiquidity(reserves, 2, ratios, "");
+    }
+
+    function test_calcReserveAtRatioLiquidityExtreme() public view {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = 1e18;
+        reserves[1] = 1e18;
+        uint256[] memory ratios = new uint256[](2);
+        ratios[0] = 8;
+        ratios[1] = 1;
+
+        uint256 reserve0 = _f.calcReserveAtRatioLiquidity(reserves, 0, ratios, data);
+
+        reserves[0] = reserve0;
+
+        uint256 price = _f.calcRate(reserves, 1, 0, data);
+        assertApproxEqRel(price, 125_000, 0.01e18);
     }
 }

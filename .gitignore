@@ -2,6 +2,10 @@
 cache/
 out/
 
+# Python virtual environments
+env/
+venv/
+
 .vscode
 
 # Ignores development broadcast logs

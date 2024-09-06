@@ -26,6 +26,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     struct PriceData {
         uint256 targetPrice;
         uint256 currentPrice;
+        uint256 newPrice;
         uint256 maxStepSize;
         ILookupTable.PriceData lutData;
     }
@@ -41,7 +42,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     // price threshold. more accurate pricing requires a lower threshold,
     // at the cost of higher execution costs.
-    uint256 constant PRICE_THRESHOLD = 100; // 0.01%
+    uint256 constant PRICE_THRESHOLD = 10; // 0.001%
 
     address immutable lookupTable;
     uint256 immutable a;
@@ -83,9 +84,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 Ann = a * N * N;
 
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
-        if (sumReserves == 0) return 0;
         lpTokenSupply = sumReserves;
         for (uint256 i = 0; i < 255; i++) {
+            bool stableOscillation;
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
             dP = dP * lpTokenSupply / (scaledReserves[0] * N);
@@ -93,13 +94,29 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             uint256 prevReserves = lpTokenSupply;
             lpTokenSupply = (Ann * sumReserves / A_PRECISION + (dP * N)) * lpTokenSupply
                 / (((Ann - A_PRECISION) * lpTokenSupply / A_PRECISION) + ((N + 1) * dP));
+
             // Equality with the precision of 1
+            // If the difference between the current lpTokenSupply and the previous lpTokenSupply is 2,
+            // Check that the oscillation is stable, and if so, return the average between the two.
             if (lpTokenSupply > prevReserves) {
+                if (lpTokenSupply - prevReserves == 2) {
+                    if (stableOscillation) {
+                        return lpTokenSupply - 1;
+                    }
+                    stableOscillation = true;
+                }
                 if (lpTokenSupply - prevReserves <= 1) return lpTokenSupply;
             } else {
+                if (prevReserves - lpTokenSupply == 2) {
+                    if (stableOscillation) {
+                        return lpTokenSupply + 1;
+                    }
+                    stableOscillation = true;
+                }
                 if (prevReserves - lpTokenSupply <= 1) return lpTokenSupply;
             }
         }
+        revert("Non convergence: calcLpTokenSupply");
     }
 
     /**
@@ -140,7 +157,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
-        revert("did not find convergence");
+        revert("Non convergence: calcReserve");
     }
 
     /**
@@ -196,7 +213,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 parityReserve = lpTokenSupply / 2;
 
         // update `scaledReserves` based on whether targetPrice is closer to low or high price:
-        if (pd.lutData.highPrice - pd.targetPrice > pd.targetPrice - pd.lutData.lowPrice) {
+        if (percentDiff(pd.lutData.highPrice, pd.targetPrice) > percentDiff(pd.lutData.lowPrice, pd.targetPrice)) {
             // targetPrice is closer to lowPrice.
             scaledReserves[i] = parityReserve * pd.lutData.lowPriceI / pd.lutData.precision;
             scaledReserves[j] = parityReserve * pd.lutData.lowPriceJ / pd.lutData.precision;
@@ -211,21 +228,36 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
 
             // calculate scaledReserve[i]:
             scaledReserves[i] = calcReserve(scaledReserves, i, lpTokenSupply, abi.encode(18, 18));
-            // calc currentPrice:
-            pd.currentPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
+            // calculate new price from reserves:
+            pd.newPrice = _calcRate(scaledReserves, i, j, lpTokenSupply);
 
-            // check if new price is within 1 of target price:
+            // if the new current price is either lower or higher than both the previous current price and the target price,
+            // (i.e the target price lies between the current price and the previous current price),
+            // recalibrate high/low price.
+            if (pd.newPrice > pd.currentPrice && pd.newPrice > pd.targetPrice) {
+                pd.lutData.highPriceJ = scaledReserves[j] * 1e18 / parityReserve;
+                pd.lutData.highPriceI = scaledReserves[i] * 1e18 / parityReserve;
+                pd.lutData.highPrice = pd.newPrice;
+            } else if (pd.newPrice < pd.currentPrice && pd.newPrice < pd.targetPrice) {
+                pd.lutData.lowPriceJ = scaledReserves[j] * 1e18 / parityReserve;
+                pd.lutData.lowPriceI = scaledReserves[i] * 1e18 / parityReserve;
+                pd.lutData.lowPrice = pd.newPrice;
+            }
+
+            // update max step size based on new scaled reserve.
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
+
+            pd.currentPrice = pd.newPrice;
+
+            // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
                 if (pd.currentPrice - pd.targetPrice <= PRICE_THRESHOLD) {
                     return scaledReserves[j] / (10 ** (18 - decimals[j]));
@@ -236,6 +268,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
+        revert("Non convergence: calcReserveAtRatioSwap");
     }
 
     /**
@@ -264,7 +297,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
         // update scaledReserve[j] such that calcRate(scaledReserves, i, j) = low/high Price,
         // depending on which is closer to targetPrice.
-        if (pd.lutData.highPrice - pd.targetPrice > pd.targetPrice - pd.lutData.lowPrice) {
+        if (percentDiff(pd.lutData.highPrice, pd.targetPrice) > percentDiff(pd.lutData.lowPrice, pd.targetPrice)) {
             // targetPrice is closer to lowPrice.
             scaledReserves[j] = scaledReserves[i] * pd.lutData.lowPriceJ / pd.lutData.precision;
 
@@ -279,16 +312,29 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         }
 
         // calculate max step size:
-        if (pd.lutData.lowPriceJ > pd.lutData.highPriceJ) {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
-        } else {
-            pd.maxStepSize = scaledReserves[j] * (pd.lutData.highPriceJ - pd.lutData.lowPriceJ) / pd.lutData.highPriceJ;
-        }
+        // lowPriceJ will always be larger than highPriceJ so a check here is unnecessary.
+        pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
 
         for (uint256 k; k < 255; k++) {
             scaledReserves[j] = updateReserve(pd, scaledReserves[j]);
             // calculate new price from reserves:
-            pd.currentPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+            pd.newPrice = calcRate(scaledReserves, i, j, abi.encode(18, 18));
+
+            // if the new current price is either lower or higher than both the previous current price and the target price,
+            // (i.e the target price lies between the current price and the previous current price),
+            // recalibrate high/lowPrice and continue.
+            if (pd.newPrice > pd.targetPrice && pd.targetPrice > pd.currentPrice) {
+                pd.lutData.highPriceJ = scaledReserves[j] * 1e18 / scaledReserves[i];
+                pd.lutData.highPrice = pd.newPrice;
+            } else if (pd.newPrice < pd.targetPrice && pd.targetPrice < pd.currentPrice) {
+                pd.lutData.lowPriceJ = scaledReserves[j] * 1e18 / scaledReserves[i];
+                pd.lutData.lowPrice = pd.newPrice;
+            }
+
+            // update max step size based on new scaled reserve.
+            pd.maxStepSize = scaledReserves[j] * (pd.lutData.lowPriceJ - pd.lutData.highPriceJ) / pd.lutData.lowPriceJ;
+
+            pd.currentPrice = pd.newPrice;
 
             // check if new price is within PRICE_THRESHOLD:
             if (pd.currentPrice > pd.targetPrice) {
@@ -301,6 +347,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
                 }
             }
         }
+        revert("Non convergence: calcReserveAtRatioLiquidity");
     }
 
     /**
@@ -314,7 +361,7 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         if (decimal0 == 0) {
             decimal0 = 18;
         }
-        if (decimal0 == 0) {
+        if (decimal1 == 0) {
             decimal1 = 18;
         }
         if (decimal0 > 18 || decimal1 > 18) revert InvalidTokenDecimals();
@@ -396,5 +443,20 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
             return reserve
                 + pd.maxStepSize * (pd.currentPrice - pd.targetPrice) / (pd.lutData.highPrice - pd.lutData.lowPrice);
         }
+    }
+
+    /**
+     * @notice Calculate the percentage difference between two numbers.
+     * @return The percentage difference as a fixed-point number with 18 decimals.
+     * @dev This function calculates the absolute percentage difference:
+     *      |(a - b)| / ((a + b) / 2) * 100
+     *      The result is scaled by 1e18 for precision.
+     */
+    function percentDiff(uint256 _a, uint256 _b) internal pure returns (uint256) {
+        if (_a == _b) return 0;
+        uint256 difference = _a > _b ? _a - _b : _b - _a;
+        uint256 average = (_a + _b) / 2;
+        // Multiply by 100 * 1e18 to get percentage with 18 decimal places
+        return (difference * 100 * 1e18) / average;
     }
 }

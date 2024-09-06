@@ -17,15 +17,13 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
     address private immutable ___self = address(this);
 
     /**
-     * @notice verifies that the execution is called through an minimal proxy or is not a delegate call.
+     * @notice Verifies that the execution is called through an minimal proxy.
      */
     modifier notDelegatedOrIsMinimalProxy() {
         if (address(this) != ___self) {
             address aquifer = aquifer();
             address wellImplmentation = IAquifer(aquifer).wellImplementation(address(this));
             require(wellImplmentation == ___self, "Function must be called by a Well bored by an aquifer");
-        } else {
-            revert("UUPSUpgradeable: must not be called through delegatecall");
         }
         _;
     }
@@ -62,7 +60,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Check that the execution is being performed through a delegatecall call and that the execution context is
      * a proxy contract with an ERC1167 minimal proxy from an aquifier, pointing to a well implmentation.
      */
-    function _authorizeUpgrade(address newImplmentation) internal view override {
+    function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
         // verify the function is called through a delegatecall.
         require(address(this) != ___self, "Function must be called through delegatecall");
 
@@ -73,13 +71,21 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
 
         // verify the new implmentation is a well bored by an aquifier.
         require(
-            IAquifer(aquifer).wellImplementation(newImplmentation) != address(0),
+            IAquifer(aquifer).wellImplementation(newImplementation) != address(0),
             "New implementation must be a well implmentation"
         );
 
+        // verify the new well uses the same tokens in the same order.
+        IERC20[] memory _tokens = tokens();
+        IERC20[] memory newTokens = WellUpgradeable(newImplementation).tokens();
+        require(_tokens.length == newTokens.length, "New well must use the same number of tokens");
+        for (uint256 i; i < _tokens.length; ++i) {
+            require(_tokens[i] == newTokens[i], "New well must use the same tokens in the same order");
+        }
+
         // verify the new implmentation is a valid ERC-1967 implmentation.
         require(
-            UUPSUpgradeable(newImplmentation).proxiableUUID() == _IMPLEMENTATION_SLOT,
+            UUPSUpgradeable(newImplementation).proxiableUUID() == _IMPLEMENTATION_SLOT,
             "New implementation must be a valid ERC-1967 implmentation"
         );
     }
@@ -115,7 +121,7 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * are ERC-1167 minimal immutable clones and cannot delgate to another proxy. Thus, `proxiableUUID` was updated to support
      * this specific usecase.
      */
-    function proxiableUUID() external view override notDelegatedOrIsMinimalProxy returns (bytes32) {
+    function proxiableUUID() public view override notDelegatedOrIsMinimalProxy returns (bytes32) {
         return _IMPLEMENTATION_SLOT;
     }
 
