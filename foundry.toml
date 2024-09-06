@@ -4,7 +4,7 @@ out = 'out'
 libs = ['lib', 'node_modules']
 fuzz = { runs = 256 }
 optimizer = true
-optimizer_runs = 800
+optimizer_runs = 200
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
 ]
@@ -27,7 +27,6 @@ ignore = ["src/libraries/LibClone.sol", "src/utils/Clone.sol", "src/libraries/AB
 int_types = "long"
 line_length = 120
 multiline_func_header = "params_first"
-number_underscore = "thousands"
 override_spacing = false
 quote_style = "double"
 tab_width = 4

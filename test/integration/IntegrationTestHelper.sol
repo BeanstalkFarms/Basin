@@ -4,12 +4,11 @@ pragma solidity ^0.8.20;
 import {Test, console, stdError} from "forge-std/Test.sol";
 import {Well, Call, IERC20} from "src/Well.sol";
 import {Aquifer} from "src/Aquifer.sol";
-import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
 import {MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 import {LibContractInfo} from "src/libraries/LibContractInfo.sol";
 import {Users} from "test/helpers/Users.sol";
-import {TestHelper, Balances} from "test/TestHelper.sol";
+import {TestHelper, Balances, ConstantProduct2} from "test/TestHelper.sol";
 import {from18, to18} from "test/pumps/PumpHelpers.sol";
 
 abstract contract IntegrationTestHelper is TestHelper {
@@ -106,13 +105,14 @@ abstract contract IntegrationTestHelper is TestHelper {
         uint256 pasteIndex
     ) internal pure returns (bytes memory stuff) {
         uint256 clipboardData;
-        clipboardData = clipboardData | uint256(_type) << 248;
+        clipboardData = clipboardData | (uint256(_type) << 248);
 
-        clipboardData = clipboardData | returnDataIndex << 160 | (copyIndex * 32) + 32 << 80 | (pasteIndex * 32) + 36;
+        clipboardData =
+            clipboardData | (returnDataIndex << 160) | (((copyIndex * 32) + 32) << 80) | ((pasteIndex * 32) + 36);
         if (useEther) {
             // put 0x1 in second byte
             // shift left 30 bytes
-            clipboardData = clipboardData | 1 << 240;
+            clipboardData = clipboardData | (1 << 240);
             return abi.encodePacked(clipboardData, amount);
         } else {
             return abi.encodePacked(clipboardData);

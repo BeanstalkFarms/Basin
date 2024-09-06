@@ -156,22 +156,14 @@ contract PumpUpdateTest is TestHelper {
         mWell.update(address(pump), b, data);
 
         increaseTime(CAP_INTERVAL);
-
-        console.log(1);
-        console.log(4);
         uint256[] memory emaReserves = pump.readInstantaneousReserves(address(mWell), data);
-        console.log(4);
-        console.log("EMA Reserves Length: %s", emaReserves.length);
         assertEq(emaReserves.length, 2);
         assertApproxEqAbs(emaReserves[0], 1_156_587, 1); // = 2^(log2(1000000) * 0.9^12 +log2(1224743) * (1-0.9^12))
         assertApproxEqAbs(emaReserves[1], 1_729_223, 1); // = 2^(log2(2000000) * 0.9^12 +log2(1632992) * (1-0.9^12))
-        console.log(3);
 
         bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), data), (bytes16[]));
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1_224_743, 1);
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(12)).pow_2().toUInt(), 1_632_992, 1);
-
-        console.log(4);
 
         (uint256[] memory twaReserves, bytes memory twaCumulativeReservesBytes) =
             pump.readTwaReserves(address(mWell), startCumulativeReserves, block.timestamp - CAP_INTERVAL, data);
