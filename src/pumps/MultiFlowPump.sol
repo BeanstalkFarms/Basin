@@ -262,8 +262,8 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
         // Use the larger reserve as the numerator for the ratio to maximize precision
         (uint256 i, uint256 j) = lastReserves[0] > lastReserves[1] ? (0, 1) : (1, 0);
         CapRatesVariables memory crv;
-        crv.rLast = mfpWf.calcRate(lastReserves, i, j, data);
-        crv.r = mfpWf.calcRate(cappedReserves, i, j, data);
+        crv.rLast = tryCalcRate(mfpWf, lastReserves, i, j, data);
+        crv.r = tryCalcRate(mfpWf, cappedReserves, i, j, data);
 
         // If the ratio increased, check that it didn't increase above the max.
         if (crv.r > crv.rLast) {
@@ -318,7 +318,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
                 if (returnIfBelowMin) return new uint256[](0);
                 cappedReserves = tryCalcLPTokenUnderlying(mfpWf, maxLpTokenSupply, cappedReserves, lpTokenSupply, data);
             }
-            // If LP Token Suppply decreased, check that it didn't increase below the min.
+            // If LP Token Suppply decreased, check that it didn't decrease below the min.
         } else if (lpTokenSupply < lastLpTokenSupply) {
             uint256 minLpTokenSupply = lastLpTokenSupply
                 * (ABDKMathQuad.ONE.sub(crp.maxLpSupplyDecrease)).powu(capExponent).to128x128().toUint256() / CAP_PRECISION2;
@@ -491,7 +491,7 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     ) private view returns (uint256[] memory) {
         uint256[] memory ratios = new uint256[](2);
         ratios[i] = rLimit;
-        ratios[j] = CAP_PRECISION;
+        ratios[j] = mfpWf.ratioPrecision(j, data);
         // Use a minimum of 1 for reserve. Geometric means will be set to 0 if a reserve is 0.
         uint256 cappedReserveI = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, i, ratios, data), 1);
         reserves[j] = Math.max(tryCalcReserveAtRatioSwap(mfpWf, reserves, j, ratios, data), 1);
@@ -502,7 +502,9 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
     /**
      * @dev Convert an `address` into a `bytes32` by zero padding the right 12 bytes.
      */
-    function _getSlotForAddress(address addressValue) internal pure returns (bytes32 _slot) {
+    function _getSlotForAddress(
+        address addressValue
+    ) internal pure returns (bytes32 _slot) {
         _slot = bytes32(bytes20(addressValue)); // Because right padded, no collision on adjacent
     }
 
@@ -510,14 +512,18 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
      * @dev Get the slot number that contains the `n`th element of an array.
      * slots are seperated by 32 bytes to allow for future expansion of the Pump (i.e supporting Well with more than 3 tokens).
      */
-    function _getSlotsOffset(uint256 numberOfReserves) internal pure returns (uint256 _slotsOffset) {
+    function _getSlotsOffset(
+        uint256 numberOfReserves
+    ) internal pure returns (uint256 _slotsOffset) {
         _slotsOffset = ((numberOfReserves - 1) / 2 + 1) << 5;
     }
 
     /**
      * @dev Get the delta between the current and provided timestamp as a `uint256`.
      */
-    function _getDeltaTimestamp(uint40 lastTimestamp) internal view returns (uint256 _deltaTimestamp) {
+    function _getDeltaTimestamp(
+        uint40 lastTimestamp
+    ) internal view returns (uint256 _deltaTimestamp) {
         return uint256(uint40(block.timestamp) - lastTimestamp);
     }
 
@@ -552,6 +558,24 @@ contract MultiFlowPump is IPump, IMultiFlowPumpErrors, IInstantaneousPump, ICumu
             lpTokenSupply = _lpTokenSupply;
         } catch {
             lpTokenSupply = MAX_UINT256_SQRT;
+        }
+    }
+
+    /**
+     * @dev Assumes that if `CalcRate` fails, it fails because of overflow.
+     * If it fails, returns the maximum possible return value for `CalcRate`.
+     */
+    function tryCalcRate(
+        IMultiFlowPumpWellFunction wf,
+        uint256[] memory reserves,
+        uint256 i,
+        uint256 j,
+        bytes memory data
+    ) internal view returns (uint256 rate) {
+        try wf.calcRate(reserves, i, j, data) returns (uint256 _rate) {
+            rate = _rate;
+        } catch {
+            rate = type(uint256).max;
         }
     }
 

@@ -28,6 +28,7 @@ contract PumpUpdateTest is TestHelper {
         pump = new MultiFlowPump();
         data = mockPumpData();
         wellFunction.target = address(new ConstantProduct2());
+        wellFunction.data = abi.encode(18, 18);
         mWell.setWellFunction(wellFunction);
 
         // Send first update to the Pump, which will initialize it

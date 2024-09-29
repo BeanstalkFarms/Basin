@@ -42,4 +42,12 @@ interface IMultiFlowPumpWellFunction is IWellFunction {
         uint256 j,
         bytes calldata data
     ) external view returns (uint256 rate);
+
+    /**
+     * @notice Returns the precision of the ratio at which the pump will cap the reserve at.
+     * @param j The index of the reserve to solve for
+     * @param data The data passed to the well function
+     * @return precision The precision of the ratio at which the pump will cap the reserve at
+     */
+    function ratioPrecision(uint256 j, bytes calldata data) external view returns (uint256);
 }

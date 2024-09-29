@@ -55,8 +55,14 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         return "CP";
     }
 
+    function version() external pure override returns (string memory) {
+        return "1.2.0";
+    }
+
     /// @dev calculate the mathematical product of an array of uint256[]
-    function _prodX(uint256[] memory xs) private pure returns (uint256 pX) {
+    function _prodX(
+        uint256[] memory xs
+    ) private pure returns (uint256 pX) {
         pX = xs[0];
         uint256 length = xs.length;
         for (uint256 i = 1; i < length; ++i) {
@@ -102,5 +108,20 @@ contract ConstantProduct is ProportionalLPToken, IBeanstalkWellFunction {
         bytes calldata
     ) external pure returns (uint256 rate) {
         return reserves[i] * CALC_RATE_PRECISION / reserves[j];
+    }
+
+    /**
+     * @notice Returns the precision of the ratio at which the pump will cap the reserve at.
+     * @param j The index of the reserve to solve for
+     * @param data The data passed to the well function
+     * @return precision The precision of the ratio at which the pump will cap the reserve at
+     */
+    function ratioPrecision(uint256 j, bytes calldata data) external pure returns (uint256 precision) {
+        (uint256 iDecimals, uint256 jDecimals) = abi.decode(data, (uint256, uint256));
+        if (j == 0) {
+            return ((10 ** iDecimals) * CALC_RATE_PRECISION) / (10 ** jDecimals);
+        } else {
+            return ((10 ** jDecimals) * CALC_RATE_PRECISION) / (10 ** iDecimals);
+        }
     }
 }

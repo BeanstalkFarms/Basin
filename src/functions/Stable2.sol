@@ -58,7 +58,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     // 2. getRatiosFromPriceSwap(uint256) -> PriceData memory
     // 3. getAParameter() -> uint256
     // Lookup tables are a function of the A parameter.
-    constructor(address lut) {
+    constructor(
+        address lut
+    ) {
         if (lut == address(0)) revert InvalidLUT();
         lookupTable = lut;
         a = ILookupTable(lut).getAParameter();
@@ -274,7 +276,6 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
     /**
      * @inheritdoc IBeanstalkWellFunction
      * @dev `calcReserveAtRatioLiquidity` fetches the closes approximate ratios from the target price,
-     * and performs newtons method in order to converge into a reserve.
      */
     function calcReserveAtRatioLiquidity(
         uint256[] calldata reserves,
@@ -354,7 +355,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
      * @notice decodes the data encoded in the well.
      * @return decimals an array of the decimals of the tokens in the well.
      */
-    function decodeWellData(bytes memory data) public view virtual returns (uint256[] memory decimals) {
+    function decodeWellData(
+        bytes memory data
+    ) public view virtual returns (uint256[] memory decimals) {
         (uint256 decimal0, uint256 decimal1) = abi.decode(data, (uint256, uint256));
 
         // if well data returns 0, assume 18 decimals.
@@ -379,6 +382,10 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
         return "S2";
     }
 
+    function version() external pure returns (string memory) {
+        return "1.1.0";
+    }
+
     /**
      * @notice internal calcRate function.
      */
@@ -395,6 +402,15 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
         // calculate rate:
         rate = _reserves[i] - calcReserve(_reserves, i, lpTokenSupply, abi.encode(18, 18));
+    }
+
+    /**
+     * @inheritdoc IMultiFlowPumpWellFunction
+     * @notice Returns the precision of the ratio at which the pump will cap the reserve at.
+     * @dev {Stable2.calcRate} returns the rate with PRICE_PRECISION, independent of data or index.
+     */
+    function ratioPrecision(uint256, bytes calldata) external pure returns (uint256 precision) {
+        return PRICE_PRECISION;
     }
 
     /**
