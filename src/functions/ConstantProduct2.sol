@@ -121,16 +121,8 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
     /**
      * @notice Returns the precision of the ratio at which the pump will cap the reserve at.
-     * @param j The index of the reserve to solve for
-     * @param data The data passed to the well function
-     * @return precision The precision of the ratio at which the pump will cap the reserve at
      */
-    function ratioPrecision(uint256 j, bytes calldata data) external pure returns (uint256 precision) {
-        (uint256 iDecimals, uint256 jDecimals) = abi.decode(data, (uint256, uint256));
-        if (j == 0) {
-            return ((10 ** iDecimals) * CALC_RATE_PRECISION) / (10 ** jDecimals);
-        } else {
-            return ((10 ** jDecimals) * CALC_RATE_PRECISION) / (10 ** iDecimals);
-        }
+    function ratioPrecision(uint256, bytes calldata) external pure returns (uint256 precision) {
+        return CALC_RATE_PRECISION;
     }
 }
