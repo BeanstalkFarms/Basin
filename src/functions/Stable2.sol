@@ -9,8 +9,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 /**
  * @author brean, deadmanwalking
- * @title Gas efficient StableSwap pricing function for Wells with 2 tokens.
- * developed by curve.
+ * @title Gas efficient Like-valued token pricing function for Wells with 2 tokens.
  *
  * Stableswap Wells with 2 tokens use the formula:
  *  `4 * A * (b_0+b_1) + D = 4 * A * D + D^3/(4 * b_0 * b_1)`
