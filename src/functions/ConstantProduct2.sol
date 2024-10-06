@@ -81,6 +81,10 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         return "CP2";
     }
 
+    function version() external pure override returns (string memory) {
+        return "1.2.0";
+    }
+
     /// @dev `b_j = (b_0 * b_1 * r_j / r_i)^(1/2)`
     /// Note: Always rounds down
     function calcReserveAtRatioSwap(
@@ -113,5 +117,12 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         bytes calldata
     ) external pure returns (uint256 rate) {
         return reserves[i] * CALC_RATE_PRECISION / reserves[j];
+    }
+
+    /**
+     * @notice Returns the precision of the ratio at which the pump will cap the reserve at.
+     */
+    function ratioPrecision(uint256, bytes calldata) external pure returns (uint256 precision) {
+        return CALC_RATE_PRECISION;
     }
 }

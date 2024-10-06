@@ -70,4 +70,9 @@ interface IWellFunction {
      * @notice Returns the symbol of the Well function.
      */
     function symbol() external view returns (string memory);
+
+    /**
+     * @notice Returns the version of the Well function.
+     */
+    function version() external view returns (string memory);
 }

@@ -1,7 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
  */
-
 pragma solidity ^0.8.20;
 
 import {IWellFunction} from "src/interfaces/IWellFunction.sol";
@@ -27,4 +26,6 @@ contract MockEmptyFunction is IWellFunction {
     function name() external pure override returns (string memory) {}
 
     function symbol() external pure override returns (string memory) {}
+
+    function version() external pure override returns (string memory) {}
 }

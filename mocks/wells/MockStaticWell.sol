@@ -1,7 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
  */
-
 pragma solidity ^0.8.20;
 
 import {console} from "test/TestHelper.sol";
@@ -21,7 +20,7 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
     address immutable TOKEN0;
     address immutable TOKEN1;
     address immutable WELL_FUNCTION_TARGET;
-    bytes32 immutable WELL_FUNCTION_DATA;
+    bytes internal wellFunctionData;
     address immutable PUMP0_TARGET;
     bytes32 immutable PUMP0_DATA;
     address immutable AQUIFER;
@@ -43,7 +42,7 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
         TOKEN0 = address(_tokens[0]);
         TOKEN1 = address(_tokens[1]);
         WELL_FUNCTION_TARGET = _wellFunction.target;
-        WELL_FUNCTION_DATA = bytes32(_wellFunction.data);
+        wellFunctionData = _wellFunction.data;
         PUMP0_TARGET = _pumps[0].target;
         PUMP0_DATA = bytes32(_pumps[0].data);
         AQUIFER = _aquifer;
@@ -62,7 +61,7 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
     }
 
     function wellFunction() public view returns (Call memory _wellFunction) {
-        _wellFunction = Call(WELL_FUNCTION_TARGET, bytes32ToBytes(WELL_FUNCTION_DATA));
+        _wellFunction = Call(WELL_FUNCTION_TARGET, wellFunctionData);
     }
 
     function pumps() public view returns (Call[] memory _pumps) {
@@ -87,7 +86,9 @@ contract MockStaticWell is ReentrancyGuardUpgradeable, ClonePlus {
     }
 
     /// @dev Inefficient way to convert bytes32 back to bytes without padding
-    function bytes32ToBytes(bytes32 data) internal pure returns (bytes memory) {
+    function bytes32ToBytes(
+        bytes32 data
+    ) internal pure returns (bytes memory) {
         uint256 i = 0;
         while (i < 32 && uint8(data[i]) != 0) {
             ++i;

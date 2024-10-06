@@ -34,6 +34,7 @@ contract PumpFuzzTest is TestHelper, MultiFlowPump {
         pump = new MultiFlowPump();
         data = mockPumpData();
         wellFunction.target = address(new ConstantProduct2());
+        wellFunction.data = abi.encode(18, 18);
         mWell.setWellFunction(wellFunction);
     }
 
