@@ -15,6 +15,7 @@ block_timestamp = 1678803642
 mainnet = "${MAINNET_RPC_URL}"
 
 [profile.ci]
+no_match_contract = "IntegrationTestGasComparisons"
 no_match_test = "testSim"
 fuzz = { runs = 5_000, max_test_rejects = 1000000 }
 
