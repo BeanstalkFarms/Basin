@@ -82,7 +82,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     }
 
     function version() external pure override returns (string memory) {
-        return "1.2.0";
+        return "1.2.1";
     }
 
     /// @dev `b_j = (b_0 * b_1 * r_j / r_i)^(1/2)`
