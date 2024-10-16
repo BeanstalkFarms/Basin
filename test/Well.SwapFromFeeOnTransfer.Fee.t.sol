@@ -45,7 +45,9 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      * Well sends:      amountOut           token1
      * User receives:   amountOut           token1
      */
-    function testFuzz_swapFromFeeOnTransferWithFee_fromToken(uint256 amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransferWithFee_fromToken(
+        uint256 amountIn
+    ) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(address(user)));
         Snapshot memory bef;
         SwapAction memory act;
@@ -83,7 +85,9 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
      * the Swap event contains the amount sent by the Well, which will be larger
      * than the amount received by the User.
      */
-    function testFuzz_swapFromFeeOnTransferWithFee_toToken(uint256 amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransferWithFee_toToken(
+        uint256 amountIn
+    ) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[1].balanceOf(address(well)));
         Snapshot memory bef;
         SwapAction memory act;
@@ -107,7 +111,9 @@ contract WellSwapFromFeeOnTransferFeeTest is SwapHelper {
         afterSwapFrom(bef, act);
     }
 
-    function _getFee(uint256 amount) internal view returns (uint256) {
+    function _getFee(
+        uint256 amount
+    ) internal view returns (uint256) {
         return amount * MockTokenFeeOnTransfer(address(tokens[0])).fee() / 1e18;
     }
 }

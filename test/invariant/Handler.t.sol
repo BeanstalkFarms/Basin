@@ -59,7 +59,9 @@ contract Handler is Test {
     /// @dev The number of reverts on callling `shift`
     uint256 internal s_shiftFails;
 
-    constructor(Well well) {
+    constructor(
+        Well well
+    ) {
         s_LPs.add(msg.sender); // TestHelper adds initial liquidity
         s_well = well;
     }
@@ -160,7 +162,9 @@ contract Handler is Test {
     }
 
     /// @dev shift
-    function shift(uint256 addressSeed) public {
+    function shift(
+        uint256 addressSeed
+    ) public {
         console.log("----------------------------------");
         console.log("Shift");
         // bound address seed
@@ -489,7 +493,9 @@ contract Handler is Test {
     // helpers
 
     /// @dev Convert a seed to an address
-    function _seedToAddress(uint256 addressSeed) internal view returns (address seedAddress) {
+    function _seedToAddress(
+        uint256 addressSeed
+    ) internal view returns (address seedAddress) {
         uint160 boundInt = uint160(bound(addressSeed, 1, type(uint160).max));
         seedAddress = address(boundInt);
         if (seedAddress == address(s_well)) {
@@ -502,12 +508,16 @@ contract Handler is Test {
     }
 
     /// @dev Convert an index to an existing LP address
-    function _indexToLpAddress(uint256 addressIndex) internal view returns (address) {
+    function _indexToLpAddress(
+        uint256 addressIndex
+    ) internal view returns (address) {
         return s_LPs.at(bound(addressIndex, 0, s_LPs.length() - 1));
     }
 
     /// @dev Convert an index to an existing approvedBy address
-    function _indexToApprovedByAddress(uint256 addressIndex) internal view returns (address) {
+    function _indexToApprovedByAddress(
+        uint256 addressIndex
+    ) internal view returns (address) {
         return s_approvedBy.at(bound(addressIndex, 0, s_approvedBy.length() - 1));
     }
 
@@ -533,7 +543,9 @@ contract Handler is Test {
         console.log("Reserve1: %s", reserves[1]);
     }
 
-    function getMaxAddLiquidity(uint256[] memory reserves) internal pure returns (uint256 max) {
+    function getMaxAddLiquidity(
+        uint256[] memory reserves
+    ) internal pure returns (uint256 max) {
         if (reserves[0] == 0 || reserves[1] == 0) return type(uint96).max;
         max = type(uint256).max / (reserves[0] * reserves[1] * EXP_PRECISION);
         if (max > type(uint96).max) max = type(uint96).max;

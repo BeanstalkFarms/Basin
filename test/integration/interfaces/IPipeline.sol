@@ -33,11 +33,17 @@ struct AdvancedPipeCall {
 }
 
 interface IPipeline {
-    function pipe(PipeCall calldata p) external payable returns (bytes memory result);
+    function pipe(
+        PipeCall calldata p
+    ) external payable returns (bytes memory result);
 
-    function multiPipe(PipeCall[] calldata pipes) external payable returns (bytes[] memory results);
+    function multiPipe(
+        PipeCall[] calldata pipes
+    ) external payable returns (bytes[] memory results);
 
-    function advancedPipe(AdvancedPipeCall[] calldata pipes) external payable returns (bytes[] memory results);
+    function advancedPipe(
+        AdvancedPipeCall[] calldata pipes
+    ) external payable returns (bytes[] memory results);
 }
 
 interface IDepot {
@@ -46,7 +52,9 @@ interface IDepot {
         uint256 value
     ) external payable returns (bytes[] memory results);
 
-    function farm(bytes[] calldata data) external payable returns (bytes[] memory results);
+    function farm(
+        bytes[] calldata data
+    ) external payable returns (bytes[] memory results);
 
     function transferToken(
         IERC20 token,

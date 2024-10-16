@@ -68,7 +68,9 @@ library LibMath {
      * Implementation from: https://github.com/Gaussian-Process/solidity-sqrt/blob/main/src/FixedPointMathLib.sol
      * based on https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol
      */
-    function sqrt(uint256 a) internal pure returns (uint256 z) {
+    function sqrt(
+        uint256 a
+    ) internal pure returns (uint256 z) {
         /// @solidity memory-safe-assembly
         assembly {
             let y := a // We start y at a, which will help us make our initial estimate.

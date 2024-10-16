@@ -24,7 +24,9 @@ contract Stable2LUT1 is ILookupTable {
      * @notice Returns the estimated range of reserve ratios for a given price,
      * assuming one token reserve remains constant.
      */
-    function getRatiosFromPriceLiquidity(uint256 price) external pure returns (PriceData memory) {
+    function getRatiosFromPriceLiquidity(
+        uint256 price
+    ) external pure returns (PriceData memory) {
         if (price < 1.006758e6) {
             if (price < 0.885627e6) {
                 if (price < 0.59332e6) {
@@ -737,7 +739,9 @@ contract Stable2LUT1 is ILookupTable {
      * @notice Returns the estimated range of reserve ratios for a given price,
      * assuming the pool liquidity remains constant.
      */
-    function getRatiosFromPriceSwap(uint256 price) external pure returns (PriceData memory) {
+    function getRatiosFromPriceSwap(
+        uint256 price
+    ) external pure returns (PriceData memory) {
         if (price < 0.993344e6) {
             if (price < 0.834426e6) {
                 if (price < 0.718073e6) {

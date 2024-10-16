@@ -13,7 +13,9 @@ library LibContractInfo {
      * @return symbol The symbol of the contract
      * @dev if the contract does not have a symbol function, the first 4 bytes of the address are returned
      */
-    function getSymbol(address _contract) internal view returns (string memory symbol) {
+    function getSymbol(
+        address _contract
+    ) internal view returns (string memory symbol) {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("symbol()"));
         symbol = new string(4);
         if (success) {
@@ -31,7 +33,9 @@ library LibContractInfo {
      * @return name The name of the contract
      * @dev if the contract does not have a name function, the first 8 bytes of the address are returned
      */
-    function getName(address _contract) internal view returns (string memory name) {
+    function getName(
+        address _contract
+    ) internal view returns (string memory name) {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("name()"));
         name = new string(8);
         if (success) {
@@ -49,7 +53,9 @@ library LibContractInfo {
      * @return decimals The decimals of the contract
      * @dev if the contract does not have a decimals function, 18 is returned
      */
-    function getDecimals(address _contract) internal view returns (uint8 decimals) {
+    function getDecimals(
+        address _contract
+    ) internal view returns (uint8 decimals) {
         (bool success, bytes memory data) = _contract.staticcall(abi.encodeWithSignature("decimals()"));
         decimals = success ? abi.decode(data, (uint8)) : 18; // default to 18 decimals
     }

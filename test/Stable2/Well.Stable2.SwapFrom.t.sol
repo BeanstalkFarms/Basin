@@ -69,7 +69,9 @@ contract WellStable2SwapFromTest is SwapHelper {
         well.swapFrom(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
     }
 
-    function testFuzz_swapFrom(uint256 amountIn) public prank(user) {
+    function testFuzz_swapFrom(
+        uint256 amountIn
+    ) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
@@ -78,7 +80,9 @@ contract WellStable2SwapFromTest is SwapHelper {
         checkStableSwapInvariant(address(well));
     }
 
-    function testFuzz_swapAndRemoveAllLiq(uint256 amountIn) public {
+    function testFuzz_swapAndRemoveAllLiq(
+        uint256 amountIn
+    ) public {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
         vm.prank(user);
         well.swapFrom(tokens[0], tokens[1], amountIn, 0, user, type(uint256).max);
@@ -91,7 +95,9 @@ contract WellStable2SwapFromTest is SwapHelper {
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
-    function testFuzz_swapFrom_equalSwap(uint256 token0AmtIn) public prank(user) {
+    function testFuzz_swapFrom_equalSwap(
+        uint256 token0AmtIn
+    ) public prank(user) {
         vm.assume(token0AmtIn < tokens[0].balanceOf(user));
         uint256 token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user, type(uint256).max);
         uint256 token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user, type(uint256).max);

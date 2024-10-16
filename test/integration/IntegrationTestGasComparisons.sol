@@ -65,7 +65,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     ////////// Wells
 
-    function testFuzz_wells_WethDai_Swap(uint256 amountIn) public {
+    function testFuzz_wells_WethDai_Swap(
+        uint256 amountIn
+    ) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, daiWethTokens[1].balanceOf(address(this)));
         vm.resumeGasMetering();
@@ -73,7 +75,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         daiWethWell.swapFrom(daiWethTokens[1], daiWethTokens[0], amountIn, 0, address(this), type(uint256).max);
     }
 
-    function testFuzz_wells_WethDaiUsdc_Swap(uint256 amountIn) public {
+    function testFuzz_wells_WethDaiUsdc_Swap(
+        uint256 amountIn
+    ) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, 1000e18);
 
@@ -125,7 +129,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         depot.farm(_farmCalls);
     }
 
-    function testFuzz_wells_WethDaiUsdc_Shift(uint256 amountIn) public {
+    function testFuzz_wells_WethDaiUsdc_Shift(
+        uint256 amountIn
+    ) public {
         vm.pauseGasMetering();
         amountIn = bound(amountIn, 1e18, 1000e18);
 
@@ -157,7 +163,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         depot.farm(_farmCalls);
     }
 
-    function testFuzz_wells_WethDai_AddLiquidity(uint256 amount) public {
+    function testFuzz_wells_WethDai_AddLiquidity(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(amount, 1e18, 1000e18);
@@ -167,7 +175,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         daiWethWell.addLiquidity(amounts, 0, address(this), type(uint256).max);
     }
 
-    function testFuzz_wells_WethDai_RemoveLiquidity(uint256 amount) public {
+    function testFuzz_wells_WethDai_RemoveLiquidity(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(amount, 1e18, 1000e18);
@@ -188,7 +198,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     ////////// Uniswap V2
 
-    function testFuzz_uniswapV2_WethDai_Swap(uint256 amount) public {
+    function testFuzz_uniswapV2_WethDai_Swap(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
@@ -203,7 +215,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDaiUsdc_Swap(uint256 amount) public {
+    function testFuzz_uniswapV2_WethDaiUsdc_Swap(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         vm.assume(amount > 0);
         amount = bound(amount, 1e18, 1000 * 1e18);
@@ -219,7 +233,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDai_AddLiquidity(uint256 amount) public {
+    function testFuzz_uniswapV2_WethDai_AddLiquidity(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
@@ -228,7 +244,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV2Router.addLiquidity(address(WETH), address(DAI), amount, amount, 1, 1, address(this), block.timestamp);
     }
 
-    function testFuzz_uniswapV2_WethDai_RemoveLiquidity(uint256 amount) public {
+    function testFuzz_uniswapV2_WethDai_RemoveLiquidity(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV2Router));
@@ -245,7 +263,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
     ////////// Uniswap V3
 
-    function testFuzz_uniswapV3_WethDai_Swap(uint256 amount) public {
+    function testFuzz_uniswapV3_WethDai_Swap(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
@@ -264,7 +284,9 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
         uniV3Router.exactInputSingle(params);
     }
 
-    function testFuzz_uniswapV3_WethDaiUsdc_Swap(uint256 amount) public {
+    function testFuzz_uniswapV3_WethDaiUsdc_Swap(
+        uint256 amount
+    ) public {
         vm.pauseGasMetering();
         amount = bound(amount, 1e18, 1000 * 1e18);
         _uniSetupHelper(amount, address(uniV3Router));
@@ -308,5 +330,7 @@ contract IntegrationTestGasComparisons is IntegrationTestHelper {
 
 interface IWETH is IERC20 {
     function deposit() external payable;
-    function withdraw(uint256 amount) external;
+    function withdraw(
+        uint256 amount
+    ) external;
 }

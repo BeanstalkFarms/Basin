@@ -27,13 +27,17 @@ contract LibMathTest is TestHelper {
         assertEq(LibMath.nthRoot(4, 2), LibMath.sqrt(4));
     }
 
-    function testFuzz_nthRoot_sqrtMatch(uint256 a) public {
+    function testFuzz_nthRoot_sqrtMatch(
+        uint256 a
+    ) public {
         vm.assume(a < type(uint256).max);
         assertEq(LibMath.nthRoot(a, 2), LibMath.sqrt(a));
     }
 
     /// @dev for all even roots, nthRoot exactly matches `n` sqrt iterations
-    function testFuzz_nthRoot_sqrtMatchAll(uint256 a) public {
+    function testFuzz_nthRoot_sqrtMatchAll(
+        uint256 a
+    ) public {
         // every even nth root: 2 4 8 16
         for (uint256 i = 1; i <= 4; ++i) {
             uint256 v = a;

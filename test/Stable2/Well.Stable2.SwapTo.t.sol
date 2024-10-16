@@ -20,7 +20,9 @@ contract WellStable2SwapToTest is SwapHelper {
         assertEq(amountIn, 103_464_719_546_263_310_322); // ~3% slippage
     }
 
-    function testFuzz_getSwapIn_revertIf_insufficientWellBalance(uint256 i) public prank(user) {
+    function testFuzz_getSwapIn_revertIf_insufficientWellBalance(
+        uint256 i
+    ) public prank(user) {
         IERC20[] memory _tokens = well.tokens();
         Balances memory wellBalances = getBalances(address(well), well);
         vm.assume(i < _tokens.length);
@@ -60,7 +62,9 @@ contract WellStable2SwapToTest is SwapHelper {
     }
 
     /// @dev tests assume 2 tokens in future we can extend for multiple tokens
-    function testFuzz_swapTo(uint256 amountOut) public prank(user) {
+    function testFuzz_swapTo(
+        uint256 amountOut
+    ) public prank(user) {
         // User has 1000 of each token
         // Given current liquidity, swapping 1000 of one token gives 500 of the other
         uint256 maxAmountIn = 1000 * 1e18;
@@ -100,7 +104,9 @@ contract WellStable2SwapToTest is SwapHelper {
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
-    function testFuzz_swapTo_equalSwap(uint256 token0AmtOut) public prank(user) {
+    function testFuzz_swapTo_equalSwap(
+        uint256 token0AmtOut
+    ) public prank(user) {
         // assume amtOut is lower due to slippage
         vm.assume(token0AmtOut < 500e18);
         uint256 token1In = well.swapTo(tokens[0], tokens[1], 1000e18, token0AmtOut, user, type(uint256).max);

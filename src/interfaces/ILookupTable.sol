@@ -29,7 +29,11 @@ interface ILookupTable {
         uint256 precision;
     }
 
-    function getRatiosFromPriceLiquidity(uint256) external view returns (PriceData memory);
-    function getRatiosFromPriceSwap(uint256) external view returns (PriceData memory);
+    function getRatiosFromPriceLiquidity(
+        uint256
+    ) external view returns (PriceData memory);
+    function getRatiosFromPriceSwap(
+        uint256
+    ) external view returns (PriceData memory);
     function getAParameter() external view returns (uint256);
 }

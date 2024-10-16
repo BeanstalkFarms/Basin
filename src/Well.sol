@@ -408,7 +408,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
         }
     }
 
-    function getShiftOut(IERC20 tokenOut) external view readOnlyNonReentrant returns (uint256 amountOut) {
+    function getShiftOut(
+        IERC20 tokenOut
+    ) external view readOnlyNonReentrant returns (uint256 amountOut) {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = new uint256[](tokensLength);
@@ -674,7 +676,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Transfer excess tokens held by the Well to `recipient`.
      */
-    function skim(address recipient) external nonReentrant returns (uint256[] memory skimAmounts) {
+    function skim(
+        address recipient
+    ) external nonReentrant returns (uint256[] memory skimAmounts) {
         IERC20[] memory _tokens = tokens();
         uint256 tokensLength = _tokens.length;
         uint256[] memory reserves = _getReserves(tokensLength);
@@ -694,7 +698,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Gets the Well's token reserves by reading from byte storage.
      */
-    function _getReserves(uint256 _numberOfTokens) internal view returns (uint256[] memory reserves) {
+    function _getReserves(
+        uint256 _numberOfTokens
+    ) internal view returns (uint256[] memory reserves) {
         reserves = LibBytes.readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
     }
 
@@ -717,7 +723,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
      * @dev Fetches the current token reserves of the Well and updates the Pumps.
      * Typically called before an operation that modifies the Well's reserves.
      */
-    function _updatePumps(uint256 _numberOfTokens) internal returns (uint256[] memory reserves) {
+    function _updatePumps(
+        uint256 _numberOfTokens
+    ) internal returns (uint256[] memory reserves) {
         reserves = _getReserves(_numberOfTokens);
 
         uint256 _numberOfPumps = numberOfPumps();
@@ -861,7 +869,9 @@ contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgr
     /**
      * @dev Reverts if the deadline has passed.
      */
-    modifier expire(uint256 deadline) {
+    modifier expire(
+        uint256 deadline
+    ) {
         if (block.timestamp > deadline) {
             revert Expired();
         }

@@ -60,7 +60,9 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Check that the execution is being performed through a delegatecall call and that the execution context is
      * a proxy contract with an ERC1167 minimal proxy from an aquifier, pointing to a well implmentation.
      */
-    function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal view override onlyOwner {
         // verify the function is called through a delegatecall.
         require(address(this) != ___self, "Function must be called through delegatecall");
 
@@ -96,7 +98,9 @@ contract WellUpgradeable is Well, UUPSUpgradeable, OwnableUpgradeable {
      * @dev `upgradeTo` was modified to support ERC-1167 minimal proxies
      * cloned (Bored) by an Aquifer.
      */
-    function upgradeTo(address newImplementation) public override {
+    function upgradeTo(
+        address newImplementation
+    ) public override {
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, new bytes(0), false);
     }
