@@ -17,11 +17,15 @@ interface ICurvePool {
         uint256 min_amount
     ) external returns (uint256);
 
-    function balances(int128 i) external view returns (uint256);
+    function balances(
+        int128 i
+    ) external view returns (uint256);
 
     function fee() external view returns (uint256);
 
-    function coins(uint256 i) external view returns (address);
+    function coins(
+        uint256 i
+    ) external view returns (address);
 
     function get_virtual_price() external view returns (uint256);
 
@@ -134,13 +138,19 @@ interface I3Curve {
 }
 
 interface ICurveFactory {
-    function get_coins(address _pool) external view returns (address[4] calldata);
+    function get_coins(
+        address _pool
+    ) external view returns (address[4] calldata);
 
-    function get_underlying_coins(address _pool) external view returns (address[8] calldata);
+    function get_underlying_coins(
+        address _pool
+    ) external view returns (address[8] calldata);
 }
 
 interface ICurveCryptoFactory {
-    function get_coins(address _pool) external view returns (address[8] calldata);
+    function get_coins(
+        address _pool
+    ) external view returns (address[8] calldata);
 }
 
 interface ICurvePoolC {

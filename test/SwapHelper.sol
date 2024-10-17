@@ -51,7 +51,9 @@ contract SwapHelper is TestHelper {
         return beforeSwapFrom(act);
     }
 
-    function beforeSwapFrom(SwapAction memory act) internal returns (Snapshot memory, SwapAction memory) {
+    function beforeSwapFrom(
+        SwapAction memory act
+    ) internal returns (Snapshot memory, SwapAction memory) {
         Snapshot memory bef = _newSnapshot();
 
         vm.expectEmit(true, true, true, true, address(well));

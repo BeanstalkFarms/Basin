@@ -17,7 +17,9 @@ contract Users is Test {
     }
 
     //create users with 100 ether balance
-    function createUsers(uint256 userNum) external returns (address[] memory) {
+    function createUsers(
+        uint256 userNum
+    ) external returns (address[] memory) {
         address[] memory users = new address[](userNum);
         for (uint256 i; i < userNum; i++) {
             address user = this.getNextUserAddress();
@@ -27,7 +29,9 @@ contract Users is Test {
     }
 
     //move block.number forward by a given number of blocks
-    function mineBlocks(uint256 numBlocks) external {
+    function mineBlocks(
+        uint256 numBlocks
+    ) external {
         uint256 targetBlock = block.number + numBlocks;
         vm.roll(targetBlock);
     }

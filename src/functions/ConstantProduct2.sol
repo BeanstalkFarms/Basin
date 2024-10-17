@@ -82,7 +82,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
     }
 
     function version() external pure override returns (string memory) {
-        return "1.2.0";
+        return "1.2.1";
     }
 
     /// @dev `b_j = (b_0 * b_1 * r_j / r_i)^(1/2)`
@@ -107,7 +107,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         bytes calldata
     ) external pure override returns (uint256 reserve) {
         uint256 i = j == 1 ? 0 : 1;
-        reserve = reserves[i] * ratios[j] / ratios[i];
+        reserve = reserves[i].mulDiv(ratios[j], ratios[i]);
     }
 
     function calcRate(
@@ -116,7 +116,7 @@ contract ConstantProduct2 is ProportionalLPToken2, IBeanstalkWellFunction {
         uint256 j,
         bytes calldata
     ) external pure returns (uint256 rate) {
-        return reserves[i] * CALC_RATE_PRECISION / reserves[j];
+        rate = reserves[i].mulDiv(CALC_RATE_PRECISION, reserves[j]);
     }
 
     /**

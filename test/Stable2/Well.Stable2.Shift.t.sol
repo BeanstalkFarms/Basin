@@ -13,7 +13,9 @@ contract WellStable2ShiftTest is TestHelper {
     }
 
     /// @dev Shift excess token0 into token1.
-    function testFuzz_shift(uint256 amount) public prank(user) {
+    function testFuzz_shift(
+        uint256 amount
+    ) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well
@@ -67,7 +69,9 @@ contract WellStable2ShiftTest is TestHelper {
     }
 
     /// @dev Shift excess token0 into token0 (just transfers the excess token0 to the user).
-    function testFuzz_shift_tokenOut(uint256 amount) public prank(user) {
+    function testFuzz_shift_tokenOut(
+        uint256 amount
+    ) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well
@@ -144,7 +148,9 @@ contract WellStable2ShiftTest is TestHelper {
         checkInvariant(address(well));
     }
 
-    function test_shift_fail_slippage(uint256 amount) public prank(user) {
+    function test_shift_fail_slippage(
+        uint256 amount
+    ) public prank(user) {
         amount = bound(amount, 1, 1000e18);
 
         // Transfer `amount` of token0 to the Well

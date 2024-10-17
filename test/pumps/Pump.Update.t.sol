@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {console, TestHelper} from "test/TestHelper.sol";
-import {MultiFlowPump, ABDKMathQuad} from "src/pumps/MultiFlowPump.sol";
+import {MultiFlowPump, ABDKMathQuad, IMultiFlowPumpWellFunction} from "src/pumps/MultiFlowPump.sol";
 import {ConstantProduct2} from "src/functions/ConstantProduct2.sol";
 import {from18, to18, mockPumpData} from "test/pumps/PumpHelpers.sol";
 import {MockReserveWell} from "mocks/wells/MockReserveWell.sol";
@@ -11,7 +11,7 @@ import {IMultiFlowPumpErrors} from "src/interfaces/pumps/IMultiFlowPumpErrors.so
 import {log2, powu, UD60x18, wrap, unwrap} from "prb/math/UD60x18.sol";
 import {exp2, log2, powu, UD60x18, wrap, unwrap, uUNIT} from "prb/math/UD60x18.sol";
 
-contract PumpUpdateTest is TestHelper {
+contract PumpUpdateTest is TestHelper, MultiFlowPump {
     using ABDKMathQuad for bytes16;
 
     MultiFlowPump pump;
@@ -296,5 +296,107 @@ contract PumpUpdateTest is TestHelper {
         cumulativeReserves = abi.decode(twaCumulativeReservesBytes, (bytes16[]));
         assertApproxEqAbs(cumulativeReserves[0].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_106_681, 1); // = 2^((log2(1632992) * 12 + log2(2000000) * 12) / (12 + 12))
         assertApproxEqAbs(cumulativeReserves[1].div(ABDKMathQuad.fromUInt(24)).pow_2().toUInt(), 1_807_203, 1); // = 2^((log2(1224743) * 12 + log2(1000000) * 12) / (12 + 12))
+    }
+
+    /**
+     * @notice test that the pump can be deinitialized, when the reserves are 0.
+     * additionally, test the pump can re-initialize upon the next update.
+     */
+    function test_deinitialize() public prank(user) {
+        // de initialize the pump by setting reserves to 0
+        b[0] = 0;
+        b[1] = 0;
+        mWell.update(address(pump), b, data);
+        mWell.update(address(pump), b, data);
+
+        // verify the reserves cannot be read:
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readLastCappedReserves(address(mWell), data);
+
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readLastInstantaneousReserves(address(mWell), data);
+
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readLastCumulativeReserves(address(mWell), data);
+
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readInstantaneousReserves(address(mWell), data);
+
+        vm.expectRevert(IMultiFlowPumpErrors.NotInitialized.selector);
+        pump.readCumulativeReserves(address(mWell), data);
+
+        // re-initialize the pump by setting the reserves to non-zero
+        b[0] = 1e6;
+        b[1] = 2e6;
+        mWell.update(address(pump), b, data);
+        mWell.update(address(pump), b, data);
+
+        uint256[] memory lastReserves = pump.readLastCappedReserves(address(mWell), data);
+        assertApproxEqAbs(lastReserves[0], 1e6, 1);
+        assertApproxEqAbs(lastReserves[1], 2e6, 1);
+
+        uint256[] memory lastEmaReserves = pump.readLastInstantaneousReserves(address(mWell), data);
+        assertApproxEqAbs(lastEmaReserves[0], 1e6, 1);
+        assertApproxEqAbs(lastEmaReserves[1], 2e6, 1);
+
+        bytes16[] memory lastCumulativeReserves = pump.readLastCumulativeReserves(address(mWell), data);
+        assertEq(lastCumulativeReserves[0], bytes16(0));
+        assertEq(lastCumulativeReserves[1], bytes16(0));
+
+        uint256[] memory emaReserves = pump.readInstantaneousReserves(address(mWell), data);
+        assertApproxEqAbs(emaReserves[0], 1e6, 1);
+        assertApproxEqAbs(emaReserves[1], 2e6, 1);
+
+        bytes16[] memory cumulativeReserves = abi.decode(pump.readCumulativeReserves(address(mWell), data), (bytes16[]));
+        assertEq(cumulativeReserves[0], bytes16(0));
+        assertEq(cumulativeReserves[1], bytes16(0));
+    }
+
+    /**
+     * @notice test the internal `_capRates` function, and verify the reserves return 0.
+     */
+    function test_internal_capRates() public view {
+        uint256[] memory lastReserves = new uint256[](2);
+        uint256[] memory reserves = new uint256[](2);
+        bytes16[][] memory maxRateChanges = new bytes16[][](2);
+        maxRateChanges[0] = new bytes16[](2);
+        maxRateChanges[1] = new bytes16[](2);
+        CapReservesParameters memory capReservesParameters = CapReservesParameters({
+            maxLpSupplyIncrease: bytes16(0),
+            maxLpSupplyDecrease: bytes16(0),
+            maxRateChanges: maxRateChanges
+        });
+        IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wellFunction.target);
+
+        uint256[] memory cappedReserves = _capRates(lastReserves, reserves, 0, capReservesParameters, mfpWf, data);
+        assertEq(cappedReserves.length, 2);
+        assertEq(cappedReserves[0], 0);
+        assertEq(cappedReserves[1], 0);
+    }
+
+    /**
+     * @notice test the internal `_capLpTokenSupply` function, and verify the reserves return 0 when
+     * 'tryCalcLpTokenSupply` fails.
+     */
+    function test_internal_capLpTokenSupply() public view {
+        uint256[] memory lastReserves = new uint256[](2);
+        lastReserves[0] = 1e6;
+        lastReserves[1] = 1e6;
+        uint256[] memory reserves = new uint256[](2);
+        bytes16[][] memory maxRateChanges = new bytes16[][](2);
+        maxRateChanges[0] = new bytes16[](2);
+        maxRateChanges[1] = new bytes16[](2);
+        CapReservesParameters memory capReservesParameters = CapReservesParameters({
+            maxLpSupplyIncrease: bytes16(0),
+            maxLpSupplyDecrease: bytes16(0),
+            maxRateChanges: maxRateChanges
+        });
+        IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wellFunction.target);
+
+        uint256[] memory cappedReserves =
+            _capLpTokenSupply(lastReserves, reserves, 0, capReservesParameters, mfpWf, data, true);
+        assertEq(cappedReserves.length, 2);
+        assertEq(cappedReserves[0], 0);
+        assertEq(cappedReserves[1], 0);
     }
 }

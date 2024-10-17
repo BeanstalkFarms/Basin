@@ -122,7 +122,9 @@ contract Stable2Test is WellFunctionHelper {
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
-    function testFuzz_calcLpTokenSupply(uint256[2] memory _reserves) public {
+    function testFuzz_calcLpTokenSupply(
+        uint256[2] memory _reserves
+    ) public {
         _data = abi.encode(18, 18);
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(_reserves[0], 10e18, MAX_RESERVE);

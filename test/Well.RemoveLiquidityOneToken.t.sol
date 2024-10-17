@@ -73,7 +73,9 @@ contract WellRemoveLiquidityOneTokenTest is TestHelper {
 
     /// @dev Fuzz test: EQUAL token reserves, IMBALANCED removal
     /// The Well contains equal reserves of all underlying tokens before execution.
-    function testFuzz_removeLiquidityOneToken(uint256 a0) public prank(user) {
+    function testFuzz_removeLiquidityOneToken(
+        uint256 a0
+    ) public prank(user) {
         // Assume we're removing tokens[0]
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = bound(a0, 1e6, 750e18);

@@ -238,7 +238,9 @@ interface IWell {
      * @param tokenOut The token to shift into
      * @return amountOut The amount of `tokenOut` received
      */
-    function getShiftOut(IERC20 tokenOut) external returns (uint256 amountOut);
+    function getShiftOut(
+        IERC20 tokenOut
+    ) external returns (uint256 amountOut);
 
     //////////////////// ADD LIQUIDITY ////////////////////
 
@@ -279,7 +281,9 @@ interface IWell {
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @return lpAmountOut The amount of LP tokens received
      */
-    function getAddLiquidityOut(uint256[] memory tokenAmountsIn) external view returns (uint256 lpAmountOut);
+    function getAddLiquidityOut(
+        uint256[] memory tokenAmountsIn
+    ) external view returns (uint256 lpAmountOut);
 
     //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
@@ -303,7 +307,9 @@ interface IWell {
      * @param lpAmountIn The amount of LP tokens to burn
      * @return tokenAmountsOut The amount of each underlying token received
      */
-    function getRemoveLiquidityOut(uint256 lpAmountIn) external view returns (uint256[] memory tokenAmountsOut);
+    function getRemoveLiquidityOut(
+        uint256 lpAmountIn
+    ) external view returns (uint256[] memory tokenAmountsOut);
 
     //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
@@ -388,7 +394,9 @@ interface IWell {
      * @return skimAmounts The amount of each token skimmed
      * @dev No deadline is needed since this function does not use the user's assets.
      */
-    function skim(address recipient) external returns (uint256[] memory skimAmounts);
+    function skim(
+        address recipient
+    ) external returns (uint256[] memory skimAmounts);
 
     /**
      * @notice Gets the reserves of each token held by the Well.

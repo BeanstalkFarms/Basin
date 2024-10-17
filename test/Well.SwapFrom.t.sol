@@ -69,7 +69,9 @@ contract WellSwapFromTest is SwapHelper {
         well.swapFrom(tokens[0], tokens[1], 0, 0, user, block.timestamp - 1);
     }
 
-    function testFuzz_swapFrom(uint256 amountIn) public prank(user) {
+    function testFuzz_swapFrom(
+        uint256 amountIn
+    ) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);
@@ -79,7 +81,9 @@ contract WellSwapFromTest is SwapHelper {
     }
 
     /// @dev Zero hysteresis: token0 -> token1 -> token0 gives the same result
-    function testFuzz_swapFrom_equalSwap(uint256 token0AmtIn) public prank(user) {
+    function testFuzz_swapFrom_equalSwap(
+        uint256 token0AmtIn
+    ) public prank(user) {
         token0AmtIn = bound(token0AmtIn, 0, tokens[0].balanceOf(user));
         uint256 token1Out = well.swapFrom(tokens[0], tokens[1], token0AmtIn, 0, user, type(uint256).max);
         uint256 token0Out = well.swapFrom(tokens[1], tokens[0], token1Out, 0, user, type(uint256).max);

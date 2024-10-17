@@ -65,5 +65,7 @@ interface IAquifer {
      * @dev Always verify that a Well was deployed by a trusted Aquifer using a trusted implementation before using.
      * If `wellImplementation == address(0)`, then the Aquifer did not deploy the Well.
      */
-    function wellImplementation(address well) external view returns (address implementation);
+    function wellImplementation(
+        address well
+    ) external view returns (address implementation);
 }

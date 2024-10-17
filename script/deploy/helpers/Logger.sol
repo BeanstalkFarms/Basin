@@ -8,7 +8,9 @@ import {console} from "forge-std/console.sol";
 import {Well} from "src/Well.sol";
 
 library logger {
-    function logWell(Well well) public view {
+    function logWell(
+        Well well
+    ) public view {
         console.log("\nWELL:", address(well));
         console.log("Name  \t", well.name());
         console.log("Symbol\t", well.symbol());

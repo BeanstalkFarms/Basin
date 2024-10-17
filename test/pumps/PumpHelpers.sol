@@ -8,11 +8,15 @@ import {MultiFlowPump} from "src/pumps/MultiFlowPump.sol";
 uint256 constant MAX_128 = 2 ** 128;
 uint256 constant MAX_E18 = 1e18;
 
-function from18(uint256 a) pure returns (bytes16 result) {
+function from18(
+    uint256 a
+) pure returns (bytes16 result) {
     return ABDKMathQuad.from128x128(int256((a * MAX_128) / MAX_E18));
 }
 
-function to18(bytes16 a) pure returns (uint256 result) {
+function to18(
+    bytes16 a
+) pure returns (uint256 result) {
     return (uint256(ABDKMathQuad.to128x128(a)) * MAX_E18) / MAX_128;
 }
 
@@ -60,7 +64,9 @@ function generateRandomUpdate(
     newSeed = seed;
 }
 
-function stepSeed(bytes32 seed) pure returns (bytes32 newSeed) {
+function stepSeed(
+    bytes32 seed
+) pure returns (bytes32 newSeed) {
     newSeed = keccak256(abi.encode(seed));
 }
 

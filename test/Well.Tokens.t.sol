@@ -33,7 +33,9 @@ contract WellInternalTest is Well, Test {
         assertEq(j, 0);
     }
 
-    function testFuzz_getIJ(uint256 n) public {
+    function testFuzz_getIJ(
+        uint256 n
+    ) public {
         n = bound(n, 2, 16);
 
         _tokens = new IERC20[](n);

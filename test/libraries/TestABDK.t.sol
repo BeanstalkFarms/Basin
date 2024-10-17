@@ -17,7 +17,9 @@ contract ABDKTest is TestHelper {
     /**
      * @dev no hysteresis: 2^(log2(a)) == a +/- 1 (due to library rounding)
      */
-    function testFuzz_log2Pow2(uint256 a) public {
+    function testFuzz_log2Pow2(
+        uint256 a
+    ) public {
         a = bound(a, 1, type(uint256).max);
         uint256 b = (a.fromUInt().log_2()).pow_2().toUInt();
         if (a <= 1e18) {
@@ -68,12 +70,16 @@ contract ABDKTest is TestHelper {
         return a.fromUInt().div(b.fromUInt()).powu(c);
     }
 
-    function testFuzz_FromUIntToLog2(uint256 x) public pure {
+    function testFuzz_FromUIntToLog2(
+        uint256 x
+    ) public pure {
         x = bound(x, 1, type(uint256).max);
         assertEq(ABDKMathQuad.fromUInt(x).log_2(), ABDKMathQuad.fromUIntToLog2(x));
     }
 
-    function testFuzz_pow_2ToUInt(uint256 x) public pure {
+    function testFuzz_pow_2ToUInt(
+        uint256 x
+    ) public pure {
         x = bound(x, 0, 255);
 
         // test the pow_2ToUInt function

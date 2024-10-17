@@ -71,7 +71,9 @@ abstract contract TestHelper is Test, WellDeployer {
     // Initial liquidity amount given to users and wells
     uint256 public constant initialLiquidity = 1000 * 1e18;
 
-    function setupWell(uint256 n) internal {
+    function setupWell(
+        uint256 n
+    ) internal {
         setupWell(n, deployWellFunction(), deployPumps(1));
     }
 
@@ -110,7 +112,9 @@ abstract contract TestHelper is Test, WellDeployer {
         addLiquidityEqualAmount(address(this), initialLiquidity);
     }
 
-    function setupWellWithFeeOnTransfer(uint256 n) internal {
+    function setupWellWithFeeOnTransfer(
+        uint256 n
+    ) internal {
         Call memory _wellFunction = Call(address(new ConstantProduct2()), new bytes(0));
         Call[] memory _pumps = new Call[](2);
         _pumps[0].target = address(new MockPump());
@@ -170,14 +174,18 @@ abstract contract TestHelper is Test, WellDeployer {
     //////////// Test Tokens ////////////
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokens(uint256 n) internal returns (IERC20[] memory _tokens) {
+    function deployMockTokens(
+        uint256 n
+    ) internal returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](n);
         for (uint256 i; i < n; i++) {
             _tokens[i] = deployMockToken(i);
         }
     }
 
-    function deployMockToken(uint256 i) internal returns (IERC20) {
+    function deployMockToken(
+        uint256 i
+    ) internal returns (IERC20) {
         return IERC20(
             new MockToken(
                 string.concat("Token ", i.toString()), // name
@@ -198,14 +206,18 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     /// @dev deploy `n` mock ERC20 tokens and sort by address
-    function deployMockTokensFeeOnTransfer(uint256 n) internal returns (IERC20[] memory _tokens) {
+    function deployMockTokensFeeOnTransfer(
+        uint256 n
+    ) internal returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](n);
         for (uint256 i; i < n; i++) {
             _tokens[i] = deployMockTokenFeeOnTransfer(i);
         }
     }
 
-    function deployMockTokenFeeOnTransfer(uint256 i) internal returns (IERC20) {
+    function deployMockTokenFeeOnTransfer(
+        uint256 i
+    ) internal returns (IERC20) {
         return IERC20(
             new MockTokenFeeOnTransfer(
                 string.concat("Token ", i.toString()), // name
@@ -237,7 +249,9 @@ abstract contract TestHelper is Test, WellDeployer {
     }
 
     /// @dev gets the first `n` mock tokens
-    function getTokens(uint256 n) internal view returns (IERC20[] memory _tokens) {
+    function getTokens(
+        uint256 n
+    ) internal view returns (IERC20[] memory _tokens) {
         _tokens = new IERC20[](n);
         for (uint256 i; i < n; ++i) {
             _tokens[i] = tokens[i];
@@ -251,7 +265,9 @@ abstract contract TestHelper is Test, WellDeployer {
         _wellFunction.data = new bytes(0);
     }
 
-    function deployWellFunction(address _target) internal pure returns (Call memory _wellFunction) {
+    function deployWellFunction(
+        address _target
+    ) internal pure returns (Call memory _wellFunction) {
         _wellFunction.target = _target;
         _wellFunction.data = new bytes(0);
     }
@@ -264,7 +280,9 @@ abstract contract TestHelper is Test, WellDeployer {
         _wellFunction.data = _data;
     }
 
-    function deployPumps(uint256 n) internal returns (Call[] memory _pumps) {
+    function deployPumps(
+        uint256 n
+    ) internal returns (Call[] memory _pumps) {
         _pumps = new Call[](n);
         for (uint256 i; i < n; i++) {
             _pumps[i].target = address(new MockPump());
@@ -307,11 +325,15 @@ abstract contract TestHelper is Test, WellDeployer {
 
     //////////// EVM Helpers ////////////
 
-    function increaseTime(uint256 _seconds) internal {
+    function increaseTime(
+        uint256 _seconds
+    ) internal {
         vm.warp(block.timestamp + _seconds);
     }
 
-    modifier prank(address from) {
+    modifier prank(
+        address from
+    ) {
         vm.startPrank(from);
         _;
         vm.stopPrank();
@@ -436,7 +458,9 @@ abstract contract TestHelper is Test, WellDeployer {
         snapshot.reserves = well.getReserves();
     }
 
-    function checkInvariant(address _well) internal view {
+    function checkInvariant(
+        address _well
+    ) internal view {
         uint256[] memory _reserves = IWell(_well).getReserves();
         Call memory _wellFunction = IWell(_well).wellFunction();
         assertLe(
@@ -446,7 +470,9 @@ abstract contract TestHelper is Test, WellDeployer {
         );
     }
 
-    function checkStableSwapInvariant(address _well) internal view {
+    function checkStableSwapInvariant(
+        address _well
+    ) internal view {
         uint256[] memory _reserves = IWell(_well).getReserves();
         Call memory _wellFunction = IWell(_well).wellFunction();
         assertApproxEqAbs(
@@ -456,7 +482,9 @@ abstract contract TestHelper is Test, WellDeployer {
         );
     }
 
-    function getPrecisionForReserves(uint256[] memory reserves) internal pure returns (uint256 precision) {
+    function getPrecisionForReserves(
+        uint256[] memory reserves
+    ) internal pure returns (uint256 precision) {
         precision = type(uint256).max;
         for (uint256 i; i < reserves.length; ++i) {
             uint256 logReserve = reserves[i].log10();
@@ -464,14 +492,18 @@ abstract contract TestHelper is Test, WellDeployer {
         }
     }
 
-    function uint2ToUintN(uint256[2] memory input) internal pure returns (uint256[] memory out) {
+    function uint2ToUintN(
+        uint256[2] memory input
+    ) internal pure returns (uint256[] memory out) {
         out = new uint256[](input.length);
         for (uint256 i; i < input.length; i++) {
             out[i] = input[i];
         }
     }
 
-    function numDigits(uint256 number) internal pure returns (uint256 digits) {
+    function numDigits(
+        uint256 number
+    ) internal pure returns (uint256 digits) {
         while (number > 9) {
             number /= 10;
             digits++;

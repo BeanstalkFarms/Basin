@@ -28,7 +28,9 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     }
 
     /// @dev Swaps should always revert if `fromToken` = `toToken`.
-    function testFuzz_swapFromFeeOnTransferNoFee_revertIf_sameToken(uint128 amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransferNoFee_revertIf_sameToken(
+        uint128 amountIn
+    ) public prank(user) {
         MockToken(address(tokens[0])).mint(user, amountIn);
 
         vm.expectRevert(IWellErrors.InvalidTokens.selector);
@@ -42,7 +44,9 @@ contract WellSwapFromFeeOnTransferNoFeeTest is SwapHelper {
     }
 
     /// @dev With no fees, behavior is identical to {swapFrom}.
-    function testFuzz_swapFromFeeOnTransfer_noFee(uint256 amountIn) public prank(user) {
+    function testFuzz_swapFromFeeOnTransfer_noFee(
+        uint256 amountIn
+    ) public prank(user) {
         amountIn = bound(amountIn, 0, tokens[0].balanceOf(user));
 
         (Snapshot memory bef, SwapAction memory act) = beforeSwapFrom(0, 1, amountIn);

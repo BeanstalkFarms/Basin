@@ -20,7 +20,9 @@ library LibLastReserveBytes {
     using ABDKMathQuad for uint256;
     using ABDKMathQuad for bytes16;
 
-    function readNumberOfReserves(bytes32 slot) internal view returns (uint8 _numberOfReserves) {
+    function readNumberOfReserves(
+        bytes32 slot
+    ) internal view returns (uint8 _numberOfReserves) {
         assembly {
             _numberOfReserves := shr(248, sload(slot))
         }
@@ -137,7 +139,17 @@ library LibLastReserveBytes {
         }
     }
 
-    function readBytes(bytes32 slot) internal view returns (bytes32 value) {
+    function resetLastReserves(bytes32 slot, uint256 n) internal {
+        for (uint256 i; i < (n + 1) / 2; ++i) {
+            assembly {
+                sstore(add(slot, i), 0)
+            }
+        }
+    }
+
+    function readBytes(
+        bytes32 slot
+    ) internal view returns (bytes32 value) {
         assembly {
             value := sload(slot)
         }

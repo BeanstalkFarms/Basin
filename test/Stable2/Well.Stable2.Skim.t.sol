@@ -15,7 +15,9 @@ contract WellStable2SkimTest is TestHelper {
         assertEq(wellBalance.tokens[1], 1000e18);
     }
 
-    function testFuzz_skim(uint256[2] calldata amounts) public prank(user) {
+    function testFuzz_skim(
+        uint256[2] calldata amounts
+    ) public prank(user) {
         vm.assume(amounts[0] <= 800e18);
         vm.assume(amounts[1] <= 800e18);
 

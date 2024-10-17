@@ -123,7 +123,9 @@ contract ConstantProduct2Test is WellFunctionHelper {
     //////////// LP TOKEN SUPPLY ////////////
 
     /// @dev invariant: reserves -> lpTokenSupply -> reserves should match
-    function testFuzz_calcLpTokenSupply(uint256[2] memory _reserves) public {
+    function testFuzz_calcLpTokenSupply(
+        uint256[2] memory _reserves
+    ) public {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(_reserves[0], 1, MAX_RESERVE);
         reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
@@ -173,12 +175,21 @@ contract ConstantProduct2Test is WellFunctionHelper {
         assertEq(_function.calcRate(reserves, 1, 0, _data), 0.01e18);
     }
 
-    function test_fuzz_calcRate(uint256[2] memory _reserves) public {
+    function test_fuzz_calcRate(
+        uint256[2] memory _reserves
+    ) public {
         uint256[] memory reserves = new uint256[](2);
         reserves[0] = bound(_reserves[0], 1, MAX_RESERVE);
         reserves[1] = bound(_reserves[1], 1, MAX_RESERVE);
         assertEq(_function.calcRate(reserves, 0, 1, _data), reserves[0] * 1e18 / reserves[1]);
 
         assertEq(_function.calcRate(reserves, 1, 0, _data), reserves[1] * 1e18 / reserves[0]);
+    }
+
+    function test_calcRate_infinite() public view {
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = type(uint256).max;
+        reserves[1] = type(uint256).max;
+        assertEq(_function.calcRate(reserves, 0, 1, _data), _function.ratioPrecision(0, _data));
     }
 }
