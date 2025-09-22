@@ -37,6 +37,11 @@ contract Stable2Test is WellFunctionHelper {
     uint256 STATE_C_B1 = 25 * 1e18;
     uint256 STATE_C_LP = 44_906_735_116_816_626_495; // 44.9e18
 
+    /// State D: Oscillation
+    uint256 STATE_D_B0 = 1e22;
+    uint256 STATE_D_B1 = 1e18;
+    uint256 STATE_D_LP = 1135457731557704881482; // 1135e18
+
     /// @dev See {calcLpTokenSupply}.
     uint256 MAX_RESERVE = 1e32;
 
@@ -137,6 +142,20 @@ contract Stable2Test is WellFunctionHelper {
         for (uint256 i = 0; i < reserves.length; ++i) {
             assertEq(reserves[i], underlying[i], "reserves mismatch");
         }
+    }
+
+    /**
+    * @notice Using state D, after 12 iterations, the lpTokenSupply guess starts to oscillate
+    * due to the difference between the previous guess and the new guess being exactly 2 units.
+    * In this case, the lpTokenSupply should be the average of the two guesses.
+    */
+    function test_guessOscillationcalcLpTokenSupply() public {
+        _data = abi.encode(18, 18);
+        uint256[] memory reserves = new uint256[](2);
+        reserves[0] = STATE_D_B0;
+        reserves[1] = STATE_D_B1;
+        uint256 lpTokenSupply = _function.calcLpTokenSupply(reserves, _data);
+        assertEq(lpTokenSupply, STATE_D_LP);
     }
 
     //////////// FUZZ ////////////

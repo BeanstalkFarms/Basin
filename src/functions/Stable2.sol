@@ -86,8 +86,9 @@ contract Stable2 is ProportionalLPToken2, IBeanstalkWellFunction {
 
         uint256 sumReserves = scaledReserves[0] + scaledReserves[1];
         lpTokenSupply = sumReserves;
+        
+        bool stableOscillation;
         for (uint256 i = 0; i < 255; i++) {
-            bool stableOscillation;
             uint256 dP = lpTokenSupply;
             // If division by 0, this will be borked: only withdrawal will work. And that is good
             dP = dP * lpTokenSupply / (scaledReserves[0] * N);
