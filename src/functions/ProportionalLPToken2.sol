@@ -10,7 +10,7 @@ import {Math} from "oz/utils/math/Math.sol";
  * @notice Defines a proportional relationship between the supply of LP tokens
  * and the amount of each underlying token for a two-token Well.
  * @dev When removing `s` LP tokens with a Well with `S` LP token supply, the user
- * recieves `s * b_i / S` of each underlying token.
+ * receives `s * b_i / S` of each underlying token.
  */
 abstract contract ProportionalLPToken2 is IWellFunction {
     using Math for uint256;

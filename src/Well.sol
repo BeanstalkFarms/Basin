@@ -19,7 +19,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * into a single pooled on-chain liquidity position.
  *
  * Rebasing Tokens:
- * - Positive rebasing tokens are supported by Wells, but any tokens recieved from a
+ * - Positive rebasing tokens are supported by Wells, but any tokens received from a
  *   rebase will not be rewarded to LP holders and instead can be extracted by anyone
  *   using `skim`, `sync` or `shift`.
  * - Negative rebasing tokens should not be used in Well as the effect of a negative
@@ -29,7 +29,7 @@ import {ClonePlus} from "src/utils/ClonePlus.sol";
  * - When transferring fee on transfer tokens to a Well (swapping from or adding liquidity),
  *   use `swapFromFeeOnTrasfer` or `addLiquidityFeeOnTransfer`. `swapTo` does not support
  *   fee on transfer tokens (See {swapTo}).
- * - When recieving fee on transfer tokens from a Well (swapping to and removing liquidity),
+ * - When receiving fee on transfer tokens from a Well (swapping to and removing liquidity),
  *   INCLUDE the fee that is taken on transfer when calculating amount out values.
  */
 contract Well is ERC20PermitUpgradeable, IWell, IWellErrors, ReentrancyGuardUpgradeable, ClonePlus {
