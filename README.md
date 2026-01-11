@@ -2,6 +2,8 @@
 
 # Basin
 
+![Tests](https://github.com/AdekunleBamz/Basin/actions/workflows/tests.yml/badge.svg)
+
 Code Version: `1.0.0` <br>
 Whitepaper Version: `1.0.0`
 
